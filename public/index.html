@@ -14,6 +14,16 @@
     <p>Flow Rate 1: <span id="flowRate1">N/A</span></p>
 </div>
 <script>
+    const { ipcRenderer } = require('electron');
+
+    function sendLogToMain(level, message) {
+        ipcRenderer.send('log-to-main', { level, message });
+    }
+
+    sendLogToMain('info', '렌더러에서 보내는 정보 로그');
+    sendLogToMain('error', '렌더러 에러 발생');
+
+
     async function fetchSerialData() {
         try {
             const response = await fetch('http://localhost:3000/serial-data');

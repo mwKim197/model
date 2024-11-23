@@ -3,9 +3,20 @@ const path = require('path');
 const express = require('express');
 const http = require('http');
 const { SerialPort } = require('serialport');
+const logger = require('./logger');
 
 const appServer = express();
 const server = http.createServer(appServer);
+
+// 랜더러에서 발생한 오류 로그 저장 -- 시작
+const { ipcMain } = require('electron');
+const log = require('electron-log');
+
+ipcMain.on('log-to-main', (event, { level, message }) => {
+    log[level](message); // 전달받은 레벨과 메시지로 로그 기록
+});
+// 랜더러에서 발생한 오류 로그 저장 -- 종료
+
 
 // 시리얼 포트 설정
 const port = new SerialPort({
@@ -24,6 +35,7 @@ function getSerialData() {
         port.write(command, (err) => {
 
             if (err) {
+                logger.error(`명령전송 오류: ${err.message}`);
                 return reject(`명령 전송 오류: ${err.message}`);
             }
 
@@ -31,14 +43,15 @@ function getSerialData() {
             let serialBuffer = ''; // 데이터를 누적할 버퍼
 
             port.on('error', (err) => {
-                console.error('시리얼 포트 에러:', err.message);
+
+                logger.error(`시리얼 포트 에러: ${err.message}`);
             });
 
             port.on('data', (data) => {
                 console.log('data : ' + data);
                 serialBuffer += data.toString('ascii'); // 데이터 누적
                 console.log('serialBuffer : ', serialBuffer);
-
+                logger.info(`serialBuffer: ${serialBuffer}`);
                 // 응답이 끝났는지 확인 (LF로 끝남)
                 if (serialBuffer.endsWith('\x0a')) {
                     // 응답 데이터 분석
