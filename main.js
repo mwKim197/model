@@ -59,8 +59,8 @@ function getSerialData() {
 
                         console.log('success data:', { boilerTemp, heaterStatus, flowRate1, data });
 
-                        // 클라이언트로 데이터 전송 (REST API 요청에서 사용)
-                        appServer.set('serialData', { boilerTemp, heaterStatus, flowRate1 , data});
+                        // 데이터를 resolve로 반환
+                        resolve({ boilerTemp, heaterStatus, flowRate1, data: response });
 
                     } catch (error) {
                         console.error('error.message :', error.message);
