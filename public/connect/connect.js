@@ -20,6 +20,16 @@ class SerialComm {
                     return reject(`명령 전송 오류: ${err.message}`);
                 }
             });
+
+            // 시리얼 포트가 정상적으로 열렸을 때
+            this.port.on('open', () => {
+                console.log('시리얼 포트가 정상적으로 열렸습니다.');
+            });
+
+            // 시리얼 포트에서 에러가 발생했을 때
+            this.port.on('error', (err) => {
+                console.error('시리얼 포트 에러:', err.message);
+            });
         });
     }
 

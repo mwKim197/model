@@ -12,7 +12,8 @@ const serialComm = new SerialComm('COM1'); // COM1 포트에 연결
 // 시리얼 데이터 요청용 HTTP 엔드포인트
 appServer.get('/serial-data', async (req, res) => {
     try {
-        await serialComm.writeCommand('RD1\x0d'); // 명령 전송
+        const command = 'RD1\x0d';
+        await serialComm.writeCommand(command); // 명령 전송
         const data = await serialComm.readData();
         res.setHeader('Content-Type', 'application/json; charset=utf-8');  // UTF-8로 응답 설정
         res.json(data); // JSON 데이터 반환
