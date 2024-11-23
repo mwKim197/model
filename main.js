@@ -35,20 +35,20 @@ function getSerialData() {
             });
 
             port.on('data', (data) => {
-                console.log(data);
+                console.log('data : ' + data);
                 serialBuffer += data.toString('ascii'); // 데이터 누적
-                console.log('버퍼:', serialBuffer);
+                console.log('serialBuffer : ', serialBuffer);
 
                 // 응답이 끝났는지 확인 (LF로 끝남)
                 if (serialBuffer.endsWith('\x0a')) {
                     // 응답 데이터 분석
                     try {
                         const response = serialBuffer.trim(); // 불필요한 공백 제거
-                        console.log('완전한 응답:', response);
+                        console.log('total response:', response);
 
                         // 형식 검증
                         if (response.length < 10 || !response.startsWith('RD')) {
-                            throw new Error('잘못된 응답 형식');
+                            throw new Error('error response');
                         }
 
                         // 데이터 추출
@@ -57,13 +57,13 @@ function getSerialData() {
                         const heaterStatus = response[5] === '1' ? 'ON' : 'OFF'; // 히터 상태
                         const flowRate1 = parseInt(response[6] + response[7] + response[8], 10); // 유량1
 
-                        console.log('데이터 추출 성공:', { boilerTemp, heaterStatus, flowRate1, data });
+                        console.log('success data:', { boilerTemp, heaterStatus, flowRate1, data });
 
                         // 클라이언트로 데이터 전송 (REST API 요청에서 사용)
                         appServer.set('serialData', { boilerTemp, heaterStatus, flowRate1 , data});
 
                     } catch (error) {
-                        console.error('응답 처리 실패:', error.message);
+                        console.error('error.message :', error.message);
                     } finally {
                         // 처리 후 버퍼 초기화
                         serialBuffer = '';
@@ -78,6 +78,7 @@ function getSerialData() {
 appServer.get('/serial-data', async (req, res) => {
     try {
         const data = await getSerialData();
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');  // UTF-8로 응답 설정
         res.json(data); // JSON 데이터 반환
     } catch (error) {
         console.error(error);
@@ -90,7 +91,7 @@ appServer.use(express.static('public'));
 
 // 서버 시작
 server.listen(3000, () => {
-    console.log('서버가 http://localhost:3000 에서 실행 중입니다.');
+    console.log('server: http://localhost:3000');
 });
 
 // Electron 창 설정
