@@ -1,0 +1,38 @@
+{
+  "name": "model",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "electron-builder"
+  },
+  "build": {
+    "appId": "com.example.myapp",
+    "productName": "model",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "sign": false
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "electron-packager": "^17.1.2",
+    "electron-reload": "^2.0.0-alpha.1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "serialport": "^12.0.0",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
+  }
+}

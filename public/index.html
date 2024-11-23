@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serial Data Polling</title>
+</head>
+<body>
+<h1>Serial Data</h1>
+<div>
+    <p>Data: <span id="data">N/A</span></p>
+    <p>Boiler Temp: <span id="boilerTemp">N/A</span></p>
+    <p>Heater Status: <span id="heaterStatus">N/A</span></p>
+    <p>Flow Rate 1: <span id="flowRate1">N/A</span></p>
+</div>
+<script>
+    async function fetchSerialData() {
+        try {
+            const response = await fetch('http://localhost:3000/serial-data');
+            if (!response.ok) throw new Error('네트워크 응답 실패');
+
+            const data = await response.json();
+            console.log('서버 응답:', data);
+
+            // 화면에 데이터 업데이트
+            document.getElementById('data').textContent = data.data;
+            document.getElementById('boilerTemp').textContent = data.boilerTemp;
+            document.getElementById('heaterStatus').textContent = data.heaterStatus;
+            document.getElementById('flowRate1').textContent = data.flowRate1;
+        } catch (error) {
+            console.error('데이터 가져오기 실패:', error);
+        }
+    }
+
+    // 1초마다 폴링
+    setInterval(fetchSerialData, 10000);
+</script>
+</body>
+</html>
