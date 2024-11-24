@@ -1,7 +1,7 @@
 // serialComm.js
 const { SerialPort } = require('serialport');
 const log = require('../../logger'); // log 모듈 사용
-
+log.info("log ::::111111");
 class Rd1 {
     constructor(portPath, baudRate = 9600) {
         this.serialBuffer = '';
@@ -14,7 +14,7 @@ class Rd1 {
         });
 
         this.port.on('error', (err) => {
-            log.error(`시리얼 포트 에러: ${err.message}`);
+            log.error(`serialport error: ${err.message}`);
         });
 
         this.port.on('data', (data) => this._onDataReceived(data));
@@ -40,12 +40,14 @@ class Rd1 {
                 throw new Error('error response');
             }
 
-            const 보일러온도 = parseInt(response[2] + response[3] + response[4], 10);
-            const 히터상태 = response[5] === '1' ? 'ON' : 'OFF';
-            const 유랑1 = parseInt(response[6] + response[7] + response[8], 10);
+            const data = response;
+            const boilerTemp = parseInt(response[2] + response[3] + response[4], 10); // 보일러 온도
+            const heaterStatus = response[5] === '1' ? 'ON' : 'OFF'; // 히터 상태
+            const flowRate1 = parseInt(response[6] + response[7] + response[8], 10); // 유량1
 
-            log.info('success data:', { 보일러온도, 히터상태, 유랑1, response });
-            this.latestData = { 보일러온도, 히터상태, 유랑1, response };
+            log.info('success data:', { boilerTemp, heaterStatus, flowRate1, data });
+
+            this.latestData = { boilerTemp, heaterStatus, flowRate1, data };
         } catch (err) {
             log.error(`응답 처리 실패: ${err.message}`);
         }

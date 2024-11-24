@@ -10,7 +10,7 @@ const server = http.createServer(appServer);
 
 // 시리얼 통신 인스턴스 생성
 const serialComm = new Rd1('COM1');
-
+log.info('log: !!!!!!')
 // HTTP 엔드포인트 설정
 appServer.get('/serial-data', async (req, res) => {
     try {
