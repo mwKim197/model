@@ -5,11 +5,12 @@ const http = require('http');
 const log = require('./logger');
 const appServer = express();
 const server = http.createServer(appServer);
+const Connect = require('./public/connect/Connect'); // 방금 만든 serialRoutes 모듈
 
 
 // 정적 파일 제공
 appServer.use(express.static('public'));
-
+appServer.use(Connect);
 // 서버 시작
 server.listen(3000, () => {
     log.info('server: http://localhost:3000');

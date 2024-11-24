@@ -1,9 +1,3 @@
-const express = require('express');
-const Serial = require('../connect/Serial'); // 새로 작성한 모듈 가져오기
-const log = require('../../logger')
-const appServer = express();
-const http = require('http');
-const server = http.createServer(appServer);
 const { ipcRenderer } = require('electron');
 
 function sendLogToMain(level, message) {
@@ -17,70 +11,11 @@ sendLogToMain('error', '렌더러 에러 발생');
 document.getElementById('goToIndex').addEventListener('click', () => {
     ipcRenderer.send('navigate-to-page', 'index'); // 'admin' 페이지로 이동
 });
-// 시리얼 통신 부
-const cors = require('cors');
-appServer.use(cors());
-
-// 시리얼 통신 인스턴스 생성
-const serialComm = new Serial('COM1');
-// HTTP 엔드포인트 설정 RD1 호출
-appServer.get('/serial-data-rd1', async (req, res) => {
-    try {
-        const data = await serialComm.writeCommand('RD1\x0d');
-        res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.json(data);
-    } catch (err) {
-        log.error(err.message);
-        res.status(500).send(err.message);
-    }
-});
-
-// HTTP 엔드포인트 설정 RD2 호출
-appServer.get('/serial-data-rd2', async (req, res) => {
-    try {
-        const data = await serialComm.writeCommand('RD2\x0d');
-        res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.json(data);
-    } catch (err) {
-        log.error(err.message);
-        res.status(500).send(err.message);
-    }
-});
-
-// HTTP 엔드포인트 설정 RD3 호출
-appServer.get('/serial-data-rd3', async (req, res) => {
-    try {
-        const data = await serialComm.writeCommand('RD3\x0d');
-        res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.json(data);
-    } catch (err) {
-        log.error(err.message);
-        res.status(500).send(err.message);
-    }
-});
-
-// HTTP 엔드포인트 설정 RD2 호출
-appServer.get('/serial-data-rd4', async (req, res) => {
-    try {
-        const data = await serialComm.writeCommand('RD4\x0d');
-        res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.json(data);
-    } catch (err) {
-        log.error(err.message);
-        res.status(500).send(err.message);
-    }
-});
-
-// 서버 시작
-server.listen(3000, () => {
-    log.info('server: http://localhost:3001');
-});
-
 
 
 async function fetchSerialDataRd1() {
     try {
-        const response = await fetch('http://localhost:3001/serial-data-rd1');
+        const response = await fetch('http://localhost:3000/serial-data-rd1');
         if (!response.ok) throw new Error('네트워크 응답 실패');
 
         const data = await response.json();
@@ -113,7 +48,7 @@ async function fetchSerialDataRd1() {
 
 async function fetchSerialDataRd2() {
     try {
-        const response = await fetch('http://localhost:3001/serial-data-rd2');
+        const response = await fetch('http://localhost:3000/serial-data-rd2');
         if (!response.ok) throw new Error('네트워크 응답 실패');
 
         const data = await response.json();
@@ -126,7 +61,7 @@ async function fetchSerialDataRd2() {
 
 async function fetchSerialDataRd3() {
     try {
-        const response = await fetch('http://localhost:3001/serial-data-rd3');
+        const response = await fetch('http://localhost:3000/serial-data-rd3');
         if (!response.ok) throw new Error('네트워크 응답 실패');
 
         const data = await response.json();
@@ -139,7 +74,7 @@ async function fetchSerialDataRd3() {
 
 async function fetchSerialDataRd4() {
     try {
-        const response = await fetch('http://localhost:3001/serial-data-rd4');
+        const response = await fetch('http://localhost:3000/serial-data-rd4');
         if (!response.ok) throw new Error('네트워크 응답 실패');
 
         const data = await response.json();
