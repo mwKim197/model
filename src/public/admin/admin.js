@@ -8,6 +8,8 @@ document.getElementById('goToIndex').addEventListener('click', () => {
     window.location.href = '../index/index.html';  // 상대 경로로 이동
 });
 // 시리얼 통신 부
+const cors = require('cors');
+appServer.use(cors());
 
 // 시리얼 통신 인스턴스 생성
 const serialComm = new Serial('COM1');
