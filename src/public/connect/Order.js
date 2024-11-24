@@ -7,6 +7,14 @@ const Order = express.Router();
 const cors = require('cors');
 appServer.use(cors());
 
+Order.use((req, res, next) => {
+    if (!req.serialComm) {
+        log.error('serialComm is not initialized or unavailable');
+        return res.status(500).send('Serial communication is unavailable.');
+    }
+    next();
+});
+
 Order.get('/serial-order-coffee-setting/:grinder1/:grinder2/:extraction/:hotwater', async (req, res) => {
     try {
         const { grinder1, grinder2, extraction, hotwater } = req.params;
@@ -15,6 +23,7 @@ Order.get('/serial-order-coffee-setting/:grinder1/:grinder2/:extraction/:hotwate
         const command = `SCF${grinder1}${grinder2}${extraction}${hotwater}\x0D`;
         log.info('command :' + command);
         const data = await req.serialComm.writeCommand(`SCF${grinder1}${grinder2}${extraction}${hotwater}\x0D`);
+        log.info('Serial command response:', data); // 시리얼 응답 로그
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json(data);
 

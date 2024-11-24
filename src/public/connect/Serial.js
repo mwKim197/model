@@ -40,7 +40,8 @@ class Serial {
         const response = this.serialBuffer.trim();
 
         try {
-            if (response.length < 10 || !response.startsWith('RD')) {
+            // response data 사이즈가 다를수있다.
+            if (response.length < 3) {
                 throw new Error('error response');
             }
             let data = {};
@@ -52,9 +53,9 @@ class Serial {
                 data = this.parseSerialDataRd3(response);
             } else if (response.startsWith('RD4')) {
                 data = this.parseSerialDataRd4(response);
+            } else {
+                data= response;
             }
-
-            log.info('success data:', { data });
             this.latestData = data ;
         } catch (err) {
             log.error(`응답 처리 실패: ${err.message}`);
