@@ -23,7 +23,7 @@ document.getElementById('sendCoffeeSetting').addEventListener('click', () => {
 const fetchCoffeeInfo = async (grinder1, grinder2, extraction, hotwater) => {
     const response = await fetch(`http://localhost:3000/serial-order-coffee-info/${grinder1}/${grinder2}/${extraction}/${hotwater}`);
     const data = await response.json();
-    console.log(data);
+    log.info(data);
 }
 
 
