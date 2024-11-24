@@ -16,7 +16,7 @@ document.getElementById('goToAdmin').addEventListener('click', () => {
 });
 
 document.getElementById('sendCoffeeSetting').addEventListener('click', () => {
-    fetchCoffeeInfo("045","045","100","0");
+    fetchCoffeeInfo("045","000","100","000");
 });
 
 
