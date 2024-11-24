@@ -1,7 +1,7 @@
 const { SerialPort } = require('serialport');
 const log = require('../../logger'); // log 모듈 사용
 
-class Rd2 {
+class Serial {
     constructor(portPath, baudRate = 9600) {
         this.serialBuffer = '';
         this.port = new SerialPort({
@@ -38,8 +38,13 @@ class Rd2 {
             if (response.length < 10 || !response.startsWith('RD')) {
                 throw new Error('error response');
             }
+            let data = {};
+            if (response.startsWith('RD1')) {
+                data = this.parseSerialDataRd1(response);
+            } else if (response.startsWith('RD2')) {
+                data = this.parseSerialDataRd2(response);
+            }
 
-            const data = this.parseSerialData(response);
             log.info('success data:', { data });
             this.latestData = data ;
         } catch (err) {
@@ -48,7 +53,29 @@ class Rd2 {
     }
 
     // 응답 데이터 분석
-    parseSerialData(response) {
+    parseSerialDataRd1(response) {
+        return {
+            boilerTemperature: parseInt(response.slice(3, 6), 10), // 보일러 온도
+            boilerHeaterStatus: response[6] === '1' ? 'ON' : 'OFF', // 히터 상태
+            boilerFlowRate: parseInt(response.slice(7, 10), 10), // 플로우미터1 유량
+            boilerPumpStatus: response[10] === '1' ? 'ON' : 'OFF', // 펌프 상태
+            hotWaterSolValve1: response[11] === '1' ? 'ON' : 'OFF',
+            hotWaterSolValve2: response[12] === '1' ? 'ON' : 'OFF',
+            coffeeSolValve: response[13] === '1' ? 'ON' : 'OFF',
+            carbonationPressureSensor: response[14] === '1' ? 'ON' : 'OFF',
+            carbonationFlowRate: parseInt(response.slice(17, 20), 10), // 탄산수 플로우미터 유량
+            extractionHeight: parseInt(response.slice(20, 23), 10), // 추출기 상하높이
+            grinderMotor1: response[26] === '1' ? 'ON' : 'OFF', // 그라인더 모터1
+            grinderMotor2: response[27] === '1' ? 'ON' : 'OFF',
+            coffeeMode: this.getCoffeeMode(response[35]), // 커피 동작 상태
+            cupSensor: response[37] === '1' ? '있음' : '없음', // 컵 센서
+            waterAlarm: response[38] === '1' ? '물없음' : '정상', // 물 없음 알람
+            ledStatus: response[41] === '1' ? 'ON' : response[41] === '2' ? 'BLINK' : 'OFF', // LED 상태
+        };
+    }
+
+    // 응답 데이터 분석
+    parseSerialDataRd2(response) {
         return {
             powderTeaFeedingMotor1: response[1] === '1' ? 'ON' : 'OFF', // 가루차1 피딩모터
             hotWaterSolValve1_1: response[2] === '1' ? 'ON' : 'OFF',  // 핫워터1 솔1 밸브
@@ -90,6 +117,23 @@ class Rd2 {
         };
     }
 
+
+// 커피 동작 상태 변환
+     getCoffeeMode(value) {
+        switch (value) {
+            case '1':
+                return '커피 동작중';
+            case '2':
+                return '가루차 동작중';
+            case '3':
+                return '시럽 동작중';
+            case '4':
+                return '세척중';
+            default:
+                return '정지';
+        }
+    }
+
     // 명령 전송 및 데이터 반환
     writeCommand(command) {
         return new Promise((resolve, reject) => {
@@ -113,4 +157,4 @@ class Rd2 {
     }
 }
 
-module.exports = Rd2;
+module.exports = Serial;
