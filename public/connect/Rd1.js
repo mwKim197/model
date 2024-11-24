@@ -41,7 +41,7 @@ class Rd1 {
 
             const data = this.parseSerialData(response);
             log.info('success data:', { data });
-            this.latestData = { data };
+            this.latestData = data ;
         } catch (err) {
             log.error(`응답 처리 실패: ${err.message}`);
         }

@@ -9,9 +9,23 @@
 <h1>Serial Data</h1>
 <div>
     <p>Data: <span id="data">N/A</span></p>
-    <p>Boiler Temp: <span id="boilerTemp">N/A</span></p>
-    <p>Heater Status: <span id="heaterStatus">N/A</span></p>
-    <p>Flow Rate 1: <span id="flowRate1">N/A</span></p>
+    <p>boilerTemperature: <span id="boilerTemperature">N/A</span></p>
+    <p>boilerHeaterStatus: <span id="boilerHeaterStatus">N/A</span></p>
+    <p>boilerFlowRate: <span id="boilerFlowRate">N/A</span></p>
+    <p>boilerPumpStatus: <span id="boilerPumpStatus">N/A</span></p>
+    <p>hotWaterSolValve1: <span id="hotWaterSolValve1">N/A</span></p>
+    <p>hotWaterSolValve2: <span id="hotWaterSolValve2">N/A</span></p>
+    <p>coffeeSolValve: <span id="coffeeSolValve">N/A</span></p>
+    <p>carbonationPressureSensor: <span id="carbonationPressureSensor">N/A</span></p>
+    <p>carbonationFlowRate: <span id="carbonationFlowRate">N/A</span></p>
+    <p>extractionHeight: <span id="extractionHeight">N/A</span></p>
+    <p>grinderMotor1: <span id="grinderMotor1">N/A</span></p>
+    <p>grinderMotor2: <span id="grinderMotor2">N/A</span></p>
+    <p>coffeeMode: <span id="coffeeMode">N/A</span></p>
+    <p>cupSensor: <span id="cupSensor">N/A</span></p>
+    <p>waterAlarm: <span id="waterAlarm">N/A</span></p>
+    <p>ledStatus: <span id="ledStatus">N/A</span></p>
+
 </div>
 <script>
     const { ipcRenderer } = require('electron');
@@ -29,14 +43,30 @@
             const response = await fetch('http://localhost:3000/serial-data');
             if (!response.ok) throw new Error('네트워크 응답 실패');
 
-            const data = await response.json();
+            const rd1Data = await response.json();
+            const data = rd1Data.data;
             console.log('server data:', data);
 
             // 화면에 데이터 업데이트
-            document.getElementById('data').textContent = data.data;
-            document.getElementById('boilerTemp').textContent = data.boilerTemp;
-            document.getElementById('heaterStatus').textContent = data.heaterStatus;
-            document.getElementById('flowRate1').textContent = data.flowRate1;
+            document.getElementById('data').textContent                         = data.data;
+            document.getElementById('boilerTemperature').textContent            = data.boilerTemperature; // 보일러 온도
+            document.getElementById('boilerHeaterStatus').textContent           = data.boilerHeaterStatus; // 히터 상태
+            document.getElementById('boilerFlowRate').textContent               = data.boilerFlowRate; // 플로우미터1 유량;
+            document.getElementById('boilerPumpStatus').textContent             = data.boilerPumpStatus; // 펌프 상태
+            document.getElementById('hotWaterSolValve1').textContent            = data.hotWaterSolValve1;
+            document.getElementById('hotWaterSolValve2').textContent            = data.hotWaterSolValve2;
+            document.getElementById('coffeeSolValve').textContent               = data.coffeeSolValve;
+            document.getElementById('carbonationPressureSensor').textContent    = data.carbonationPressureSensor;
+            document.getElementById('carbonationFlowRate').textContent          = data.carbonationFlowRate; // 탄산수 플로우미터 유량
+            document.getElementById('extractionHeight').textContent             = data.extractionHeight; // 추출기 상하높이
+            document.getElementById('grinderMotor1').textContent                = data.grinderMotor1; // 그라인더 모터1
+            document.getElementById('grinderMotor2').textContent                = data.grinderMotor2;
+            document.getElementById('coffeeMode').textContent                   = data.coffeeMode; // 커피 동작 상태
+            document.getElementById('cupSensor').textContent                    = data.cupSensor; // 컵 센서
+            document.getElementById('waterAlarm').textContent                   = data.waterAlarm; // 물 없음 알람
+            document.getElementById('ledStatus').textContent                    = data.ledStatus; // LED 상태
+
+
         } catch (error) {
             console.error('데이터 가져오기 실패:', error);
         }
