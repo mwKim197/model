@@ -11,6 +11,7 @@ appServer.use(cors());
 
 // 시리얼 통신 인스턴스 생성
 const serialComm = new Serial('COM1');
+
 // HTTP 엔드포인트 설정 RD1 호출
 Connect.get('/serial-data-rd1', async (req, res) => {
     try {
