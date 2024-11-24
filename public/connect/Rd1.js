@@ -1,7 +1,6 @@
-// serialComm.js
 const { SerialPort } = require('serialport');
 const log = require('../../logger'); // log 모듈 사용
-log.info("log ::::111111");
+
 class Rd1 {
     constructor(portPath, baudRate = 9600) {
         this.serialBuffer = '';
@@ -40,16 +39,49 @@ class Rd1 {
                 throw new Error('error response');
             }
 
-            const data = response;
-            const boilerTemp = parseInt(response[2] + response[3] + response[4], 10); // 보일러 온도
-            const heaterStatus = response[5] === '1' ? 'ON' : 'OFF'; // 히터 상태
-            const flowRate1 = parseInt(response[6] + response[7] + response[8], 10); // 유량1
-
-            log.info('success data:', { boilerTemp, heaterStatus, flowRate1, data });
-
-            this.latestData = { boilerTemp, heaterStatus, flowRate1, data };
+            const data = this.parseSerialData(response);
+            log.info('success data:', { data });
+            this.latestData = { data };
         } catch (err) {
             log.error(`응답 처리 실패: ${err.message}`);
+        }
+    }
+
+    // 응답 데이터 분석
+    parseSerialData(response) {
+        return {
+            boilerTemperature: parseInt(response.slice(3, 6), 10), // 보일러 온도
+            boilerHeaterStatus: response[6] === '1' ? 'ON' : 'OFF', // 히터 상태
+            boilerFlowRate: parseInt(response.slice(7, 10), 10), // 플로우미터1 유량
+            boilerPumpStatus: response[10] === '1' ? 'ON' : 'OFF', // 펌프 상태
+            hotWaterSolValve1: response[11] === '1' ? 'ON' : 'OFF',
+            hotWaterSolValve2: response[12] === '1' ? 'ON' : 'OFF',
+            coffeeSolValve: response[13] === '1' ? 'ON' : 'OFF',
+            carbonationPressureSensor: response[14] === '1' ? 'ON' : 'OFF',
+            carbonationFlowRate: parseInt(response.slice(17, 20), 10), // 탄산수 플로우미터 유량
+            extractionHeight: parseInt(response.slice(20, 23), 10), // 추출기 상하높이
+            grinderMotor1: response[26] === '1' ? 'ON' : 'OFF', // 그라인더 모터1
+            grinderMotor2: response[27] === '1' ? 'ON' : 'OFF',
+            coffeeMode: this.getCoffeeMode(response[35]), // 커피 동작 상태
+            cupSensor: response[37] === '1' ? '있음' : '없음', // 컵 센서
+            waterAlarm: response[38] === '1' ? '물없음' : '정상', // 물 없음 알람
+            ledStatus: response[41] === '1' ? 'ON' : response[41] === '2' ? 'BLINK' : 'OFF', // LED 상태
+        };
+    }
+
+// 커피 동작 상태 변환
+     getCoffeeMode(value) {
+        switch (value) {
+            case '1':
+                return '커피 동작중';
+            case '2':
+                return '가루차 동작중';
+            case '3':
+                return '시럽 동작중';
+            case '4':
+                return '세척중';
+            default:
+                return '정지';
         }
     }
 

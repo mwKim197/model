@@ -30,7 +30,7 @@
             if (!response.ok) throw new Error('네트워크 응답 실패');
 
             const data = await response.json();
-            console.log('서버 응답:', data);
+            console.log('server data:', data);
 
             // 화면에 데이터 업데이트
             document.getElementById('data').textContent = data.data;
