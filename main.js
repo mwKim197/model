@@ -66,14 +66,14 @@ function getSerialData() {
 
                         // 데이터 추출
                         const data = response;
-                        const boilerTemp = parseInt(response[2] + response[3] + response[4], 10); // 보일러 온도
-                        const heaterStatus = response[5] === '1' ? 'ON' : 'OFF'; // 히터 상태
-                        const flowRate1 = parseInt(response[6] + response[7] + response[8], 10); // 유량1
+                        const 보일러온도 = parseInt(response[2] + response[3] + response[4], 10); // 보일러 온도
+                        const 히터상태 = response[5] === '1' ? 'ON' : 'OFF'; // 히터 상태
+                        const 유랑1 = parseInt(response[6] + response[7] + response[8], 10); // 유량1
 
-                        console.log('success data:', { boilerTemp, heaterStatus, flowRate1, data });
+                        console.log('success data:', { 보일러온도, 히터상태, 유랑1, data });
 
                         // 클라이언트로 데이터 전송 (REST API 요청에서 사용)
-                        appServer.set('serialData', { boilerTemp, heaterStatus, flowRate1 , data});
+                        appServer.set('serialData', { 보일러온도, 히터상태, 유랑1, data});
 
                     } catch (error) {
                         console.error('error.message :', error.message);
