@@ -17,6 +17,7 @@ Order.get('/serial-order-coffee-info/:grinder1/:grinder2/:extraction/:hotwater',
 
         // SCF 명령어에 URL 파라미터 값을 포함시켜 시리얼 통신
         const command = `SCF${grinder1}${grinder2}${extraction}${hotwater}\x0D\x0A`;
+        log.info('command :' + command);
         const data = await serialComm.writeCommand(command);
 
         let parsedData = data;
