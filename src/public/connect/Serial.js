@@ -12,6 +12,11 @@ class Serial {
             stopBits: 1,
         });
 
+        if (!this.port.isOpen) {
+            log.error('Serial port is not open.');
+            return;
+        }
+
         this.port.on('error', (err) => {
             log.error(`serialport error: ${err.message}`);
         });
