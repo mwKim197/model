@@ -19,15 +19,8 @@ Order.get('/serial-order-coffee-info/:grinder1/:grinder2/:extraction/:hotwater',
         const command = `SCF${grinder1}${grinder2}${extraction}${hotwater}\x0D`;
         log.info('command :' + command);
         const data = await serialComm.writeCommand(`SCF${grinder1}${grinder2}${extraction}${hotwater}\x0D`);
-
-        let parsedData = data;
-        // 시리얼 장치에서 받은 응답을 JSON 형태로 반환
-        if (typeof data === "string") {
-            parsedData = JSON.parse(data);  // 응답을 파싱하여 반환
-        }
-
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.json(parsedData);
+        res.json(data);
 
     } catch (err) {
         log.error(err.message);
@@ -37,19 +30,9 @@ Order.get('/serial-order-coffee-info/:grinder1/:grinder2/:extraction/:hotwater',
 
 Order.get('/serial-order-coffee-use', async (req, res) => {
     try {
-
-        // SCF 명령어에 URL 파라미터 값을 포함시켜 시리얼 통신
-
         const data = await serialComm.writeCommand('COFFEE\x0d');
-
-        let parsedData = data;
-        // 시리얼 장치에서 받은 응답을 JSON 형태로 반환
-        if (typeof data === "string") {
-            parsedData = JSON.parse(data);  // 응답을 파싱하여 반환
-        }
-
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.json(parsedData);
+        res.json(data);
 
     } catch (err) {
         log.error(err.message);
@@ -60,19 +43,11 @@ Order.get('/serial-order-coffee-use', async (req, res) => {
 Order.get('/serial-order-coffee-use1', async (req, res) => {
     try {
 
-        // SCF 명령어에 URL 파라미터 값을 포함시켜 시리얼 통신
         const command = 'COFFEE1';
         log.info('command :' + command);
         const data = await serialComm.writeCommand('COFFEE1\x0d');
-
-        let parsedData = data;
-        // 시리얼 장치에서 받은 응답을 JSON 형태로 반환
-        if (typeof data === "string") {
-            parsedData = JSON.parse(data);  // 응답을 파싱하여 반환
-        }
-
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.json(parsedData);
+        res.json(data);
 
     } catch (err) {
         log.error(err.message);
