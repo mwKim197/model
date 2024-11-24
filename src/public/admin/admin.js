@@ -2,7 +2,7 @@ const express = require('express');
 const Serial = require('../connect/Serial'); // 새로 작성한 모듈 가져오기
 const log = require('../../logger')
 const appServer = express();
-
+const server = http.createServer(appServer);
 const { ipcRenderer } = require('electron');
 
 function sendLogToMain(level, message) {
@@ -18,6 +18,7 @@ document.getElementById('goToIndex').addEventListener('click', () => {
 });
 // 시리얼 통신 부
 const cors = require('cors');
+const http = require("http");
 appServer.use(cors());
 
 // 시리얼 통신 인스턴스 생성
@@ -69,6 +70,12 @@ appServer.get('/serial-data-rd4', async (req, res) => {
         res.status(500).send(err.message);
     }
 });
+
+// 서버 시작
+server.listen(3000, () => {
+    log.info('server: http://localhost:3000');
+});
+
 
 
 async function fetchSerialDataRd1() {
