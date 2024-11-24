@@ -11,7 +11,7 @@ const serialComm = new Serial('COM1');
 const cors = require('cors');
 appServer.use(cors());
 
-appServer.get('/serial-order-coffee-info/:grinder1/:grinder2/:extraction/:hotwater', async (req, res) => {
+Order.get('/serial-order-coffee-info/:grinder1/:grinder2/:extraction/:hotwater', async (req, res) => {
     try {
         const { grinder1, grinder2, extraction, hotwater } = req.params;
 
