@@ -84,9 +84,13 @@
         }
     }
 
+    async function fetchSerialRdData() {
+       await fetchSerialDataRd1();
+       await fetchSerialDataRd2();
+    }
+
     // 1초마다 폴링
-    setInterval(fetchSerialDataRd1, 10000);
-    setInterval(fetchSerialDataRd2, 10000);
+    setInterval(fetchSerialRdData, 10000);
 </script>
 </body>
 </html>
