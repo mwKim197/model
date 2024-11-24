@@ -34,6 +34,18 @@ appServer.get('/serial-data-rd2', async (req, res) => {
     }
 });
 
+// HTTP 엔드포인트 설정 RD2 호출
+appServer.get('/serial-data-rd3', async (req, res) => {
+    try {
+        const data = await serialComm.writeCommand('RD3\x0d');
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.json(data);
+    } catch (err) {
+        log.error(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
 // 정적 파일 제공
 appServer.use(express.static('public'));
 

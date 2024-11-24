@@ -43,6 +43,8 @@ class Serial {
                 data = this.parseSerialDataRd1(response);
             } else if (response.startsWith('RD2')) {
                 data = this.parseSerialDataRd2(response);
+            } else if (response.startsWith('RD3')) {
+                data = this.parseSerialDataRd3(response);
             }
 
             log.info('success data:', { data });
@@ -114,6 +116,69 @@ class Serial {
             syrupPumpMotor6: response[30] === '1' ? 'ON' : 'OFF', // 시럽6 펌프모터
 
             acOutputSpareStatus: response[31] === '1' ? 'ON' : 'OFF', // AC 출력 스페어
+        };
+    }
+
+    // RD3 응답 데이터 분석
+    parseSerialDataRd3(response) {
+        if (response.length !== 62) {
+            throw new Error('잘못된 응답 길이');
+        }
+
+        return {
+            // 핫워터 플로우 센서 카운터
+            hotWaterFlowSensorCounter: parseInt(response.slice(3, 7), 10), // 1234 -> 13
+
+            // CO2 플로우 센서 카운터
+            co2FlowSensorCounter: parseInt(response.slice(7, 11), 10), // 5678 -> 43
+
+            // 추출기 상하모터 엔코더 값
+            extractorEncoderValue: parseInt(response.slice(11, 17), 10), // 9abcde -> 100
+
+            // 보일러 온도 센서 상태
+            boilerTemperatureSensor: response[17] === '1' ? '정상' : '센서 없음 알람',
+
+            // CO2 온도 값
+            co2Temperature: parseInt(response.slice(18, 22), 10), // ghij -> 3도
+
+            // CO2 온도 센서 상태
+            co2TemperatureSensor: response[22] === '1' ? '정상' : '센서 없음 알람',
+
+            // 추출기 레버모터 동작 상태
+            extractorLeverMotorStatus: response[23] === '1' ? 'ON' : 'OFF',
+
+            // 추출기 상하모터 동작 상태
+            extractorMotorStatus: response[24] === '1' ? 'ON' : 'OFF',
+
+            // 슈트 상하모터 동작 상태
+            chuteMotorStatus: response[25] === '1' ? 'ON' : 'OFF',
+
+            // 추출기 자동운전 스텝번호
+            extractionAutoStep: response.slice(26, 30),
+
+            // 추출기 수동운전 스텝번호
+            extractionManualStep: response.slice(30, 34),
+
+            // 그라인더 자동운전 스텝번호
+            grinderAutoStep: response.slice(34, 38),
+
+            // 슈트 수동운전 스텝번호
+            chuteManualStep: response.slice(38, 42),
+
+            // 스팀 자동운전 스텝번호
+            steamAutoStep: response.slice(42, 46),
+
+            // 커피 자동운전 스텝번호
+            coffeeAutoStep: response.slice(46, 50),
+
+            // 가루차 자동운전 스텝번호
+            powderTeaAutoStep: response.slice(50, 54),
+
+            // 시럽 자동운전 스텝번호
+            syrupAutoStep: response.slice(54, 58),
+
+            // 세척 자동운전 스텝번호
+            cleaningAutoStep: response.slice(58, 62),
         };
     }
 
