@@ -49,7 +49,7 @@ appServer.get('/serial-data-rd3', async (req, res) => {
 // HTTP 엔드포인트 설정 RD2 호출
 appServer.get('/serial-data-rd4', async (req, res) => {
     try {
-        const data = await serialComm.writeCommand('RD3\x0d');
+        const data = await serialComm.writeCommand('RD4\x0d');
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json(data);
     } catch (err) {
