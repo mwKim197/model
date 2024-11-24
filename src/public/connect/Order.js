@@ -91,7 +91,7 @@ Order.get('/serial-order-syrup-setting/:syrup/:pump/:hotwater/:sparkling', async
         // SCF 명령어에 URL 파라미터 값을 포함시켜 시리얼 통신
         const command = `SSR${syrup}${pump}${hotwater}${sparkling}\x0D`;
         log.info('command :' + command);
-        const data = await serialComm.writeCommand(command);
+        const data = await serialComm.writeCommand('SSR1045120130\x0D\x0A');
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json(data);
 
