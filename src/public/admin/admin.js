@@ -73,14 +73,14 @@ appServer.get('/serial-data-rd4', async (req, res) => {
 
 // 서버 시작
 server.listen(3000, () => {
-    log.info('server: http://localhost:3000');
+    log.info('server: http://localhost:3001');
 });
 
 
 
 async function fetchSerialDataRd1() {
     try {
-        const response = await fetch('http://localhost:3000/serial-data-rd1');
+        const response = await fetch('http://localhost:3001/serial-data-rd1');
         if (!response.ok) throw new Error('네트워크 응답 실패');
 
         const data = await response.json();
@@ -113,7 +113,7 @@ async function fetchSerialDataRd1() {
 
 async function fetchSerialDataRd2() {
     try {
-        const response = await fetch('http://localhost:3000/serial-data-rd2');
+        const response = await fetch('http://localhost:3001/serial-data-rd2');
         if (!response.ok) throw new Error('네트워크 응답 실패');
 
         const data = await response.json();
@@ -126,7 +126,7 @@ async function fetchSerialDataRd2() {
 
 async function fetchSerialDataRd3() {
     try {
-        const response = await fetch('http://localhost:3000/serial-data-rd3');
+        const response = await fetch('http://localhost:3001/serial-data-rd3');
         if (!response.ok) throw new Error('네트워크 응답 실패');
 
         const data = await response.json();
@@ -139,7 +139,7 @@ async function fetchSerialDataRd3() {
 
 async function fetchSerialDataRd4() {
     try {
-        const response = await fetch('http://localhost:3000/serial-data-rd4');
+        const response = await fetch('http://localhost:3001/serial-data-rd4');
         if (!response.ok) throw new Error('네트워크 응답 실패');
 
         const data = await response.json();
