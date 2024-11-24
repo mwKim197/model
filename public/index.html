@@ -43,12 +43,11 @@
             const response = await fetch('http://localhost:3000/serial-data');
             if (!response.ok) throw new Error('네트워크 응답 실패');
 
-            const rd1Data = await response.json();
-            const data = rd1Data.data;
+            const data = await response.json();
             console.log('server data:', data);
 
             // 화면에 데이터 업데이트
-            document.getElementById('data').textContent                         = data.data;
+            document.getElementById('data').textContent                         = data;
             document.getElementById('boilerTemperature').textContent            = data.boilerTemperature; // 보일러 온도
             document.getElementById('boilerHeaterStatus').textContent           = data.boilerHeaterStatus; // 히터 상태
             document.getElementById('boilerFlowRate').textContent               = data.boilerFlowRate; // 플로우미터1 유량;
