@@ -2,6 +2,7 @@ const express = require('express');
 const Serial = require('../connect/Serial'); // 새로 작성한 모듈 가져오기
 const log = require('../../logger')
 const appServer = express();
+const http = require('http');
 const server = http.createServer(appServer);
 const { ipcRenderer } = require('electron');
 
@@ -18,7 +19,6 @@ document.getElementById('goToIndex').addEventListener('click', () => {
 });
 // 시리얼 통신 부
 const cors = require('cors');
-const http = require("http");
 appServer.use(cors());
 
 // 시리얼 통신 인스턴스 생성
