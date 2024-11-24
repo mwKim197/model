@@ -2,8 +2,16 @@ const { SerialPort } = require('serialport');
 const log = require('../../logger'); // log 모듈 사용
 
 class Serial {
-    constructor(portPath, baudRate = 9600) {
+    constructor(portPath, baudRate = 9600, maxRetries = 5, retryDelay = 1000) {
         this.serialBuffer = '';
+        this.maxRetries = maxRetries; // 최대 재시도 횟수
+        this.retryDelay = retryDelay; // 재시도 간격 (밀리초)
+        this.retryCount = 0; // 현재 재시도 횟수
+        this._openPort(portPath, baudRate); // 포트 열기 시도
+    }
+
+    // 포트를 여는 함수
+    _openPort(portPath, baudRate) {
         this.port = new SerialPort({
             path: portPath,
             baudRate,
@@ -12,15 +20,25 @@ class Serial {
             stopBits: 1,
         });
 
-        if (!this.port.isOpen) {
-            log.error('Serial port is not open.');
-            return;
-        }
+        this.port.on('open', () => {
+            log.info(`Serial port opened successfully on path: ${portPath}`);
+            this.retryCount = 0; // 포트가 성공적으로 열리면 재시도 횟수 초기화
+        });
 
         this.port.on('error', (err) => {
             log.error(`serialport error: ${err.message}`);
+            if (this.retryCount < this.maxRetries) {
+                this.retryCount++;
+                log.info(`Retrying to open the port... Attempt ${this.retryCount}`);
+                setTimeout(() => {
+                    this._openPort(portPath, baudRate); // 재시도
+                }, this.retryDelay);
+            } else {
+                log.error('Max retry attempts reached. Could not open the serial port.');
+            }
         });
 
+        // 데이터 수신 이벤트 처리
         this.port.on('data', (data) => this._onDataReceived(data));
     }
 
