@@ -28,6 +28,14 @@ function createWindow() {
 
     win.loadFile(path.join(__dirname, 'public', 'index', 'index.html'));
 
+    const { ipcMain } = require('electron');
+
+// 페이지 변경 핸들러
+    ipcMain.on('navigate-to-page', (event, pageName) => {
+        const win = BrowserWindow.getFocusedWindow(); // 현재 활성화된 창
+        win.loadFile(path.join(__dirname, 'public', pageName, `${pageName}.html`));
+    });
+
 }
 
 app.whenReady().then(createWindow);

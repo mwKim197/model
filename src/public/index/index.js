@@ -1,7 +1,9 @@
 const path = require('path');
 const log = require('../../logger');
 
-// 버튼 클릭 시 admin 페이지로 이동
+const { ipcRenderer } = require('electron');
+
+// 페이지 이동 버튼
 document.getElementById('goToAdmin').addEventListener('click', () => {
-    window.location.href = '../admin/admin.html';  // 상대 경로로 이동
+    ipcRenderer.send('navigate-to-page', 'admin'); // 'admin' 페이지로 이동
 });

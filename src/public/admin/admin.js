@@ -3,9 +3,11 @@ const Serial = require('../connect/Serial'); // 새로 작성한 모듈 가져�
 const log = require('../../logger')
 const appServer = express();
 
-// 버튼 클릭 시 index 페이지로 이동
+const { ipcRenderer } = require('electron');
+
+// 페이지 이동 버튼
 document.getElementById('goToIndex').addEventListener('click', () => {
-    window.location.href = '../index/index.html';  // 상대 경로로 이동
+    ipcRenderer.send('navigate-to-page', 'index'); // 'admin' 페이지로 이동
 });
 // 시리얼 통신 부
 const cors = require('cors');
