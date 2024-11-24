@@ -14,3 +14,16 @@ sendLogToMain('error', '렌더러 에러 발생');
 document.getElementById('goToAdmin').addEventListener('click', () => {
     ipcRenderer.send('navigate-to-page', 'admin'); // 'admin' 페이지로 이동
 });
+
+document.getElementById('sendCoffeeSetting').addEventListener('click', () => {
+    fetchCoffeeInfo("045","045","100","0");
+});
+
+
+const fetchCoffeeInfo = async (grinder1, grinder2, extraction, hotwater) => {
+    const response = await fetch(`http://localhost:3000/serial-order-coffee-info/${grinder1}/${grinder2}/${extraction}/${hotwater}`);
+    const data = await response.json();
+    console.log(data);
+}
+
+

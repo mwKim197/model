@@ -18,19 +18,7 @@ server.listen(3000, () => {
     log.info('server: http://localhost:3000');
 });
 
-async function fetchSerialDataOrderCoffeInfo() {
-    try {
-        const response = await fetch('http://localhost:3000/serial-order-coffee-info');
-        if (!response.ok) throw new Error('네트워크 응답 실패');
 
-        const data = await response.json();
-        console.log('server data serial-order-coffee-info:', data);
-
-    } catch (error) {
-        console.error('데이터 가져오기 실패:', error);
-    }
-}
-setInterval(fetchSerialDataOrderCoffeInfo, 10000);
 // Electron 창 설정
 function createWindow() {
     const win = new BrowserWindow({
