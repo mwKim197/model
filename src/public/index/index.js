@@ -26,12 +26,25 @@ document.getElementById('sendCoffeeUse').addEventListener('click', () => {
 document.getElementById('sendCoffeeUse1').addEventListener('click', () => {
     fetchCoffeeUse1();
 });
+document.getElementById('sendTaeSetting').addEventListener('click', () => {
+    fetchTeaInfo("1","040","120");
+});
 
+document.getElementById('sendTeaUse').addEventListener('click', () => {
+    fetchTeaUse();
+});
+document.getElementById('sendSyrupSetting').addEventListener('click', () => {
+    fetchSyrupInfo("1","040","000","100");
+});
+
+document.getElementById('sendSyrupUse').addEventListener('click', () => {
+    fetchSyrupUse();
+});
 
 
 const fetchCoffeeInfo = async (grinder1, grinder2, extraction, hotwater) => {
     try {
-        const response = await fetch(`http://localhost:3000/serial-order-coffee-info/${grinder1}/${grinder2}/${extraction}/${hotwater}`);
+        const response = await fetch(`http://localhost:3000/serial-order-coffee-setting/${grinder1}/${grinder2}/${extraction}/${hotwater}`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -66,6 +79,74 @@ const fetchCoffeeUse = async () => {
 const fetchCoffeeUse1 = async () => {
     try {
         const response = await fetch('http://localhost:3000/serial-order-coffee-use1');
+
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('Response Data:', data);  // 디버깅용 콘솔
+        log.info(data);
+    } catch (error) {
+        console.error('Error fetching coffee info:', error);
+        log.error(error);
+    }
+}
+
+const fetchTeaInfo = async (motor, extraction, hotwater) => {
+    try {
+        const response = await fetch(`http://localhost:3000/serial-order-tea-setting/${motor}/${extraction}/${hotwater}`);
+
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('Response Data:', data);  // 디버깅용 콘솔
+        log.info(data);
+    } catch (error) {
+        console.error('Error fetching coffee info:', error);
+        log.error(error);
+    }
+}
+
+const fetchTeaUse = async () => {
+    try {
+        const response = await fetch('http://localhost:3000/serial-order-tea-use');
+
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('Response Data:', data);  // 디버깅용 콘솔
+        log.info(data);
+    } catch (error) {
+        console.error('Error fetching coffee info:', error);
+        log.error(error);
+    }
+}
+
+const fetchSyrupInfo = async (syrup, pump, hotwater, sparkling) => {
+    try {
+        const response = await fetch(`http://localhost:3000/serial-order-syrup-setting/${syrup}/${pump}/${hotwater}/${sparkling}`);
+
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('Response Data:', data);  // 디버깅용 콘솔
+        log.info(data);
+    } catch (error) {
+        console.error('Error fetching coffee info:', error);
+        log.error(error);
+    }
+}
+
+const fetchSyrupUse = async () => {
+    try {
+        const response = await fetch('http://localhost:3000/serial-order-syrup-use');
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
