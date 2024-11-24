@@ -90,7 +90,20 @@
             if (!response.ok) throw new Error('네트워크 응답 실패');
 
             const data = await response.json();
-            console.log('server data rd2:', data);
+            console.log('server data rd3:', data);
+
+        } catch (error) {
+            console.error('데이터 가져오기 실패:', error);
+        }
+    }
+
+    async function fetchSerialDataRd4() {
+        try {
+            const response = await fetch('http://localhost:3000/serial-data-rd4');
+            if (!response.ok) throw new Error('네트워크 응답 실패');
+
+            const data = await response.json();
+            console.log('server data rd4:', data);
 
         } catch (error) {
             console.error('데이터 가져오기 실패:', error);
@@ -101,6 +114,7 @@
        await fetchSerialDataRd1();
        await fetchSerialDataRd2();
        await fetchSerialDataRd3();
+       await fetchSerialDataRd4();
     }
 
     // 1초마다 폴링

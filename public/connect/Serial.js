@@ -45,6 +45,8 @@ class Serial {
                 data = this.parseSerialDataRd2(response);
             } else if (response.startsWith('RD3')) {
                 data = this.parseSerialDataRd3(response);
+            } else if (response.startsWith('RD4')) {
+                data = this.parseSerialDataRd4(response);
             }
 
             log.info('success data:', { data });
@@ -121,10 +123,6 @@ class Serial {
 
     // RD3 응답 데이터 분석
     parseSerialDataRd3(response) {
-        if (response.length !== 62) {
-            throw new Error('잘못된 응답 길이');
-        }
-
         return {
             // 핫워터 플로우 센서 카운터
             hotWaterFlowSensorCounter: parseInt(response.slice(3, 7), 10), // 1234 -> 13
@@ -182,6 +180,15 @@ class Serial {
         };
     }
 
+    parseSerialDataRd4(response) {
+        return {
+            heaterStatus: response[2] === '1' ? 'ON' : 'OFF',  // 히터(보일러) S/W 동작상태
+            chuteSensorStatus: response[3] === '1' ? 'ON' : 'OFF',  // 슈트 상승센서 동작상태
+            spare1: response.slice(4, 6),  // spare 34
+            spare2: response.slice(6, 9),  // spare 567
+            spare3: response.slice(9, 12),  // spare 89a
+        };
+    }
 
 // 커피 동작 상태 변환
      getCoffeeMode(value) {
