@@ -139,10 +139,10 @@ class Serial {
         return new Promise((resolve, reject) => {
             this.port.write(command, (err) => {
                 if (err) {
-                    log.error(`명령 전송 오류: ${err.message}`);
+                    log.error(`writeCommand error: ${err.message}`);
                     return reject(err);
                 }
-                log.info(`명령 전송 성공: ${command}`);
+                log.info(`writeCommand success: ${command}`);
 
                 // 일정 시간 후 데이터를 반환
                 setTimeout(() => {
