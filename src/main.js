@@ -8,24 +8,27 @@ const server = http.createServer(appServer);
 const Connect = require('./public/connect/Connect'); // serial 모듈
 const Order = require('./public/connect/Order'); // serial 모듈
 const Serial = require('../src/public/connect/Serial'); // 새로 작성한 모듈 가져오기
+
 const serialComm = new Serial('COM1');
-
-
 
 appServer.use((req, res, next) => {
     req.serialComm = serialComm;  // serialComm을 모든 요청에 주입
     next();
 });
 
+// 시리얼 통신 부
+const cors = require('cors');
+appServer.use(cors());
+
 // 정적 파일 제공
 appServer.use(express.static('public'));
 appServer.use(Connect);
 appServer.use(Order);
+
 // 서버 시작
 server.listen(3000, () => {
     log.info('server: http://localhost:3000');
 });
-
 
 // Electron 창 설정
 function createWindow() {
