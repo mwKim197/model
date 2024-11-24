@@ -23,6 +23,10 @@ document.getElementById('sendCoffeeUse').addEventListener('click', () => {
     fetchCoffeeUse();
 });
 
+document.getElementById('sendCoffeeUse1').addEventListener('click', () => {
+    fetchCoffeeUse1();
+});
+
 
 
 const fetchCoffeeInfo = async (grinder1, grinder2, extraction, hotwater) => {
@@ -58,5 +62,23 @@ const fetchCoffeeUse = async () => {
         log.error(error);
     }
 }
+
+const fetchCoffeeUse1 = async () => {
+    try {
+        const response = await fetch('http://localhost:3000/serial-order-coffee-use1');
+
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('Response Data:', data);  // 디버깅용 콘솔
+        log.info(data);
+    } catch (error) {
+        console.error('Error fetching coffee info:', error);
+        log.error(error);
+    }
+}
+
 
 
