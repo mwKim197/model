@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serial Data Polling</title>
+</head>
+<body>
+<h1>주문화면</h1>
+
+
+<div>
+    <button id="goToAdmin">Go to Admin</button>
+</div>
+<script src="index.js"></script>
+<script>
+    const { ipcRenderer  } = require('electron');
+
+    function sendLogToMain(level, message) {
+        ipcRenderer.send('log-to-main', { level, message });
+    }
+
+    sendLogToMain('info', '렌더러에서 보내는 정보 로그');
+    sendLogToMain('error', '렌더러 에러 발생');
+
+</script>
+</body>
+</html>

@@ -1,8 +1,9 @@
 const log = require('electron-log');
 
+
 // 로그 레벨 설정
-log.transports.file.level = 'info'; // 파일에는 info 이상만 기록
-log.transports.console.level = 'debug'; // 콘솔에는 debug 이상 기록
+//log.transports.file.level = 'info'; // 파일에는 info 이상만 기록
+//log.transports.console.level = 'debug'; // 콘솔에는 debug 이상 기록
 
 /*log.info('info 레벨 로그');
 log.debug('debug 레벨 로그');
