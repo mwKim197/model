@@ -12,14 +12,12 @@ document.getElementById('goToIndex').addEventListener('click', () => {
     ipcRenderer.send('navigate-to-page', 'index'); // 'admin' 페이지로 이동
 });
 
-
 async function fetchSerialDataRd1() {
     try {
         const response = await fetch('http://localhost:3000/serial-data-rd1');
         if (!response.ok) throw new Error('네트워크 응답 실패');
 
         const data = await response.json();
-        console.log('server data:', data);
 
         // 화면에 데이터 업데이트
         document.getElementById('data').textContent                         = data;
@@ -42,7 +40,7 @@ async function fetchSerialDataRd1() {
 
 
     } catch (error) {
-        console.error('데이터 가져오기 실패:', error);
+        sendLogToMain('error','RD1: 데이터 가져오기 실패:', error);
     }
 }
 
@@ -52,10 +50,9 @@ async function fetchSerialDataRd2() {
         if (!response.ok) throw new Error('네트워크 응답 실패');
 
         const data = await response.json();
-        console.log('server data rd2:', data);
 
     } catch (error) {
-        console.error('데이터 가져오기 실패:', error);
+        sendLogToMain('error','RD2: 데이터 가져오기 실패:', error);
     }
 }
 
@@ -63,12 +60,10 @@ async function fetchSerialDataRd3() {
     try {
         const response = await fetch('http://localhost:3000/serial-data-rd3');
         if (!response.ok) throw new Error('네트워크 응답 실패');
-
         const data = await response.json();
-        console.log('server data rd3:', data);
 
     } catch (error) {
-        console.error('데이터 가져오기 실패:', error);
+        sendLogToMain('error','RD3: 데이터 가져오기 실패:', error);
     }
 }
 
@@ -78,10 +73,9 @@ async function fetchSerialDataRd4() {
         if (!response.ok) throw new Error('네트워크 응답 실패');
 
         const data = await response.json();
-        console.log('server data rd4:', data);
 
     } catch (error) {
-        console.error('데이터 가져오기 실패:', error);
+        sendLogToMain('error','RD4: 데이터 가져오기 실패:', error);
     }
 }
 

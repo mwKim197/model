@@ -4,6 +4,7 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
+    "build:css": "npx tailwindcss -i ./src/styles/tailwind.css -o ./src/styles/output.css --watch",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "electron-builder"
   },
@@ -22,7 +23,8 @@
     "electron": "^33.2.0",
     "electron-builder": "^25.1.8",
     "electron-packager": "^17.1.2",
-    "electron-reload": "^2.0.0-alpha.1"
+    "electron-reload": "^2.0.0-alpha.1",
+    "tailwindcss": "^3.4.15"
   },
   "keywords": [],
   "author": "",

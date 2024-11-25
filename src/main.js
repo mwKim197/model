@@ -1,14 +1,13 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow} = require('electron');
 const path = require('path');
 const express = require('express');
 const http = require('http');
 const log = require('./logger');
 const appServer = express();
 const server = http.createServer(appServer);
-const Connect = require('./public/connect/Connect');
-const Order = require('./public/connect/Order');
-const Serial = require('../src/public/connect/Serial'); // 새로 작성한 모듈 가져오기
-
+const Connect = require('./connect/Connect');
+const Order = require('./connect/Order');
+const Serial = require('./connect/Serial'); // 새로 작성한 모듈 가져오기
 
 // COM1 START
 const serialCommCom1 = new Serial('COM1');
@@ -23,14 +22,10 @@ const cors = require('cors');
 appServer.use(cors());
 
 // 정적 파일 제공
-appServer.use(express.static('public'));
+appServer.use(express.static('renderer'));
 appServer.use(Connect);
 appServer.use(Order);
-
 // COM1 END
-
-
-
 
 // 서버 시작
 server.listen(3000, () => {
@@ -48,14 +43,34 @@ function createWindow() {
         },
     });
 
-    win.loadFile(path.join(__dirname, 'public', 'index', 'index.html'));
+    win.loadFile(path.join(__dirname, 'renderer', 'index', 'index.html'));
 
     const { ipcMain } = require('electron');
 
 // 페이지 변경 핸들러
     ipcMain.on('navigate-to-page', (event, pageName) => {
         const win = BrowserWindow.getFocusedWindow(); // 현재 활성화된 창
-        win.loadFile(path.join(__dirname, 'public', pageName, `${pageName}.html`));
+        win.loadFile(path.join(__dirname, 'renderer', pageName, `${pageName}.html`));
+    });
+
+    // IPC 로그 이벤트 처리
+    ipcMain.on('log-to-main', (event, { level, message }) => {
+        const timestamp = new Date().toISOString();
+
+        switch (level) {
+            case 'info':
+                log.info(`[렌더러 프로세스] ${timestamp} - ${message}`);
+                break;
+            case 'warn':
+                log.warn(`[렌더러 프로세스] ${timestamp} - ${message}`);
+                break;
+            case 'error':
+                log.error(`[렌더러 프로세스] ${timestamp} - ${message}`);
+                break;
+            default:
+                log.debug(`[렌더러 프로세스] ${timestamp} - ${message}`);
+                break;
+        }
     });
 
 }
