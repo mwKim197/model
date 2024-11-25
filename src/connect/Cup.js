@@ -24,4 +24,33 @@ Cup.get('/serial-cup-info', async (req, res) => {
     }
 });
 
+Cup.get('/serial-cup-plastic-use', async (req, res) => {
+    try {
+
+        const data = await req.serialCommCom4.writeCommand('PL\x0D');
+        log.info('Serial command response:', data); // 시리얼 응답 로그
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.json(data);
+
+    } catch (err) {
+        log.error(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
+Cup.get('/serial-cup-paper-use', async (req, res) => {
+    try {
+
+        const data = await req.serialCommCom4.writeCommand('PA\x0D');
+        log.info('Serial command response:', data); // 시리얼 응답 로그
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.json(data);
+
+    } catch (err) {
+        log.error(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
+
 module.exports = Cup;

@@ -56,6 +56,12 @@ document.getElementById('sendIceUse').addEventListener('click', () => {
 document.getElementById('sendCupInfo').addEventListener('click', () => {
     fetchCupInfo();
 });
+document.getElementById('sendCupPlUse').addEventListener('click', () => {
+    fetchCupPlUse();
+});
+document.getElementById('sendCupPaUse').addEventListener('click', () => {
+    fetchCupPaUse();
+});
 
 
 
@@ -198,6 +204,40 @@ const fetchIceUse = async () => {
 const fetchCupInfo = async () => {
     try {
         const response = await fetch('http://localhost:3000/serial-cup-info');
+
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('Response Data:', data);  // 디버깅용 콘솔
+        log.info(data);
+    } catch (error) {
+        sendLogToMain('error','Error fetching coffee info:', error);
+        log.error(error);
+    }
+}
+
+const fetchCupPlUse = async () => {
+    try {
+        const response = await fetch('http://localhost:3000/serial-cup-plastic-use');
+
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('Response Data:', data);  // 디버깅용 콘솔
+        log.info(data);
+    } catch (error) {
+        sendLogToMain('error','Error fetching coffee info:', error);
+        log.error(error);
+    }
+}
+
+const fetchCupPaUse = async () => {
+    try {
+        const response = await fetch('http://localhost:3000/serial-cup-paper-use');
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
