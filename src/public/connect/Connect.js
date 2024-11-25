@@ -1,11 +1,6 @@
 const log = require('../../logger')
 const express = require('express');
-const appServer = express();
 const Connect = express.Router();
-
-// 시리얼 통신 부
-const cors = require('cors');
-appServer.use(cors());
 
 // HTTP 엔드포인트 설정 RD1 호출
 Connect.get('/serial-data-rd1', async (req, res) => {

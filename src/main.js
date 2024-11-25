@@ -5,14 +5,16 @@ const http = require('http');
 const log = require('./logger');
 const appServer = express();
 const server = http.createServer(appServer);
-const Connect = require('./public/connect/Connect'); // serial 모듈
-const Order = require('./public/connect/Order'); // serial 모듈
+const Connect = require('./public/connect/Connect');
+const Order = require('./public/connect/Order');
 const Serial = require('../src/public/connect/Serial'); // 새로 작성한 모듈 가져오기
 
-const serialComm = new Serial('COM1');
+
+// COM1 START
+const serialCommCom1 = new Serial('COM1');
 
 appServer.use((req, res, next) => {
-    req.serialComm = serialComm;  // serialComm을 모든 요청에 주입
+    req.serialComm = serialCommCom1;  // serialComm을 모든 요청에 주입
     next();
 });
 
@@ -24,6 +26,11 @@ appServer.use(cors());
 appServer.use(express.static('public'));
 appServer.use(Connect);
 appServer.use(Order);
+
+// COM1 END
+
+
+
 
 // 서버 시작
 server.listen(3000, () => {

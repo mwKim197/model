@@ -1,11 +1,7 @@
 const log = require('../../logger')
 const express = require('express');
-const appServer = express();
 const Order = express.Router();
 
-// 시리얼 통신 부
-const cors = require('cors');
-appServer.use(cors());
 
 Order.use((req, res, next) => {
     if (!req.serialComm) {
@@ -109,7 +105,7 @@ Order.get('/serial-order-syrup-setting/:syrup/:pump/:hotwater/:sparkling', async
 Order.get('/serial-order-syrup-use', async (req, res) => {
     try {
 
-        const data = await req.serialComm.writeCommand('SSR\x0D');
+        const data = await req.serialComm.writeCommand('SYRUP\x0D');
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json(data);
 
