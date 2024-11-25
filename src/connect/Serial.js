@@ -59,7 +59,7 @@ class Serial {
 
         try {
             // response data 사이즈가 다를수있다.
-            if (response.length < 3) {
+            if (response.length < 1) {
                 throw new Error('error response');
             }
             let data;
