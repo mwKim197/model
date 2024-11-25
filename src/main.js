@@ -33,6 +33,7 @@ appServer.use(express.static('renderer'));
 appServer.use(Connect); // 연결부
 appServer.use(Order);   // 주문부
 appServer.use(Ice);   // 주문부
+appServer.use(Cup);   // 주문부
 
 // COM1 END
 
