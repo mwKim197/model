@@ -7,13 +7,20 @@ const appServer = express();
 const server = http.createServer(appServer);
 const Connect = require('./connect/Connect');
 const Order = require('./connect/Order');
+const Ice = require('./connect/Ice');
+const Cup = require('./connect/Cup');
 const Serial = require('./connect/Serial'); // 새로 작성한 모듈 가져오기
 
 // COM1 START
 const serialCommCom1 = new Serial('COM1');
+const serialCommCom3 = new Serial('COM3'); // COM3 포트 추가
+const serialCommCom4 = new Serial('COM4'); // COM3 포트 추가
 
+// Express 서버에서 serialComm을 각 포트에 맞게 사용하도록 설정
 appServer.use((req, res, next) => {
-    req.serialComm = serialCommCom1;  // serialComm을 모든 요청에 주입
+    req.serialCommCom1 = serialCommCom1;  // COM1 포트를 사용하는 시리얼 통신 객체
+    req.serialCommCom3 = serialCommCom3;  // COM3 포트를 사용하는 시리얼 통신 객체
+    req.serialCommCom4 = serialCommCom4;  // COM4 포트를 사용하는 시리얼 통신 객체
     next();
 });
 
@@ -23,8 +30,10 @@ appServer.use(cors());
 
 // 정적 파일 제공
 appServer.use(express.static('renderer'));
-appServer.use(Connect);
-appServer.use(Order);
+appServer.use(Connect); // 연결부
+appServer.use(Order);   // 주문부
+appServer.use(Ice);   // 주문부
+
 // COM1 END
 
 // 서버 시작

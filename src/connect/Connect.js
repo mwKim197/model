@@ -5,7 +5,7 @@ const Connect = express.Router();
 // HTTP 엔드포인트 설정 RD1 호출
 Connect.get('/serial-data-rd1', async (req, res) => {
     try {
-        const data = await req.serialComm.writeCommand('RD1\x0d');
+        const data = await req.serialCommCom1.writeCommand('RD1\x0d');
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json(data);
     } catch (err) {
@@ -17,7 +17,7 @@ Connect.get('/serial-data-rd1', async (req, res) => {
 // HTTP 엔드포인트 설정 RD2 호출
 Connect.get('/serial-data-rd2', async (req, res) => {
     try {
-        const data = await req.serialComm.writeCommand('RD2\x0d');
+        const data = await req.serialCommCom1.writeCommand('RD2\x0d');
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json(data);
     } catch (err) {
@@ -29,7 +29,7 @@ Connect.get('/serial-data-rd2', async (req, res) => {
 // HTTP 엔드포인트 설정 RD3 호출
 Connect.get('/serial-data-rd3', async (req, res) => {
     try {
-        const data = await req.serialComm.writeCommand('RD3\x0d');
+        const data = await req.serialCommCom1.writeCommand('RD3\x0d');
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json(data);
     } catch (err) {
@@ -41,7 +41,7 @@ Connect.get('/serial-data-rd3', async (req, res) => {
 // HTTP 엔드포인트 설정 RD4 호출
 Connect.get('/serial-data-rd4', async (req, res) => {
     try {
-        const data = await req.serialComm.writeCommand('RD4\x0d');
+        const data = await req.serialCommCom1.writeCommand('RD4\x0d');
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json(data);
     } catch (err) {

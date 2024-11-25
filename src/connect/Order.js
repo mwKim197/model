@@ -4,8 +4,8 @@ const Order = express.Router();
 
 
 Order.use((req, res, next) => {
-    if (!req.serialComm) {
-        log.error('serialComm is not initialized or unavailable');
+    if (!req.serialCommCom1) {
+        log.error('serialCommCom1 is not initialized or unavailable');
         return res.status(500).send('Serial communication is unavailable.');
     }
     next();
@@ -18,7 +18,7 @@ Order.get('/serial-order-coffee-setting/:grinder1/:grinder2/:extraction/:hotwate
         // SCF 명령어에 URL 파라미터 값을 포함시켜 시리얼 통신
         const command = `SCF${grinder1}${grinder2}${extraction}${hotwater}\x0D`;
         log.info('command :' + command);
-        const data = await req.serialComm.writeCommand(`SCF${grinder1}${grinder2}${extraction}${hotwater}\x0D`);
+        const data = await req.serialCommCom1.writeCommand(`SCF${grinder1}${grinder2}${extraction}${hotwater}\x0D`);
         log.info('Serial command response:', data); // 시리얼 응답 로그
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json(data);
@@ -31,7 +31,7 @@ Order.get('/serial-order-coffee-setting/:grinder1/:grinder2/:extraction/:hotwate
 
 Order.get('/serial-order-coffee-use', async (req, res) => {
     try {
-        const data = await req.serialComm.writeCommand('COFFEE\x0d');
+        const data = await req.serialCommCom1.writeCommand('COFFEE\x0d');
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json(data);
 
@@ -46,7 +46,7 @@ Order.get('/serial-order-coffee-use1', async (req, res) => {
 
         const command = 'COFFEE1';
         log.info('command :' + command);
-        const data = await req.serialComm.writeCommand('COFFEE1\x0d');
+        const data = await req.serialCommCom1.writeCommand('COFFEE1\x0d');
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json(data);
 
@@ -63,7 +63,7 @@ Order.get('/serial-order-tea-setting/:motor/:extraction/:hotwater', async (req, 
         // SCF 명령어에 URL 파라미터 값을 포함시켜 시리얼 통신
         const command = `SPD${motor}${extraction}${hotwater}\x0D`;
         log.info('command :' + command);
-        const data = await req.serialComm.writeCommand(command);
+        const data = await req.serialCommCom1.writeCommand(command);
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json(data);
 
@@ -75,7 +75,7 @@ Order.get('/serial-order-tea-setting/:motor/:extraction/:hotwater', async (req, 
 
 Order.get('/serial-order-tea-use', async (req, res) => {
     try {
-        const data = await req.serialComm.writeCommand('POWDER\x0D');
+        const data = await req.serialCommCom1.writeCommand('POWDER\x0D');
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json(data);
 
@@ -92,7 +92,7 @@ Order.get('/serial-order-syrup-setting/:syrup/:pump/:hotwater/:sparkling', async
         // SCF 명령어에 URL 파라미터 값을 포함시켜 시리얼 통신
         const command = `SSR${syrup}${pump}${hotwater}${sparkling}\x0D`;
         log.info('command :' + command);
-        const data = await req.serialComm.writeCommand('SSR1045120130\x0D\x0A');
+        const data = await req.serialCommCom1.writeCommand('SSR1045120130\x0D\x0A');
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json(data);
 
@@ -105,7 +105,7 @@ Order.get('/serial-order-syrup-setting/:syrup/:pump/:hotwater/:sparkling', async
 Order.get('/serial-order-syrup-use', async (req, res) => {
     try {
 
-        const data = await req.serialComm.writeCommand('SYRUP\x0D');
+        const data = await req.serialCommCom1.writeCommand('SYRUP\x0D');
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json(data);
 
