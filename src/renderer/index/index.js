@@ -53,6 +53,9 @@ document.getElementById('sendSyrupUse').addEventListener('click', () => {
 document.getElementById('sendIceUse').addEventListener('click', () => {
     fetchIceUse();
 });
+document.getElementById('sendCupInfo').addEventListener('click', () => {
+    fetchCupInfo();
+});
 
 
 
@@ -178,6 +181,23 @@ const fetchSyrupUse = async () => {
 const fetchIceUse = async () => {
     try {
         const response = await fetch('http://localhost:3000/serial-ice-info');
+
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('Response Data:', data);  // 디버깅용 콘솔
+        log.info(data);
+    } catch (error) {
+        sendLogToMain('error','Error fetching coffee info:', error);
+        log.error(error);
+    }
+}
+
+const fetchCupInfo = async () => {
+    try {
+        const response = await fetch('http://localhost:3000/serial-cup-info');
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
