@@ -50,12 +50,22 @@ class Serial {
     // 내부적으로 데이터를 처리하는 메서드
     _onDataReceived(data) {
 
-        this.serialBuffer += data.toString('ascii'); // 데이터 누적
-        log.info(`serialBuffer: ${this.serialBuffer}`);
+        log.info("data" + data);
+        console.log('Received Data (Hex):', data.toString('hex'));
+        console.log('Received Data (ASCII):', data.toString('ascii'));
 
-        if (this.serialBuffer.endsWith('\x0a')) {
-            this._processResponse();
-            this.serialBuffer = ''; // 버퍼 초기화
+        if (data.toString('hex')) {
+            this.latestData = data.toString('hex');
+        }
+
+        if (data.toString('ascii')) {
+            this.serialBuffer += data.toString('ascii'); // 데이터 누적
+            log.info(`serialBuffer: ${this.serialBuffer}`);
+
+            if (this.serialBuffer.endsWith('\x0a')) {
+                this._processResponse();
+                this.serialBuffer = ''; // 버퍼 초기화
+            }
         }
     }
 
