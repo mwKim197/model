@@ -26,7 +26,7 @@ class Serial {
         });
 
         this.port.on('error', (err) => {
-            log.error(`serialport error: ${err.message}`);
+            log.error(`serial port error: ${err.message}`);
             if (this.retryCount < this.maxRetries) {
                 this.retryCount++;
                 log.info(`Retrying to open the port... Attempt ${this.retryCount}`);
@@ -83,21 +83,21 @@ class Serial {
     // 응답 데이터 분석
     parseSerialDataRd1(response) {
         return {
-            boilerTemperature: parseInt(response.slice(3, 6), 10),      // 보일러 온도
-            boilerHeaterStatus: response[6] === '1' ? 'ON' : 'OFF',          // 히터 상태
-            boilerFlowRate: parseInt(response.slice(7, 10), 10),        // 플로우미터1 유량
-            boilerPumpStatus: response[10] === '1' ? 'ON' : 'OFF',           // 펌프 상태
-            hotWaterSolValve1: response[11] === '1' ? 'ON' : 'OFF',          // 핫워터1 솔 밸브 상태
-            hotWaterSolValve2: response[12] === '1' ? 'ON' : 'OFF',          // 핫워터2 솔 밸브 상태
-            coffeeSolValve: response[13] === '1' ? 'ON' : 'OFF',             // 커피 솔 밸브 상태
-            carbonationPressureSensor: response[14] === '1' ? 'ON' : 'OFF',  // 탄산수 압력센서
-            carbonationFlowRate: parseInt(response.slice(17, 20), 10),  // 탄산수 플로우미터 유량
-            extractionHeight: parseInt(response.slice(20, 23), 10),     // 추출기 상하 높이
+            boilerTemperature: parseInt(response.slice(3, 6), 10),       // 보일러 온도
+            boilerHeaterStatus: response[6] === '1' ? 'ON' : 'OFF',           // 히터 상태
+            boilerFlowRate: parseInt(response.slice(7, 10), 10),         // 플로우미터1 유량
+            boilerPumpStatus: response[10] === '1' ? 'ON' : 'OFF',            // 펌프 상태
+            hotWaterSolValve1: response[11] === '1' ? 'ON' : 'OFF',           // 핫워터1 솔 밸브 상태
+            hotWaterSolValve2: response[12] === '1' ? 'ON' : 'OFF',           // 핫워터2 솔 밸브 상태
+            coffeeSolValve: response[13] === '1' ? 'ON' : 'OFF',              // 커피 솔 밸브 상태
+            carbonationPressureSensor: response[14] === '1' ? 'ON' : 'OFF',   // 탄산수 압력센서
+            carbonationFlowRate: parseInt(response.slice(17, 20), 10),   // 탄산수 플로우미터 유량
+            extractionHeight: parseInt(response.slice(20, 23), 10),      // 추출기 상하 높이
             grinderMotor1: response[26] === '1' ? 'ON' : 'OFF',               // 그라인더 모터1
             grinderMotor2: response[27] === '1' ? 'ON' : 'OFF',               // 그라인더 모터2
             coffeeMode: this.getCoffeeMode(response[35]),                     // 커피 동작 상태
             cupSensor: response[37] === '1' ? '있음' : '없음',                  // 컵 센서
-            waterAlarm: response[38] === '1' ? '물없음' : '정상',                // 물 없음 알람
+            waterAlarm: response[38] === '1' ? '물없음' : '정상',               // 물 없음 알람
             ledStatus: response[41] === '1' ? 'ON' : response[41] === '2' ? 'BLINK' : 'OFF' // LED 상태
         };
     }
