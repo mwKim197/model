@@ -25,8 +25,11 @@ document.getElementById('goToTest').addEventListener('click', () => {
 });
 
 
-document.getElementById('sendCoffeeSetting').addEventListener('click', () => {
-    fetchCoffeeInfo("000","010","100","000");
+document.getElementById('sendCoffeeUse1Setting').addEventListener('click', () => {
+    fetchCoffeeInfo("045","000","110","000");
+});
+document.getElementById('sendCoffeeUse2Setting').addEventListener('click', () => {
+    fetchCoffeeInfo("000","045","110","140");
 });
 
 document.getElementById('sendCoffeeUse').addEventListener('click', () => {
@@ -50,8 +53,11 @@ document.getElementById('sendSyrupSetting').addEventListener('click', () => {
 document.getElementById('sendSyrupUse').addEventListener('click', () => {
     fetchSyrupUse();
 });
-document.getElementById('sendIceUse').addEventListener('click', () => {
-    fetchIceUse();
+document.getElementById('sendWaterTime').addEventListener('click', () => {
+    fetchWaterTime();
+});
+document.getElementById('sendIceTime').addEventListener('click', () => {
+    fetchIceTime();
 });
 document.getElementById('sendCupInfo').addEventListener('click', () => {
     fetchCupInfo();
@@ -184,9 +190,26 @@ const fetchSyrupUse = async () => {
     }
 }
 
-const fetchIceUse = async () => {
+const fetchWaterTime = async () => {
     try {
-        const response = await fetch('http://localhost:3000/serial-ice-info');
+        const response = await fetch('http://localhost:3000/serial-warter-time');
+
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('Response Data:', data);  // 디버깅용 콘솔
+        log.info(data);
+    } catch (error) {
+        sendLogToMain('error','Error fetching coffee info:', error);
+        log.error(error);
+    }
+}
+
+const fetchIceTime = async () => {
+    try {
+        const response = await fetch('http://localhost:3000/serial-ice-time');
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
