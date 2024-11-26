@@ -38,8 +38,9 @@ appServer.use(Cup);   // 주문부
 // COM1 END
 
 // 서버 시작
-server.listen(3000, () => {
+server.listen(3000, '0.0.0.0',() => {
     log.info('server: http://localhost:3000');
+    log.info('server: http://0.0.0.0:3000');
 });
 
 // Electron 창 설정

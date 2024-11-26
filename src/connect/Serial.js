@@ -38,12 +38,18 @@ class Serial {
             }
         });
 
+        this.port.on('data', (data) => {
+            console.log('Received Raw Data:', data.toString('hex')); // 데이터 로그
+            console.log('Received ASCII Data:', data.toString('ascii')); // ASCII로 출력
+        });
+
         // 데이터 수신 이벤트 처리
         this.port.on('data', (data) => this._onDataReceived(data));
     }
 
     // 내부적으로 데이터를 처리하는 메서드
     _onDataReceived(data) {
+
         this.serialBuffer += data.toString('ascii'); // 데이터 누적
         log.info(`serialBuffer: ${this.serialBuffer}`);
 
