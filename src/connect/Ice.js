@@ -26,12 +26,10 @@ Ice.get('/serial-ice-info', async (req, res) => {
         // 패킷 조립
         const packet = Buffer.from([stx, id, len, cmd, data, crc, etx]);
 
-        console.log('Sending Packet:', packet);
+        log.info('Sending Packet:', packet);
 
-        const command = `${packet}`;
-        log.info('command :' + command);
-        const response = await req.serialCommCom3.writeCommand(command);
-        log.info('Serial command response:', data); // 시리얼 응답 로그
+        const response = await req.serialCommCom3.writeCommand(packet);
+        log.info('Serial command response:', response); // 시리얼 응답 로그
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json(data);
 
