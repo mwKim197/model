@@ -47,29 +47,53 @@ class Serial {
         this.port.on('data', (data) => this._onDataReceived(data));
     }
 
+    // Hex 데이터 여부 판별
+    isHexData(data) {
+        // 예: 특정 길이나 데이터 패턴으로 판별 (환경에 맞게 수정)
+        return !data.toString('ascii').match(/^[\x20-\x7E]*$/); // 비ASCII 데이터일 경우
+    }
+
+
     // 내부적으로 데이터를 처리하는 메서드
     _onDataReceived(data) {
 
-        log.info("data" + data);
-        console.log('Received Data (Hex):', data.toString('hex'));
-        console.log('Received Data (ASCII):', data.toString('ascii'));
-
-        if (data.toString('hex')) {
-            this.latestData = data.toString('hex');
-        }
-
-        if (data.toString('ascii')) {
+        // Hex 데이터 처리 (필요에 따라 조건 변경)
+        if (this.isHexData(data)) {
+            this._processHexData(data);
+        } else {
+            // ASCII 데이터 처리
             this.serialBuffer += data.toString('ascii'); // 데이터 누적
             log.info(`serialBuffer: ${this.serialBuffer}`);
 
-            if (this.serialBuffer.endsWith('\x0a')) {
+            if (this.serialBuffer.endsWith('\x0a')) { // ASCII 데이터 종료 조건
                 this._processResponse();
                 this.serialBuffer = ''; // 버퍼 초기화
             }
         }
     }
 
-    // 응답 데이터 처리
+    // Hex 데이터 처리
+    _processHexData(data) {
+        try {
+            const hexString = data.toString('hex'); // Hex로 변환
+            log.info(`Processing Hex Data: ${hexString}`);
+            // Hex 데이터 분석 로직 추가
+            this.latestData = this.parseHexData(hexString);
+        } catch (err) {
+            log.error(`Hex 데이터 처리 실패: ${err.message}`);
+        }
+    }
+
+    // Hex 데이터 분석 메서드
+    parseHexData(hexString) {
+        // 예: 특정 프로토콜에 따라 데이터 파싱
+        return {
+            field1: parseInt(hexString.slice(0, 4), 16), // 예: 16진수 -> 정수 변환
+            field2: hexString.slice(4, 8),              // 예: Hex 문자열로 유지
+        };
+    }
+
+    //  ascii 응답 데이터 처리
     _processResponse() {
         const response = this.serialBuffer.trim();
 
