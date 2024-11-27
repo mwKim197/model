@@ -56,55 +56,54 @@ class Serial {
     }
 
 
+    // 데이터 리시브
     _onDataReceived(data) {
-        if (this.isHexData(data)) {
-            // Hex 데이터 처리
-            this.hexBuffer += data.toString('hex'); // Hex 데이터 누적
-            log.info(`Hex Buffer: ${this.hexBuffer}`);
+        // 수신된 데이터를 rawBuffer에 누적
+        this.rawBuffer += data.toString('hex'); // HEX 형식으로 변환하여 누적
 
-            if (this._isHexComplete(this.hexBuffer)) {
-                this._processHexData(this.hexBuffer); // Hex 데이터 처리
-                this.hexBuffer = ''; // 버퍼 초기화
-            }
-        } else {
-            // ASCII 데이터 처리
-            this.asciiBuffer += data.toString('ascii'); // ASCII 데이터 누적
-            log.info(`ASCII Buffer: ${this.asciiBuffer}`);
+        // HEX 패킷 처리
+        while (this._isHexComplete(Buffer.from(this.rawBuffer, 'hex'))) {
+            const hexPacket = this.rawBuffer.slice(0, 14); // HEX 패킷 길이에 맞게 추출
+            this._processHexData(Buffer.from(hexPacket, 'hex')); // 패킷 처리
+            this.rawBuffer = this.rawBuffer.slice(14); // 사용한 패킷 제거
+        }
 
-            if (this.asciiBuffer.endsWith('\x0a')) { // ASCII 데이터 종료 조건
-                this._processResponse(this.asciiBuffer); // ASCII 데이터 처리
-                this.asciiBuffer = ''; // 버퍼 초기화
-            }
+        // ASCII 패킷 처리
+        this.asciiBuffer += data.toString('ascii'); // ASCII 형식으로 누적
+        log.info(`asciiBuffer: ${this.asciiBuffer}`);
+
+        // ASCII 데이터 처리
+        while (this.asciiBuffer.includes('\n')) {
+            const newlineIndex = this.asciiBuffer.indexOf('\n');
+            const asciiPacket = this.asciiBuffer.slice(0, newlineIndex + 1).trim(); // 줄 단위로 추출
+            this._processAsciiData(asciiPacket); // ASCII 처리
+            this.asciiBuffer = this.asciiBuffer.slice(newlineIndex + 1); // 사용한 데이터 제거
         }
     }
     
     // Hex 데이터 검증
     _isHexComplete(hexBuffer) {
-        // 최소 패킷 길이 확인 (STX + ID + Length + Command + Data + CRC + ETX)
         if (hexBuffer.length < 7) {
-            return false; // 최소 길이를 충족하지 않으면 패킷이 완전하지 않음
+            return false; // 최소 길이 확인
         }
 
-        // STX와 ETX 확인
-        const stx = hexBuffer.charCodeAt(0); // 첫 번째 바이트
-        const etx = hexBuffer.charCodeAt(hexBuffer.length - 1); // 마지막 바이트
+        const stx = hexBuffer[0];
+        const etx = hexBuffer[hexBuffer.length - 1];
         if (stx !== 0x02 || etx !== 0x03) {
-            return false; // STX와 ETX가 없으면 패킷이 유효하지 않음
+            return false; // STX, ETX 확인
         }
 
-        // length 검증
-        const expectedLength = 1 + 1 + 1 + length + 1; // STX + ID + Length + Payload + ETX
-        if (hexBuffer.length !== expectedLength) {
-            return false;
+        const length = hexBuffer[2];
+        if (hexBuffer.length !== length + 2) {
+            return false; // Length 필드와 실제 길이 비교
         }
 
-        // CRC 확인 (선택 사항)
-        const id = hexBuffer.charCodeAt(1); // 두 번째 바이트가 ID
-        const cmd = hexBuffer.charCodeAt(3); // 네 번째 바이트가 Command
-        const data = hexBuffer.charCodeAt(4); // 다섯 번째 바이트가 Data
-        const crc = hexBuffer.charCodeAt(5); // 여섯 번째 바이트가 CRC
+        const id = hexBuffer[1];
+        const cmd = hexBuffer[3];
+        const data = hexBuffer[4];
+        const crc = hexBuffer[5];
 
-        // 검증완료시 true
+        // 유효한 HEX 패킷 인지 검증
         return crc === (id ^ length ^ cmd ^ data);
     }
 
@@ -129,32 +128,42 @@ class Serial {
         };
     }
 
-    //  ascii 응답 데이터 처리
-    _processResponse() {
-        const response = this.asciiBuffer.trim();
+    // ascii 응답데이터 처리
+    _processAsciiData(asciiPacket) {
+        log.info(`Processing ASCII data: ${asciiPacket}`);
 
-        try {
-            // response data 사이즈가 다를수있다.
-            if (response.length < 1) {
-                throw new Error('error response');
+        // ASCII 데이터 추가 처리 로직
+        if (asciiPacket.match(/^[a-zA-Z0-9\s]*$/)) {
+            log.info(`Valid ASCII data: ${asciiPacket}`);
+            const asciiPacket = this.asciiBuffer.trim();
+
+            try {
+                // response data 사이즈가 다를수있다.
+                if (asciiPacket.length < 1) {
+                    throw new Error('error response');
+                }
+                let data;
+                if (asciiPacket.startsWith('RD1')) {
+                    data = this.parseSerialDataRd1(asciiPacket);
+                } else if (asciiPacket.startsWith('RD2')) {
+                    data = this.parseSerialDataRd2(asciiPacket);
+                } else if (asciiPacket.startsWith('RD3')) {
+                    data = this.parseSerialDataRd3(asciiPacket);
+                } else if (asciiPacket.startsWith('RD4')) {
+                    data = this.parseSerialDataRd4(asciiPacket);
+                } else {
+                    data= asciiPacket;
+                }
+                this.latestData = data ;
+            } catch (err) {
+                log.error(`응답 처리 실패: ${err.message}`);
             }
-            let data;
-            if (response.startsWith('RD1')) {
-                data = this.parseSerialDataRd1(response);
-            } else if (response.startsWith('RD2')) {
-                data = this.parseSerialDataRd2(response);
-            } else if (response.startsWith('RD3')) {
-                data = this.parseSerialDataRd3(response);
-            } else if (response.startsWith('RD4')) {
-                data = this.parseSerialDataRd4(response);
-            } else {
-                data= response;
-            }
-            this.latestData = data ;
-        } catch (err) {
-            log.error(`응답 처리 실패: ${err.message}`);
+            
+        } else {
+            log.warn(`Unexpected ASCII data: ${asciiPacket}`);
         }
     }
+
 
     // 응답 데이터 분석
     parseSerialDataRd1(response) {
