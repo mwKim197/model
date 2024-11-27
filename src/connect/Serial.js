@@ -54,18 +54,17 @@ class Serial {
         log.info("HEX ?:" + /^[\x00-\x1F\x80-\xFF]*$/.test(data.toString('ascii'))); // ASCII로 변환 불가한 데이터는 Hex);
         return /^[\x00-\x1F\x80-\xFF]*$/.test(data.toString('ascii')); // ASCII로 변환 불가한 데이터는 Hex // 비ASCII 데이터일 경우
     }
-
-
+    
     // 데이터 리시브
     _onDataReceived(data) {
-        // 수신된 데이터를 rawBuffer에 누적
-        this.rawBuffer += data.toString('hex'); // HEX 형식으로 변환하여 누적
+        // 수신된 데이터를 hexBuffer에 누적
+        this.hexBuffer += data.toString('hex'); // HEX 형식으로 변환하여 누적
 
         // HEX 패킷 처리
-        while (this._isHexComplete(Buffer.from(this.rawBuffer, 'hex'))) {
-            const hexPacket = this.rawBuffer.slice(0, 14); // HEX 패킷 길이에 맞게 추출
+        while (this._isHexComplete(Buffer.from(this.hexBuffer, 'hex'))) {
+            const hexPacket = this.hexBuffer.slice(0, 14); // HEX 패킷 길이에 맞게 추출
             this._processHexData(Buffer.from(hexPacket, 'hex')); // 패킷 처리
-            this.rawBuffer = this.rawBuffer.slice(14); // 사용한 패킷 제거
+            this.hexBuffer = this.hexBuffer.slice(14); // 사용한 패킷 제거
         }
 
         // ASCII 패킷 처리
