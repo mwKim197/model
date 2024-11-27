@@ -61,7 +61,7 @@ class Serial {
         while (this._isHexComplete(hexBuffer)) {
             const hexPacket = this.hexBuffer.slice(0, 14); // HEX 패킷 길이에 맞게 추출
             this._processHexData(Buffer.from(hexPacket, 'hex')); // 패킷 처리
-            this.hexBuffer = this.hexBuffer.slice(14); // 사용한 패킷 제거
+            this.hexBuffer =''; // 사용한 패킷 제거
         }
 
         // ASCII 패킷 처리
@@ -94,7 +94,7 @@ class Serial {
         }
 
         // 수신된 데이터(hexBuffer) 출력
-        console.log("hexBuffer:", hexBuffer.toString('hex'));
+        console.log("hexBuffer:", hexBuffer.toString('hex')); // 02 01 07 04 05 00 03
         // Length 필드 확인
         const length = hexBuffer[2]; // 세 번째 바이트가 Length
         console.log("Length field:", length); // Length 필드 값 출력
