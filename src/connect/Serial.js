@@ -94,13 +94,23 @@ class Serial {
         }
 
         // Length 필드 확인
+        // 수신된 데이터(hexBuffer) 출력
+        console.log("hexBuffer:", hexBuffer.toString('hex'));
+
+        // Length 필드 확인
         const length = hexBuffer[2]; // 세 번째 바이트가 Length
-        // 실제 길이는 Length 필드 값 + STX(1바이트) + ETX(1바이트)
-        if (hexBuffer.length !== length + 2) { // 실제 길이와 Length 필드 값 비교 (STX + ETX 포함)
+        console.log("Length field:", length); // Length 필드 값 출력
+
+        // 패킷 길이 계산
+        const expectedLength = length + 2; // Length 필드 값 + STX(1바이트) + ETX(1바이트)
+        console.log("Expected packet length:", expectedLength);
+        console.log("Actual hexBuffer length:", hexBuffer.length);
+
+        // 길이 비교
+        if (hexBuffer.length !== expectedLength) {
             console.log('Invalid packet: Length mismatch');
             return false; // 실제 길이와 Length 필드 값이 다르면 패킷 불완전
         }
-
         // CRC 확인 (선택 사항)
         const id = hexBuffer[1]; // 두 번째 바이트가 ID
         const cmd = hexBuffer[3]; // 네 번째 바이트가 Command
