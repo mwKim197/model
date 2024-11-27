@@ -58,7 +58,7 @@ class Serial {
         // 문자열이 올바른 HEX 형식일 경우 Buffer로 변환
         const hexBuffer = Buffer.from(this.hexBuffer, 'hex');
         // HEX 패킷 처리
-        while (this._isHexComplete(hexBuffer)) {
+        if (this._isHexComplete(hexBuffer)) {
             const hexPacket = this.hexBuffer.slice(0, 14); // HEX 패킷 길이에 맞게 추출
             this._processHexData(Buffer.from(hexPacket, 'hex')); // 패킷 처리
             this.hexBuffer =''; // 사용한 패킷 제거
