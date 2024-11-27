@@ -52,12 +52,15 @@ class Serial {
 // 데이터 리시브
     _onDataReceived(data) {
         // 수신된 데이터를 hexBuffer에 누적
-        //this.hexBuffer += data.toString('hex'); // HEX 형식으로 변환하여 누적
-        this.hexBuffer = Buffer.concat([this.hexBuffer, data]);
+        // 수신된 데이터를 HEX 문자열로 누적
+        this.hexBuffer += data.toString('hex');
 
-        log.info("!!!!!!!!!" + this._isHexComplete(Buffer.from(this.hexBuffer, 'hex')));
+        // 문자열이 올바른 HEX 형식일 경우 Buffer로 변환
+        const hexBuffer = Buffer.from(this.hexBuffer, 'hex');
+        log.info("hexBuffer  " + hexBuffer);
+        log.info("!!!!!!!!!" + this._isHexComplete(hexBuffer));
         // HEX 패킷 처리
-        while (this._isHexComplete(this.hexBuffer)) {
+        while (this._isHexComplete(hexBuffer)) {
             const hexPacket = this.hexBuffer.slice(0, 14); // HEX 패킷 길이에 맞게 추출
             this._processHexData(Buffer.from(hexPacket, 'hex')); // 패킷 처리
             this.hexBuffer = this.hexBuffer.slice(14); // 사용한 패킷 제거
