@@ -99,13 +99,8 @@ class Serial {
         const length = hexBuffer[2]; // 세 번째 바이트가 Length
         console.log("Length field:", length); // Length 필드 값 출력
 
-        // 패킷 길이 계산 (Length + STX + ID + Command + Data + CRC + ETX)
-        const expectedLength = length + 6; // Length + STX(1바이트) + ID(1바이트) + Command(1바이트) + CRC(1바이트) + ETX(1바이트)
-        console.log("Expected packet length:", expectedLength);
-        console.log("Actual hexBuffer length:", hexBuffer.length);
-
         // 길이 비교
-        if (hexBuffer.length !== expectedLength) {
+        if (hexBuffer.length !== length) {
             console.log('Invalid packet: Length mismatch');
             return false; // 실제 길이와 Length 필드 값이 다르면 패킷 불완전
         }
