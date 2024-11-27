@@ -105,20 +105,6 @@ class Serial {
             return false; // 실제 길이와 Length 필드 값이 다르면 패킷 불완전
         }
 
-        // CRC 확인 (선택 사항)
-        const id = hexBuffer[1]; // 두 번째 바이트가 ID
-        const cmd = hexBuffer[3]; // 네 번째 바이트가 Command
-        const data = hexBuffer[4]; // 다섯 번째 바이트가 Data
-        const crc = hexBuffer[5]; // 여섯 번째 바이트가 CRC
-
-        // CRC 계산 (XOR)
-        const calculatedCrc = id ^ length ^ cmd ^ data;
-
-        if (crc !== calculatedCrc) {
-            console.log('Invalid packet: CRC mismatch');
-            return false; // CRC 검증 실패
-        }
-
         return true; // 모든 조건 충족 시 패킷 완전
     }
 
