@@ -26,10 +26,10 @@ Ice.get('/serial-water-time', async (req, res) => {
         // 패킷 조립
         const packet = Buffer.from([stx, id, len, cmd, data, crc, etx]);
 
-        log.info('Sending Packet:', packet);
+        log.info('water-time: Sending Packet:', packet);
 
         const response = await req.serialCommCom3.writeCommand(packet);
-        log.info('Serial command response:', response); // 시리얼 응답 로그
+        log.info('water-time command response:', response); // 시리얼 응답 로그
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json(data);
 
@@ -55,10 +55,10 @@ Ice.get('/serial-ice-time', async (req, res) => {
         // 패킷 조립
         const packet = Buffer.from([stx, id, len, cmd, data, crc, etx]);
 
-        log.info('Sending Packet:', packet);
+        log.info('ice-time: Sending Packet:', packet);
 
         const response = await req.serialCommCom3.writeCommand(packet);
-        log.info('Serial command response:', response); // 시리얼 응답 로그
+        log.info('ice-time command response:', response); // 시리얼 응답 로그
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json(data);
 

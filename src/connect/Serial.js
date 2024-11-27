@@ -3,7 +3,8 @@ const log = require('../logger'); // log 모듈 사용
 
 class Serial {
     constructor(portPath, baudRate = 9600, maxRetries = 5, retryDelay = 1000) {
-        this.serialBuffer = '';
+        this.hexBuffer = '';
+        this.asciiBuffer = '';
         this.maxRetries = maxRetries; // 최대 재시도 횟수
         this.retryDelay = retryDelay; // 재시도 간격 (밀리초)
         this.retryCount = 0; // 현재 재시도 횟수
@@ -50,26 +51,61 @@ class Serial {
     // Hex 데이터 여부 판별
     isHexData(data) {
         // 예: 특정 길이나 데이터 패턴으로 판별 (환경에 맞게 수정)
-        return !data.toString('ascii').match(/^[\x20-\x7E]*$/); // 비ASCII 데이터일 경우
+        log.info("HEX ?:" + /^[\x00-\x1F\x80-\xFF]*$/.test(data.toString('ascii'))); // ASCII로 변환 불가한 데이터는 Hex);
+        return /^[\x00-\x1F\x80-\xFF]*$/.test(data.toString('ascii')); // ASCII로 변환 불가한 데이터는 Hex // 비ASCII 데이터일 경우
     }
 
 
-    // 내부적으로 데이터를 처리하는 메서드
     _onDataReceived(data) {
-
-        // Hex 데이터 처리 (필요에 따라 조건 변경)
         if (this.isHexData(data)) {
-            this._processHexData(data);
+            // Hex 데이터 처리
+            this.hexBuffer += data.toString('hex'); // Hex 데이터 누적
+            log.info(`Hex Buffer: ${this.hexBuffer}`);
+
+            if (this._isHexComplete(this.hexBuffer)) {
+                this._processHexData(this.hexBuffer); // Hex 데이터 처리
+                this.hexBuffer = ''; // 버퍼 초기화
+            }
         } else {
             // ASCII 데이터 처리
-            this.serialBuffer += data.toString('ascii'); // 데이터 누적
-            log.info(`serialBuffer: ${this.serialBuffer}`);
+            this.asciiBuffer += data.toString('ascii'); // ASCII 데이터 누적
+            log.info(`ASCII Buffer: ${this.asciiBuffer}`);
 
-            if (this.serialBuffer.endsWith('\x0a')) { // ASCII 데이터 종료 조건
-                this._processResponse();
-                this.serialBuffer = ''; // 버퍼 초기화
+            if (this.asciiBuffer.endsWith('\x0a')) { // ASCII 데이터 종료 조건
+                this._processResponse(this.asciiBuffer); // ASCII 데이터 처리
+                this.asciiBuffer = ''; // 버퍼 초기화
             }
         }
+    }
+    
+    // Hex 데이터 검증
+    _isHexComplete(hexBuffer) {
+        // 최소 패킷 길이 확인 (STX + ID + Length + Command + Data + CRC + ETX)
+        if (hexBuffer.length < 7) {
+            return false; // 최소 길이를 충족하지 않으면 패킷이 완전하지 않음
+        }
+
+        // STX와 ETX 확인
+        const stx = hexBuffer.charCodeAt(0); // 첫 번째 바이트
+        const etx = hexBuffer.charCodeAt(hexBuffer.length - 1); // 마지막 바이트
+        if (stx !== 0x02 || etx !== 0x03) {
+            return false; // STX와 ETX가 없으면 패킷이 유효하지 않음
+        }
+
+        // length 검증
+        const expectedLength = 1 + 1 + 1 + length + 1; // STX + ID + Length + Payload + ETX
+        if (hexBuffer.length !== expectedLength) {
+            return false;
+        }
+
+        // CRC 확인 (선택 사항)
+        const id = hexBuffer.charCodeAt(1); // 두 번째 바이트가 ID
+        const cmd = hexBuffer.charCodeAt(3); // 네 번째 바이트가 Command
+        const data = hexBuffer.charCodeAt(4); // 다섯 번째 바이트가 Data
+        const crc = hexBuffer.charCodeAt(5); // 여섯 번째 바이트가 CRC
+
+        // 검증완료시 true
+        return crc === (id ^ length ^ cmd ^ data);
     }
 
     // Hex 데이터 처리
@@ -95,7 +131,7 @@ class Serial {
 
     //  ascii 응답 데이터 처리
     _processResponse() {
-        const response = this.serialBuffer.trim();
+        const response = this.asciiBuffer.trim();
 
         try {
             // response data 사이즈가 다를수있다.
