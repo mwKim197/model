@@ -64,6 +64,7 @@ class Serial {
             this.hexBuffer =''; // 사용한 패킷 제거
         }
 
+
         // ASCII 패킷 처리
         this.asciiBuffer += data.toString('ascii'); // ASCII 형식으로 누적
         log.info(`asciiBuffer: ${this.asciiBuffer}`);
