@@ -111,6 +111,7 @@ class Serial {
             console.log('Invalid packet: Length mismatch');
             return false; // 실제 길이와 Length 필드 값이 다르면 패킷 불완전
         }
+
         // CRC 확인 (선택 사항)
         const id = hexBuffer[1]; // 두 번째 바이트가 ID
         const cmd = hexBuffer[3]; // 네 번째 바이트가 Command
@@ -155,7 +156,7 @@ class Serial {
 
         // ASCII 데이터 추가 처리 로직
         if (asciiPacket.match(/^[a-zA-Z0-9\s]*$/)) {
-            log.info(`Valid ASCII data: ${asciiPacket}`);
+
             const asciiPacket = this.asciiBuffer.trim();
 
             try {
