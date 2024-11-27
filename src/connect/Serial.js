@@ -57,8 +57,6 @@ class Serial {
 
         // 문자열이 올바른 HEX 형식일 경우 Buffer로 변환
         const hexBuffer = Buffer.from(this.hexBuffer, 'hex');
-        log.info("hexBuffer  " + hexBuffer);
-        log.info("!!!!!!!!!" + this._isHexComplete(hexBuffer));
         // HEX 패킷 처리
         while (this._isHexComplete(hexBuffer)) {
             const hexPacket = this.hexBuffer.slice(0, 14); // HEX 패킷 길이에 맞게 추출
@@ -97,7 +95,8 @@ class Serial {
 
         // Length 필드 확인
         const length = hexBuffer[2]; // 세 번째 바이트가 Length
-        if (hexBuffer.length !== length + 3) { // Length + STX + ETX 길이 확인
+        // 실제 길이는 Length 필드 값 + STX(1바이트) + ETX(1바이트)
+        if (hexBuffer.length !== length + 2) { // 실제 길이와 Length 필드 값 비교 (STX + ETX 포함)
             console.log('Invalid packet: Length mismatch');
             return false; // 실제 길이와 Length 필드 값이 다르면 패킷 불완전
         }
