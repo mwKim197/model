@@ -95,13 +95,12 @@ class Serial {
 
         // 수신된 데이터(hexBuffer) 출력
         console.log("hexBuffer:", hexBuffer.toString('hex'));
-
         // Length 필드 확인
         const length = hexBuffer[2]; // 세 번째 바이트가 Length
         console.log("Length field:", length); // Length 필드 값 출력
 
-        // 패킷 길이 계산 (Length + STX + ETX)
-        const expectedLength = length + 3; // Length + STX(1바이트) + ETX(1바이트) + 데이터(1바이트)
+        // 패킷 길이 계산 (Length + STX + ID + Command + Data + CRC + ETX)
+        const expectedLength = length + 6; // Length + STX(1바이트) + ID(1바이트) + Command(1바이트) + CRC(1바이트) + ETX(1바이트)
         console.log("Expected packet length:", expectedLength);
         console.log("Actual hexBuffer length:", hexBuffer.length);
 
