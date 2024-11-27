@@ -49,17 +49,13 @@ class Serial {
     }
 
     // Hex 데이터 여부 판별
-    isHexData(data) {
-        // 예: 특정 길이나 데이터 패턴으로 판별 (환경에 맞게 수정)
-        log.info("HEX ?:" + /^[\x00-\x1F\x80-\xFF]*$/.test(data.toString('ascii'))); // ASCII로 변환 불가한 데이터는 Hex);
-        return /^[\x00-\x1F\x80-\xFF]*$/.test(data.toString('ascii')); // ASCII로 변환 불가한 데이터는 Hex // 비ASCII 데이터일 경우
-    }
-    
-    // 데이터 리시브
+// 데이터 리시브
     _onDataReceived(data) {
         // 수신된 데이터를 hexBuffer에 누적
         this.hexBuffer += data.toString('hex'); // HEX 형식으로 변환하여 누적
 
+
+        log.info("!!!!!!!!!" + this._isHexComplete(Buffer.from(this.hexBuffer, 'hex')));
         // HEX 패킷 처리
         while (this._isHexComplete(Buffer.from(this.hexBuffer, 'hex'))) {
             const hexPacket = this.hexBuffer.slice(0, 14); // HEX 패킷 길이에 맞게 추출
@@ -82,28 +78,42 @@ class Serial {
     
     // Hex 데이터 검증
     _isHexComplete(hexBuffer) {
+        // 최소 패킷 길이 확인 (STX + ID + Length + Command + Data + CRC + ETX)
         if (hexBuffer.length < 7) {
-            return false; // 최소 길이 확인
+            console.log('Invalid packet: Length is too short');
+            return false; // 최소 길이를 충족하지 않으면 패킷이 완전하지 않음
         }
 
-        const stx = hexBuffer[0];
-        const etx = hexBuffer[hexBuffer.length - 1];
+        // STX와 ETX 확인
+        const stx = hexBuffer[0]; // 첫 번째 바이트 (STX)
+        const etx = hexBuffer[hexBuffer.length - 1]; // 마지막 바이트 (ETX)
         if (stx !== 0x02 || etx !== 0x03) {
-            return false; // STX, ETX 확인
+            console.log('Invalid packet: Missing STX or ETX');
+            return false; // STX와 ETX가 없으면 패킷이 유효하지 않음
         }
 
-        const length = hexBuffer[2];
-        if (hexBuffer.length !== length + 2) {
-            return false; // Length 필드와 실제 길이 비교
+        // Length 필드 확인
+        const length = hexBuffer[2]; // 세 번째 바이트가 Length
+        if (hexBuffer.length !== length + 3) { // Length + STX + ETX 길이 확인
+            console.log('Invalid packet: Length mismatch');
+            return false; // 실제 길이와 Length 필드 값이 다르면 패킷 불완전
         }
 
-        const id = hexBuffer[1];
-        const cmd = hexBuffer[3];
-        const data = hexBuffer[4];
-        const crc = hexBuffer[5];
+        // CRC 확인 (선택 사항)
+        const id = hexBuffer[1]; // 두 번째 바이트가 ID
+        const cmd = hexBuffer[3]; // 네 번째 바이트가 Command
+        const data = hexBuffer[4]; // 다섯 번째 바이트가 Data
+        const crc = hexBuffer[5]; // 여섯 번째 바이트가 CRC
 
-        // 유효한 HEX 패킷 인지 검증
-        return crc === (id ^ length ^ cmd ^ data);
+        // CRC 계산 (XOR)
+        const calculatedCrc = id ^ length ^ cmd ^ data;
+
+        if (crc !== calculatedCrc) {
+            console.log('Invalid packet: CRC mismatch');
+            return false; // CRC 검증 실패
+        }
+
+        return true; // 모든 조건 충족 시 패킷 완전
     }
 
     // Hex 데이터 처리
