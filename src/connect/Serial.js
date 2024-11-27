@@ -93,7 +93,6 @@ class Serial {
             return false; // STX와 ETX가 없으면 패킷이 유효하지 않음
         }
 
-        // Length 필드 확인
         // 수신된 데이터(hexBuffer) 출력
         console.log("hexBuffer:", hexBuffer.toString('hex'));
 
@@ -101,8 +100,8 @@ class Serial {
         const length = hexBuffer[2]; // 세 번째 바이트가 Length
         console.log("Length field:", length); // Length 필드 값 출력
 
-        // 패킷 길이 계산
-        const expectedLength = length + 2; // Length 필드 값 + STX(1바이트) + ETX(1바이트)
+        // 패킷 길이 계산 (Length + STX + ETX)
+        const expectedLength = length + 3; // Length + STX(1바이트) + ETX(1바이트) + 데이터(1바이트)
         console.log("Expected packet length:", expectedLength);
         console.log("Actual hexBuffer length:", hexBuffer.length);
 
