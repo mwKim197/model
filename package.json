@@ -24,7 +24,8 @@
     },
     "win": {
       "target": "nsis",
-      "sign": false
+      "sign": false,
+      "artifactName": "model-setup-${version}.exe"
     }
   },
   "devDependencies": {
