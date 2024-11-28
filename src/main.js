@@ -88,8 +88,6 @@ function createWindow() {
 
 }
 
-app.whenReady().then(createWindow);
-
 /* Updater ======================================================*/
 
 autoUpdater.on('checking-for-update', () => {
@@ -117,12 +115,9 @@ autoUpdater.on('update-downloaded', (info) => {
 /* Electron =====================================================*/
 
 /** 초기화가 끝나게 되면 실행 */
-app.on('ready', () => {
-    // 메인 창 생성
+app.whenReady().then(async () => {
     createWindow();
-
-    // 자동 업데이트 등록
-    autoUpdater.checkForUpdates();
+    await autoUpdater.checkForUpdates();
 });
 
 
