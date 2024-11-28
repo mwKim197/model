@@ -46,7 +46,7 @@ Order.get('/serial-order-coffee-use1', async (req, res) => {
 
         const command = 'COFFEE1';
         log.info('command :' + command);
-        const data = await req.serialCommCom1.writeCommand('COFFEE1\x0d');
+        const data = await req.serialCommCom1.writeCommand('COFFEE\x0d');
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json(data);
 
