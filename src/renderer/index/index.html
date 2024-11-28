@@ -7,7 +7,7 @@
 </head>
 <body>
 <h1>주문화면</h1>
-<p>v1.0.1</p>
+<h1>App Version: <span id="version"></span></h1>
 <div>
     <button id="goToAdmin">Go to Admin</button>
     <button id="goToTest">Go to Test</button>
@@ -26,8 +26,57 @@
     <button id="sendCupInfo">컵상태</button>
     <button id="sendCupPlUse">플라스틱</button>
     <button id="sendCupPaUse">종이</button>
+    <form name="form" method="post">
+        <div>
+            <label for="credit">신용카드</label>
+            <input id="credit" type="radio" name="myRadios" onclick="handleClick(this);" value="credit" />
+            <table class="w-full max-w-4xl border-2 border-gray-300 bg-white">
+                <tbody>
+                    <tr class="bg-blue-500 text-center">
+                        <td colspan="3" class="text-white py-2">[요청 파라미터]</td>
+                    </tr>
+                    <tr class="text-left">
+                        <td class="px-4 py-2"><label for="agreenum">승인번호 : </label> <input type="text"              id="agreenum"   name="agreenum"   class="w-24 h-6 border border-gray-300 p-1" value=""></td>
+                        <td class="px-4 py-2"><label for="agreedate">승인날짜 : </label> <input type="text"             id="agreedate"   name="agreedate"   class="w-24 h-6 border border-gray-300 p-1" value="220502"></td>
+                        <td class="px-4 py-2"><label for="catid">CATID   : </label> <input type="text"                id="catid"      name="catid"      class="w-24 h-6 border border-gray-300 p-1" value=""></td>
+                    </tr>
+                    <tr class="text-left">
+                        <td class="px-4 py-2"><label for="halbu">할부 : </label><input type="text"              id="halbu"      name="halbu"    class="w-24 h-6 border border-gray-300 p-1" value="00"></td>
+                        <td class="px-4 py-2"><label for="cashno">현금식별번호(바코드) : </label><input type="text" id="cashno"   name="cashno"   class="w-24 h-6 border border-gray-300 p-1" value="01023720000"></td>
+                        <td class="px-4 py-2"><label for="money">총금액 : </label> <input type="text"            id="money"      name="money"     class="w-24 h-6 border border-gray-300 p-1" value="1004"></td>
+                    </tr>
+                    <tr class="text-left">
+                        <td class="px-4 py-2"><label for="tax">부가세 : </label> <input type="text"            id="tax"        name="tax"     class="w-24 h-6 border border-gray-300 p-1" value="0"></td>
+                        <td class="px-4 py-2"><label for="bongsa">봉사료  : </label> <input type="text"           id="bongsa"     name="bongsa"  class="w-24 h-6 border border-gray-300 p-1" value="0"></td>
+                        <td class="px-4 py-2"><label for="myunse">면세금액 : </label> <input type="text"          id="myunse"     name="myunse"  class="w-24 h-6 border border-gray-300 p-1" value="0"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div>
+                <br>
+                <label for="SendData">SendData :</label> <input type="text" id="SendData" name="SendData" size="100"><br><br>
+                <label for="RecvData">RecvData :</label>  :
+                <textarea name="RecvData" id="RecvData" cols="100" rows="5"></textarea>
+                <br><br>
+                <a href="javascript:reqVCAT_HTTP()">VCAT 요청(HTTP방식)</a>
+
+            </div>
+        </div>
+    </form>
 </div>
+
+
+<script>
+    // 서버에서 version 값을 가져와서 화면에 표시
+    fetch('http://localhost:3000/version')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('version').textContent = data.version;
+        })
+        .catch(error => console.error('Error fetching version:', error));
+</script>
 <script src="index.js"></script>
+<script src="../../nvcat/Nvcat.js"> console.log('Nvcat.js 로드 완료'); </script>
 <script>
 
 

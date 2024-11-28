@@ -12,6 +12,7 @@ const Ice = require('./serial/portProcesses/Ice');
 const Cup = require('./serial/portProcesses/Cup');
 const Serial = require('./serial/SerialPortManager'); // 새로 작성한 모듈 가져오기
 const config = require('./serial/config');
+const fs = require('fs');
 
 // 포트 연결
 const serialCommCom1 = new Serial(config.ports[0].path);
@@ -43,6 +44,15 @@ appServer.use(Cup);     // 주문부
 server.listen(3000, '0.0.0.0',() => {
     log.info('server: http://localhost:3000');
     log.info('server: http://0.0.0.0:3000');
+});
+
+
+// 버전읽기
+appServer.get('/version', (req, res) => {
+    // package.json 파일에서 version 값 읽기
+    const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8'));
+    console.log(packageJson);
+    res.json({ version: packageJson.version });
 });
 
 // Electron 창 설정
