@@ -13,7 +13,7 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "mwkin197@gmail.com",
+        "owner": "mwkim197",
         "repo": "model",
         "releaseType": "draft"
       }
