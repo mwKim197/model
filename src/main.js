@@ -5,16 +5,17 @@ const http = require('http');
 const log = require('./logger');
 const appServer = express();
 const server = http.createServer(appServer);
-const Connect = require('./connect/Connect');
-const Order = require('./connect/Order');
-const Ice = require('./connect/Ice');
-const Cup = require('./connect/Cup');
-const Serial = require('./connect/Serial'); // 새로 작성한 모듈 가져오기
+const Connect = require('./serial/portProcesses/Connect');
+const Order = require('./serial/portProcesses/Order');
+const Ice = require('./serial/portProcesses/Ice');
+const Cup = require('./serial/portProcesses/Cup');
+const Serial = require('./serial/SerialPortManager'); // 새로 작성한 모듈 가져오기
+const config = require('./serial/config');
 
-// COM1 START
-const serialCommCom1 = new Serial('COM1');
-const serialCommCom3 = new Serial('COM3'); // COM3 포트 추가
-const serialCommCom4 = new Serial('COM4'); // COM3 포트 추가
+// 포트 연결
+const serialCommCom1 = new Serial(config.ports[0].path);
+const serialCommCom3 = new Serial(config.ports[2].path); // COM3 포트 추가
+const serialCommCom4 = new Serial(config.ports[3].path); // COM3 포트 추가
 
 // Express 서버에서 serialComm을 각 포트에 맞게 사용하도록 설정
 appServer.use((req, res, next) => {
@@ -32,8 +33,8 @@ appServer.use(cors());
 appServer.use(express.static('renderer'));
 appServer.use(Connect); // 연결부
 appServer.use(Order);   // 주문부
-appServer.use(Ice);   // 주문부
-appServer.use(Cup);   // 주문부
+appServer.use(Ice);     // 주문부
+appServer.use(Cup);     // 주문부
 
 // COM1 END
 
