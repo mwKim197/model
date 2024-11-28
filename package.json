@@ -15,7 +15,7 @@
         "provider": "github",
         "owner": "mwkim197",
         "repo": "model",
-        "releaseType": "final"
+        "releaseType": "release"
       }
     ],
     "productName": "model",
