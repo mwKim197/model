@@ -1,6 +1,6 @@
 {
   "name": "model",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
@@ -10,6 +10,14 @@
   },
   "build": {
     "appId": "com.example.myapp",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "mwkin197@gmail.com",
+        "repo": "model",
+        "releaseType": "draft"
+      }
+    ],
     "productName": "model",
     "directories": {
       "output": "dist"
