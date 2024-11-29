@@ -12,6 +12,11 @@ Ice.use((req, res, next) => {
 
 Ice.get('/serial-water-time', async (req, res) => {
     try {
+        const { data } = req.query;
+        if (!data) {
+            log.error("no parameter " + data);
+            return res.status(400).send('Data parameter is required');
+        }
 
         // SCF 명령어에 URL 파라미터 값을 포함시켜 시리얼 통신
         // 데이터 패킷 생성
@@ -19,7 +24,6 @@ Ice.get('/serial-water-time', async (req, res) => {
         const id = 0x01;          // Device ID
         const len = 0x07;         // Packet Length
         const cmd = 0x04;         // Command (ICE TIME)
-        const data = 0x05;        // Data (1.5초 → 15)
         const crc = id ^ len ^ cmd ^ data; // XOR 계산
         const etx = 0x03;         // End Byte
 
@@ -40,15 +44,19 @@ Ice.get('/serial-water-time', async (req, res) => {
 });
 
 Ice.get('/serial-ice-time', async (req, res) => {
-    try {
 
+    try {
+        const { data } = req.query;
+        if (!data) {
+            log.error("no parameter " + data);
+            return res.status(400).send('Data parameter is required');
+        }
         // SCF 명령어에 URL 파라미터 값을 포함시켜 시리얼 통신
         // 데이터 패킷 생성
         const stx = 0x02;         // Start Byte
         const id = 0x01;          // Device ID
         const len = 0x07;         // Packet Length
         const cmd = 0x05;         // Command (ICE TIME)
-        const data = 0x0A;        // Data (1.5초 → 15 → 0x05, 5초 → 50 → 0x0A)
         const crc = id ^ len ^ cmd ^ data; // XOR 계산
         const etx = 0x03;         // End Byte
 

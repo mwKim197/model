@@ -1,6 +1,6 @@
 const log = require('../../logger');
 const { readJsonFile, updateJsonFile, addToJsonFile, deleteFromJsonFile } = require('../../util/fileUtil');
-
+const {convertTimeToHex} = require('../../util/numberConvert');
 
 const { ipcRenderer } = require('electron');
 function sendLogToMain(level, message) {
@@ -54,10 +54,28 @@ document.getElementById('sendSyrupUse').addEventListener('click', () => {
     fetchSyrupUse();
 });
 document.getElementById('sendWaterTime').addEventListener('click', () => {
-    fetchWaterTime();
+    const waterItem = document.getElementById('setWaterTime').value;
+    if(waterItem) {
+        // 10 진수 16진수로 변경
+        const time = convertTimeToHex(waterItem);
+        fetchWaterTime(time);
+    }
+
 });
 document.getElementById('sendIceTime').addEventListener('click', () => {
-    fetchIceTime();
+    const iceItem = document.getElementById('setIceTime').value;
+    if(iceItem) {
+        // 10 진수 16진수로 변경
+        const time = convertTimeToHex(iceItem);
+        fetchIceTime(time);
+    }
+
+});
+document.getElementById('sendIceRun').addEventListener('click', () => {
+    fetchIceRun();
+});
+document.getElementById('sendIceStop').addEventListener('click', () => {
+    fetchIceStop();
 });
 document.getElementById('sendCupInfo').addEventListener('click', () => {
     fetchCupInfo();
@@ -68,12 +86,7 @@ document.getElementById('sendCupPlUse').addEventListener('click', () => {
 document.getElementById('sendCupPaUse').addEventListener('click', () => {
     fetchCupPaUse();
 });
-document.getElementById('sendIceRun').addEventListener('click', () => {
-    fetchIceRun();
-});
-document.getElementById('sendIceStop').addEventListener('click', () => {
-    fetchIceStop();
-});
+
 
 
 const fetchCoffeeInfo = async (grinder1, grinder2, extraction, hotwater) => {
@@ -195,9 +208,9 @@ const fetchSyrupUse = async () => {
     }
 }
 
-const fetchWaterTime = async () => {
+const fetchWaterTime = async (waterTime) => {
     try {
-        const response = await fetch('http://localhost:3000/serial-water-time');
+        const response = await fetch('http://localhost:3000/serial-water-time?data=${waterTime}');
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -212,9 +225,9 @@ const fetchWaterTime = async () => {
     }
 }
 
-const fetchIceTime = async () => {
+const fetchIceTime = async (iceTime) => {
     try {
-        const response = await fetch('http://localhost:3000/serial-ice-time');
+        const response = await fetch(`http://localhost:3000/serial-ice-time?data=${iceTime}`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);

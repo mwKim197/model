@@ -9,23 +9,41 @@
 <h1>주문화면</h1>
 <h1>App Version: <span id="version"></span></h1>
 <div>
-    <button id="goToAdmin">Go to Admin</button>
-    <button id="goToTest">Go to Test</button>
-    <button id="sendCoffeeUse1Setting">커피1 값세팅 - 45, 0, 110, 0</button>
-    <button id="sendCoffeeUse2Setting">커피2 값세팅 - 0, 45, 110, 140</button>
-    <button id="sendCoffeeUse">커피 추출</button>
-    <button id="sendCoffeeUse1">커피 추출</button>
-    <button id="sendTaeSetting">티 세팅</button>
-    <button id="sendTeaUse">티 추출</button>
-    <button id="sendSyrupSetting">시럽 세팅</button>
-    <button id="sendSyrupUse">시럽 추출</button>
-    <button id="sendWaterTime">물 세팅 1.5초</button>
-    <button id="sendIceTime">얼음 세팅 5초</button>
-    <button id="sendIceRun">카이저 - 출수</button>
-    <button id="sendIceStop">카이저 - 정지</button>
-    <button id="sendCupInfo">컵상태</button>
-    <button id="sendCupPlUse">플라스틱</button>
-    <button id="sendCupPaUse">종이</button>
+    <div>
+        <button id="goToAdmin">Go to Admin</button>
+        <button id="goToTest">Go to Test</button>
+    </div>
+    <div>
+        <button id="sendCoffeeUse1Setting">커피1 값세팅 - 45, 0, 110, 0</button>
+        <button id="sendCoffeeUse2Setting">커피2 값세팅 - 0, 45, 110, 140</button>
+        <button id="sendCoffeeUse">커피 추출</button>
+        <button id="sendCoffeeUse1">커피 추출</button>
+        <button id="sendTaeSetting">티 세팅</button>
+        <button id="sendTeaUse">티 추출</button>
+        <button id="sendSyrupSetting">시럽 세팅</button>
+        <button id="sendSyrupUse">시럽 추출</button>
+    </div>
+    <br>
+    <br>
+    <div>
+        <label for="setWaterTime">물 시간세팅</label>
+        <input id="setWaterTime" type="text" placeholder=물시간입력 value="5" />
+        <button id="sendWaterTime">물 세팅</button>
+        <label for="setIceTime">얼음 시간세팅</label>
+        <input id="setIceTime" type="text" placeholder=얼음시간입력 value="5" />
+        <button id="sendIceTime">얼음 세팅</button>
+        <button id="sendIceRun">카이저 - 출수</button>
+        <button id="sendIceStop">카이저 - 정지</button>
+    </div>
+    <br>
+    <br>
+    <div>
+        <button id="sendCupInfo">컵상태</button>
+        <button id="sendCupPlUse">플라스틱</button>
+        <button id="sendCupPaUse">종이</button>
+    </div>
+    <br>
+    <br>
     <form name="form" method="post">
         <div>
             <label for="credit">신용카드</label>
