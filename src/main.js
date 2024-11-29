@@ -6,6 +6,7 @@ const http = require('http');
 const log = require('./logger');
 const appServer = express();
 const server = http.createServer(appServer);
+//const Menu = require('./db/dbProcesses/Menu');
 const Connect = require('./serial/portProcesses/Connect');
 const Order = require('./serial/portProcesses/Order');
 const Ice = require('./serial/portProcesses/Ice');
@@ -51,7 +52,6 @@ server.listen(3000, '0.0.0.0',() => {
 appServer.get('/version', (req, res) => {
     // package.json 파일에서 version 값 읽기
     const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8'));
-    console.log(packageJson);
     res.json({ version: packageJson.version });
 });
 
