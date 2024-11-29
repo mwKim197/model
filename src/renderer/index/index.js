@@ -210,7 +210,7 @@ const fetchSyrupUse = async () => {
 
 const fetchWaterTime = async (waterTime) => {
     try {
-        const response = await fetch('http://localhost:3000/serial-water-time?data=${waterTime}');
+        const response = await fetch(`http://localhost:3000/serial-water-time?data=${waterTime}`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
