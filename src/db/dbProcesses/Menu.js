@@ -1,5 +1,7 @@
 const dynamoDB = require('../dynamodb_start');
 const log = require('../../logger');
+const { initializeCounter, incrementCounter, getCounterValue } = require('./count');
+
 
 const addProduct = async (product) => {
     const params = {
@@ -21,8 +23,8 @@ const addProduct = async (product) => {
 
 // 예시로 제품 데이터 삽입
 const newProduct = {
-    menuId: '0001',
-    userId: '테스트유저',
+    menuId: 1,
+    userId: 'test_user1',
 
 };
 
@@ -34,6 +36,7 @@ const checkProduct = async (menuId) => {
     const params = {
         TableName: 'model_menu',
         Key: {
+            userId: 'test_user1',
             menuId: menuId,
         },
     };
@@ -42,6 +45,8 @@ const checkProduct = async (menuId) => {
     try {
         // DynamoDB에서 데이터 조회
         const result = await dynamoDB.get(params).promise();
+
+        log.info('DynamoDB result:', result);  // 결과 로그 출력
 
         if (result.Item) {
             log.info('Product found:', result.Item);
@@ -54,6 +59,6 @@ const checkProduct = async (menuId) => {
 };
 
 // `menuId`로 저장된 데이터 확인
-checkProduct('0001').then(() => {
+checkProduct(1).then(() => {
     log.info("get Menu!");
 });

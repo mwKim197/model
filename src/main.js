@@ -4,9 +4,7 @@ const path = require('path');
 const express = require('express');
 const http = require('http');
 const log = require('./logger');
-const appServer = express();
-const server = http.createServer(appServer);
-//const Menu = require('./db/dbProcesses/Menu');
+const Menu = require('./db/dbProcesses/Menu');
 const Connect = require('./serial/portProcesses/Connect');
 const Order = require('./serial/portProcesses/Order');
 const Ice = require('./serial/portProcesses/Ice');
@@ -14,6 +12,9 @@ const Cup = require('./serial/portProcesses/Cup');
 const Serial = require('./serial/SerialPortManager'); // 새로 작성한 모듈 가져오기
 const config = require('./serial/config');
 const fs = require('fs');
+
+const appServer = express();
+const server = http.createServer(appServer);
 
 // 포트 연결
 const serialCommCom1 = new Serial(config.ports[0].path);
