@@ -80,7 +80,7 @@ class SerialPortManager {
             const newlineIndex = this.asciiBuffer.indexOf('\n');
             const asciiPacket = this.asciiBuffer.slice(0, newlineIndex + 1).trim(); // 줄 단위로 추출
             this._processAsciiData(asciiPacket); // ASCII 처리
-            this.asciiBuffer = this.asciiBuffer.slice(newlineIndex + 1); // 사용한 데이터 제거
+            this.asciiBuffer = ''; // 사용한 데이터 제거
         }
     }
     
@@ -171,8 +171,6 @@ class SerialPortManager {
             log.warn(`Unexpected ASCII data: ${asciiPacket}`);
         }
     }
-
-
 
     // 명령 전송 및 데이터 반환
     writeCommand(command) {
