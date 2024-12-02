@@ -6,6 +6,7 @@ const http = require('http');
 const log = require('./logger');
 const { signupUser, loginUser } = require('./login');
 const Connect = require('./serial/portProcesses/Connect');
+const { startPolling } = require('./services/serialDataManager');
 const Order = require('./serial/portProcesses/Order');
 const Ice = require('./serial/portProcesses/Ice');
 const Cup = require('./serial/portProcesses/Cup');
@@ -35,19 +36,18 @@ appServer.use(cors());
 appServer.use(express.json());
 // 정적 파일 제공
 appServer.use(express.static('renderer'));
-appServer.use(Connect); // 연결부
-appServer.use(Order);   // 주문부
-appServer.use(Ice);     // 주문부
-appServer.use(Cup);     // 주문부
-appServer.use(Menu);     // 주문부
+appServer.use(Connect); // MC연결
+appServer.use(Order);   // MC주문
+appServer.use(Ice);     // 카이저 ICE
+appServer.use(Cup);     // 컵 디스펜서
+appServer.use(Menu);    // MENU DB
 
-
-// COM1 END
+// 매 10 초마다 머신 정보 조회
+startPolling(appServer);
 
 // 서버 시작
 server.listen(3000, '0.0.0.0',() => {
-    log.info('server: http://localhost:3000');
-    log.info('server: http://0.0.0.0:3000');
+    log.info('server: http://localhost:3000 ' ,'http://0.0.0.0:3000');
 });
 
 

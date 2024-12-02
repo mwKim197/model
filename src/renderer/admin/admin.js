@@ -9,10 +9,34 @@ sendLogToMain('info', '렌더러에서 보내는 정보 로그');
 sendLogToMain('error', '렌더러 에러 발생');
 */
 
+
 // 페이지 이동 버튼
 document.getElementById('goToIndex').addEventListener('click', () => {
     ipcRenderer.send('navigate-to-page', 'index'); // 'admin' 페이지로 이동
 });
+
+// 페이지 이동 버튼
+document.getElementById('getData').addEventListener('click', () => {
+    getData();
+});
+
+async function getData() {
+    try {
+        const response = await fetch('http://localhost:3000/get-data', {
+            method: 'POST', // POST 요청
+            headers: {
+                'Content-Type': 'application/json', // JSON 형식으로 전송
+            }
+        });
+        if (!response.ok) throw new Error('네트워크 응답 실패');
+
+        const data = await response.json();
+        console.log(data);
+
+    } catch (error) {
+        sendLogToMain('error','RD2: 데이터 가져오기 실패:', error);
+    }
+}
 
 async function fetchSerialDataRd1() {
     try {
@@ -81,7 +105,7 @@ async function fetchSerialDataRd4() {
     }
 }
 
-async function fetchSerialRdData() {
+/*async function fetchSerialRdData() {
     await fetchSerialDataRd1();
     await fetchSerialDataRd2();
     await fetchSerialDataRd3();
@@ -89,4 +113,4 @@ async function fetchSerialRdData() {
 }
 
 // 1초마다 폴링
-setInterval(fetchSerialRdData, 10000);
+setInterval(fetchSerialRdData, 10000);*/

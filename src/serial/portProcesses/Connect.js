@@ -1,54 +1,36 @@
-const log = require('../../logger')
 const express = require('express');
+const { stopPolling, startPolling, getSerialData } = require('../../services/serialDataManager');
 const Connect = express.Router();
 
-// HTTP 엔드포인트 설정 RD1 호출
-Connect.get('/serial-data-rd1', async (req, res) => {
+// 주문 요청 처리 엔드포인트
+Connect.post('/start-order', (req, res) => {
     try {
-        const data = await req.serialCommCom1.writeCommand('RD1\x0d');
-        res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.json(data);
+        stopPolling(); // 주문 작업을 시작하기 전에 조회 정지
+        // 여기서 주문 처리를 수행
+        res.json({ success: true, message: 'Order process started, polling stopped.' });
     } catch (err) {
-        log.error(err.message);
-        res.status(500).send(err.message);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// HTTP 엔드포인트 설정 RD2 호출
-Connect.get('/serial-data-rd2', async (req, res) => {
+// 주문 완료 후 조회 재개 엔드포인트
+Connect.post('/end-order', (req, res) => {
     try {
-        const data = await req.serialCommCom1.writeCommand('RD2\x0d');
-        res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.json(data);
+        const { serialCommCom1 } = req; // 시리얼 통신 객체 가져오기
+        startPolling(serialCommCom1, 10000); // 주문 작업이 끝난 후 조회 재개
+        res.json({ success: true, message: 'Order process completed, polling resumed.' });
     } catch (err) {
-        log.error(err.message);
-        res.status(500).send(err.message);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// HTTP 엔드포인트 설정 RD3 호출
-Connect.get('/serial-data-rd3', async (req, res) => {
+// 폴링데이터 받아오기
+Connect.post('/get-data', (req, res) => {
     try {
-        const data = await req.serialCommCom1.writeCommand('RD3\x0d');
-        res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.json(data);
+        res.json({ success: true, data: getSerialData() });
     } catch (err) {
-        log.error(err.message);
-        res.status(500).send(err.message);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
-
-// HTTP 엔드포인트 설정 RD4 호출
-Connect.get('/serial-data-rd4', async (req, res) => {
-    try {
-        const data = await req.serialCommCom1.writeCommand('RD4\x0d');
-        res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.json(data);
-    } catch (err) {
-        log.error(err.message);
-        res.status(500).send(err.message);
-    }
-});
-
 
 module.exports = Connect;
