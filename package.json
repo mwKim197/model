@@ -18,6 +18,11 @@
         "releaseType": "release"
       }
     ],
+    "files": [
+      "src/**/*",
+      "node_modules/**/*",
+      ".env"
+    ],
     "productName": "model",
     "directories": {
       "output": "dist"
