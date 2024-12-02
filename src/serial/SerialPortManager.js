@@ -141,7 +141,7 @@ class SerialPortManager {
         log.info(`Processing ASCII data: ${asciiPacket}`);
 
         // ASCII 데이터 추가 처리 로직
-        if (asciiPacket.match(/^[a-zA-Z0-9\s]*$/)) {
+        if (asciiPacket.match(/^[a-zA-Z0-9+\s]*$/)) {
 
             const asciiPacket = this.asciiBuffer.trim();
 
