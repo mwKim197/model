@@ -2,6 +2,7 @@ const log = require('../../logger');
 const { readJsonFile, updateJsonFile, addToJsonFile, deleteFromJsonFile } = require('../../util/fileUtil');
 const {convertTimeToHex} = require('../../util/numberConvert');
 const { ipcRenderer } = require('electron');
+
 function sendLogToMain(level, message) {
     ipcRenderer.send('log-to-main', { level, message });
 }
@@ -33,9 +34,14 @@ document.getElementById('goToAdmin').addEventListener('click', () => {
     ipcRenderer.send('navigate-to-page', 'admin'); // 'admin' 페이지로 이동
 });
 
-// 페이지 이동 버튼
+/*// 페이지 이동 버튼
 document.getElementById('goToTest').addEventListener('click', () => {
     ipcRenderer.send('navigate-to-page', 'test'); // 'admin' 페이지로 이동
+});*/
+
+// 페이지 이동 버튼
+document.getElementById('goToOrder').addEventListener('click', () => {
+    ipcRenderer.send('navigate-to-page', 'order'); // 'admin' 페이지로 이동
 });
 
 
