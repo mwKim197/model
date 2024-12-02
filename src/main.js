@@ -42,8 +42,8 @@ appServer.use(Ice);     // 카이저 ICE
 appServer.use(Cup);     // 컵 디스펜서
 appServer.use(Menu);    // MENU DB
 
-// 매 10 초마다 머신 정보 조회
-startPolling(appServer);
+// 매 10 초마다 MC 머신 정보 조회
+startPolling(serialCommCom1);
 
 // 서버 시작
 server.listen(3000, '0.0.0.0',() => {
