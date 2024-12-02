@@ -6,7 +6,7 @@ const getUser = async () => {
 
         // 저장된 'user' 정보 반환
         const user = store.get('user');
-        log.info("user______store: " + JSON.stringify(user));
+
         // 'user' 정보가 없으면 null 반환
         if (!user) {
             return null;

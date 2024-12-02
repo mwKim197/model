@@ -45,6 +45,9 @@ appServer.use(Menu);    // MENU DB
 // 매 10 초마다 MC 머신 정보 조회
 startPolling(serialCommCom1);
 
+// 로그인처리 임시
+loginUser("test_user1", "test_user1");
+
 // 서버 시작
 server.listen(3000, '0.0.0.0',() => {
     log.info('server: http://localhost:3000 ' ,'http://0.0.0.0:3000');
