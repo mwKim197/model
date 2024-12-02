@@ -19,23 +19,25 @@ async function updateSerialData(serialComm, command, key) {
 }
 
 // 데이터 조회 시작 함수
-function startPolling(serialComm, interval = 10000) {
+async function startPolling(serialComm, interval = 10000) {
     if (pollingTimer) {
         log.warn('Polling is already running.');
         return;
     }
 
     isPollingActive = true;
-    pollingTimer = setInterval(() => {
+    pollingTimer = setInterval(async () => {
         if (!isPollingActive) {
             log.info('Polling paused.');
             return;
         }
 
-        updateSerialData(serialComm, 'RD1', 'RD1');
-        updateSerialData(serialComm, 'RD2', 'RD2');
-        updateSerialData(serialComm, 'RD3', 'RD3');
-        updateSerialData(serialComm, 'RD4', 'RD4');
+        // 비동기 처리를 순차적으로 실행
+        await updateSerialData(serialComm, 'RD1', 'RD1');
+        await updateSerialData(serialComm, 'RD2', 'RD2');
+        await updateSerialData(serialComm, 'RD3', 'RD3');
+        await updateSerialData(serialComm, 'RD4', 'RD4');
+
     }, interval);
 
     log.info('Started polling for serial data.');
