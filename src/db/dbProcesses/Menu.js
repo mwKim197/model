@@ -1,64 +1,49 @@
-const dynamoDB = require('../dynamodb_start');
-const log = require('../../logger');
-const { initializeCounter, incrementCounter, getCounterValue } = require('./count');
+const express = require('express');
+const Menu = express.Router();
+const {checkProduct, addProduct,allProduct} = require('../dbProcesses/util/getMenu');
+const log = require("../../logger");
 
-
-const addProduct = async (product) => {
-    const params = {
-        TableName: 'model_menu',
-        Item: {
-            menuId: product.menuId,
-            userId: product.userId,
-        },
-    };
-
+Menu.get('/get-menu-info', async (req, res) => {
     try {
-        // DynamoDB에 아이템 삽입
-        await dynamoDB.put(params).promise();
-        console.log('Product added successfully');
-    } catch (error) {
-        console.error('Error adding product:', error.message);  // 상세 오류 메시지 출력
+        const data = await checkProduct();
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.json(data);
+    } catch (err) {
+        log.error(err.message);
+        res.status(500).send(err.message);
     }
-};
-
-// 예시로 제품 데이터 삽입
-const newProduct = {
-    menuId: 1,
-    userId: 'test_user1',
-
-};
-
-/*addProduct(newProduct).then(() => {
-    log.info("set Menu!");
-});*/
-
-const checkProduct = async (menuId) => {
-    const params = {
-        TableName: 'model_menu',
-        Key: {
-            userId: 'test_user1',
-            menuId: menuId,
-        },
-    };
-
-    log.info('Check Product Params:', params);  // params 확인용 로그
-    try {
-        // DynamoDB에서 데이터 조회
-        const result = await dynamoDB.get(params).promise();
-
-        log.info('DynamoDB result:', result);  // 결과 로그 출력
-
-        if (result.Item) {
-            log.info('Product found:', result.Item);
-        } else {
-            log.info('Product not found');
-        }
-    } catch (error) {
-        log.info('Error checking product:', error.message);
-    }
-};
-
-// `menuId`로 저장된 데이터 확인
-checkProduct(1).then(() => {
-    log.info("get Menu!");
 });
+
+Menu.get('/get-menu-info-all', async (req, res) => {
+    try {
+        const data = await allProduct();
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.json(data);
+    } catch (err) {
+        log.error(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
+Menu.post('/set-menu-info', async (req, res) => {
+    try {
+        const selectedOptions = req.body; // 클라이언트에서 전송한 JSON 데이터
+
+        // 받은 데이터를 콘솔에 출력
+        console.log('Received menu info:', selectedOptions);
+
+        const data = await addProduct(selectedOptions);
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        // 응답을 클라이언트로 보냄
+        res.json({
+            message: 'Menu info received successfully',
+            data: data,
+        });
+    } catch (err) {
+        log.error(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
+
+module.exports = Menu;

@@ -4,15 +4,15 @@ const path = require('path');
 const express = require('express');
 const http = require('http');
 const log = require('./logger');
-const Menu = require('./db/dbProcesses/Menu');
+const { signupUser, loginUser } = require('./login');
 const Connect = require('./serial/portProcesses/Connect');
 const Order = require('./serial/portProcesses/Order');
 const Ice = require('./serial/portProcesses/Ice');
 const Cup = require('./serial/portProcesses/Cup');
+const Menu = require('./db/dbProcesses/Menu');
 const Serial = require('./serial/SerialPortManager'); // 새로 작성한 모듈 가져오기
 const config = require('./serial/config');
 const fs = require('fs');
-
 const appServer = express();
 const server = http.createServer(appServer);
 
@@ -32,13 +32,15 @@ appServer.use((req, res, next) => {
 // 시리얼 통신 부
 const cors = require('cors');
 appServer.use(cors());
-
+appServer.use(express.json());
 // 정적 파일 제공
 appServer.use(express.static('renderer'));
 appServer.use(Connect); // 연결부
 appServer.use(Order);   // 주문부
 appServer.use(Ice);     // 주문부
 appServer.use(Cup);     // 주문부
+appServer.use(Menu);     // 주문부
+
 
 // COM1 END
 
@@ -104,10 +106,10 @@ function createWindow() {
 autoUpdater.on('checking-for-update', () => {
     log.info('업데이트 확인 중...');
 });
-autoUpdater.on('update-available', (info) => {
+autoUpdater.on('update-available', () => {
     log.info('업데이트가 가능합니다.');
 });
-autoUpdater.on('update-not-available', (info) => {
+autoUpdater.on('update-not-available', () => {
     log.info('현재 최신버전입니다.');
 });
 autoUpdater.on('error', (err) => {
@@ -119,7 +121,7 @@ autoUpdater.on('download-progress', (progressObj) => {
     log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
     log.info(log_message);
 })
-autoUpdater.on('update-downloaded', (info) => {
+autoUpdater.on('update-downloaded', () => {
     log.info('업데이트가 완료되었습니다.');
 });
 

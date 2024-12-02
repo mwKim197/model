@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SerialPortManager Data Polling</title>
+    <style>
+        /* 추가적인 스타일 (필요시) */
+        .time-inputs {
+            display: none;
+        }
+    </style>
 </head>
 <body>
 <h1>주문화면</h1>
@@ -12,6 +18,119 @@
     <div>
         <button id="goToAdmin">Go to Admin</button>
         <button id="goToTest">Go to Test</button>
+    </div>
+    <div>
+        <h1>Menu Options</h1>
+
+        <!-- 메뉴 선택 폼 -->
+        <form id="menuForm">
+            <h2>Menu ID: 1</h2>
+
+            <!-- 컵 옵션 -->
+            <fieldset>
+                <legend>Cup</legend>
+                <label for="cupPlastic">플라스틱컵</label>
+                <input type="radio" id="cupPlastic" name="cup" value="plastic">
+                <label for="cupPaper">종이컵</label>
+                <input type="radio" id="cupPaper" name="cup" value="paper">
+            </fieldset>
+
+            <!-- 얼음 옵션 -->
+            <fieldset>
+                <legend>얼음</legend>
+                <label for="iceYes">Yes</label>
+                <input type="radio" id="iceYes" name="ice" value="yes">
+                <label for="iceNo">No</label>
+                <input type="radio" id="iceNo" name="ice" value="no">
+            </fieldset>
+
+            <!-- 얼음 시간과 물 시간 입력 -->
+            <div id="iceInput" class="time-inputs">
+                <label for="iceTime">얼음시간 :</label>
+                <input type="number" id="iceTime" name="iceTime" min="0" step="0.5" placeholder="Enter ice time">
+                <br>
+                <label for="waterTime">물시간 :</label>
+                <input type="number" id="waterTime" name="waterTime" min="0" step="0.5" placeholder="Enter water time">
+            </div>
+
+            <fieldset>
+                <legend>커피</legend>
+                <label for="coffeeYes">Yes</label>
+                <input type="radio" id="coffeeYes" name="coffee" value="yes">
+                <label for="coffeeNo">No</label>
+                <input type="radio" id="coffeeNo" name="coffee" value="no">
+            </fieldset>
+
+            <!-- 커피 옵션 -->
+            <fieldset id="coffeeInput" class="time-inputs">
+                <legend>커피 </legend>
+                <label for="coffeeGrinder1">글라인더 1</label>
+                <input type="number" id="coffeeGrinder1" name="coffee" value="0" min="0" step="0.5">
+                <label for="coffeeGrinder2">글라인더 2</label>
+                <input type="number" id="coffeeGrinder2" name="coffee" value="0" min="0" step="0.5">
+                <label for="coffeeExtraction">추출시간</label>
+                <input type="number" id="coffeeExtraction" name="coffee" value="0" min="0" step="0.5">
+                <label for="coffeeHotWater">뜨거운물 시간</label>
+                <input type="number" id="coffeeHotWater" name="coffee" value="0" min="0" step="0.5">
+                <label for="coffeeShot">샷 개수</label>
+                <input type="number" id="coffeeShot" name="coffee" value="0" max="3" min="0" step="0.5">
+            </fieldset>
+
+            <fieldset>
+                <legend>가루차</legend>
+                <label for="garuchaYes">Yes</label>
+                <input type="radio" id="garuchaYes" name="garucha" value="yes">
+                <label for="garuchaNo">No</label>
+                <input type="radio" id="garuchaNo" name="garucha" value="no">
+            </fieldset>
+
+            <!-- 가루차 옵션 -->
+            <fieldset id="garuchaInput" class="time-inputs">
+                <legend>가루차 </legend>
+                <label for="garuchaNumber">가루차 넘버</label>
+                <input type="number" id="garuchaNumber" name="garuchaNumber" min="1">
+                <label for="garuchaExtraction">추출시간</label>
+                <input type="number" id="garuchaExtraction" name="garuchaExtraction" value="0" min="0" step="0.5">
+                <label for="garuchaHotWater">뜨거운물 시간</label>
+                <input type="number" id="garuchaHotWater" name="garuchaHotWater" value="0" min="0" step="0.5">
+            </fieldset>
+
+            <fieldset>
+                <legend>시럽</legend>
+                <label for="syrupYes">Yes</label>
+                <input type="radio" id="syrupYes" name="syrup" value="yes">
+                <label for="syrupNo">No</label>
+                <input type="radio" id="syrupNo" name="syrup" value="no">
+            </fieldset>
+
+            <!-- 시럽 옵션 -->
+            <fieldset id="syrupInput" class="time-inputs">
+                <legend>시럽</legend>
+                <label for="syrupNumber">시럽 넘버</label>
+                <input type="number" id="syrupNumber" name="syrupNumber" min="1">
+                <label for="syrupExtraction">추출시간</label>
+                <input type="number" id="syrupExtraction" name="syrupExtraction" value="0" min="0" step="0.5">
+                <label for="syrupHotWater">뜨거운물 시간</label>
+                <input type="number" id="syrupHotWater" name="syrupHotWater" value="0" min="0" step="0.5">
+            </fieldset>
+
+            <!-- 제출 버튼 -->
+            <button type="submit">메뉴저장</button>
+        </form>
+        <!-- 결과 출력 영역 -->
+        <div id="result">
+            <h3>선택한 옵션노출 </h3>
+            <p id="selectedOptions">No options selected yet.</p>
+        </div>
+    </div>
+    <div>
+        <button id="setToMenu" > 메뉴 정보 저장</button>>
+    </div>
+    <div>
+        <button id="getToMenu" > 메뉴 정보 조회</button>
+        <p>Data: <span id="data">N/A</span></p>
+        <button id="getToMenuAll" > 메뉴 정보 전체 조회</button>
+        <p>Data: <span id="dataAll">N/A</span></p>
     </div>
     <div>
         <button id="sendCoffeeUse1Setting">커피1 값세팅 - 45, 0, 110, 0</button>
@@ -92,6 +211,124 @@
             document.getElementById('version').textContent = data.version;
         })
         .catch(error => console.error('Error fetching version:', error));
+
+
+    // 얼음 옵션 선택에 따라 시간 입력 필드 노출
+    const iceYes = document.getElementById('iceYes');
+    const iceNo = document.getElementById('iceNo');
+    const iceInput = document.getElementById('iceInput');
+
+    // iceYes 선택 시, 입력 필드 노출
+    iceYes.addEventListener('change', () => {
+        if (iceYes.checked) {
+            iceInput.style.display = 'block';
+        }
+    });
+
+    // iceNo 선택 시, 입력 필드 숨김
+    iceNo.addEventListener('change', () => {
+        if (iceNo.checked) {
+            iceInput.style.display = 'none';
+        }
+    });
+
+    const coffeeYes = document.getElementById('coffeeYes');
+    const coffeeNo = document.getElementById('coffeeNo');
+    const coffeeInput = document.getElementById('coffeeInput');
+
+    // iceYes 선택 시, 입력 필드 노출
+    coffeeYes.addEventListener('change', () => {
+        if (coffeeYes.checked) {
+            coffeeInput.style.display = 'block';
+        }
+    });
+
+    // iceNo 선택 시, 입력 필드 숨김
+    coffeeNo.addEventListener('change', () => {
+        if (coffeeNo.checked) {
+            coffeeInput.style.display = 'none';
+        }
+    });
+
+    const garuchaYes = document.getElementById('garuchaYes');
+    const garuchaNo = document.getElementById('garuchaNo');
+    const garuchaInput = document.getElementById('garuchaInput');
+
+    // garuchaYes 선택 시, 입력 필드 노출
+    garuchaYes.addEventListener('change', () => {
+        if (garuchaYes.checked) {
+            garuchaInput.style.display = 'block';
+        }
+    });
+
+    // garuchaNo 선택 시, 입력 필드 숨김
+    garuchaNo.addEventListener('change', () => {
+        if (garuchaNo.checked) {
+            garuchaInput.style.display = 'none';
+        }
+    });
+
+    const syrupYes = document.getElementById('syrupYes');
+    const syrupNo = document.getElementById('syrupNo');
+    const syrupInput = document.getElementById('syrupInput');
+
+    // syrupYes 선택 시, 입력 필드 노출
+    syrupYes.addEventListener('change', () => {
+        if (syrupYes.checked) {
+            syrupInput.style.display = 'block';
+        }
+    });
+
+    // syrupNo 선택 시, 입력 필드 숨김
+    syrupNo.addEventListener('change', () => {
+        if (syrupNo.checked) {
+            syrupInput.style.display = 'none';
+        }
+    });
+
+
+    document.getElementById('menuForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        // 각 옵션 값을 저장할 객체
+        const selectedOptions = {
+            cup: document.querySelector('input[name="cup"]:checked')?.value || 'None',
+            ice: document.querySelector('input[name="ice"]:checked')?.value || 'None',
+            iceTime: document.querySelector('input[name="iceTime"]')?.value || 'None',
+            waterTime: document.querySelector('input[name="waterTime"]')?.value || 'None',
+            coffee: document.querySelector('input[name="coffee"]:checked')?.value || 'None',
+            coffeeGrinder1: document.querySelector('input[id="coffeeGrinder1"]')?.value || 'None',
+            coffeeGrinder2: document.querySelector('input[id="coffeeGrinder2"]')?.value || 'None',
+            coffeeExtraction: document.querySelector('input[id="coffeeExtraction"]')?.value || 'None',
+            coffeeHotWater: document.querySelector('input[id="coffeeHotWater"]')?.value || 'None',
+            coffeeShot: document.querySelector('input[id="coffeeShot"]')?.value || 'None',
+            garuchaNumber: document.getElementById('garuchaNumber').value || 'None',
+            garuchaExtraction: document.getElementById('garuchaExtraction').value || 'None',
+            garuchaHotWater: document.getElementById('garuchaHotWater').value || 'None',
+            syrupNumber: document.getElementById('syrupNumber').value || 'None',
+            syrupExtraction: document.getElementById('syrupExtraction').value || 'None',
+            syrupHotWater: document.getElementById('syrupHotWater').value || 'None',
+        };
+
+        // 선택된 옵션 결과 출력
+        // 결과 출력 영역에 표시
+        document.getElementById('selectedOptions').innerHTML = `
+        Cup: ${selectedOptions.cup}<br>
+        Ice: ${selectedOptions.ice}<br>
+        Coffee: ${selectedOptions.coffee}<br>
+        coffeeGrinder1: ${selectedOptions.coffeeGrinder1}<br>
+        coffeeGrinder2: ${selectedOptions.coffeeGrinder2}<br>
+        coffeeExtraction: ${selectedOptions.coffeeExtraction}<br>
+        coffeeHotWater: ${selectedOptions.coffeeHotWater}<br>
+        coffeeShot: ${selectedOptions.coffeeShot}<br>
+        Garucha Number: ${selectedOptions.garuchaNumber}<br>
+        Garucha Extraction: ${selectedOptions.garuchaExtraction}<br>
+        Garucha HotWater: ${selectedOptions.garuchaHotWater}<br>
+        Syrup Number: ${selectedOptions.syrupNumber}<br>
+        Syrup Extraction: ${selectedOptions.syrupExtraction}<br>
+        Syrup HotWater: ${selectedOptions.syrupHotWater}<br>
+    `;
+    });
 </script>
 <script src="index.js"></script>
 <script src="../../nvcat/Nvcat.js"> console.log('Nvcat.js 로드 완료'); </script>

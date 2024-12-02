@@ -1,5 +1,6 @@
 const AWS = require('aws-sdk');
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
+const log = require('../../../logger');
 
 const initializeCounter = async (userId) => {
     const params = {
@@ -11,6 +12,7 @@ const initializeCounter = async (userId) => {
     };
 
     try {
+        log.info(params);
         await dynamoDB.put(params).promise();
         console.log(`Counter initialized for ${userId}`);
     } catch (error) {
