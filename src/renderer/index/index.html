@@ -114,6 +114,12 @@
                 <input type="number" id="syrupHotWater" name="syrupHotWater" value="0" min="0" step="0.5">
             </fieldset>
 
+            <fieldset id="priceInput" class="time-inputs">
+                <legend>금액</legend>
+                <label for="price">금액</label>
+                <input type="number" id="price" name="price" min="0">
+            </fieldset>
+
             <!-- 제출 버튼 -->
             <button type="submit">메뉴저장</button>
         </form>
@@ -308,6 +314,7 @@
             syrupNumber: document.getElementById('syrupNumber').value || 'None',
             syrupExtraction: document.getElementById('syrupExtraction').value || 'None',
             syrupHotWater: document.getElementById('syrupHotWater').value || 'None',
+            price: document.getElementById('price').value || 'None',
         };
 
         // 선택된 옵션 결과 출력
@@ -327,6 +334,7 @@
         Syrup Number: ${selectedOptions.syrupNumber}<br>
         Syrup Extraction: ${selectedOptions.syrupExtraction}<br>
         Syrup HotWater: ${selectedOptions.syrupHotWater}<br>
+        price: ${selectedOptions.price}<br>
     `;
     });
 </script>

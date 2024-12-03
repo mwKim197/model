@@ -21,7 +21,8 @@ document.getElementById('getToMenu').addEventListener('click', () => {
 
 // 메뉴정보 전체 조회 버튼
 document.getElementById('getToMenuAll').addEventListener('click', () => {
-    getMenuInfoAll(); //메뉴 조회
+    const allData = getMenuInfoAll(); //메뉴 조회
+    document.getElementById('dataAll').textContent = JSON.stringify(allData);
 });
 
 // 메뉴정보 저장 버튼
@@ -137,7 +138,7 @@ const getMenuInfoAll = async () => {
         const data = await response.json();
         sendLogToMain('info','SCF: ', data);  // 디버깅용 콘솔
         log.info(data);
-        document.getElementById('dataAll').textContent = JSON.stringify(data);
+        return data;
     } catch (error) {
         sendLogToMain('error','Error fetching menu info:', error);
         log.error(error);
@@ -430,5 +431,7 @@ const fetchCupPaUse = async () => {
 }
 
 
-
-
+module.exports = {
+    getMenuInfoAll,
+    // 필요한 함수들 추가
+};

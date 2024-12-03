@@ -2,26 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
-.menu-tab {
-    @apply px-8 py-4 text-white text-center cursor-pointer;
-}
+@layer components {
+    .menu-tab {
+        @apply px-8 py-4 text-white text-center cursor-pointer;
+    }
 
-.menu-tab.active {
-    @apply bg-white text-black;
-}
+    .menu-tab.active {
+        @apply bg-white text-black;
+    }
 
-.product-card {
-    @apply bg-gray-100 p-4 rounded-lg relative flex flex-col items-center;
-}
+    .product-card {
+        @apply bg-gray-100 p-4 rounded-lg relative flex flex-col items-center;
+    }
 
-.badge {
-    @apply absolute top-2 left-2 w-12 h-12 flex items-center justify-center rounded-full text-white text-sm font-bold;
-}
+    .badge {
+        @apply absolute top-2 left-2 w-12 h-12 flex items-center justify-center rounded-full text-white text-sm font-bold;
+    }
 
-.badge-new {
-    @apply bg-red-600;
-}
+    .badge-new {
+        @apply bg-red-600;
+    }
 
-.badge-best {
-    @apply bg-green-600;
+    .badge-best {
+        @apply bg-green-600;
+    }
 }

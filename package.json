@@ -3,7 +3,7 @@
   "version": "1.1.3",
   "main": "src/main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "npx tailwindcss build src/styles/tailwind.css -o src/styles/output.css && electron .",
     "build:css": "npx tailwindcss -i ./src/styles/tailwind.css -o ./src/styles/output.css --watch",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "electron-builder"
@@ -54,6 +54,7 @@
     "express": "^4.21.1",
     "serialport": "^12.0.0",
     "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "tailwind-scrollbar-hide": "^1.1.7"
   }
 }

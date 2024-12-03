@@ -17,6 +17,7 @@ const fs = require('fs');
 const appServer = express();
 const server = http.createServer(appServer);
 
+
 // 포트 연결
 const serialCommCom1 = new Serial(config.ports[0].path);
 const serialCommCom3 = new Serial(config.ports[2].path); // COM3 포트 추가
