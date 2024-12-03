@@ -30,9 +30,9 @@ const addProduct = async (data) => {
     try {
         // DynamoDB에 아이템 삽입
         await dynamoDB.put(params).promise();
-        console.log('Product added successfully');
+        log.info('Product added successfully');
     } catch (error) {
-        console.error('Error adding product:', error.message);  // 상세 오류 메시지 출력
+        log.error('Error adding product:', error.message);  // 상세 오류 메시지 출력
     }
 };
 
@@ -67,7 +67,7 @@ const allProduct = async () => {
         const data = await dynamoDB.query(params).promise();
         return data.Items;  // 조회된 항목들
     } catch (error) {
-        console.error('Error querying data:', error);
+        log.error('Error querying data:', error);
     }
 }
 
