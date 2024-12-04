@@ -1,9 +1,11 @@
 /////// 최초 전체 목록 조회해서 뿌리기, 여기서 주문 전송
 const log = require("../../logger");
-const {getMenuInfoAll} = require('../index/index');
+const menuApi = require('../api/menuApi');
 
+menuApi.getMenuInfoAll().then((data) => {
+    log.info(data)
+});
 
-const allData = await getMenuInfoAll();
 // 메뉴 데이터
 const allProducts = [
     { name: '아메리카노', nameEn: 'Americano', category: '커피', price: 2000,          image: 'https://placehold.co/200x300/png' },
