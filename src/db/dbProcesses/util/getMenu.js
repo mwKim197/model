@@ -23,7 +23,7 @@ const addProduct = async (data) => {
         Item: {
             userId: user.userId,
             menuId: await incrementCounter(user.userId),
-            data: data,
+            ...data,
         },
     };
 
@@ -64,8 +64,9 @@ const allProduct = async () => {
         ScanIndexForward: true,           // 정렬 키를 오름차순으로 정렬 (false는 내림차순)
     };
     try {
-        const data = await dynamoDB.query(params).promise();
-        return data.Items;  // 조회된 항목들
+        const result = await dynamoDB.query(params).promise();
+        log.info('DynamoDB result:', result);  // 결과 로그 출력
+        return result;  // 조회된 항목들
     } catch (error) {
         log.error('Error querying data:', error);
     }

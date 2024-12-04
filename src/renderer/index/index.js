@@ -15,9 +15,9 @@ document.getElementById('getToMenu').addEventListener('click', () => {
 });
 
 // 메뉴정보 전체 조회 버튼
-document.getElementById('getToMenuAll').addEventListener('click', () => {
-    const allData = menuApi.getMenuInfoAll(); //메뉴 조회
-    document.getElementById('dataAll').textContent = JSON.stringify(allData);
+document.getElementById('getToMenuAll').addEventListener('click', async () => {
+    const allData = await  menuApi.getMenuInfoAll(); //메뉴 조회
+    document.getElementById('dataAll').textContent = JSON.stringify(allData.Items, null, 2);
 });
 
 // 메뉴정보 저장 버튼

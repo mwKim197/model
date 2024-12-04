@@ -36,8 +36,8 @@ const getMenuInfoAll = async () => {
         }
 
         const data = await response.json();
-        sendLogToMain('info','SCF: ', data);  // 디버깅용 콘솔
         log.info(data);
+        sendLogToMain('info','DATA: ', data);  // 디버깅용 콘솔
         return data;
     } catch (error) {
         sendLogToMain('error','Error fetching menu info:', error);
@@ -49,23 +49,38 @@ const setMenuInfo = async () => {
 
     // 각 옵션 값을 저장할 객체
     const selectedOptions = {
+        name: document.getElementById('menuName')?.value || 'None',
         cup: document.querySelector('input[name="cup"]:checked')?.value || 'None',
-        ice: document.querySelector('input[name="ice"]:checked')?.value || 'None',
+        iceYn: document.querySelector('input[name="iceYn"]:checked')?.value || 'None',
         iceTime: document.querySelector('input[name="iceTime"]')?.value || 'None',
         waterTime: document.querySelector('input[name="waterTime"]')?.value || 'None',
-        coffee: document.querySelector('input[name="coffee"]:checked')?.value || 'None',
-        coffeeGrinder1: document.querySelector('input[id="coffeeGrinder1"]')?.value || 'None',
-        coffeeGrinder2: document.querySelector('input[id="coffeeGrinder2"]')?.value || 'None',
-        coffeeExtraction: document.querySelector('input[id="coffeeExtraction"]')?.value || 'None',
-        coffeeHotWater: document.querySelector('input[id="coffeeHotWater"]')?.value || 'None',
-        coffeeShot: document.querySelector('input[id="coffeeShot"]')?.value || 'None',
-        garuchaNumber: document.getElementById('garuchaNumber').value || 'None',
-        garuchaExtraction: document.getElementById('garuchaExtraction').value || 'None',
-        garuchaHotWater: document.getElementById('garuchaHotWater').value || 'None',
-        syrupNumber: document.getElementById('syrupNumber').value || 'None',
-        syrupExtraction: document.getElementById('syrupExtraction').value || 'None',
-        syrupHotWater: document.getElementById('syrupHotWater').value || 'None',
+        coffeeYn: document.querySelector('input[name="coffeeYn"]')?.value || 'None',
+        // 가루차 데이터 저장
+        coffee: Array.from(document.querySelectorAll('[id^="grinderOne"]')).map((coffeeElement, index) => ({
+            grinderOne: coffeeElement.value || 'None',
+            grinderTwo: document.getElementById(`grinderTwo${index + 1}`)?.value || 'None',
+            extraction: document.getElementById(`extraction${index + 1}`)?.value || 'None',
+            hotWater: document.getElementById(`hotWater${index + 1}`)?.value || 'None',
+        })),
+        garuchaYn: document.querySelector('input[name="garuchaYn"]')?.value || 'None',
+        // 가루차 데이터 저장
+        garucha: Array.from(document.querySelectorAll('[id^="garuchaNumber"]')).map((garuchaElement, index) => ({
+            garuchaNumber: garuchaElement.value || 'None',
+            garuchaExtraction: document.getElementById(`garuchaExtraction${index + 1}`)?.value || 'None',
+            garuchaHotWater: document.getElementById(`garuchaHotWater${index + 1}`)?.value || 'None',
+        })),
+        syrupYn: document.querySelector('input[name="syrupYn"]')?.value || 'None',
+        // 시럽 데이터 저장
+        syrup: Array.from(document.querySelectorAll('[id^="syrupNumber"]')).map((syrupElement, index) => ({
+            syrupNumber: syrupElement.value || 'None',
+            syrupExtraction: document.getElementById(`syrupExtraction${index + 1}`)?.value || 'None',
+            syrupHotWater: document.getElementById(`syrupHotWater${index + 1}`)?.value || 'None',
+        })),
+        price: document.getElementById('price').value || 'None',
+        image: 'https://placehold.co/200x300/png',
+        category: document.getElementById('category').value || 'None',
     };
+
 
     log.info("data : " + JSON.stringify(selectedOptions));
 

@@ -1,26 +1,16 @@
-let FS = '\x1C';
-let H7 = '\x07';
-let sendbuf;
-let iFlag = '0';
+const log = require("../../logger");
 
-function handleClick(myRadio) {
-    //alert(myRadio.value);
-    if(myRadio.value === 'credit') // 카드 결제
-    {
-        sendbuf = "NICEVCAT" + H7 + "0200" + FS + "10" + FS + "C" + FS + form.money.value + FS + form.tax.value + FS + form.bongsa.value + FS + form.halbu.value + FS + "" + FS + "" + FS + "" + FS + "" + FS + FS + FS + "" + FS + FS + FS + FS + ""+ FS + H7;
-    }
-
-    form.SendData.value = sendbuf;
-}
-
-async function reqVCAT_HTTP(myRadio) {
+const reqVCAT_HTTP = async (cost, halbu) => {
     let sendMsg;
-    let RecvData;
+    let FS = '\x1C';
+    let H7 = '\x07';
+    let sendbuf;
+    let iFlag = '0';
 
-    form.RecvData.value = "";
-    sendMsg = form.SendData.value;
-    if (sendMsg.length === 0) {
-        alert("전송할 데이터가 없습니다.");
+    sendMsg = sendbuf = "NICEVCAT" + H7 + "0200" + FS + "10" + FS + "C" + FS + cost + FS + 0 + FS + 0 + FS + halbu + FS + "" + FS + "" + FS + "" + FS + "" + FS + FS + FS + "" + FS + FS + FS + FS + ""+ FS + H7;
+
+    if (sendMsg.length === 0 || cost === 0) {
+        log.error("전송할 데이터가 없습니다.");
     } else {
         if (sendMsg === "REQ_STOP") {
             sendbuf = make_send_data(sendMsg);
@@ -33,10 +23,21 @@ async function reqVCAT_HTTP(myRadio) {
                     },
                     body: encodeURI(sendbuf)
                 });
+
                 const data = await response.text();
-                form.RecvData.value = data;
+
+                log.info(data);
+                // 성공 여부 확인 (예: "SUCCESS"가 성공 메시지라고 가정)
+                if (data === "SUCCESS") {
+                    log.info("결제 성공: " + data);
+                    return { success: true, message: data };
+                } else {
+                    log.error("결제 실패: " + data);
+                    return { success: false, message: data };
+                }
+
             } catch (error) {
-                alert("AJAX 요청 실패!");
+                log.error("AJAX 요청 실패!");
             }
 
         } else {
@@ -53,18 +54,28 @@ async function reqVCAT_HTTP(myRadio) {
                         body: encodeURI(sendbuf)
                     });
                     const data = await response.text();
-                    form.RecvData.value = data;
+
+                    log.info(data);
+                    // 성공 여부 확인 (예: "SUCCESS"가 성공 메시지라고 가정)
+                    if (data === "SUCCESS") {
+                        log.info("결제 성공: " + data);
+                        return { success: true, message: data };
+                    } else {
+                        log.error("결제 실패: " + data);
+                        return { success: false, message: data };
+                    }
+
                     iFlag = '0';
                 } catch (error) {
                     if (sendMsg === "RESTART\u0007" || sendMsg === "NVCATSHUTDOWN\u0007") {
                         // 서버 종료 처리
                     } else {
-                        alert('AJAX 오류! NVCAT 서버가 정상적으로 동작하지 않음!');
+                        log.error('AJAX 오류! NVCAT 서버가 정상적으로 동작하지 않음!');
                     }
                     iFlag = '0';
                 }
             } else {
-                alert('다른 요청이 진행 중입니다.');
+                log.info('다른 요청이 진행 중입니다.');
             }
         }
     }
@@ -99,3 +110,7 @@ function NCpad(n, width) {
     n = n + '';
     return n.length >= width ? n : new Array(width - n.length + 1).join('0') + n;
 }
+
+module.exports = {
+    reqVCAT_HTTP,
+};
