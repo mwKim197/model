@@ -4,6 +4,7 @@ const menuApi = require('../api/menuApi');
 const orderApi = require('../api/orderApi');
 
 let orderList = [];
+
 // 메뉴 데이터
 let allProducts = [
     { name: '아메리카노', nameEn: 'Americano', category: '커피', price: 2000,          image: 'https://placehold.co/200x300/png' },
@@ -62,6 +63,9 @@ function displayProducts(products) {
 function addItemToOrder(itemName) {
     const product = allProducts.find(p => p.name === itemName);
     const orderItem = document.createElement('div');
+    // 해당 아이템의 orderList에 추가
+    const orderId = `${product.menuId}-${product.userId}`;  // 메뉴 ID와 userId로 고유한 주문 아이템 ID 생성
+    orderList.push({ orderId, userId: product.userId, menuId: product.menuId, price: product.price, count: 1 });
     orderItem.className = 'order-item bg-gray-300 p-2 rounded-lg flex justify-between items-center w-[190px] min-h-32 h-32';
     orderItem.innerHTML = `
                 <div class="border-2 border-gray-300 rounded-2xl">
@@ -72,13 +76,13 @@ function addItemToOrder(itemName) {
                         <!-- 수량 조정 버튼 -->
                             <button 
                                 class="bg-blue-500 text-white px-2 py-1 rounded-lg" 
-                                onclick="updateItemQuantity(this, -1)">
+                                onclick="updateItemQuantity(this, -1, '${orderId}')">
                                 -
                             </button>
                             <span class="quantity bg-white px-3 py-1 rounded-lg text-center">1</span>
                             <button 
                                 class="bg-green-500 text-white px-2 py-1 rounded-lg" 
-                                onclick="updateItemQuantity(this, 1)">
+                                onclick="updateItemQuantity(this, 1, '${orderId}')">
                                 +
                             </button>
                         </div>
@@ -87,16 +91,20 @@ function addItemToOrder(itemName) {
                 </div>
             `;
     orderGrid.appendChild(orderItem);
-    orderList.push({userId: product.userId, menuId: product.menuId, price: product.price, count: 1 });
+
 }
 
 // 주문된 아이템을 삭제하는 함수
-function removeItemFromOrder(button) {
+function removeItemFromOrder(button, orderId) {
     const orderItem = button.closest('.order-item');
     orderItem.remove();
+
+    // orderList에서 해당 주문 삭제
+    orderList = orderList.filter(order => order.orderId !== orderId);
 }
 
-function updateItemQuantity(button, change) {
+// 수량을 업데이트하는 함수
+function updateItemQuantity(button, change, orderId) {
     // 부모 요소에서 .quantity 찾기
     const quantityElement = button.parentElement.querySelector('.quantity');
     let currentQuantity = parseInt(quantityElement.textContent, 10);
@@ -112,6 +120,13 @@ function updateItemQuantity(button, change) {
 
     // 수량 업데이트
     quantityElement.textContent = currentQuantity;
+    console.log(orderId);
+    console.log(orderList);
+    // orderList에서 해당 주문을 찾아 수량 업데이트
+    const order = orderList.find(order => order.orderId === orderId);
+    if (order) {
+        order.count = currentQuantity;  // 수량 업데이트
+    }
 }
 
 // 메뉴 탭 클릭 시 제품 필터링
@@ -131,7 +146,7 @@ document.getElementById('payment').addEventListener('click', async () => {
 
     let price = 0;
     orderList.map((order)=> {
-        price += Number(order.price);
+        price += Number(order.price) * order.count;  // 수량만큼 가격 계산
     })
 
     //const result = await orderApi.reqVCAT_HTTP( price, "00");
@@ -150,12 +165,10 @@ document.getElementById('payment').addEventListener('click', async () => {
 });
 
 
-
-
 // async 함수 안에서 await 사용
 async function fetchData() {
     const allData = await menuApi.getMenuInfoAll();
     allProducts = allData.Items;
     displayProducts(allProducts);
 }
-fetchData();  // 함수 호출
+fetchData().then();  // 함수 호출

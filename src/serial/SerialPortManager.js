@@ -46,8 +46,8 @@ class SerialPortManager {
         });
 
         this.port.on('data', (data) => {
-            console.log('Received Raw Data:', data.toString('hex')); // 데이터 로그
-            console.log('Received ASCII Data:', data.toString('ascii')); // ASCII로 출력
+            log.info('Received Raw Data:', data.toString('hex')); // 데이터 로그
+            log.info('Received ASCII Data:', data.toString('ascii')); // ASCII로 출력
         });
 
         // 데이터 수신 이벤트 처리
@@ -69,7 +69,6 @@ class SerialPortManager {
             this._processHexData(Buffer.from(hexPacket, 'hex')); // 패킷 처리
             this.hexBuffer =''; // 사용한 패킷 제거
         }
-
 
         // ASCII 패킷 처리
         this.asciiBuffer += data.toString('ascii'); // ASCII 형식으로 누적

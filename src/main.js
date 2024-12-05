@@ -10,18 +10,14 @@ const { startPolling } = require('./services/serialDataManager');
 const Order = require('./serial/portProcesses/Order');
 const Ice = require('./serial/portProcesses/Ice');
 const Cup = require('./serial/portProcesses/Cup');
+const CupModule = require('./serial/portProcesses/CupModule');
 const Menu = require('./db/dbProcesses/Menu');
 const Serial = require('./serial/SerialPortManager'); // 새로 작성한 모듈 가져오기
 const config = require('./serial/config');
 const fs = require('fs');
 const appServer = express();
 const server = http.createServer(appServer);
-
-
-// 포트 연결
-const serialCommCom1 = new Serial(config.ports[0].path);
-const serialCommCom3 = new Serial(config.ports[2].path); // COM3 포트 추가
-const serialCommCom4 = new Serial(config.ports[3].path); // COM3 포트 추가
+const {serialCommCom1, serialCommCom3, serialCommCom4} = require("./serial/serialCommManager")
 
 // Express 서버에서 serialComm을 각 포트에 맞게 사용하도록 설정
 appServer.use((req, res, next) => {
