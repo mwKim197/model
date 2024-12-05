@@ -1,5 +1,12 @@
 const log = require("../../logger");
+const { ipcRenderer } = require('electron');
 
+function sendLogToMain(level, message) {
+    ipcRenderer.send('log-to-main', { level, message });
+}
+
+/**결제 요청
+ * */
 const reqVCAT_HTTP = async (cost, halbu) => {
     let sendMsg;
     let FS = '\x1C';
@@ -30,6 +37,7 @@ const reqVCAT_HTTP = async (cost, halbu) => {
                 // 성공 여부 확인 (예: "SUCCESS"가 성공 메시지라고 가정)
                 if (data === "SUCCESS") {
                     log.info("결제 성공: " + data);
+
                     return { success: true, message: data };
                 } else {
                     log.error("결제 실패: " + data);
@@ -55,9 +63,10 @@ const reqVCAT_HTTP = async (cost, halbu) => {
                     });
                     const data = await response.text();
 
-                    log.info(data);
+                    const responseData = await reqNCData(data);
+                    log.info(responseData);
                     // 성공 여부 확인 (예: "SUCCESS"가 성공 메시지라고 가정)
-                    if (data === "SUCCESS") {
+                    if (responseData.isValid) {
                         log.info("결제 성공: " + data);
                         return { success: true, message: data };
                     } else {
@@ -71,6 +80,7 @@ const reqVCAT_HTTP = async (cost, halbu) => {
                         // 서버 종료 처리
                     } else {
                         log.error('AJAX 오류! NVCAT 서버가 정상적으로 동작하지 않음!');
+                        return { success: false, message: 'AJAX 오류! NVCAT 서버가 정상적으로 동작하지 않음!' };
                     }
                     iFlag = '0';
                 }
@@ -81,7 +91,7 @@ const reqVCAT_HTTP = async (cost, halbu) => {
     }
 }
 
-function make_send_data(senddata) {
+const make_send_data = (senddata) => {
     let m_sendmsg;
     let m_totlen;
     let m_bodylen;
@@ -106,11 +116,85 @@ String.prototype.NCbyteLength = function() {
     return l;
 };
 
-function NCpad(n, width) {
+const NCpad = (n, width) => {
     n = n + '';
     return n.length >= width ? n : new Array(width - n.length + 1).join('0') + n;
 }
+const reqOrder = async (orderList) => {
+    try {
+        const response = await fetch('http://localhost:3000/start-order', {
+            method: 'POST', // POST 요청
+            headers: {
+                'Content-Type': 'application/json', // JSON 형식으로 전송
+            },
+            body: JSON.stringify(orderList),
+        });
+        if (!response.ok) throw new Error('네트워크 응답 실패');
+
+        const data = await response.json();
+        console.log(data);
+
+    } catch (error) {
+        sendLogToMain('error','RD2: 데이터 가져오기 실패:', error);
+    }
+}
+const reqNCData = async (rawData) => {
+    const fieldDefinitions = [
+        { name: "거래구분", length: 4, description: "승인 : 0210, 취소 : 0430" },
+        { name: "거래유형", length: 2, description: "신용(10), 현금영수증(21)" },
+        { name: "응답코드", length: 4, description: "정상: 0000" },
+        { name: "거래금액", length: 12, description: "거래금액" },
+        { name: "부가세", length: 12, description: "부가세" },
+        { name: "봉사료", length: 12, description: "봉사료" },
+        { name: "할부개월", length: 2, description: "할부개월" },
+        { name: "승인번호", length: 12, description: "승인번호" },
+        { name: "승인일시", length: 12, description: "승인일시(YYMMDDhhmmss)" },
+        { name: "발급사코드", length: 2, description: "발급사코드" },
+        { name: "발급사명", length: 20, description: "발급사명" },
+        { name: "매입사코드", length: 2, description: "매입사코드" },
+        { name: "매입사명", length: 20, description: "매입사명" },
+        { name: "가맹점번호", length: 15, description: "가맹점번호" },
+        { name: "승인CATID", length: 10, description: "승인CATID" },
+        { name: "잔액", length: 9, description: "잔액(누적포인트)" },
+        { name: "응답메시지", length: 112, description: "응답메시지" },
+        { name: "카드Bin", length: 12, description: "Bin 6자리 + '*'" },
+        { name: "카드구분", length: 1, description: "0: 신용카드, 1: 체크카드, 2: 선불카드" },
+        { name: "전문관리번호", length: 20, description: "POS 전달 전문관리번호" },
+        { name: "거래일련번호", length: 20, description: "카드번호 대체 거래일련번호" },
+        { name: "기기번호", length: 10, description: "기기번호" },
+        { name: "캐시백가맹점", length: 15, description: "캐시백 가맹점 정보" },
+        { name: "캐시백승인번호", length: 12, description: "캐시백 승인번호" },
+        { name: "VAN NAME", length: 10, description: "멀티VAN 사용 시 승인 VAN사" },
+        { name: "전문TEXT", length: 3, description: "전문TEXT (예: 'PRO')" },
+        { name: "기종구분", length: 2, description: "'H1': 일반거래" },
+        { name: "사업자번호", length: 10, description: "사업자번호" },
+        { name: "거래고유번호", length: 12, description: "거래고유번호" },
+        { name: "DDC여부", length: 1, description: "1: DDC, 3: DSC/ESC 사인 있을 때, 4: DSC/ESC 사인 없을 때" },
+        { name: "실승인금액", length: 9, description: "실승인금액" },
+    ];
+
+    const fields = rawData.split(/\x1C/);
+
+    const parsedData = fields.map((value, index) => ({
+        name: fieldDefinitions[index]?.name || `Field${index + 1}`,
+        value: value.trim(),
+        description: fieldDefinitions[index]?.description || "N/A",
+    }));
+
+    // 정상적인 응답인지 확인하는 함수
+    function isValidResponse(parsedData) {
+        // 응답코드를 찾아서 0000인지 확인
+        const responseCode = parsedData.find(field => field.name === "응답코드");
+        return responseCode && responseCode.value === "0000";
+    }
+
+    const isValid = await isValidResponse(parsedData);
+
+    return {isValid: isValid, parsedData: parsedData};
+}
+
 
 module.exports = {
     reqVCAT_HTTP,
+    reqOrder
 };

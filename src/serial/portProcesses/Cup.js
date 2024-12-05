@@ -1,4 +1,4 @@
-const log = require('../../logger')
+const log = require('../../logger');
 const express = require('express');
 const Cup = express.Router();
 

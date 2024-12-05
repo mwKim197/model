@@ -64,17 +64,54 @@ function addItemToOrder(itemName) {
     const orderItem = document.createElement('div');
     orderItem.className = 'order-item bg-gray-300 p-2 rounded-lg flex justify-between items-center w-[190px] min-h-32 h-32';
     orderItem.innerHTML = `
-                <span>${product.name}</span>
-                <button class="bg-red-500 text-white px-2 py-1 rounded-lg" onclick="removeItemFromOrder(this)">삭제</button>
+                <div class="border-2 border-gray-300 rounded-2xl">
+                    <img src="https://placehold.co/200x300/png" alt="${product.name}" class="w-full mb-2">
+                    <span>${product.name}</span>
+                    <div class="flex justify-between">
+                        <div class="flex items-center space-x-2">
+                        <!-- 수량 조정 버튼 -->
+                            <button 
+                                class="bg-blue-500 text-white px-2 py-1 rounded-lg" 
+                                onclick="updateItemQuantity(this, -1)">
+                                -
+                            </button>
+                            <span class="quantity bg-white px-3 py-1 rounded-lg text-center">1</span>
+                            <button 
+                                class="bg-green-500 text-white px-2 py-1 rounded-lg" 
+                                onclick="updateItemQuantity(this, 1)">
+                                +
+                            </button>
+                        </div>
+                        <button class="bg-red-500 text-white px-2 py-1 rounded-lg" onclick="removeItemFromOrder(this)">삭제</button>  
+                    </div>
+                </div>
             `;
     orderGrid.appendChild(orderItem);
-    orderList.push({userId: product.userId, menuId: product.menuId, price: product.price });
+    orderList.push({userId: product.userId, menuId: product.menuId, price: product.price, count: 1 });
 }
 
 // 주문된 아이템을 삭제하는 함수
 function removeItemFromOrder(button) {
     const orderItem = button.closest('.order-item');
     orderItem.remove();
+}
+
+function updateItemQuantity(button, change) {
+    // 부모 요소에서 .quantity 찾기
+    const quantityElement = button.parentElement.querySelector('.quantity');
+    let currentQuantity = parseInt(quantityElement.textContent, 10);
+
+    // 수량 변경 로직
+    currentQuantity += change;
+
+    // 수량이 1 미만이 되지 않도록 설정
+    if (currentQuantity < 1) {
+        alert("최소 수량은 1입니다.");
+        currentQuantity = 1;
+    }
+
+    // 수량 업데이트
+    quantityElement.textContent = currentQuantity;
 }
 
 // 메뉴 탭 클릭 시 제품 필터링
@@ -96,15 +133,17 @@ document.getElementById('payment').addEventListener('click', async () => {
     orderList.map((order)=> {
         price += Number(order.price);
     })
-    console.log(orderList);
-    console.log(price);
 
-    const result = await orderApi.reqVCAT_HTTP( price, 0);
+    //const result = await orderApi.reqVCAT_HTTP( price, "00");
+    const result = {success :true}
 
     if (result.success) {
-        console.log("결제 성공: ", result.message);
         // 다음 단계로 진행
+        console.log(orderList);
+        await orderApi.reqOrder(orderList);
+
     } else {
+        alert("결제에 실패하였습니다. 다시 시도해주세요.");
         console.error("결제 실패: ", result.message);
         // 결제 실패 처리
     }

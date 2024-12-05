@@ -1,12 +1,15 @@
 const express = require('express');
 const { stopPolling, startPolling, getSerialData } = require('../../services/serialDataManager');
 const Connect = express.Router();
+const log = require('../../logger');
 
 // 주문 요청 처리 엔드포인트
 Connect.post('/start-order', (req, res) => {
     try {
         stopPolling(); // 주문 작업을 시작하기 전에 조회 정지
-        // 여기서 주문 처리를 수행
+        const reqBody = req.body;
+        log.info(reqBody);
+        // list 받음 -> 메뉴판에 있는 데이터 불러서 조합 시작!
         res.json({ success: true, message: 'Order process started, polling stopped.' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
