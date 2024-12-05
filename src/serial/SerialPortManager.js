@@ -72,7 +72,6 @@ class SerialPortManager {
 
         // ASCII 패킷 처리
         this.asciiBuffer += data.toString('ascii'); // ASCII 형식으로 누적
-        log.info(`asciiBuffer: ${this.asciiBuffer}`);
 
         // ASCII 데이터 처리
         while (this.asciiBuffer.includes('\n')) {
@@ -87,7 +86,6 @@ class SerialPortManager {
     _isHexComplete(hexBuffer) {
         // 최소 패킷 길이 확인 (STX + ID + Length + Command + Data + CRC + ETX)
         if (hexBuffer.length < 7) {
-            console.log('Invalid packet: Length is too short');
             return false; // 최소 길이를 충족하지 않으면 패킷이 완전하지 않음
         }
 
@@ -95,22 +93,17 @@ class SerialPortManager {
         const stx = hexBuffer[0]; // 첫 번째 바이트 (STX)
         const etx = hexBuffer[hexBuffer.length - 1]; // 마지막 바이트 (ETX)
         if (stx !== 0x02 || etx !== 0x03) {
-            console.log('Invalid packet: Missing STX or ETX');
             return false; // STX와 ETX가 없으면 패킷이 유효하지 않음
         }
 
-        // 수신된 데이터(hexBuffer) 출력
-        console.log("hexBuffer:", hexBuffer.toString('hex')); // 02 01 07 04 05 00 03
         // Length 필드 확인
         const length = hexBuffer[2]; // 세 번째 바이트가 Length
-        console.log("Length field:", length); // Length 필드 값 출력
 
         // 길이 비교
         if (hexBuffer.length !== length) {
-            console.log('Invalid packet: Length mismatch');
             return false; // 실제 길이와 Length 필드 값이 다르면 패킷 불완전
         }
-
+        log.info("HEX DATA");
         return true; // 모든 조건 충족 시 패킷 완전
     }
 
@@ -118,7 +111,6 @@ class SerialPortManager {
     _processHexData(data) {
         try {
             const hexString = data.toString('hex'); // Hex로 변환
-            log.info(`Processing Hex Data: ${hexString}`);
             // Hex 데이터 분석 로직 추가
             this.latestData = this.parseHexData(hexString);
         } catch (err) {
@@ -137,8 +129,6 @@ class SerialPortManager {
 
     // ascii 응답데이터 처리
     _processAsciiData(asciiPacket) {
-        log.info(`Processing ASCII data: ${asciiPacket}`);
-
         // ASCII 데이터 추가 처리 로직
         if (asciiPacket.match(/^[a-zA-Z0-9+\s]*$/)) {
 

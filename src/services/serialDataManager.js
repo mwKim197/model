@@ -10,9 +10,7 @@ let isPollingActive = false; // 조회 활성화 여부
 // 데이터 갱신 함수
 async function updateSerialData(serialComm, command, key) {
     try {
-        const data = await serialComm.writeCommand(`${command}\x0d`);
-        serialData[key] = data; // 데이터 저장
-        log.info(`Updated ${key}:`, data);
+        serialData[key] = await serialComm.writeCommand(`${command}\x0d`); // 데이터 저장
     } catch (err) {
         log.error(`Error updating ${key}: ${err.message}`);
     }
