@@ -138,6 +138,25 @@ const reqOrder = async (orderList) => {
         sendLogToMain('error','RD2: 데이터 가져오기 실패:', error);
     }
 }
+
+const reStartCheck = async (orderList) => {
+    try {
+        const response = await fetch('http://localhost:3000/start-order', {
+            method: 'POST', // POST 요청
+            headers: {
+                'Content-Type': 'application/json', // JSON 형식으로 전송
+            },
+            body: JSON.stringify(orderList),
+        });
+        if (!response.ok) throw new Error('네트워크 응답 실패');
+
+        const data = await response.json();
+        console.log(data);
+
+    } catch (error) {
+        sendLogToMain('error','RD2: 데이터 가져오기 실패:', error);
+    }
+}
 const reqNCData = async (rawData) => {
     const fieldDefinitions = [
         { name: "거래구분", length: 4, description: "승인 : 0210, 취소 : 0430" },

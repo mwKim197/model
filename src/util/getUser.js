@@ -14,7 +14,7 @@ const getUser = async () => {
 
         return user;
     } catch (error) {
-        log.error('Error loading electron-store:', error);
+        log.error('[STORE] electron-store:', error);
         return null;  // 예외 발생 시 null 반환
     }
 };
