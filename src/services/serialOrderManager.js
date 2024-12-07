@@ -247,43 +247,38 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
             await Order.setSyrup(motor, extraction, hotwater, sparkling);
             log.info("extractSyrup!!!");
             await Order.extractSyrup();
-            let operationStopped = false; // 상태 플래그 초기화
+            let stopCount = 0; // "없음" 상태 횟수 카운터
+            const stopThreshold = 3; // "없음" 상태가 필요한 반복 횟수
 
             for (let counter = 0; counter < 60; counter++) {
                 await McData.updateSerialData('RD1', 'RD1');
                 const data = McData.getSerialData('RD1');
 
                 log.info(JSON.stringify(data));
-                let stopCount = 0; // "정지" 상태 횟수 카운터
-                const stopThreshold = 3; // "정지" 상태가 필요한 반복 횟수
 
-                for (let counter = 0; counter < 60; counter++) {
-                    await McData.updateSerialData('RD1', 'RD1');
-                    const data = McData.getSerialData('RD1');
-
-                    log.info(JSON.stringify(data));
-
-                    if (data.cupSensor === "없음") {
-                        stopCount++;
-                        log.info(`Sensor state is '없음', count: ${stopCount}`);
-                        if (stopCount >= stopThreshold) {
-                            log.info(`Sensor state reached '없음' ${stopThreshold} times. Exiting loop.`);
-                            break; // 루프 종료
-                        }
-                    } else {
-                        stopCount = 0; // "없음" 상태가 아닌 경우 카운터 초기화
+                // "없음" 상태 감지 및 카운터 증가
+                if (data.cupSensor === "없음") {
+                    stopCount++;
+                    log.info(`Sensor state is '없음', count: ${stopCount}`);
+                    if (stopCount >= stopThreshold) {
+                        log.info(`Sensor state reached '없음' ${stopThreshold} times. Exiting loop.`);
+                        break; // 루프 종료
                     }
+                } else {
+                    stopCount = 0; // "없음" 상태가 아닌 경우 카운터 초기화
                 }
+
                 await new Promise(r => setTimeout(r, 1000));
             }
 
-            // 루프 종료 후 다음 로직
-            if (operationStopped) {
-                await Order.purifyingSyrup(motor);
-                log.info("Purifying syrup completed.");
+            // 루프 종료 후 처리
+            if (stopCount >= stopThreshold) {
+                log.info("Cup sensor reached '없음' threshold, proceeding with the next step.");
+                // 다음 로직 실행
             } else {
-                log.warn("Auto operation state did not reach '정지' within the timeout.");
-                reject(new Error("Timeout: Auto operation did not stop."));
+                log.warn("Cup sensor did not reach '없음' threshold within timeout.");
+                // 타임아웃 처리
+                reject(new Error("Timeout: Cup sensor did not reach '없음' state."));
             }
             reject();
 
