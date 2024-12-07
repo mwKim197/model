@@ -75,6 +75,7 @@ const setMenuInfo = async () => {
             syrupNumber: syrupElement.value || '0',
             syrupExtraction: document.getElementById(`syrupExtraction${index + 1}`)?.value || '0',
             syrupHotWater: document.getElementById(`syrupHotWater${index + 1}`)?.value || '0',
+            syrupSparklingWater: document.getElementById(`syrupSparklingWater${index + 1}`)?.value || '0',
         })),
         price: document.getElementById('price').value || '0',
         image: 'https://placehold.co/200x300/png',

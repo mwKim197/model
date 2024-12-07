@@ -304,6 +304,8 @@
                 <input type="number" id="syrupExtraction${syrupCounter}" name="syrupExtraction${syrupCounter}" value="0" min="0" step="0.5">
                 <label for="syrupHotWater${syrupCounter}">뜨거운물 시간</label>
                 <input type="number" id="syrupHotWater${syrupCounter}" name="syrupHotWater${syrupCounter}" value="0" min="0" step="0.5">
+                <label for="syrupSparklingWater${syrupCounter}">탄산수 시간</label>
+                <input type="number" id="syrupSparklingWater${syrupCounter}" name="syrupSparklingWater${syrupCounter}" value="0" min="0" step="0.5">
             `;
         syrupContainer.appendChild(newFieldset);
     });
@@ -340,6 +342,7 @@
                 syrupNumber: syrupElement.value || 'None',
                 syrupExtraction: document.getElementById(`syrupExtraction${index + 1}`)?.value || 'None',
                 syrupHotWater: document.getElementById(`syrupHotWater${index + 1}`)?.value || 'None',
+                syrupSparklingWater: document.getElementById(`syrupSparklingWater${index + 1}`)?.value || 'None',
             })),
             price: document.getElementById('price').value || 'None',
             image: 'https://placehold.co/200x300/png',

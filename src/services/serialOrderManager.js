@@ -61,8 +61,8 @@ const processOrder = async (recipe) => {
    //if (recipe.iceYn === 'yes') await dispenseIce(recipe);
 
      //if (recipe.coffeeYn === 'yes') await dispenseMultipleCoffees(recipe);
-     if (recipe.garuchaYn === 'yes') await dispenseMultipleGarucha(recipe);
-     //if (recipe.syrupYn === 'yes') await dispenseSyrup();
+     //if (recipe.garuchaYn === 'yes') await dispenseMultipleGarucha(recipe);
+     if (recipe.syrupYn === 'yes') await dispenseMultipleSyrup(recipe);
 };
 
 // 제조 단계 함수
@@ -238,14 +238,41 @@ const dispenseMultipleGarucha = async (recipe) => {
     log.info('모든 차 배출 완료');
 };
 
-const dispenseSyrup = () => {
-    return new Promise(resolve => {
-        log.info('시럽 추가 중');
-        setTimeout(() => {
-            log.info('시럽 추가 완료');
-            resolve();
-        }, 1000);
+const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            await McData.updateSerialData('RD1', 'RD1');
+            const data = McData.getSerialData('RD1');
+            log.info("GET SYRUP INFO ", JSON.stringify(data));
+            log.info(`syrup set!!!  : ${motor}, ${extraction}, ${hotWater}, ${sparkling}`);
+            await Order.setSyrup(motor, extraction, hotwater, sparkling);
+            log.info("extractSyrup!!!");
+            await Order.extractSyrup();
+            reject();
+
+        } catch (error) {
+            log.error('dispenseSyrup 오류:', error.message);
+            reject(error);
+        }
+
     });
+};
+
+const dispenseMultipleSyrup = async (recipe) => {
+    log.info(`JSON.stringify(recipe) : ${JSON.stringify(recipe)}`);
+    for (let i = 0; i < recipe.syrup.length; i++) {
+        const syrup = recipe.syrup[i];
+        log.info(`dispenseSyrup ${i + 1} START!!`);
+        log.info(`syrup set!!!  : ${syrup.syrupNumber}, ${syrup.syrupExtraction}, ${syrup.syrupHotWater}, ${syrup.syrupSparklingWater}`);
+        // 각 커피 배출을 순차적으로 실행
+        await dispenseSyrup(
+            syrup.syrupNumber,
+            syrup.syrupExtraction,
+            syrup.syrupHotWater,
+            syrup.syrupSparklingWater
+        );
+    }
+    log.info('모든 시럽 배출 완료');
 };
 
 // 주문 처리 시작
