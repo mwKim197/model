@@ -254,19 +254,26 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
                 const data = McData.getSerialData('RD1');
 
                 log.info(JSON.stringify(data));
-                let cupSensor = 0;
+                let stopCount = 0; // "정지" 상태 횟수 카운터
+                const stopThreshold = 3; // "정지" 상태가 필요한 반복 횟수
 
-                if (data.cupSensor === "없음") {
-                    cupSensor++;
-                    log.info(cupSensor);
+                for (let counter = 0; counter < 60; counter++) {
+                    await McData.updateSerialData('RD1', 'RD1');
+                    const data = McData.getSerialData('RD1');
+
+                    log.info(JSON.stringify(data));
+
+                    if (data.cupSensor === "없음") {
+                        stopCount++;
+                        log.info(`Sensor state is '없음', count: ${stopCount}`);
+                        if (stopCount >= stopThreshold) {
+                            log.info(`Sensor state reached '없음' ${stopThreshold} times. Exiting loop.`);
+                            break; // 루프 종료
+                        }
+                    } else {
+                        stopCount = 0; // "없음" 상태가 아닌 경우 카운터 초기화
+                    }
                 }
-
-                if (cupSensor > 2) {
-                    log.info("Auto operation state is '정지', exiting loop.");
-                    operationStopped = true; // 상태 플래그 업데이트
-                    break; // 루프 종료
-                }
-
                 await new Promise(r => setTimeout(r, 1000));
             }
 
