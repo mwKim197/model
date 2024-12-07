@@ -10,7 +10,7 @@ class IceModule {
     }
 
     // 제빙기 상태
-    async getKaiserInfo() {
+    async getKaiserInfo(data) {
         try {
 
             // SCF 명령어에 URL 파라미터 값을 포함시켜 시리얼 통신
@@ -19,7 +19,7 @@ class IceModule {
             const id = 0x01;          // Device ID
             const len = 0x06;         // Packet Length
             const cmd = 0x01;         // Command
-            const data = 0x06;          // data
+            const data = data;                  // data  0x02, 0x03, 0x04
             const etx = 0x03;         // End Byte
 
             // 패킷 조립
@@ -31,11 +31,8 @@ class IceModule {
             const response = await this.serialCommCom3.writeCommand(packet);
             log.info('info command response:', response); // 시리얼 응답 로그
 
-            const statusData = response; // 전체 버퍼
-            log.info('Parsed Status Data:', statusData);
-
-            return await this.parseStatusData(statusData);
-
+            //return await this.parseStatusData(response);
+            return response
         } catch (err) {
             log.error(err.message);
             throw new Error(err.message);
@@ -187,7 +184,7 @@ class IceModule {
             const cmd = responseData[3]; // CMD 필드
             const wasTrue = cmd === 0x0B ? 0 : 1;
             // 데이터 필드만 추출 (STX, ID, LEN, CMD, CRC, ETX 제외)
-            const statusData = responseData.slice(4, responseData.length - 1);
+            const statusData = responseData.slice(4, 5);
 
             // 상태 플래그 추출
             const genBuf2 = statusData[1]; // DATA2

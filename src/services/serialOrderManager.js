@@ -102,8 +102,12 @@ const dispenseIce = (recipe) => {
     return new Promise(async (resolve, reject) => {
         try {
             log.info(`얼음 세팅 중: ${recipe.iceTime}초, 물 세팅 중: ${recipe.waterTime}초`);
-            const initialStatus = await Ice.getKaiserInfo();
-            log.info(`menu: ${recipe.name} - [${recipe.menuId}] : wasTrue=${initialStatus.wasTrue}, isIceOutDone=${initialStatus.data2.b_ad_avr_end}`);
+            const initialStatus2 = await Ice.getKaiserInfo("0x02");
+            const initialStatus3 = await Ice.getKaiserInfo("0x03");
+            const initialStatus4 = await Ice.getKaiserInfo("0x04");
+            log.info(`menu: ${recipe.name} - [${recipe.menuId}] : wasTrue=${initialStatus2.wasTrue}, isIceOutDone=${initialStatus2.data2.b_ad_avr_end}`);
+            log.info(`menu: ${recipe.name} - [${recipe.menuId}] : wasTrue=${initialStatus3.wasTrue}, isIceOutDone=${initialStatus3.data2.b_ad_avr_end}`);
+            log.info(`menu: ${recipe.name} - [${recipe.menuId}] : wasTrue=${initialStatus4.wasTrue}, isIceOutDone=${initialStatus4.data2.b_ad_avr_end}`);
             await Ice.sendIceTimePacket(convertTimeToHex(recipe.iceTime));
             await Ice.sendWaterTimePacket(convertTimeToHex(recipe.waterTime));
             await Ice.sendIceRunPacket();
@@ -113,8 +117,13 @@ const dispenseIce = (recipe) => {
             let state = { wasTrue: 0, isIceOutDone: 0, transitionedToReady: false };
 
             for (let counter = 0; counter < 60; counter++) {
-                const result = await Ice.getKaiserInfo();
-                log.info(
+                const result2 = await Ice.getKaiserInfo("0x02");
+                const result3 = await Ice.getKaiserInfo("0x03");
+                const result4 = await Ice.getKaiserInfo("0x04");
+                log.info("result2", result2);
+                log.info("result3", result3);
+                log.info("result4", result4);
+               /* log.info(
                     `menu: ${recipe.name} - [${recipe.menuId}] : wasTrue=${result.wasTrue}, isIceOutDone=${result.data2.b_ad_avr_end} ${counter}/60`
                 );
 
@@ -140,7 +149,7 @@ const dispenseIce = (recipe) => {
                 }
 
                 state.wasTrue = result.wasTrue;
-                state.isIceOutDone = result.data2.b_ad_avr_end;
+                state.isIceOutDone = result.data2.b_ad_avr_end;*/
 
                 await new Promise(r => setTimeout(r, 1000));
             }
