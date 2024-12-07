@@ -274,13 +274,14 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
             // 루프 종료 후 처리
             if (stopCount >= stopThreshold) {
                 log.info("Cup sensor reached '없음' threshold, proceeding with the next step.");
-                // 다음 로직 실행
+                await Order.purifyingSyrup(motor);
+                reject();
             } else {
                 log.warn("Cup sensor did not reach '없음' threshold within timeout.");
                 // 타임아웃 처리
                 reject(new Error("Timeout: Cup sensor did not reach '없음' state."));
             }
-            reject();
+
 
         } catch (error) {
             log.error('dispenseSyrup 오류:', error.message);
