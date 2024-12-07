@@ -1,22 +1,36 @@
 // 응답 데이터 분석
 const parseSerialDataRd1 = (response) => {
     return {
-        boilerTemperature: parseInt(response.slice(3, 6), 10),       // 보일러 온도
-        boilerHeaterStatus: response[6] === '1' ? 'ON' : 'OFF',           // 히터 상태
-        boilerFlowRate: parseInt(response.slice(7, 10), 10),         // 플로우미터1 유량
-        boilerPumpStatus: response[10] === '1' ? 'ON' : 'OFF',            // 펌프 상태
-        hotWaterSolValve1: response[11] === '1' ? 'ON' : 'OFF',           // 핫워터1 솔 밸브 상태
-        hotWaterSolValve2: response[12] === '1' ? 'ON' : 'OFF',           // 핫워터2 솔 밸브 상태
-        coffeeSolValve: response[13] === '1' ? 'ON' : 'OFF',              // 커피 솔 밸브 상태
-        carbonationPressureSensor: response[14] === '1' ? 'ON' : 'OFF',   // 탄산수 압력센서
-        carbonationFlowRate: parseInt(response.slice(17, 20), 10),   // 탄산수 플로우미터 유량
-        extractionHeight: parseInt(response.slice(20, 23), 10),      // 추출기 상하 높이
-        grinderMotor1: response[26] === '1' ? 'ON' : 'OFF',               // 그라인더 모터1
-        grinderMotor2: response[27] === '1' ? 'ON' : 'OFF',               // 그라인더 모터2
-        coffeeMode: getCoffeeMode(response[35]),                     // 커피 동작 상태
-        cupSensor: response[37] === '1' ? '있음' : '없음',                  // 컵 센서
-        waterAlarm: response[38] === '1' ? '물없음' : '정상',               // 물 없음 알람
-        ledStatus: response[41] === '1' ? 'ON' : response[41] === '2' ? 'BLINK' : 'OFF' // LED 상태
+        boilerTemperature: parseInt(response.slice(3, 6), 10),     // 보일러 온도 (123 = 123도)
+        boilerHeaterStatus: response[6] === '1' ? 'ON' : 'OFF',         // 히터 상태
+        boilerFlowRate: parseInt(response.slice(7, 10), 10),       // 플로우미터1 유량
+        boilerPumpStatus: response[10] === '1' ? 'ON' : 'OFF',          // 펌프 상태
+        hotWaterSolValve1: response[11] === '1' ? 'ON' : 'OFF',         // 핫워터1 솔 밸브 상태
+        hotWaterSolValve2: response[12] === '1' ? 'ON' : 'OFF',         // 핫워터2 솔 밸브 상태
+        coffeeSolValve: response[13] === '1' ? 'ON' : 'OFF',            // 커피 솔 밸브 상태
+        hotWaterValve: response[14] === '1' ? 'ON' : 'OFF',             // 핫워터 솔 밸브 상태
+        carbonationPressureSensor: response[15] === '1' ? 'ON' : 'OFF', // 탄산수 압력센서
+        carbonationLevelSensor: response[16] === '1' ? 'ON' : 'OFF',    // 탄산수 수위 센서
+        carbonationFlowRate: parseInt(response.slice(17, 20), 10), // 탄산수 플로우미터 유량
+        carbonationSolValve: response[20] === '1' ? 'ON' : 'OFF',       // 탄산수 솔 밸브 상태
+        carbonationPump2Status: response[21] === '1' ? 'ON' : 'OFF',    // 탄산수 펌프 모터2 상태
+        carbonationCirculationPump: response[22] === '1' ? 'ON' : 'OFF',// 탄산수 순환 펌프 상태
+        extractionHeight: parseInt(response.slice(23, 26), 10),    // 추출기 상하 높이
+        extractorLeverPosition: getExtractorLeverPosition(response[26]),// 추출기 레버 위치
+        grinderMotor1: response[27] === '1' ? 'ON' : 'OFF',             // 그라인더 모터1 상태
+        grinderMotor2: response[28] === '1' ? 'ON' : 'OFF',             // 그라인더 모터2 상태
+        chutePosition: getChutePosition(response[29]),                  // 슈트 위치 상태
+        extractorHomeComplete: response[30] === '1' ? 'ON' : 'OFF',     // 추출기 원점 완료 상태
+        autoOperationState: getAutoOperationState(response[31]),        // 자동 운전 상태
+        hotWaterReady: response[32] === '1' ? '완료' : '준비안됨',        // 핫워터 온도 준비 상태
+        cupSensor: response[33] === '1' ? '있음' : '없음',               // 컵 센서
+        waterAlarm: response[34] === '1' ? '물없음' : '정상',            // 물 없음 알람
+        co2WaterAlarm: response[35] === '1' ? '물없음' : '정상',         // CO2 물 없음 알람
+        grinderComplete: response[36] === '1' ? '대기중' : '초기상태',   // 추출기 그라인더 완료 상태
+        led1Status: getLEDStatus(response[37]),                         // LED1 상태
+        led2Status: getLEDStatus(response[38]),                         // LED2 상태
+        cardTerminalPower: response[39] === '1' ? 'ON' : 'OFF',         // 카드 단말기 전원 상태
+        coffeeExhaustFanStatus: response[40] === '1' ? 'ON' : 'OFF'     // 커피 배기휀 상태
     };
 }
 
@@ -115,21 +129,46 @@ const parseSerialDataRd4 = (response) => {
     };
 }
 
-// 커피 동작 상태 변환
-const getCoffeeMode = (value) => {
+// 추출기 레버 위치
+const getExtractorLeverPosition = (value) => {
     switch (value) {
-        case '1':
-            return '커피 동작중';
-        case '2':
-            return '가루차 동작중';
-        case '3':
-            return '시럽 동작중';
-        case '4':
-            return '세척중';
-        default:
-            return '정지';
+        case '1': return '닫힘';
+        case '2': return '배출';
+        case '3': return '열림';
+        default: return '알 수 없음';
     }
-}
+};
+
+// 슈트 위치 상태
+const getChutePosition = (value) => {
+    switch (value) {
+        case '1': return 'UP';
+        case '2': return 'DOWN';
+        default: return '알 수 없음';
+    }
+};
+
+// 자동 운전 상태
+const getAutoOperationState = (value) => {
+    switch (value) {
+        case '1': return '커피';
+        case '2': return '가루차';
+        case '3': return '시럽 동작 중';
+        case '4': return '세척 중';
+        case '0': return '정지';
+        default: return '알 수 없음';
+    }
+};
+
+// LED 상태
+const getLEDStatus = (value) => {
+    switch (value) {
+        case '1': return 'ON';
+        case '2': return 'BLINK';
+        case '0': return 'OFF';
+        default: return '알 수 없음';
+    }
+};
 
 module.exports = {
     parseSerialDataRd1,
