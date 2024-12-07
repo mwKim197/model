@@ -51,32 +51,32 @@ const setMenuInfo = async () => {
     const selectedOptions = {
         name: document.getElementById('menuName')?.value || 'None',
         cup: document.querySelector('input[name="cup"]:checked')?.value || 'None',
-        iceYn: document.querySelector('input[name="iceYn"]:checked')?.value || 'None',
-        iceTime: document.querySelector('input[name="iceTime"]')?.value || 'None',
-        waterTime: document.querySelector('input[name="waterTime"]')?.value || 'None',
-        coffeeYn: document.querySelector('input[name="coffeeYn"]')?.value || 'None',
-        // 가루차 데이터 저장
+        iceYn: document.querySelector('input[name="iceYn"]:checked')?.value || 'No',
+        iceTime: document.querySelector('input[name="iceTime"]')?.value || '0',
+        waterTime: document.querySelector('input[name="waterTime"]')?.value || '0',
+        coffeeYn: document.querySelector('input[name="coffeeYn"]')?.value || 'No',
+        // 커피 데이터 저장
         coffee: Array.from(document.querySelectorAll('[id^="grinderOne"]')).map((coffeeElement, index) => ({
-            grinderOne: coffeeElement.value || 'None',
-            grinderTwo: document.getElementById(`grinderTwo${index + 1}`)?.value || 'None',
-            extraction: document.getElementById(`extraction${index + 1}`)?.value || 'None',
-            hotWater: document.getElementById(`hotWater${index + 1}`)?.value || 'None',
+            grinderOne: coffeeElement.value || '0',
+            grinderTwo: document.getElementById(`grinderTwo${index + 1}`)?.value || '0',
+            extraction: document.getElementById(`extraction${index + 1}`)?.value || '0',
+            hotWater: document.getElementById(`hotWater${index + 1}`)?.value || '0',
         })),
-        garuchaYn: document.querySelector('input[name="garuchaYn"]')?.value || 'None',
+        garuchaYn: document.querySelector('input[name="garuchaYn"]')?.value || 'No',
         // 가루차 데이터 저장
         garucha: Array.from(document.querySelectorAll('[id^="garuchaNumber"]')).map((garuchaElement, index) => ({
-            garuchaNumber: garuchaElement.value || 'None',
-            garuchaExtraction: document.getElementById(`garuchaExtraction${index + 1}`)?.value || 'None',
-            garuchaHotWater: document.getElementById(`garuchaHotWater${index + 1}`)?.value || 'None',
+            garuchaNumber: garuchaElement.value || '0',
+            garuchaExtraction: document.getElementById(`garuchaExtraction${index + 1}`)?.value || '0',
+            garuchaHotWater: document.getElementById(`garuchaHotWater${index + 1}`)?.value || '0',
         })),
-        syrupYn: document.querySelector('input[name="syrupYn"]')?.value || 'None',
+        syrupYn: document.querySelector('input[name="syrupYn"]')?.value || 'No',
         // 시럽 데이터 저장
         syrup: Array.from(document.querySelectorAll('[id^="syrupNumber"]')).map((syrupElement, index) => ({
-            syrupNumber: syrupElement.value || 'None',
-            syrupExtraction: document.getElementById(`syrupExtraction${index + 1}`)?.value || 'None',
-            syrupHotWater: document.getElementById(`syrupHotWater${index + 1}`)?.value || 'None',
+            syrupNumber: syrupElement.value || '0',
+            syrupExtraction: document.getElementById(`syrupExtraction${index + 1}`)?.value || '0',
+            syrupHotWater: document.getElementById(`syrupHotWater${index + 1}`)?.value || '0',
         })),
-        price: document.getElementById('price').value || 'None',
+        price: document.getElementById('price').value || '0',
         image: 'https://placehold.co/200x300/png',
         category: document.getElementById('category').value || 'None',
     };

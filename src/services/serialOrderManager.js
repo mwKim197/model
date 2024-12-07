@@ -161,8 +161,6 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
             await Order.sendCoffeeCommand(grinderOne, grinderTwo, extraction, hotWater);
             log.info("extractCoffee!!!");
             await Order.extractCoffee();
-
-            log.error('Coffee time out 동작 정지 요청을 보냅니다.');
             reject();
 
         } catch (error) {
