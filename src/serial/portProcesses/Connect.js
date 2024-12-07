@@ -1,15 +1,19 @@
 const express = require('express');
-const { stopPolling, startPolling, getSerialData } = require('../../services/serialDataManager');
+const serialDataManager  = require('../../services/serialDataManager');
 const Connect = express.Router();
 const log = require('../../logger');
 let { startOrder }= require('../../services/serialOrderManager.js');
+const {serialCommCom1} = require("../../serial/serialCommManager")
+// MC 머신 Data - SerialPolling 인스턴스 생성
+const polling = new serialDataManager(serialCommCom1);
+
 
 // 주문 요청 처리 엔드포인트
 Connect.post('/start-order', async (req, res) => {
     try {
         log.info("Order process started, polling stopped");
 
-        stopPolling(); // 주문 작업을 시작하기 전에 조회 정지
+        await polling.stopPolling(); // 주문 작업을 시작하기 전에 조회 정지
         const reqBody = req.body;
         await startOrder(reqBody).then();
         // list 받음 -> 메뉴판에 있는 데이터 불러서 조합 시작!

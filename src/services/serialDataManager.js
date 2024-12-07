@@ -43,7 +43,7 @@ class serialDataManager {
         log.info('Started polling for serial data.');
     }
     // 데이터 조회 정지 함수
-    stopPolling() {
+    async stopPolling() {
         if (this.pollingTimer) {
             clearInterval(this.pollingTimer);
             this.pollingTimer = null;
