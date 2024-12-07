@@ -137,7 +137,7 @@ class SerialPortManager {
         if (asciiPacket.match(/^[a-zA-Z0-9+\s]*$/)) {
 
             const asciiPacket = this.asciiBuffer.trim();
-
+            log.info("asciiPacket: ", asciiPacket);
             try {
                 // response data 사이즈가 다를수있다.
                 if (asciiPacket.length < 1) {

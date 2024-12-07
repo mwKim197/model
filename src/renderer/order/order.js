@@ -149,8 +149,8 @@ document.getElementById('payment').addEventListener('click', async () => {
         price += Number(order.price) * order.count;  // 수량만큼 가격 계산
     })
 
-    const result = await orderApi.reqVCAT_HTTP( price, "00");
-    //const result = {success :true}
+    //const result = await orderApi.reqVCAT_HTTP( price, "00");
+    const result = {success :true}
 
     if (result.success) {
         // 다음 단계로 진행
