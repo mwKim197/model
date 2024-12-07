@@ -13,16 +13,31 @@ const McData = new serialDataManager(serialCommCom1);
 
 // 주문 처리 로직
 const startOrder = async (data) => {
-    let orderData = data;  // 주문 데이터
-    // 전체 메뉴 조회
-    const menu = await allProduct();
-    let menuData = menu.Items;
 
-    // 메뉴가 정상적으로 로드되었으면 주문 처리 시작
-    if (menuData.length > 0 && orderData.length > 0) {
-        await processQueue(orderData, menuData);
-    } else {
-        log.info("주문 데이터나 메뉴 데이터가 비어 있습니다.");
+    try {
+        // 주문 데이터 검증
+        if (!Array.isArray(data) || data.length === 0) {
+            throw new Error("Invalid or empty order data");
+        }
+        let orderData = data;  // 주문 데이터
+
+        // 전체 메뉴 조회
+        const menu = await allProduct();
+        if (!menu || !menu.Items) {
+            throw new Error("Failed to load menu data");
+        }
+        let menuData = menu.Items;
+
+        // 메뉴와 주문 데이터가 정상적으로 로드되었으면 주문 처리 시작
+        if (menuData.length > 0) {
+            log.info("Processing order...");
+            await processQueue(orderData, menuData);
+        } else {
+            log.warn("Menu data is empty, cannot process order.");
+        }
+    } catch (error) {
+        log.error("Error in startOrder:", error.message);
+        throw error; // 명시적으로 에러를 다시 던짐
     }
 };
 
