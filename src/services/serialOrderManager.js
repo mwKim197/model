@@ -13,7 +13,6 @@ const McData = new serialDataManager(serialCommCom1);
 
 // 주문 처리 로직
 const startOrder = async (data) => {
-
     try {
         // 주문 데이터 검증
         if (!Array.isArray(data) || data.length === 0) {

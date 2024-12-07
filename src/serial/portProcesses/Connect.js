@@ -19,7 +19,7 @@ Connect.post('/start-order', async (req, res) => {
         // list 받음 -> 메뉴판에 있는 데이터 불러서 조합 시작!
         res.json({ success: true, message: '주문 완료' });
     } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
+        res.status(500).json({ success: false});
     }
 });
 
