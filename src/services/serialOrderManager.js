@@ -110,7 +110,7 @@ const dispenseIce = (recipe) => {
             log.info('출빙 요청이 완료되었습니다. 상태를 감시합니다.');
             log.info('얼음을 받아주세요'); // [TODO] 음성 메시지 호출
 
-            let state = { wasTrue: 0, isIceOutDone: 0, transitionedToReady: false };
+            let state = { transitionedToReady: false };
 
             for (let counter = 0; counter < 60; counter++) {
                 const result = await Ice.getKaiserInfo();
@@ -120,8 +120,6 @@ const dispenseIce = (recipe) => {
                 );
 
                 if (
-                    state.wasTrue === 0 &&
-                    state.isIceOutDone === 0 &&
                     result.wasTrue === 1 &&
                     result.data.b_wt_drink_rt === 1
                 ) {
@@ -139,9 +137,6 @@ const dispenseIce = (recipe) => {
                     resolve();
                     return;
                 }
-
-                state.wasTrue = result.wasTrue;
-                state.isIceOutDone = result.data.b_wt_drink_rt;
 
                 await new Promise(r => setTimeout(r, 1000));
             }
