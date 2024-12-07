@@ -46,18 +46,26 @@ class serialDataManager {
             }
         }, this.interval);
 
-        log.info('Started polling for serial data.');
+        log.info(`Polling started. Timer: ${this.pollingTimer}`);
+        log.info('setInterval created:', this.pollingTimer);
     }
     // 데이터 조회 정지 함수
     async stopPolling() {
-        if (this.pollingTimer) {
-            clearInterval(this.pollingTimer);
-            this.pollingTimer = null;
+        log.info(`Stopping polling... Timer: ${this.pollingTimer}, Active: ${this.isPollingActive}`);
+        console.trace('stopPolling called from:'); // 호출 스택 출력
+
+        if (this.isPollingActive) {
             this.isPollingActive = false;
+            if (this.pollingTimer) {
+                clearInterval(this.pollingTimer);
+                this.pollingTimer = null;
+            }
             log.info('Stopped polling for serial data.');
         } else {
             log.warn('Polling is not running.');
         }
+
+        log.info(`After stopPolling: Timer: ${this.pollingTimer}, Active: ${this.isPollingActive}`);
     }
 
     // 데이터 반환 함수
