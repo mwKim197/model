@@ -256,8 +256,9 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
                 log.info(JSON.stringify(data));
                 let cupSensor = 0;
 
-                if (data.autoOperationState === "정지" && data.cupSensor === "없음") {
-                    cupSensor++
+                if (data.cupSensor === "없음") {
+                    cupSensor++;
+                    log.info(cupSensor);
                 }
 
                 if (cupSensor > 2) {
