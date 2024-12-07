@@ -152,15 +152,23 @@ const dispenseIce = (recipe) => {
 };
 
 const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
-    return new Promise(async (resolve) => {
-        log.info(`coffee set!!!  : ${grinderOne}, ${grinderTwo}, ${extraction}, ${hotWater}`);
-        await Order.sendCoffeeCommand(grinderOne, grinderTwo, extraction, hotWater);
-        const data = await McData.getSerialData('RD1');
-        log.info("GET COFFEE INFO " + data);
-        setTimeout(() => {
-            log.info('커피 배출 완료');
-            resolve();
-        }, 2000);  // 2초 후 완료
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            log.info(`coffee set!!!  : ${grinderOne}, ${grinderTwo}, ${extraction}, ${hotWater}`);
+            await Order.sendCoffeeCommand(grinderOne, grinderTwo, extraction, hotWater);
+            const data = await McData.getSerialData('RD1');
+            log.info("GET COFFEE INFO " + data);
+            setTimeout(() => {
+                log.info('커피 배출 완료');
+                resolve();
+            }, 2000);  // 2초 후 완료
+
+        } catch (error) {
+            log.error('dispenseCoffee 오류:', error.message);
+            reject(error);
+        }
+
     });
 };
 
