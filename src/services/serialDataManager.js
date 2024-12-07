@@ -1,66 +1,64 @@
-/**
- * 기기정보를 주기적으로 조회하는 로직
- * */
 const log = require('../logger');
 
-let serialData = {}; // 데이터를 저장할 객체
-let pollingTimer = null; // setInterval의 타이머 ID를 저장
-let isPollingActive = false; // 조회 활성화 여부
-
-// 데이터 갱신 함수
-async function updateSerialData(serialComm, command, key) {
-    try {
-        serialData[key] = await serialComm.writeCommand(`${command}\x0d`); // 데이터 저장
-    } catch (err) {
-        log.error(`Error updating ${key}: ${err.message}`);
-    }
-}
-
-// 데이터 조회 시작 함수
-async function startPolling(serialComm, interval = 10000) {
-    if (pollingTimer) {
-        log.warn('Polling is already running.');
-        return;
+class serialDataManager {
+    constructor(serialComm, interval = 10000) {
+        this.serialComm = serialComm;
+        this.interval = interval;
+        this.serialData = {};
+        this.pollingTimer = null;
+        this.isPollingActive = false;
     }
 
-    isPollingActive = true;
-    pollingTimer = setInterval(async () => {
-        if (!isPollingActive) {
-            log.info('Polling paused.');
+    // 데이터 갱신 함수
+    async updateSerialData(command, key) {
+        try {
+            this.serialData[key] = await this.serialComm.writeCommand(`${command}\x0d`); // 데이터 저장
+            log.info(`Data updated for ${key}:`, this.serialData[key]);
+        } catch (err) {
+            log.error(`Error updating ${key}: ${err.message}`);
+        }
+    }
+
+    // 데이터 조회 시작 함수 (수정된 async/await 방식)
+    async startPolling() {
+        if (this.pollingTimer) {
+            log.warn('Polling is already running.');
             return;
         }
 
-        // 비동기 처리를 순차적으로 실행
-        await updateSerialData(serialComm, 'RD1', 'RD1');
-        await updateSerialData(serialComm, 'RD2', 'RD2');
-        await updateSerialData(serialComm, 'RD3', 'RD3');
-        await updateSerialData(serialComm, 'RD4', 'RD4');
+        this.isPollingActive = true;
+        this.pollingTimer = setInterval(async () => {
+            if (!this.isPollingActive) {
+                log.info('Polling paused.');
+                return;
+            }
 
-    }, interval);
+            // 비동기 처리를 순차적으로 실행
+            await this.updateSerialData('RD1', 'RD1');
+            await this.updateSerialData('RD2', 'RD2');
+            await this.updateSerialData('RD3', 'RD3');
+            await this.updateSerialData('RD4', 'RD4');
+        }, this.interval);
 
-    log.info('Started polling for serial data.');
-}
+        log.info('Started polling for serial data.');
+    }
+    // 데이터 조회 정지 함수
+    stopPolling() {
+        if (this.pollingTimer) {
+            clearInterval(this.pollingTimer);
+            this.pollingTimer = null;
+            this.isPollingActive = false;
+            log.info('Stopped polling for serial data.');
+        } else {
+            log.warn('Polling is not running.');
+        }
+    }
 
-// 데이터 조회 정지 함수
-function stopPolling() {
-    if (pollingTimer) {
-        clearInterval(pollingTimer);
-        pollingTimer = null;
-        isPollingActive = false;
-        log.info('Stopped polling for serial data.');
-    } else {
-        log.warn('Polling is not running.');
+    // 데이터 반환 함수
+    getSerialData(key) {
+        return key ? this.serialData[key] : this.serialData;
     }
 }
 
-// 데이터 반환 함수
-function getSerialData(key) {
-    return key ? serialData[key] : serialData;
-}
-
-module.exports = {
-    startPolling,
-    stopPolling,
-    getSerialData,
-};
-
+// 클래스 내보내기 (default export)
+module.exports = serialDataManager;

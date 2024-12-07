@@ -1,11 +1,15 @@
 const log = require('../logger');
 const { allProduct } = require("../db/dbProcesses/util/getMenu");
-const {serialCommCom3, serialCommCom4 } = require("../serial/serialCommManager");
+const {serialCommCom1, serialCommCom3, serialCommCom4 } = require("../serial/serialCommManager");
 const  CupModule = require("../serial/portProcesses/CupModule");
 const  IceModule = require("../serial/portProcesses/IceModule");
+const  OrderModule = require("../serial/portProcesses/OrderModule");
+const serialDataManager  = require('./serialDataManager');
 const {convertTimeToHex} = require('../util/numberConvert');
 const Cup = new CupModule(serialCommCom4);
 const Ice = new IceModule(serialCommCom3);
+const Order = new OrderModule(serialCommCom1);
+const McData = new serialDataManager(serialCommCom1);
 
 // 주문 처리 로직
 const startOrder = async (data) => {
@@ -23,7 +27,8 @@ const startOrder = async (data) => {
 };
 
 // 주문 처리 큐
-const processQueue = async (orderList, menuList) => {
+const processQueue = async (orderList = [], menuList) => {
+
     for (const order of orderList) {
         const recipe = menuList.find(menu => menu.menuId === order.menuId); // 제조 레시피 찾기
         if (!recipe) {
@@ -40,9 +45,9 @@ const processQueue = async (orderList, menuList) => {
 const processOrder = async (recipe) => {
     //await dispenseCup(recipe);
    if (recipe.iceYn === 'yes') await dispenseIce(recipe);
-    /*  await dispenseWater(recipe.waterTime);
-     if (recipe.coffeeYn === 'yes') await dispenseCoffee();
-     if (recipe.garuchaYn === 'yes') await dispenseGarucha();
+
+     if (recipe.coffeeYn === 'yes') await dispenseMultipleCoffees(recipe);
+     /*if (recipe.garuchaYn === 'yes') await dispenseGarucha();
      if (recipe.syrupYn === 'yes') await dispenseSyrup();*/
 };
 
@@ -150,26 +155,35 @@ const dispenseIce = (recipe) => {
     });
 };
 
-
-const dispenseWater = (time) => {
-    return new Promise(resolve => {
-        log.info(`물 배출 중: ${time}초`);
-        setTimeout(() => {
-            log.info('물 배출 완료');
-            resolve();
-        }, time * 1000);
-    });
-};
-
-const dispenseCoffee = () => {
-    return new Promise(resolve => {
-        log.info('커피 배출 중');
+const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
+    return new Promise(async (resolve) => {
+        log.info(`커피 설정 세팅 : ${grinderOne}, ${grinderTwo}, ${extraction}, ${hotWater}`);
+        await Order.sendCoffeeCommand(grinderOne, grinderTwo, extraction, hotWater);
+        const data = await McData.getSerialData('RD1');
+        log.info("조회 데이터 호출 " + data);
         setTimeout(() => {
             log.info('커피 배출 완료');
             resolve();
-        }, 2000);
+        }, 2000);  // 2초 후 완료
     });
 };
+
+const dispenseMultipleCoffees = async (recipe) => {
+    for (let i = 0; i < recipe.coffee.length; i++) {
+        const coffee = recipe.coffee[i];
+        log.info(`커피 배출 ${i + 1}번째 시작`);
+
+        // 각 커피 배출을 순차적으로 실행
+        await dispenseCoffee(
+            coffee.grinderOne,
+            coffee.grinderTwo,
+            coffee.extraction,
+            coffee.hotWater
+        );
+    }
+    log.info('모든 커피 배출 완료');
+};
+
 
 const dispenseGarucha = () => {
     return new Promise(resolve => {

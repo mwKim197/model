@@ -2,12 +2,13 @@ const express = require('express');
 const { stopPolling, startPolling, getSerialData } = require('../../services/serialDataManager');
 const Connect = express.Router();
 const log = require('../../logger');
-let { startOrder} = require('../../services/serialOrderManager.js');
+let { startOrder }= require('../../services/serialOrderManager.js');
 
 // 주문 요청 처리 엔드포인트
 Connect.post('/start-order', async (req, res) => {
     try {
         log.info("Order process started, polling stopped");
+
         stopPolling(); // 주문 작업을 시작하기 전에 조회 정지
         const reqBody = req.body;
         await startOrder(reqBody).then();

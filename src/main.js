@@ -6,18 +6,18 @@ const http = require('http');
 const log = require('./logger');
 const { signupUser, loginUser } = require('./login');
 const Connect = require('./serial/portProcesses/Connect');
-const { startPolling } = require('./services/serialDataManager');
+const serialDataManager  = require('./services/serialDataManager');
 const Order = require('./serial/portProcesses/Order');
 const Ice = require('./serial/portProcesses/Ice');
 const Cup = require('./serial/portProcesses/Cup');
-const CupModule = require('./serial/portProcesses/CupModule');
 const Menu = require('./db/dbProcesses/Menu');
-const Serial = require('./serial/SerialPortManager'); // 새로 작성한 모듈 가져오기
-const config = require('./serial/config');
 const fs = require('fs');
 const appServer = express();
 const server = http.createServer(appServer);
 const {serialCommCom1, serialCommCom3, serialCommCom4} = require("./serial/serialCommManager")
+
+// MC 머신 Data - SerialPolling 인스턴스 생성
+const polling = new serialDataManager(serialCommCom1);
 
 // Express 서버에서 serialComm을 각 포트에 맞게 사용하도록 설정
 appServer.use((req, res, next) => {
@@ -39,17 +39,14 @@ appServer.use(Ice);     // 카이저 ICE
 appServer.use(Cup);     // 컵 디스펜서
 appServer.use(Menu);    // MENU DB
 
-// 매 10 초마다 MC 머신 정보 조회
-startPolling(serialCommCom1);
 
 // 로그인처리 임시
-loginUser("test_user1", "test_user1");
+loginUser("test_user1", "test_user1").then();
 
 // 서버 시작
 server.listen(3000, '0.0.0.0',() => {
     log.info('server: http://localhost:3000 ' ,'http://0.0.0.0:3000');
 });
-
 
 // 버전읽기
 appServer.get('/version', (req, res) => {
@@ -130,6 +127,8 @@ autoUpdater.on('update-downloaded', () => {
 /** 초기화가 끝나게 되면 실행 */
 app.whenReady().then(async () => {
     createWindow();
+    // polling.startPolling() 비동기 함수 호출
+    await polling.startPolling(); // 여기서 호출하여 startPolling의 비동기 처리가 완료되도록 함
     await autoUpdater.checkForUpdates();
 });
 
