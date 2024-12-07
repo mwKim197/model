@@ -174,24 +174,8 @@ class IceModule {
 
     async parseStatusData(responseData) {
 
-        // 객체 형태를 배열로 변환 후 Buffer 생성
-        if (responseData && typeof responseData === 'object') {
-            const bufferData = Object.values(responseData);
-            responseData = Buffer.from(bufferData);
-        }
+        console.log("Is Buffer:", Buffer.isBuffer(responseData));
 
-        // 데이터 필드가 존재하는 경우 추가 처리
-        if (responseData && responseData.data) {
-            if (Array.isArray(responseData.data)) {
-                responseData = Buffer.from(responseData.data);
-            } else {
-                throw new Error('Invalid data field: data is not an array');
-            }
-        }
-
-        if (!responseData || responseData.length < 7) {
-            throw new Error('Invalid response data');
-        }
 
         try {
 
@@ -204,6 +188,11 @@ class IceModule {
             const genBuf2 = statusData[1]; // DATA2
             const genBuf3 = statusData[2]; // DATA3
             const genBuf4 = statusData[3]; // DATA4
+
+            console.log("Status Data:", statusData);
+            console.log("genBuf2:", genBuf2);
+            console.log("genBuf3:", genBuf3);
+            console.log("genBuf4:", genBuf4);
 
             log.debug(`genBuf4: ${genBuf4}`);
 
