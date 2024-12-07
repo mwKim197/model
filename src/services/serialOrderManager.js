@@ -179,6 +179,7 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
 };
 
 const dispenseMultipleCoffees = async (recipe) => {
+    log.info(`JSON.stringify(recipe) : ${JSON.stringify(recipe)}`);
     for (let i = 0; i < recipe.coffee.length; i++) {
         const coffee = recipe.coffee[i];
         log.info(`dispenseCoffee ${i + 1} START!!`);
