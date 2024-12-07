@@ -211,6 +211,7 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
             await Order.sendTeaCommand(motor, extraction, hotwater);
             log.info("extractGarucha!!!");
             await Order.extractTeaPowder();
+            await Order.purifyingTae(motor);
             reject();
 
         } catch (error) {
@@ -246,6 +247,7 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
             await Order.setSyrup(motor, extraction, hotwater, sparkling);
             log.info("extractSyrup!!!");
             await Order.extractSyrup();
+            await Order.purifyingSyrup(motor);
             reject();
 
         } catch (error) {
