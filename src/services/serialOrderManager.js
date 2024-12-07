@@ -208,7 +208,6 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
             await McData.updateSerialData('RD1', 'RD1');
             const data = McData.getSerialData('RD1');
             log.info("GET GARUCHA INFO ", JSON.stringify(data));
-            log.info(`garucha set!!!  : ${motor}, ${extraction}, , ${hotWater}`);
             await Order.sendTeaCommand(motor, extraction, hotwater);
             log.info("extractGarucha!!!");
             await Order.extractTeaPowder();
@@ -244,7 +243,6 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
             await McData.updateSerialData('RD1', 'RD1');
             const data = McData.getSerialData('RD1');
             log.info("GET SYRUP INFO ", JSON.stringify(data));
-            log.info(`syrup set!!!  : ${motor}, ${extraction}, ${hotWater}, ${sparkling}`);
             await Order.setSyrup(motor, extraction, hotwater, sparkling);
             log.info("extractSyrup!!!");
             await Order.extractSyrup();
