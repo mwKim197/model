@@ -2,11 +2,16 @@ const log = require('../logger');
 
 class serialDataManager {
     constructor(serialComm, interval = 10000) {
+        if (serialDataManager.instance) {
+            return serialDataManager.instance;
+        }
         this.serialComm = serialComm;
         this.interval = interval;
         this.serialData = {};
         this.pollingTimer = null;
         this.isPollingActive = false;
+
+        serialDataManager.instance = this;
     }
 
     // 데이터 갱신 함수
