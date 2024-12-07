@@ -112,6 +112,15 @@ class SerialPortManager {
 
     // Hex 데이터 처리
     _processHexData(data) {
+
+        // 1. Object 값을 배열로 변환
+        const valuesArray = Object.values(data);
+
+        // 2. 배열을 Buffer로 변환
+        const buffer = Buffer.from(valuesArray);
+
+        log.info("Buffer:", buffer); // <Buffer 02 01 07 06 01 00 03>
+
         try {
             if (!Buffer.isBuffer(data)) {
                 log.error('Received data is NOT a Buffer');
