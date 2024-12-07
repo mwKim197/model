@@ -65,10 +65,9 @@ class SerialPortManager {
         const hexBuffer = Buffer.from(this.hexBuffer, 'hex');
         // HEX 패킷 처리
         if (this._isHexComplete(hexBuffer)) {
+
             const hexPacket = this.hexBuffer.slice(0, 14); // HEX 패킷 길이에 맞게 추출
-            console.log("hexPacket ---- " , hexPacket);
-            console.log("hexPacket ---- " , Buffer.from(hexPacket, 'hex'));
-            log.info("hexPacket ---- " , Buffer.from(hexPacket, 'hex'));
+
             this._processHexData(Buffer.from(hexPacket, 'hex')); // 패킷 처리
             this.hexBuffer =''; // 사용한 패킷 제거
         }
@@ -119,18 +118,10 @@ class SerialPortManager {
                 log.debug('Received Buffer:', data);
             }
 
-            this.latestData = this.parseBufferData(data);
+            this.latestData = data;
         } catch (err) {
             log.error(`Hex 데이터 처리 실패: ${err.message}`);
         }
-    }
-
-    // Hex 데이터 분석 메서드
-    parseBufferData(buffer) {
-        return {
-            field1: buffer.readUInt16BE(0), // 버퍼의 처음 2바이트 (Big-Endian) -> 정수 변환
-            field2: buffer,                 // 전체 버퍼 전송
-        };
     }
 
     // ascii 응답데이터 처리

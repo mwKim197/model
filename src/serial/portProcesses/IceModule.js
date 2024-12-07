@@ -31,7 +31,7 @@ class IceModule {
             const response = await this.serialCommCom3.writeCommand(packet);
             log.info('info command response:', response); // 시리얼 응답 로그
 
-            const statusData = response.field2; // 전체 버퍼
+            const statusData = response; // 전체 버퍼
             log.info('Parsed Status Data:', statusData);
 
             return await this.parseStatusData(statusData);
