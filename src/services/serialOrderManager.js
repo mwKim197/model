@@ -154,9 +154,8 @@ const dispenseIce = (recipe) => {
                 await new Promise(r => setTimeout(r, 1000));
             }
 
-            log.error('Ice time out 동작 정지 요청을 보냅니다.');
             await Ice.sendIceStopPacket();
-            reject(new Error('제빙기 동작 시간 초과'));
+            reject();
         } catch (error) {
             log.error('dispenseIce 오류:', error.message);
             reject(error);
