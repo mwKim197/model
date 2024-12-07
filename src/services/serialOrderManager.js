@@ -57,12 +57,11 @@ const processQueue = async (orderList = [], menuList) => {
 
 // 주문 처리
 const processOrder = async (recipe) => {
-    //await dispenseCup(recipe);
-   //if (recipe.iceYn === 'yes') await dispenseIce(recipe);
-
-     //if (recipe.coffeeYn === 'yes') await dispenseMultipleCoffees(recipe);
-     //if (recipe.garuchaYn === 'yes') await dispenseMultipleGarucha(recipe);
-     if (recipe.syrupYn === 'yes') await dispenseMultipleSyrup(recipe);
+    await dispenseCup(recipe);
+    if (recipe.iceYn === 'yes') await dispenseIce(recipe);
+    if (recipe.coffeeYn === 'yes') await dispenseMultipleCoffees(recipe);
+    if (recipe.garuchaYn === 'yes') await dispenseMultipleGarucha(recipe);
+    if (recipe.syrupYn === 'yes') await dispenseMultipleSyrup(recipe);
 };
 
 // 제조 단계 함수
@@ -173,9 +172,17 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
             log.info("GET COFFEE INFO " + data);
             log.info(`coffee set!!!  : ${grinderOne}, ${grinderTwo}, ${extraction}, ${hotWater}`);
             await Order.sendCoffeeCommand(grinderOne, grinderTwo, extraction, hotWater);
-            log.info("extractCoffee!!!");
-            await Order.extractCoffee();
-            reject();
+
+            // "있음" 상태 3회 체크
+            const isStartValid = await checkCupSensor("있음", 3);
+            if (isStartValid) {
+                log.info(`coffee 추출 실행`);
+                await Order.extractCoffee();
+            } else {
+                reject(new Error("Timeout: Cup sensor did not reach '있음' state."));
+                return;
+            }
+            resolve(); // 성공 시
 
         } catch (error) {
             log.error('dispenseCoffee 오류:', error.message);
