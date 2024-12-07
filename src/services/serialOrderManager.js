@@ -183,6 +183,7 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
                 reject(new Error("Timeout: Cup sensor did not reach '있음' state."));
                 return;
             }
+
             resolve(); // 성공 시
 
         } catch (error) {
@@ -198,14 +199,18 @@ const dispenseMultipleCoffees = async (recipe) => {
     for (let i = 0; i < recipe.coffee.length; i++) {
         const coffee = recipe.coffee[i];
         log.info(`dispenseCoffee ${i + 1} START!!`);
+        const isAutoOperation =  await checkAutoOperationState("정지", 1);
 
-        // 각 커피 배출을 순차적으로 실행
-        await dispenseCoffee(
-            coffee.grinderOne,
-            coffee.grinderTwo,
-            coffee.extraction,
-            coffee.hotWater
-        );
+        if (isAutoOperation) {
+            // 각 커피 배출을 순차적으로 실행
+            await dispenseCoffee(
+                coffee.grinderOne,
+                coffee.grinderTwo,
+                coffee.extraction,
+                coffee.hotWater
+            );
+        }
+
     }
     log.info('모든 커피 배출 완료');
 };
@@ -253,11 +258,15 @@ const dispenseMultipleGarucha = async (recipe) => {
         log.info(`dispenseGarucha ${i + 1} START!!`);
         log.info(`garucha set!!!  : ${garucha.garuchaNumber}, ${garucha.garuchaExtraction}, , ${garucha.garuchaHotWater}`);
         // 각 가루차 배출을 순차적으로 실행
-        await dispenseGarucha(
-            garucha.garuchaNumber,
-            garucha.garuchaExtraction,
-            garucha.garuchaHotWater
-        );
+        const isAutoOperation =  await checkAutoOperationState("정지", 1);
+
+        if (isAutoOperation) {
+            await dispenseGarucha(
+                garucha.garuchaNumber,
+                garucha.garuchaExtraction,
+                garucha.garuchaHotWater
+            );
+        }
     }
     log.info('모든 차 배출 완료');
 };
@@ -305,12 +314,16 @@ const dispenseMultipleSyrup = async (recipe) => {
         log.info(`dispenseSyrup ${i + 1} START!!`);
         log.info(`syrup set!!!  : ${syrup.syrupNumber}, ${syrup.syrupExtraction}, ${syrup.syrupHotWater}, ${syrup.syrupSparklingWater}`);
         // 각 시럽 배출을 순차적으로 실행
-        await dispenseSyrup(
-            syrup.syrupNumber,
-            syrup.syrupExtraction,
-            syrup.syrupHotWater,
-            syrup.syrupSparklingWater
-        );
+
+        const isAutoOperation =  await checkAutoOperationState("정지", 1);
+        if (isAutoOperation) {
+            await dispenseSyrup(
+                syrup.syrupNumber,
+                syrup.syrupExtraction,
+                syrup.syrupHotWater,
+                syrup.syrupSparklingWater
+            );
+        }
     }
     log.info('모든 시럽 배출 완료');
 };
@@ -324,6 +337,32 @@ const checkCupSensor = async (expectedState, threshold) => {
         log.info(JSON.stringify(data));
 
         if (data.cupSensor === expectedState) {
+            stateCount++;
+            log.info(`Sensor state is '${expectedState}', count: ${stateCount}`);
+            if (stateCount >= threshold) {
+                log.info(`Sensor state reached '${expectedState}' ${threshold} times. Exiting loop.`);
+                return true; // 조건 충족 시 함수 종료
+            }
+        } else {
+            stateCount = 0; // 상태가 맞지 않으면 카운터 초기화
+        }
+
+        await new Promise((r) => setTimeout(r, 1000));
+    }
+
+    log.warn(`Sensor state did not reach '${expectedState}' threshold within timeout.`);
+    return false; // 타임아웃 처리
+};
+
+const checkAutoOperationState = async (expectedState, threshold) => {
+    let stateCount = 0; // 상태 카운터
+
+    for (let counter = 0; counter < 60; counter++) {
+        await McData.updateSerialData('RD1', 'RD1');
+        const data = McData.getSerialData('RD1');
+        log.info(JSON.stringify(data));
+
+        if (data.autoOperationState === expectedState) {
             stateCount++;
             log.info(`Sensor state is '${expectedState}', count: ${stateCount}`);
             if (stateCount >= threshold) {
