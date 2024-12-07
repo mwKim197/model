@@ -144,7 +144,7 @@ class SerialPortManager {
                     throw new Error('error response');
                 }
                 let data;
-                if (asciiPacket.startsWith('RD1') && asciiPacket.length >= 18) {
+                if (asciiPacket.startsWith('RD1') && asciiPacket.length >= 20) {
                     data = parseSerialDataRd1(asciiPacket);
                 } else if (asciiPacket.startsWith('RD2')) {
                     data = parseSerialDataRd2(asciiPacket);
