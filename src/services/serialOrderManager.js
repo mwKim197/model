@@ -154,15 +154,15 @@ const dispenseIce = (recipe) => {
 const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const data = await McData.getSerialData('RD1');
+            const data = await McData.updateSerialData('RD1', 'RD1');
             log.info("GET COFFEE INFO " + data);
             log.info(`coffee set!!!  : ${grinderOne}, ${grinderTwo}, ${extraction}, ${hotWater}`);
             await Order.sendCoffeeCommand(grinderOne, grinderTwo, extraction, hotWater);
 
 
             for (let counter = 0; counter < 6; counter++) {
-                const result = await McData.getSerialData('RD1');
-                log.info(`GET COFFEE INFO COUNT : ${counter}  / 60` );
+                const result =  await McData.updateSerialData('RD1', 'RD1');
+                log.info(`GET COFFEE INFO COUNT : ${JSON.stringify(result)} ${counter}  / 60` );
 
                 await new Promise(r => setTimeout(r, 1000));
 
