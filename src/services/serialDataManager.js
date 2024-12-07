@@ -28,16 +28,22 @@ class serialDataManager {
 
         this.isPollingActive = true;
         this.pollingTimer = setInterval(async () => {
-            if (!this.isPollingActive) {
-                log.info('Polling paused.');
-                return;
-            }
+            try {
+                if (!this.isPollingActive) {
+                    log.info('Polling paused.');
+                    return;
+                }
 
-            // 비동기 처리를 순차적으로 실행
-            await this.updateSerialData('RD1', 'RD1');
-            await this.updateSerialData('RD2', 'RD2');
-            await this.updateSerialData('RD3', 'RD3');
-            await this.updateSerialData('RD4', 'RD4');
+                await this.updateSerialData('RD1', 'RD1');
+                await this.updateSerialData('RD2', 'RD2');
+                await this.updateSerialData('RD3', 'RD3');
+                await this.updateSerialData('RD4', 'RD4');
+            } catch (error) {
+                log.error('Error during polling execution:', error);
+                clearInterval(this.pollingTimer); // 에러 발생 시 타이머 정지
+                this.pollingTimer = null;
+                this.isPollingActive = false;
+            }
         }, this.interval);
 
         log.info('Started polling for serial data.');
