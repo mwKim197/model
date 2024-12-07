@@ -15,7 +15,7 @@ Connect.post('/start-order', async (req, res) => {
 
         await polling.stopPolling(); // 주문 작업을 시작하기 전에 조회 정지
         const reqBody = req.body;
-        await startOrder(reqBody).then();
+        await startOrder(reqBody);
         // list 받음 -> 메뉴판에 있는 데이터 불러서 조합 시작!
         res.json({ success: true, message: '주문 완료' });
     } catch (err) {
