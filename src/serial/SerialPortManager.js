@@ -67,9 +67,11 @@ class SerialPortManager {
         if (this._isHexComplete(hexBuffer)) {
 
             const hexPacket = this.hexBuffer.slice(0, 14); // HEX 패킷 길이에 맞게 추출
-            console.log("hexPacket ---- " , hexPacket);
-            console.log("hexPacket ---- " , Buffer.from(hexPacket, 'hex'));
-            this._processHexData(Buffer.from(hexPacket, 'hex')); // 패킷 처리
+
+            // Buffer -> Hex 문자열로 변환
+            const hexString = hexPacket.toString('hex');
+            log.info("hexString: " , hexString);
+            this._processHexData(hexString); // 패킷 처리
             this.hexBuffer =''; // 사용한 패킷 제거
         }
 
@@ -113,22 +115,17 @@ class SerialPortManager {
     // Hex 데이터 처리
     _processHexData(data) {
 
-        // 1. Object 값을 배열로 변환
-        const valuesArray = Object.values(data);
-
-        // 2. 배열을 Buffer로 변환
-        const buffer = Buffer.from(valuesArray);
-
-        log.info("Buffer:", buffer); // <Buffer 02 01 07 06 01 00 03>
+        // Hex 문자열 -> Buffer로 변환
+        const hexBuffer = Buffer.from(data, 'hex');
 
         try {
-            if (!Buffer.isBuffer(data)) {
+            if (!Buffer.isBuffer(hexBuffer)) {
                 log.error('Received data is NOT a Buffer');
             } else {
-                log.debug('Received Buffer:', data);
+                log.debug('Received Buffer:', hexBuffer);
             }
 
-            this.latestData = data;
+            this.latestData = hexBuffer;
         } catch (err) {
             log.error(`Hex 데이터 처리 실패: ${err.message}`);
         }
