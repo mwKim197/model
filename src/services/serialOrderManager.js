@@ -212,7 +212,40 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
             log.info("extractGarucha!!!");
             await Order.extractTeaPowder();
             await Order.purifyingTae(motor);
-            reject();
+            let stopCount = 0; // "없음" 상태 횟수 카운터
+            const stopThreshold = 3; // "없음" 상태가 필요한 반복 횟수
+
+            for (let counter = 0; counter < 60; counter++) {
+                await McData.updateSerialData('RD1', 'RD1');
+                const data = McData.getSerialData('RD1');
+
+                log.info(JSON.stringify(data));
+
+                // "없음" 상태 감지 및 카운터 증가
+                if (data.cupSensor === "없음") {
+                    stopCount++;
+                    log.info(`Sensor state is '없음', count: ${stopCount}`);
+                    if (stopCount >= stopThreshold) {
+                        log.info(`Sensor state reached '없음' ${stopThreshold} times. Exiting loop.`);
+                        break; // 루프 종료
+                    }
+                } else {
+                    stopCount = 0; // "없음" 상태가 아닌 경우 카운터 초기화
+                }
+
+                await new Promise(r => setTimeout(r, 1000));
+            }
+
+            // 루프 종료 후 처리
+            if (stopCount >= stopThreshold) {
+                log.info(`${motor} 세척 실행 Cup sensor ${stopCount} / 3`);
+                await Order.purifyingTae(motor);
+                reject();
+            } else {
+                log.warn("Cup sensor did not reach '없음' threshold within timeout.");
+                // 타임아웃 처리
+                reject(new Error("Timeout: Cup sensor did not reach '없음' state."));
+            }
 
         } catch (error) {
             log.error('dispenseGarucha 오류:', error.message);
@@ -273,7 +306,7 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
 
             // 루프 종료 후 처리
             if (stopCount >= stopThreshold) {
-                log.info("Cup sensor reached '없음' threshold, proceeding with the next step.");
+                log.info(`${motor} 세척 실행 Cup sensor ${stopCount} / 3`);
                 await Order.purifyingSyrup(motor);
                 reject();
             } else {
