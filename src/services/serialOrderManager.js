@@ -254,8 +254,13 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
                 const data = McData.getSerialData('RD1');
 
                 log.info(JSON.stringify(data));
+                let cupSensor = 0;
 
-                if (data.autoOperationState === "정지") {
+                if (data.autoOperationState === "정지" && data.cupSensor === "없음") {
+                    cupSensor++
+                }
+
+                if (cupSensor > 2) {
                     log.info("Auto operation state is '정지', exiting loop.");
                     operationStopped = true; // 상태 플래그 업데이트
                     break; // 루프 종료
