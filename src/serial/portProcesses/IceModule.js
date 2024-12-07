@@ -188,27 +188,15 @@ class IceModule {
 
             // 3. 비트별 상태 해석
             const dataStatus = {
-                b_drink_init_st: (data >> 0) & 0x01, // bit0
-                b_wt_drink_rt: (data >> 1) & 0x01, // bit1
-                b_ice_cont_on_st: (data >> 2) & 0x01, // bit2
-                b_mode_sw_chk: (data >> 3) & 0x01, // bit3
-                mode_ice_wat_st: (data >> 4) & 0x01, // bit4
-                b_time_set_mode_sw_st: (data >> 5) & 0x01, // bit5
-                b_time_set_mode_sw_chk: (data >> 6) & 0x01, // bit6
-                b_time_set_mode_on_st: (data >> 7) & 0x01, // bit7
+                b_drink_init_st: (data >> 0) & 0x01,        // bit0 bit0: 음료 초기화 상태 (OFF)
+                b_wt_drink_rt: (data >> 1) & 0x01,          // bit1 bit1: 음료 배출 상태 (ON)
+                b_ice_cont_on_st: (data >> 2) & 0x01,       // bit2 bit2: 얼음 컨테이너 동작 상태 (OFF)
+                b_mode_sw_chk: (data >> 3) & 0x01,          // bit3 bit3: 모드 스위치 상태 확인 (ON)
+                mode_ice_wat_st: (data >> 4) & 0x01,        // bit4 bit4: 얼음과 물 모드 상태 (OFF)
+                b_time_set_mode_sw_st: (data >> 5) & 0x01,  // bit5 bit5: 시간 설정 모드 스위치 (OFF)
+                b_time_set_mode_sw_chk: (data >> 6) & 0x01, // bit6 bit6: 시간 설정 모드 스위치 확인 (OFF)
+                b_time_set_mode_on_st: (data >> 7) & 0x01,  // bit7 bit7: 시간 설정 모드 활성 상태 (OFF)
             };
-
-            /*
-            b_drink_init_st: 0,  // bit0: 음료 초기화 상태 (OFF)
-            b_wt_drink_rt: 1,    // bit1: 음료 배출 상태 (ON)
-            b_ice_cont_on_st: 0, // bit2: 얼음 컨테이너 동작 상태 (OFF)
-            b_mode_sw_chk: 1,    // bit3: 모드 스위치 상태 확인 (ON)
-            mode_ice_wat_st: 0,  // bit4: 얼음과 물 모드 상태 (OFF)
-            b_time_set_mode_sw_st: 0, // bit5: 시간 설정 모드 스위치 (OFF)
-            b_time_set_mode_sw_chk: 0, // bit6: 시간 설정 모드 스위치 확인 (OFF)
-            b_time_set_mode_on_st: 0  // bit7: 시간 설정 모드 활성 상태 (OFF)
-            * */
-
 
             // 결과 반환
             return {
