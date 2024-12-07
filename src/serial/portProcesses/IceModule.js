@@ -194,8 +194,6 @@ class IceModule {
             console.log("genBuf3:", genBuf3);
             console.log("genBuf4:", genBuf4);
 
-            log.debug(`genBuf4: ${genBuf4}`);
-
 
             // DATA2 해석
             const data2Status = {
