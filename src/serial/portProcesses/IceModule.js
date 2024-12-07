@@ -194,6 +194,9 @@ class IceModule {
             const genBuf3 = statusData[2]; // DATA3
             const genBuf4 = statusData[3]; // DATA4
 
+            log.debug(`statusData: ${statusData.toString('hex')}`);
+            log.debug(`genBuf4: ${statusData[3]} (binary: ${statusData[3].toString(2).padStart(8, '0')})`);
+
             // DATA2 해석
             const data2Status = {
                 b_ad_avr_end: (genBuf2 >> 0) & 0x01, // bit0
