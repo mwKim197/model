@@ -70,7 +70,7 @@ class SerialPortManager {
 
             // Buffer -> Hex 문자열로 변환
             const hexString = hexPacket.toString('hex');
-            log.info("hexString: " , hexString);
+
             this._processHexData(hexString); // 패킷 처리
             this.hexBuffer =''; // 사용한 패킷 제거
         }
@@ -117,12 +117,12 @@ class SerialPortManager {
 
         // Hex 문자열 -> Buffer로 변환
         const hexBuffer = Buffer.from(data, 'hex');
-        log.info("hexBuffer  --- ", hexBuffer);
+
         try {
             if (!Buffer.isBuffer(hexBuffer)) {
                 log.error('Received data is NOT a Buffer');
             } else {
-                log.debug('Received Buffer:', hexBuffer);
+                log.debug('Received Buffer');
             }
 
             this.latestData = hexBuffer;
