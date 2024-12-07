@@ -117,7 +117,7 @@ class SerialPortManager {
 
         // Hex 문자열 -> Buffer로 변환
         const hexBuffer = Buffer.from(data, 'hex');
-
+        log.info("hexBuffer  --- ", hexBuffer);
         try {
             if (!Buffer.isBuffer(hexBuffer)) {
                 log.error('Received data is NOT a Buffer');
