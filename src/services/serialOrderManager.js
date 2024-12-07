@@ -44,7 +44,7 @@ const processQueue = async (orderList = [], menuList) => {
 // 주문 처리
 const processOrder = async (recipe) => {
     //await dispenseCup(recipe);
-   if (recipe.iceYn === 'yes') await dispenseIce(recipe);
+   //if (recipe.iceYn === 'yes') await dispenseIce(recipe);
 
      if (recipe.coffeeYn === 'yes') await dispenseMultipleCoffees(recipe);
      /*if (recipe.garuchaYn === 'yes') await dispenseGarucha();
@@ -153,10 +153,10 @@ const dispenseIce = (recipe) => {
 
 const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
     return new Promise(async (resolve) => {
-        log.info(`커피 설정 세팅 : ${grinderOne}, ${grinderTwo}, ${extraction}, ${hotWater}`);
+        log.info(`coffee set!!!  : ${grinderOne}, ${grinderTwo}, ${extraction}, ${hotWater}`);
         await Order.sendCoffeeCommand(grinderOne, grinderTwo, extraction, hotWater);
         const data = await McData.getSerialData('RD1');
-        log.info("조회 데이터 호출 " + data);
+        log.info("GET COFFEE INFO " + data);
         setTimeout(() => {
             log.info('커피 배출 완료');
             resolve();
@@ -167,7 +167,7 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
 const dispenseMultipleCoffees = async (recipe) => {
     for (let i = 0; i < recipe.coffee.length; i++) {
         const coffee = recipe.coffee[i];
-        log.info(`커피 배출 ${i + 1}번째 시작`);
+        log.info(`dispenseCoffee ${i + 1} START!!`);
 
         // 각 커피 배출을 순차적으로 실행
         await dispenseCoffee(
