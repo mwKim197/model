@@ -46,9 +46,9 @@ const processOrder = async (recipe) => {
     //await dispenseCup(recipe);
    //if (recipe.iceYn === 'yes') await dispenseIce(recipe);
 
-     if (recipe.coffeeYn === 'yes') await dispenseMultipleCoffees(recipe);
-     /*if (recipe.garuchaYn === 'yes') await dispenseGarucha();
-     if (recipe.syrupYn === 'yes') await dispenseSyrup();*/
+     //if (recipe.coffeeYn === 'yes') await dispenseMultipleCoffees(recipe);
+     if (recipe.garuchaYn === 'yes') await dispenseMultipleGarucha(recipe);
+     //if (recipe.syrupYn === 'yes') await dispenseSyrup();
 };
 
 // 제조 단계 함수
@@ -188,15 +188,40 @@ const dispenseMultipleCoffees = async (recipe) => {
     log.info('모든 커피 배출 완료');
 };
 
+const dispenseGarucha = (motor, extraction, hotwater) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            await McData.updateSerialData('RD1', 'RD1');
+            const data = McData.getSerialData('RD1');
+            log.info("GET GARUCHA INFO " + data);
+            log.info(`garucha set!!!  : ${motor}, ${extraction}, , ${hotWater}`);
+            await Order.sendTeaCommand(motor, extraction, hotwater);
+            log.info("extractGarucha!!!");
+            await Order.extractTeaPowder();
+            reject();
 
-const dispenseGarucha = () => {
-    return new Promise(resolve => {
-        log.info('가루차 배출 중');
-        setTimeout(() => {
-            log.info('가루차 배출 완료');
-            resolve();
-        }, 2000);
+        } catch (error) {
+            log.error('dispenseGarucha 오류:', error.message);
+            reject(error);
+        }
+
     });
+};
+
+const dispenseMultipleGarucha = async (recipe) => {
+    log.info(`JSON.stringify(recipe) : ${JSON.stringify(recipe)}`);
+    for (let i = 0; i < recipe.garucha.length; i++) {
+        const garucha = recipe.garucha[i];
+        log.info(`dispenseGarucha ${i + 1} START!!`);
+
+        // 각 커피 배출을 순차적으로 실행
+        await dispenseGarucha(
+            garucha.garuchaNumber,
+            garucha.garuchaExtraction,
+            garucha.garuchaHotWater
+        );
+    }
+    log.info('모든 차 배출 완료');
 };
 
 const dispenseSyrup = () => {
