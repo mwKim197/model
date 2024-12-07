@@ -55,7 +55,7 @@ class SerialPortManager {
     }
 
     // Hex 데이터 여부 판별
-// 데이터 리시브
+    // 데이터 리시브
     _onDataReceived(data) {
         // 수신된 데이터를 hexBuffer에 누적
         // 수신된 데이터를 HEX 문자열로 누적
@@ -110,20 +110,17 @@ class SerialPortManager {
     // Hex 데이터 처리
     _processHexData(data) {
         try {
-            const hexString = data.toString('hex'); // Hex로 변환
-            // Hex 데이터 분석 로직 추가
-            this.latestData = this.parseHexData(hexString);
+            this.latestData = this.parseBufferData(data);
         } catch (err) {
             log.error(`Hex 데이터 처리 실패: ${err.message}`);
         }
     }
 
     // Hex 데이터 분석 메서드
-    parseHexData(hexString) {
-        // 예: 특정 프로토콜에 따라 데이터 파싱
+    parseBufferData(buffer) {
         return {
-            field1: parseInt(hexString.slice(0, 4), 16), // 예: 16진수 -> 정수 변환
-            field2: hexString.slice(4, 8),                     // 예: Hex 문자열로 유지
+            field1: buffer.readUInt16BE(0), // 버퍼의 처음 2바이트 (Big-Endian) -> 정수 변환
+            field2: buffer,                 // 전체 버퍼 전송
         };
     }
 

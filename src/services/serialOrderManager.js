@@ -1,8 +1,11 @@
 const log = require('../logger');
 const { allProduct } = require("../db/dbProcesses/util/getMenu");
-const { serialCommCom4 } = require("../serial/serialCommManager");
+const {serialCommCom3, serialCommCom4 } = require("../serial/serialCommManager");
 const  CupModule = require("../serial/portProcesses/CupModule");
+const  IceModule = require("../serial/portProcesses/IceModule");
+const {convertTimeToHex} = require('../util/numberConvert');
 const Cup = new CupModule(serialCommCom4);
+const Ice = new IceModule(serialCommCom3);
 
 // 주문 처리 로직
 const startOrder = async (data) => {
@@ -24,23 +27,23 @@ const processQueue = async (orderList, menuList) => {
     for (const order of orderList) {
         const recipe = menuList.find(menu => menu.menuId === order.menuId); // 제조 레시피 찾기
         if (!recipe) {
-            console.error(`레시피를 찾을 수 없음: 메뉴 ID ${order.menuId}`);
+            log.error(`레시피를 찾을 수 없음: 메뉴 ID ${order.menuId}`);
             continue;
         }
-        console.log(`주문 처리 시작: ${recipe.name}`);
+        log.info(`${recipe.name} - [${recipe.menuId}] : 주문 처리 시작`);
         await processOrder(recipe); // 주문 처리
-        console.log(`주문 처리 완료: ${recipe.name}`);
+        log.info(`${recipe.name} - [${recipe.menuId}] : 주문 처리 완료`);
     }
 };
 
 // 주문 처리
 const processOrder = async (recipe) => {
-    await dispenseCup(recipe);
-   /* if (recipe.iceYn === 'yes') await dispenseIce(recipe.iceTime);
-    await dispenseWater(recipe.waterTime);
-    if (recipe.coffeeYn === 'yes') await dispenseCoffee();
-    if (recipe.garuchaYn === 'yes') await dispenseGarucha();
-    if (recipe.syrupYn === 'yes') await dispenseSyrup();*/
+    //await dispenseCup(recipe);
+   if (recipe.iceYn === 'yes') await dispenseIce(recipe);
+    /*  await dispenseWater(recipe.waterTime);
+     if (recipe.coffeeYn === 'yes') await dispenseCoffee();
+     if (recipe.garuchaYn === 'yes') await dispenseGarucha();
+     if (recipe.syrupYn === 'yes') await dispenseSyrup();*/
 };
 
 // 제조 단계 함수
@@ -90,21 +93,69 @@ const dispenseCup = (recipe) => {
     });
 };
 
-const dispenseIce = (time) => {
-    return new Promise(resolve => {
-        console.log(`얼음 배출 중: ${time}초`);
-        setTimeout(() => {
-            console.log('얼음 배출 완료');
-            resolve();
-        }, time * 1000);
+const dispenseIce = (recipe) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            log.info(`얼음 세팅 중: ${recipe.iceTime}초, 물 세팅 중: ${recipe.waterTime}초`);
+            const initialStatus = await Ice.getKaiserInfo();
+            log.info(`menu: ${recipe.name} - [${recipe.menuId}] : wasTrue=${initialStatus.wasTrue}, isIceOutDone=${initialStatus.data2.b_ad_avr_end}`);
+            await Ice.sendIceTimePacket(convertTimeToHex(recipe.iceTime));
+            await Ice.sendWaterTimePacket(convertTimeToHex(recipe.waterTime));
+            await Ice.sendIceRunPacket();
+            log.info('출빙 요청이 완료되었습니다. 상태를 감시합니다.');
+            log.info('얼음을 받아주세요'); // [TODO] 음성 메시지 호출
+
+            let state = { wasTrue: 0, isIceOutDone: 0, transitionedToReady: false };
+
+            for (let counter = 0; counter < 60; counter++) {
+                const result = await Ice.getKaiserInfo();
+                log.info(
+                    `menu: ${recipe.name} - [${recipe.menuId}] : wasTrue=${result.wasTrue}, isIceOutDone=${result.data2.b_ad_avr_end} ${counter}/60`
+                );
+
+                if (
+                    state.wasTrue === 0 &&
+                    state.isIceOutDone === 0 &&
+                    result.wasTrue === 1 &&
+                    result.data2.b_ad_avr_end === 1
+                ) {
+                    log.info('1단계 완료: wasTrue=1, isIceOutDone=1 상태로 전환');
+                    state.transitionedToReady = true;
+                }
+
+                if (
+                    state.transitionedToReady &&
+                    result.wasTrue === 1 &&
+                    result.data2.b_ad_avr_end === 0
+                ) {
+                    log.info('2단계 완료: 얼음 배출 완료 및 다음 플로우로 진행');
+
+                    resolve();
+                    return;
+                }
+
+                state.wasTrue = result.wasTrue;
+                state.isIceOutDone = result.data2.b_ad_avr_end;
+
+                await new Promise(r => setTimeout(r, 1000));
+            }
+
+            log.error('Ice time out 동작 정지 요청을 보냅니다.');
+            await Ice.sendIceStopPacket();
+            reject(new Error('제빙기 동작 시간 초과'));
+        } catch (error) {
+            log.error('dispenseIce 오류:', error.message);
+            reject(error);
+        }
     });
 };
 
+
 const dispenseWater = (time) => {
     return new Promise(resolve => {
-        console.log(`물 배출 중: ${time}초`);
+        log.info(`물 배출 중: ${time}초`);
         setTimeout(() => {
-            console.log('물 배출 완료');
+            log.info('물 배출 완료');
             resolve();
         }, time * 1000);
     });
@@ -112,9 +163,9 @@ const dispenseWater = (time) => {
 
 const dispenseCoffee = () => {
     return new Promise(resolve => {
-        console.log('커피 배출 중');
+        log.info('커피 배출 중');
         setTimeout(() => {
-            console.log('커피 배출 완료');
+            log.info('커피 배출 완료');
             resolve();
         }, 2000);
     });
@@ -122,9 +173,9 @@ const dispenseCoffee = () => {
 
 const dispenseGarucha = () => {
     return new Promise(resolve => {
-        console.log('가루차 배출 중');
+        log.info('가루차 배출 중');
         setTimeout(() => {
-            console.log('가루차 배출 완료');
+            log.info('가루차 배출 완료');
             resolve();
         }, 2000);
     });
@@ -132,9 +183,9 @@ const dispenseGarucha = () => {
 
 const dispenseSyrup = () => {
     return new Promise(resolve => {
-        console.log('시럽 추가 중');
+        log.info('시럽 추가 중');
         setTimeout(() => {
-            console.log('시럽 추가 완료');
+            log.info('시럽 추가 완료');
             resolve();
         }, 1000);
     });

@@ -135,7 +135,7 @@ const reqOrder = async (orderList) => {
         console.log(data);
 
     } catch (error) {
-        sendLogToMain('error','RD2: 데이터 가져오기 실패:', error);
+        sendLogToMain('error','ORDER :', error);
     }
 }
 
