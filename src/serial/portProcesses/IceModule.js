@@ -174,15 +174,20 @@ class IceModule {
 
     async parseStatusData(responseData) {
 
-        console.log("Is Buffer:", Buffer.isBuffer(responseData));
+        console.log("Response Data (full):", responseData);
+        console.log("Response Data (length):", responseData.length);
 
+        // 데이터 길이 확인
+        if (!responseData || responseData.length < 7) {
+            throw new Error("Invalid response data length");
+        }
 
         try {
 
             const cmd = responseData[3]; // CMD 필드
             const wasTrue = cmd === 0x0B ? 0 : 1;
             // 데이터 필드만 추출 (STX, ID, LEN, CMD, CRC, ETX 제외)
-            const statusData = responseData.slice(4, responseData.length - 2);
+            const statusData = responseData.slice(4, responseData.length - 1);
 
             // 상태 플래그 추출
             const genBuf2 = statusData[1]; // DATA2
