@@ -132,7 +132,7 @@ const dispenseIce = (recipe) => {
                     `menu: ${recipe.name} - [${recipe.menuId}] : wasTrue=${result.wasTrue}, isIceOutDone=${result.data.b_wt_drink_rt} ${counter}/60`
                 );
 
-                if (
+                /*if (
                     result.wasTrue === 1 &&
                     result.data.b_wt_drink_rt === 1
                 ) {
@@ -147,6 +147,8 @@ const dispenseIce = (recipe) => {
                 ) {
                     log.info('2단계 완료: 얼음 배출 완료 및 다음 플로우로 진행');
 
+                }*/
+                if(counter >= 6) {
                     resolve();
                     return;
                 }
