@@ -67,7 +67,8 @@ class SerialPortManager {
         if (this._isHexComplete(hexBuffer)) {
 
             const hexPacket = this.hexBuffer.slice(0, 14); // HEX 패킷 길이에 맞게 추출
-
+            console.log("hexPacket ---- " , hexPacket);
+            console.log("hexPacket ---- " , Buffer.from(hexPacket, 'hex'));
             this._processHexData(Buffer.from(hexPacket, 'hex')); // 패킷 처리
             this.hexBuffer =''; // 사용한 패킷 제거
         }
