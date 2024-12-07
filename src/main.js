@@ -127,8 +127,15 @@ autoUpdater.on('update-downloaded', () => {
 /** 초기화가 끝나게 되면 실행 */
 app.whenReady().then(async () => {
     createWindow();
-    // polling.startPolling() 비동기 함수 호출
-    await polling.startPolling(); // 여기서 호출하여 startPolling의 비동기 처리가 완료되도록 함
+    // polling.startPolling() 호출 전 상태 확인
+    console.log('Before startPolling:', polling.pollingTimer, polling.isPollingActive);
+
+    // polling.startPolling() 호출
+    await polling.startPolling();
+
+    // polling.startPolling() 호출 후 상태 확인
+    console.log('After startPolling:', polling.pollingTimer, polling.isPollingActive);
+
     await autoUpdater.checkForUpdates();
 });
 
