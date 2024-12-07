@@ -247,35 +247,31 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
             await Order.setSyrup(motor, extraction, hotwater, sparkling);
             log.info("extractSyrup!!!");
             await Order.extractSyrup();
-            for (let counter = 0; counter < 6; counter++) {
+            let operationStopped = false; // 상태 플래그 초기화
+
+            for (let counter = 0; counter < 60; counter++) {
                 await McData.updateSerialData('RD1', 'RD1');
                 const data = McData.getSerialData('RD1');
 
                 log.info(JSON.stringify(data));
 
-                /*if (
-                    result.wasTrue === 1 &&
-                    result.data.b_wt_drink_rt === 1
-                ) {
-                    log.info('1단계 완료: wasTrue=1, isIceOutDone=1 상태로 전환');
-                    state.transitionedToReady = true;
+                if (data.autoOperationState === "정지") {
+                    log.info("Auto operation state is '정지', exiting loop.");
+                    operationStopped = true; // 상태 플래그 업데이트
+                    break; // 루프 종료
                 }
-
-                if (
-                    state.transitionedToReady &&
-                    result.wasTrue === 1 &&
-                    result.data.b_wt_drink_rt === 0
-                ) {
-                    log.info('2단계 완료: 얼음 배출 완료 및 다음 플로우로 진행');
-
-                    resolve();
-                    return;
-                }*/
 
                 await new Promise(r => setTimeout(r, 1000));
             }
 
-            await Order.purifyingSyrup(motor);
+            // 루프 종료 후 다음 로직
+            if (operationStopped) {
+                await Order.purifyingSyrup(motor);
+                log.info("Purifying syrup completed.");
+            } else {
+                log.warn("Auto operation state did not reach '정지' within the timeout.");
+                reject(new Error("Timeout: Auto operation did not stop."));
+            }
             reject();
 
         } catch (error) {
