@@ -193,7 +193,7 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
         try {
             await McData.updateSerialData('RD1', 'RD1');
             const data = McData.getSerialData('RD1');
-            log.info("GET GARUCHA INFO " + data);
+            log.info("GET GARUCHA INFO ", JSON.stringify(data));
             log.info(`garucha set!!!  : ${motor}, ${extraction}, , ${hotWater}`);
             await Order.sendTeaCommand(motor, extraction, hotwater);
             log.info("extractGarucha!!!");
@@ -213,7 +213,7 @@ const dispenseMultipleGarucha = async (recipe) => {
     for (let i = 0; i < recipe.garucha.length; i++) {
         const garucha = recipe.garucha[i];
         log.info(`dispenseGarucha ${i + 1} START!!`);
-
+        log.info(`garucha set!!!  : ${garucha.garuchaNumber}, ${garucha.garuchaExtraction}, , ${garucha.garuchaHotWater}`);
         // 각 커피 배출을 순차적으로 실행
         await dispenseGarucha(
             garucha.garuchaNumber,
