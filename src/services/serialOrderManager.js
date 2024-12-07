@@ -228,7 +228,7 @@ const dispenseMultipleGarucha = async (recipe) => {
         const garucha = recipe.garucha[i];
         log.info(`dispenseGarucha ${i + 1} START!!`);
         log.info(`garucha set!!!  : ${garucha.garuchaNumber}, ${garucha.garuchaExtraction}, , ${garucha.garuchaHotWater}`);
-        // 각 커피 배출을 순차적으로 실행
+        // 각 가루차 배출을 순차적으로 실행
         await dispenseGarucha(
             garucha.garuchaNumber,
             garucha.garuchaExtraction,
@@ -247,6 +247,34 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
             await Order.setSyrup(motor, extraction, hotwater, sparkling);
             log.info("extractSyrup!!!");
             await Order.extractSyrup();
+            for (let counter = 0; counter < 6; counter++) {
+                await McData.updateSerialData('RD1', 'RD1');
+                const data = McData.getSerialData('RD1');
+
+                log.info(JSON.stringify(data));
+
+                /*if (
+                    result.wasTrue === 1 &&
+                    result.data.b_wt_drink_rt === 1
+                ) {
+                    log.info('1단계 완료: wasTrue=1, isIceOutDone=1 상태로 전환');
+                    state.transitionedToReady = true;
+                }
+
+                if (
+                    state.transitionedToReady &&
+                    result.wasTrue === 1 &&
+                    result.data.b_wt_drink_rt === 0
+                ) {
+                    log.info('2단계 완료: 얼음 배출 완료 및 다음 플로우로 진행');
+
+                    resolve();
+                    return;
+                }*/
+
+                await new Promise(r => setTimeout(r, 1000));
+            }
+
             await Order.purifyingSyrup(motor);
             reject();
 
@@ -264,7 +292,7 @@ const dispenseMultipleSyrup = async (recipe) => {
         const syrup = recipe.syrup[i];
         log.info(`dispenseSyrup ${i + 1} START!!`);
         log.info(`syrup set!!!  : ${syrup.syrupNumber}, ${syrup.syrupExtraction}, ${syrup.syrupHotWater}, ${syrup.syrupSparklingWater}`);
-        // 각 커피 배출을 순차적으로 실행
+        // 각 시럽 배출을 순차적으로 실행
         await dispenseSyrup(
             syrup.syrupNumber,
             syrup.syrupExtraction,
