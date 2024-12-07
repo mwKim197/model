@@ -122,7 +122,7 @@ const dispenseIce = (recipe) => {
                     state.wasTrue === 0 &&
                     state.isIceOutDone === 0 &&
                     result.wasTrue === 1 &&
-                    result.data2.b_ad_avr_end === 1
+                    result.data4.b_wt_drink_rt === 1
                 ) {
                     log.info('1단계 완료: wasTrue=1, isIceOutDone=1 상태로 전환');
                     state.transitionedToReady = true;
@@ -131,7 +131,7 @@ const dispenseIce = (recipe) => {
                 if (
                     state.transitionedToReady &&
                     result.wasTrue === 1 &&
-                    result.data2.b_ad_avr_end === 0
+                    result.data4.b_wt_drink_rt === 0
                 ) {
                     log.info('2단계 완료: 얼음 배출 완료 및 다음 플로우로 진행');
 
