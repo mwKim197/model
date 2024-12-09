@@ -150,7 +150,7 @@ const dispenseIce = (recipe) => {
 
                 }*/
                 if(counter >= 20) {
-                    resolve();
+                    resolve(new Error('작업 시간이 초과되었습니다.'));
                     return;
                 }
 
