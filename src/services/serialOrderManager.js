@@ -116,7 +116,7 @@ const dispenseIce = (recipe) => {
         try {
             log.info(`얼음 세팅 중: ${recipe.iceTime}초, 물 세팅 중: ${recipe.waterTime}초`);
             const initialStatus = await Ice.getKaiserInfo();
-            log.info(`menu: ${recipe.name} - [${recipe.menuId}] : wasTrue=${initialStatus.wasTrue}, isIceOutDone=${initialStatus.data.b_wt_drink_rt}`);
+            log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(initialStatus)}`);
             await Ice.sendIceTimePacket(convertTimeToHex(recipe.iceTime));
             await Ice.sendWaterTimePacket(convertTimeToHex(recipe.waterTime));
             await Ice.sendIceRunPacket();
