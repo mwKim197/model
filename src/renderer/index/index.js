@@ -30,10 +30,10 @@ document.getElementById('goToAdmin').addEventListener('click', () => {
     ipcRenderer.send('navigate-to-page', 'admin'); // 'admin' 페이지로 이동
 });
 
-/*// 페이지 이동 버튼
+// 페이지 이동 버튼
 document.getElementById('goToTest').addEventListener('click', () => {
     ipcRenderer.send('navigate-to-page', 'test'); // 'admin' 페이지로 이동
-});*/
+});
 
 // 페이지 이동 버튼
 document.getElementById('goToOrder').addEventListener('click', () => {

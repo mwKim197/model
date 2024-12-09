@@ -1,5 +1,5 @@
 const log = require('../logger');
-const { allProduct } = require("../db/dbProcesses/util/getMenu");
+const { allProduct } = require("../aws/db/utils/getMenu");
 const {serialCommCom1, serialCommCom3, serialCommCom4 } = require("../serial/serialCommManager");
 const  CupModule = require("../serial/portProcesses/CupModule");
 const  IceModule = require("../serial/portProcesses/IceModule");

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>커피 메뉴 관리</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+<div class="container mx-auto my-10 p-5 bg-white shadow-md rounded-lg">
+    <!-- 헤더 -->
+    <header class="text-center mb-10">
+        <h1 class="text-2xl font-bold text-gray-700">메뉴 목록</h1>
+        <script src="modelAdmin.js"></script>
+    </header>
+
+    <!-- 메뉴 리스트 -->
+    <main class="space-y-6">
+        <!-- 메뉴 아이템 -->
+        <div class="menu-item flex gap-4 p-4 bg-gray-50 border border-gray-300 rounded-lg">
+            <!-- 이미지 -->
+            <div class="menu-image w-40 h-40 flex items-center justify-center rounded-lg text-sm text-gray-500">
+                <img src="" alt="이미지" />
+            </div>
+            <!-- 메뉴 상세 -->
+            <div class="menu-details flex flex-wrap gap-4 flex-1">
+                <div class="ingredient w-28 h-12 bg-gray-100 border border-gray-300 rounded-md flex items-center justify-center text-sm">
+                    커피
+                </div>
+                <div class="ingredient w-28 h-12 bg-gray-100 border border-gray-300 rounded-md flex items-center justify-center text-sm">
+                    재료2
+                </div>
+                <div class="ingredient w-28 h-12 bg-gray-100 border border-gray-300 rounded-md flex items-center justify-center text-sm">
+                    재료3
+                </div>
+                <div class="ingredient w-28 h-12 bg-gray-100 border border-gray-300 rounded-md flex items-center justify-center text-sm">
+                    재료4
+                </div>
+                <div class="ingredient w-28 h-12 bg-gray-100 border border-gray-300 rounded-md flex items-center justify-center text-sm">
+                    재료5
+                </div>
+            </div>
+        </div>
+
+        <!-- 또 다른 메뉴 아이템 -->
+        <div class="menu-item flex gap-4 p-4 bg-gray-50 border border-gray-300 rounded-lg">
+            <!-- 이미지 -->
+            <div class="menu-image w-40 h-40 bg-gray-200 flex items-center justify-center rounded-lg text-sm text-gray-500">
+                이미지
+            </div>
+            <!-- 메뉴 상세 -->
+            <div class="menu-details flex flex-wrap gap-4 flex-1">
+                <div class="ingredient w-28 h-12 bg-gray-100 border border-gray-300 rounded-md flex items-center justify-center text-sm">
+                    재료1
+                </div>
+                <div class="ingredient w-28 h-12 bg-gray-100 border border-gray-300 rounded-md flex items-center justify-center text-sm">
+                    재료2
+                </div>
+                <div class="ingredient w-28 h-12 bg-gray-100 border border-gray-300 rounded-md flex items-center justify-center text-sm">
+                    재료3
+                </div>
+                <div class="ingredient w-28 h-12 bg-gray-100 border border-gray-300 rounded-md flex items-center justify-center text-sm">
+                    재료4
+                </div>
+                <div class="ingredient w-28 h-12 bg-gray-100 border border-gray-300 rounded-md flex items-center justify-center text-sm">
+                    재료5
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

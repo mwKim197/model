@@ -1,0 +1,30 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f4f4f9;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    grid-auto-rows: 50px;
+    gap: 10px;
+    width: 90%;
+    max-width: 800px;
+}
+
+.item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #4caf50;
+    color: white;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    touch-action: manipulation;
+}

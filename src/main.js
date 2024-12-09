@@ -10,7 +10,7 @@ const serialDataManager  = require('./services/serialDataManager');
 const Order = require('./serial/portProcesses/Order');
 const Ice = require('./serial/portProcesses/Ice');
 const Cup = require('./serial/portProcesses/Cup');
-const Menu = require('./db/dbProcesses/Menu');
+const Menu = require('./aws/db/Menu');
 const fs = require('fs');
 const appServer = express();
 const server = http.createServer(appServer);
@@ -29,10 +29,21 @@ appServer.use((req, res, next) => {
 
 // 시리얼 통신 부
 const cors = require('cors');
+
+// assets 디렉토리를 정적 파일로 제공
+appServer.use('/assets', express.static(path.resolve(__dirname, 'assets')));
+
+appServer.use((req, res, next) => {
+    res.set('Content-Type', 'text/html');
+    next();
+});
 appServer.use(cors());
+// html 를 정적 파일로 제공
+appServer.get('/web/modelAdmin.html', (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'renderer', 'web', 'modelAdmin.html'));
+});
+
 appServer.use(express.json());
-// 정적 파일 제공
-appServer.use(express.static('renderer'));
 appServer.use(Connect); // MC연결
 appServer.use(Order);   // MC주문
 appServer.use(Ice);     // 카이저 ICE
@@ -40,12 +51,21 @@ appServer.use(Cup);     // 컵 디스펜서
 appServer.use(Menu);    // MENU DB
 
 
+appServer.use((req, res, next) => {
+    console.log(`Request URL: ${req.url}`);
+    next();
+});
+
 // 로그인처리 임시
 loginUser("test_user1", "test_user1").then();
 
 // 서버 시작
 server.listen(3000, '0.0.0.0',() => {
     log.info('server: http://localhost:3000 ' ,'http://0.0.0.0:3000');
+});
+
+appServer.get('/api/data', (req, res) => {
+    res.json({ message: 'Electron Node.js 서버에서 전송된 데이터!' });
 });
 
 // 버전읽기

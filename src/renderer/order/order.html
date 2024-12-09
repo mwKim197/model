@@ -1,43 +1,40 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>커피 메뉴</title>
-    <link href="../../styles/output.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100">
-<div class="max-w-7xl mx-auto p-4">
-    <!-- Navigation -->
-    <nav class="bg-menu-gray flex rounded-t-lg">
-        <div class="menu-tab active" data-category="all">전체메뉴</div>
-        <div class="menu-tab" data-category="coffee">커피</div>
-        <div class="menu-tab" data-category="ade">에이드</div>
-        <div class="menu-tab" data-category="tea">티</div>
-        <div class="menu-tab" data-category="order">기타음료</div>
-    </nav>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>커피 메뉴</title>
+        <link href="../../styles/output.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-100">
+    <div class="max-w-7xl mx-auto p-4">
+        <!-- Navigation -->
+        <nav class="bg-menu-gray flex rounded-t-lg">
+            <div class="menu-tab active" data-category="all">전체메뉴</div>
+            <div class="menu-tab" data-category="coffee">커피</div>
+            <div class="menu-tab" data-category="ade">에이드</div>
+            <div class="menu-tab" data-category="tea">티</div>
+            <div class="menu-tab" data-category="order">기타음료</div>
+        </nav>
 
-    <div class="flex"> <!-- flex 클래스를 추가하여 좌우 영역을 가로로 배치 -->
-        <!-- 왼쪽 영역 (제품 그리드) -->
-        <div class="w-4/5 bg-gray-100 p-4">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4" id="productGrid"></div>
-        </div>
+        <div class="flex"> <!-- flex 클래스를 추가하여 좌우 영역을 가로로 배치 -->
+            <!-- 왼쪽 영역 (제품 그리드) -->
+            <div class="w-4/5 bg-gray-100 p-4">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4" id="productGrid"></div>
+            </div>
 
-        <div class="fixed top-0 right-0 bg-gray-300 min-h-208 p-4 min-w-52 h-full flex flex-col justify-center">
-            <div class="flex flex-col gap-1 h-[740px] grid-flow-row overflow-y-auto scrollbar-hide" id="orderGrid" ></div>
+            <div class="fixed top-0 right-0 bg-gray-300 min-h-208 p-4 min-w-52 h-full flex flex-col justify-center">
+                <div class="flex flex-col gap-1 h-[740px] grid-flow-row overflow-y-auto scrollbar-hide" id="orderGrid" ></div>
 
-            <!-- 버튼을 absolute로 고정하고 부모 div 내에서 가로세로 가운데 배치 -->
-            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-3/4"> <!-- 부모 너비의 3/4로 설정 -->
-                <button class="bg-[#E84118] text-white px-8 py-4 rounded-lg text-xl font-bold w-full" id="payment">
-                    결제하기
-                </button>
+                <!-- 버튼을 absolute로 고정하고 부모 div 내에서 가로세로 가운데 배치 -->
+                <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-3/4"> <!-- 부모 너비의 3/4로 설정 -->
+                    <button class="bg-[#E84118] text-white px-8 py-4 rounded-lg text-xl font-bold w-full" id="payment">
+                        결제하기
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</div>
-<script src="order.js"></script>
-<script>
-
-</script>
-</body>
+    <script src="order.js"></script>
+    </body>
 </html>

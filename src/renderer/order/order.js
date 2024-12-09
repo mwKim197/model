@@ -2,9 +2,13 @@
 const log = require("../../logger");
 const menuApi = require('../api/menuApi');
 const orderApi = require('../api/orderApi');
+const image = require('../../aws/s3/utils/image');
 
 let orderList = [];
 
+
+const data = image.downloadAllFromS3WithCache("model-narrow-road", "model/test_user1");
+log.info(data);
 // 메뉴 데이터
 let allProducts = [
     { name: '아메리카노', nameEn: 'Americano', category: '커피', price: 2000,          image: 'https://placehold.co/200x300/png' },

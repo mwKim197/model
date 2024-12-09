@@ -2,7 +2,7 @@ const log = require('./logger');
 const bcrypt =  require('bcrypt');
 
 // DynamoDB 설정
-const dynamoDB = require('./db/dynamodb_start');
+const { dynamoDB } = require('./aws/aws');
 
 // 비밀번호 해시화 함수
 const hashPassword = async (password) => {
