@@ -1,6 +1,6 @@
 const express = require('express');
 const Menu = express.Router();
-const {checkProduct, addProduct,allProduct} = require('../dbProcesses/util/getMenu');
+const {checkProduct, addProduct, allProduct} = require('./utils/getMenu');
 const log = require("../../logger");
 
 Menu.get('/get-menu-info', async (req, res) => {
