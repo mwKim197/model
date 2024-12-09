@@ -125,6 +125,7 @@ const dispenseIce = (recipe) => {
 
             let state = { transitionedToReady: false };
 
+
             for (let counter = 0; counter < 20; counter++) {
                 const result = await Ice.getKaiserInfo();
 
