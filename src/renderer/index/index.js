@@ -102,3 +102,6 @@ document.getElementById('sendCupPlUse').addEventListener('click', () => {
 document.getElementById('sendCupPaUse').addEventListener('click', () => {
     menuApi.fetchCupPaUse();
 });
+document.getElementById('getIceInfo').addEventListener('click', () => {
+    menuApi.fetchIceInfo();
+});

@@ -346,6 +346,23 @@ const fetchCupPaUse = async () => {
     }
 }
 
+const fetchIceInfo = async () => {
+    try {
+        const response = await fetch('http://localhost:3000/serial-ice-info');
+
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('Response Data:', data);  // 디버깅용 콘솔
+        log.info(data);
+    } catch (error) {
+        sendLogToMain('error','Error fetching coffee info:', error);
+        log.error(error);
+    }
+}
+
 
 module.exports = {
     getMenuInfo,
@@ -364,6 +381,7 @@ module.exports = {
     fetchIceStop,
     fetchCupInfo,
     fetchCupPlUse,
-    fetchCupPaUse
+    fetchCupPaUse,
+    fetchIceInfo
     // 필요한 함수들 추가
 };
