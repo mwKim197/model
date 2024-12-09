@@ -1,5 +1,5 @@
 const AWS = require('aws-sdk');
-const dynamoDB = new AWS.DynamoDB.DocumentClient();
+const { dynamoDB } = new AWS.DynamoDB.DocumentClient();
 const log = require('../../../logger');
 
 const initializeCounter = async (userId) => {

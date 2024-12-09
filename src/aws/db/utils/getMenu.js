@@ -1,4 +1,4 @@
-const dynamoDB = require('../../dynamodb_start');
+const { dynamoDB } = require('../../aws');
 const log = require('../../../logger');
 const { initializeCounter, incrementCounter, getCounterValue } = require('./getCount');
 const getUser = require('../../../util/getUser');  // 유틸 함수 가져오기
@@ -18,6 +18,7 @@ const processUserAndProduct = async () => {
 processUserAndProduct().then();
 
 const addProduct = async (data) => {
+    log.info(await incrementCounter(user.userId));
     const params = {
         TableName: 'model_menu',
         Item: {
