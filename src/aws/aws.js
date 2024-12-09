@@ -6,9 +6,6 @@ const accessKeyId = process.env.MODEL_AWS_ACCESS_KEY_ID;
 const secretAccessKey = process.env.MODEL_AWS_SECRET_ACCESS_KEY;
 const region = process.env.MODEL_AWS_DEFAULT_REGION;
 
-log.info(accessKeyId);
-log.info(region);
-
 // AWS 자격 증명 설정
 AWS.config.update({
     accessKeyId: accessKeyId,
@@ -19,4 +16,7 @@ AWS.config.update({
 // DynamoDB 클라이언트 생성
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
-module.exports = dynamoDB;
+// S3 클라이언트 생성
+const s3 = new AWS.S3();
+
+module.exports = { dynamoDB, s3 };
