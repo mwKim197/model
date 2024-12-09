@@ -7,6 +7,14 @@ class IceModule {
             throw new Error('Serial communication is unavailable.');
         }
         this.serialCommCom3 = serialCommCom3;
+
+        this.dataFields = [
+            { name: "GEN_BUF0", bits: ["B_MS10", "B_INIT_ST", "B_PWR_SW_CHK", "B_PWR_SW_ON_ST", "B_ICE_SW_CHK", "B_CONT_ON_SW_ST", "B_ICE_READY_SW_ON_ST", "B_ICE_SW_ON_ST"] },
+            { name: "GEN_BUF1", bits: ["B_OUT_SW_ON_ST", "B_ICE_WT_SW_CHK", "B_ICE_WT_SW_ON_ST", "B_WT_SW_CHK", "B_WT_SW_ON_ST", "B_TIME_DOWN_SW_CHK", "B_TIME_UP_SW_CHK", ""] },
+            { name: "GEN_BUF2", bits: ["B_AD_AVR_END", "B_DRINK_SW_ON_ST", "B_FLOAT_SW_ON_ST", "B_INIT_BIN_ON_ST", "B_EVA_ON_ST", "B_ERR_ON_ST", "B_DRINK_EN", ""] },
+            { name: "GEN_BUF3", bits: ["B_COMP_ON_ST", "B_MT_ON_ST", "B_AC_WT_ON_ST", "B_ELEC_GT_ON_ST", "B_FAN_MOT_ON_ST", "B_DC_WT_ON_ST", "B_EVA_175_ON_ST", "B_EVA_SERVICE_ST"] },
+            { name: "GEN_BUF4", bits: ["B_DRINK_INIT_ST", "B_WT_DRINK_RT", "B_ICE_CONT_ON_ST", "MODE_ICE_WAT_ST", "B_TIME_SET_MODE_SW_ST", "B_TIME_SET_MODE_SW_CHK", "B_TIME_SET_MODE_ON_ST", ""] },
+        ];
     }
 
     // 제빙기 상태
@@ -30,7 +38,7 @@ class IceModule {
             // 시리얼 응답 받기
             const response = await this.serialCommCom3.writeCommand(packet);
 
-            return await this.parseStatusData(response);
+            return await this.parseResponse(response);
         } catch (err) {
             log.error(err.message);
             throw new Error(err.message);
@@ -167,7 +175,7 @@ class IceModule {
         }
     };
 
-    async parseStatusData(responseData) {
+    /*async parseStatusData(responseData) {
 
         console.log("Response Data (full):", responseData);
         console.log("Response Data (length):", responseData.length);
@@ -178,13 +186,8 @@ class IceModule {
         }
 
         try {
-
-            const cmd = responseData[3]; // CMD 필드
-            const wasTrue = cmd === 0x0B ? 0 : 1;
-            // 데이터 필드만 추출 (STX, ID, LEN, CMD, CRC, ETX 제외)
-            const statusData = responseData.slice(4, 5);
-            // 2. 데이터 값 가져오기
-            const data = statusData[0]; // 0x0a
+            const len = responseData[2]; // Length
+            const data = responseData.slice(4, len - 2); // Data (Len - 고정 필드)
 
             // 3. 비트별 상태 해석
             const dataStatus = {
@@ -207,6 +210,34 @@ class IceModule {
             console.error('Error parsing status data:', err.message);
             throw err;
         }
+    }*/
+
+    // 비트를 해석하여 상태를 반환
+    parseBits(byte, bitDescriptions) {
+        const states = [];
+        for (let i = 0; i < 8; i++) {
+            if (bitDescriptions[i]) {
+                states.push({ bit: `bit${i}`, name: bitDescriptions[i], value: (byte >> i) & 1 });
+            }
+        }
+        return states;
+    }
+
+    // 응답 데이터를 파싱
+    async parseResponse(responseHex) {
+        const responseBuffer = Buffer.from(responseHex, "hex");
+
+        if (responseBuffer.length < 5) {
+            throw new Error("응답 데이터가 너무 짧습니다.");
+        }
+
+        const parsedData = {};
+        for (let i = 0; i < this.dataFields.length; i++) {
+            const field = this.dataFields[i];
+            const byte = responseBuffer[i];
+            parsedData[field.name] = this.parseBits(byte, field.bits);
+        }
+        return parsedData;
     }
 }
 
