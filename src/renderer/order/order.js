@@ -124,7 +124,6 @@ function updateItemQuantity(button, change, orderId) {
 
     // 수량 업데이트
     quantityElement.textContent = currentQuantity;
-    console.log(orderId);
     console.log(orderList);
     // orderList에서 해당 주문을 찾아 수량 업데이트
     const order = orderList.find(order => order.orderId === orderId);

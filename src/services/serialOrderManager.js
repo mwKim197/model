@@ -125,11 +125,11 @@ const dispenseIce = (recipe) => {
 
             let state = { transitionedToReady: false };
 
-            for (let counter = 0; counter < 7; counter++) {
+            for (let counter = 0; counter < 20; counter++) {
                 const result = await Ice.getKaiserInfo();
 
                 log.info(
-                    `menu: ${recipe.name} - [${recipe.menuId}] : wasTrue=${result.wasTrue}, isIceOutDone=${result.data.b_wt_drink_rt} ${counter}/60`
+                    `menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(result)} ${counter}/60`
                 );
 
                 /*if (
