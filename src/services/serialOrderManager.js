@@ -71,6 +71,7 @@ const processOrder = async (recipe) => {
 // 제조 단계 함수
 const dispenseCup = (recipe) => {
     log.info(JSON.stringify(recipe));
+
     return new Promise(resolve => {
         setTimeout(async () => {
             const result = await Cup.getCupInfo(); // `getSomeData()`는 조회하는 함수입니다.
@@ -85,7 +86,7 @@ const dispenseCup = (recipe) => {
                 log.info(`menu: ${recipe.name} - [${recipe.menuId}] : GoCupOut, cup: 'paper'`);
                 await Cup.getPaperCupUsage();
             }
-
+            let stopCup = 0;
             const checkCondition = async (counter = 0) => {
                 // 비동기 함수 실행 후 일정 시간 지연
                 if (counter >= 60) {
@@ -95,17 +96,12 @@ const dispenseCup = (recipe) => {
                     return;
                 }
 
-                let stopCup = 0;
                 const result = await Cup.getCupInfo();
                 log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵디스펜서 상태 cup: ${recipe.cup}, 컵1(PL)모터ON=${result.plasticCup.motorActive}, 컵2(PA)모터ON=${result.paperCup.motorActive} ${counter + 1} / 60`);
-                console.log(result.plasticCup.motorActive === 0 || result.paperCup.motorActive === 0);
-                console.log(result.plasticCup.motorActive === 0);
-                console.log(result.paperCup.motorActive === 0);
-                console.log(stopCup);
+
                 // 조회한 값이 false 이면 멈추기
                 if (result.plasticCup.motorActive === 0 || result.paperCup.motorActive === 0) {
                     stopCup++;
-                    console.log(stopCup);
                 }
 
                 if ( stopCup >= 2) {
