@@ -176,8 +176,6 @@ class SerialPortManager {
                     log.error(`writeCommand error: ${err.message}`);
                     return reject(err);
                 }
-               // log.info(`writeCommand success: ${command}`);
-
                 // 일정 시간 후 데이터를 반환
                 setTimeout(() => {
                     if (this.latestData) {

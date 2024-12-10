@@ -194,13 +194,18 @@ const dispenseMultipleCoffees = async (recipe) => {
         log.info(`dispenseCoffee ${i + 1} START!!`);
         const isAutoOperation =  await checkAutoOperationState("정지", 3);
 
+        const formatValue = (value) => value.toString().padStart(3, "0");
+        const grinder = (coffee) => {
+            const result = Math.round(coffee * 10);
+            return formatValue(result);
+        };
         if (isAutoOperation) {
             // 각 커피 배출을 순차적으로 실행
             await dispenseCoffee(
-                coffee.grinderOne,
-                coffee.grinderTwo,
-                coffee.extraction,
-                coffee.hotWater
+                grinder(coffee.grinderOne),
+                grinder(coffee.grinderTwo),
+                formatValue(coffee.extraction),
+                formatValue(coffee.hotWater)
             );
         }
 
@@ -243,12 +248,16 @@ const dispenseMultipleGarucha = async (recipe) => {
         log.info(`garucha set!!!  : ${garucha.garuchaNumber}, ${garucha.garuchaExtraction}, , ${garucha.garuchaHotWater}`);
         // 각 가루차 배출을 순차적으로 실행
         const isAutoOperation =  await checkAutoOperationState("정지", 3);
-
+        const formatValue = (value) => value.toString().padStart(3, "0");
+        const grinder = (coffee) => {
+            const result = Math.round(coffee * 10);
+            return formatValue(result);
+        };
         if (isAutoOperation) {
             await dispenseGarucha(
                 garucha.garuchaNumber,
-                garucha.garuchaExtraction,
-                garucha.garuchaHotWater
+                grinder(garucha.garuchaExtraction),
+                formatValue(garucha.garuchaHotWater)
             );
         }
     }
@@ -288,14 +297,19 @@ const dispenseMultipleSyrup = async (recipe) => {
         log.info(`dispenseSyrup ${i + 1} START!!`);
         log.info(`syrup set!!!  : ${syrup.syrupNumber}, ${syrup.syrupExtraction}, ${syrup.syrupHotWater}, ${syrup.syrupSparklingWater}`);
         // 각 시럽 배출을 순차적으로 실행
-
         const isAutoOperation =  await checkAutoOperationState("정지", 3);
+
+        const formatValue = (value) => value.toString().padStart(3, "0");
+        const grinder = (coffee) => {
+            const result = Math.round(coffee * 10);
+            return formatValue(result);
+        };
         if (isAutoOperation) {
             await dispenseSyrup(
                 syrup.syrupNumber,
-                syrup.syrupExtraction,
-                syrup.syrupHotWater,
-                syrup.syrupSparklingWater
+                grinder(syrup.syrupExtraction),
+                formatValue(syrup.syrupHotWater),
+                formatValue(syrup.syrupSparklingWater)
             );
         }
     }
@@ -378,6 +392,10 @@ const useWash = async (recipe) => {
 
     log.info("전체 세척 작업 완료");
 };
+
+
+
+
 // 주문 처리 시작
 processQueue();
 
