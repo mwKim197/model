@@ -153,7 +153,7 @@ class SerialPortManager {
             }
             
         } else {
-            log.warn(`Unexpected ASCII data: ${asciiPacket}`);
+            log.info(`Unexpected ASCII data: ${asciiPacket}`);
         }
     }
 
