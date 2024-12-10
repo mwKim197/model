@@ -109,20 +109,17 @@ class SerialPortManager {
 
     // Hex 데이터 처리
     _processHexData(data) {
-
-        // Hex 문자열 -> Buffer로 변환
-        const hexBuffer = Buffer.from(data, 'hex');
-
         try {
-            if (!Buffer.isBuffer(hexBuffer)) {
-                log.error('Received data is NOT a Buffer');
-            } else {
-                log.debug('Received Buffer');
+            // 데이터 검증 (선택 사항)
+            if (typeof data !== 'string') {
+                throw new Error('Received data is not a valid string');
             }
 
-            this.latestData = hexBuffer;
+            // 최신 데이터로 문자열 저장
+            this.latestData = data; // 문자열로 저장
+            console.log(`Processed HEX Data: ${data}`); // 로그 출력 (원하는 방식으로 대체 가능)
         } catch (err) {
-            log.error(`Hex 데이터 처리 실패: ${err.message}`);
+            console.error(`Hex 데이터 처리 실패: ${err.message}`);
         }
     }
 
