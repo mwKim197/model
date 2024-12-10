@@ -60,7 +60,7 @@ class SerialPortManager {
         // 수신된 데이터를 hexBuffer에 누적
         // 수신된 데이터를 HEX 문자열로 누적
         this.hexBuffer += data.toString('hex');
-
+        console.log("data __" , this.hexBuffer);
         // 문자열이 올바른 HEX 형식일 경우 Buffer로 변환
         const hexBuffer = Buffer.from(this.hexBuffer, 'hex');
         // HEX 패킷 처리

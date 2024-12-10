@@ -32,10 +32,10 @@ class IceModule {
 
             // 패킷 조립
             const packet = Buffer.from([stx, id, len, cmd, data, etx]);
-
+            console.log("packet : ", packet.toString('hex'));
             // 시리얼 응답 받기
             const response = await this.serialCommCom3.writeCommand(packet);
-            log.info("response : ", response);
+
             return await this.parseResponse(response);
         } catch (err) {
             log.error(err.message);
