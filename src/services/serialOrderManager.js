@@ -283,7 +283,6 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
 };
 
 const dispenseMultipleSyrup = async (recipe) => {
-    log.info(`JSON.stringify(recipe) : ${JSON.stringify(recipe)}`);
     for (let i = 0; i < recipe.syrup.length; i++) {
         const syrup = recipe.syrup[i];
         log.info(`dispenseSyrup ${i + 1} START!!`);
