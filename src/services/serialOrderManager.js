@@ -121,7 +121,7 @@ const dispenseIce = (recipe) => {
             const initialStatus = await Ice.getKaiserInfo();
             totalTime = initialStatus.match(/.{1,2}/g)[6];
 
-            log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(initialStatus)}`);
+            console.log(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(totalTime)}`);
             await Ice.sendIceTimePacket(convertTimeToHex(recipe.iceTime));
             await Ice.sendWaterTimePacket(convertTimeToHex(recipe.waterTime));
             await Ice.sendIceRunPacket();
@@ -133,6 +133,7 @@ const dispenseIce = (recipe) => {
 
                 log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(result)} ${counter}/60`);
                 const hexArray = result.match(/.{1,2}/g);
+                console.log(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(hexArray)}`);
                 if (hexArray[6] !== totalTime) {
                     log.info('2단계 완료: 얼음 배출 완료 및 다음 플로우로 진행');
                     await Ice.sendIceStopPacket();
