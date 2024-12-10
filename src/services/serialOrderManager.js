@@ -57,6 +57,7 @@ const processQueue = async (orderList = [], menuList) => {
 
 // 주문 처리
 const processOrder = async (recipe) => {
+    console.log("recipes : " , recipe);
     await dispenseCup(recipe);
     if (recipe.iceYn === 'yes') await dispenseIce(recipe);
     if (recipe.coffeeYn === 'yes') await dispenseMultipleCoffees(recipe);
@@ -115,7 +116,7 @@ const dispenseCup = (recipe) => {
 const dispenseIce = (recipe) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let totalTime ="";
+            let totalTime = "";
             log.info(`얼음 세팅 중: ${recipe.iceTime}초, 물 세팅 중: ${recipe.waterTime}초`);
             await Ice.sendIceTimePacket(convertTimeToHex(recipe.iceTime));
             await Ice.sendWaterTimePacket(convertTimeToHex(recipe.waterTime));
