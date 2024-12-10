@@ -51,6 +51,7 @@ const processQueue = async (orderList = [], menuList) => {
         }
         log.info(`${recipe.name} - [${recipe.menuId}] : 주문 처리 시작`);
         await processOrder(recipe); // 주문 처리
+        await useWash(recipe);
         log.info(`${recipe.name} - [${recipe.menuId}] : 주문 처리 완료`);
     }
 };
@@ -222,17 +223,7 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
                 await Order.extractTeaPowder();
             } else {
                 reject(new Error("Timeout: Cup sensor did not reach '있음' state."));
-                return;
-            }
 
-            // "없음" 상태 3회 체크
-            const isStopValid = await checkCupSensor("없음", 3);
-            if (isStopValid) {
-                log.info(`${motor} 세척 실행`);
-                await Order.purifyingTae(motor);
-                resolve(); // 성공 시 resolve
-            } else {
-                reject(new Error("Timeout: Cup sensor did not reach '없음' state."));
             }
 
         } catch (error) {
@@ -278,18 +269,8 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
                 await Order.extractSyrup();
             } else {
                 reject(new Error("Timeout: Cup sensor did not reach '있음' state."));
-                return;
             }
 
-            // "없음" 상태 3회 체크
-            const isStopValid = await checkCupSensor("없음", 3);
-            if (isStopValid) {
-                log.info(`${motor} 세척 실행`);
-                await Order.purifyingSyrup(motor);
-                resolve(); // 성공 시 resolve
-            } else {
-                reject(new Error("Timeout: Cup sensor did not reach '없음' state."));
-            }
 
         } catch (error) {
             log.error('dispenseSyrup 오류:', error.message);
@@ -372,6 +353,30 @@ const checkAutoOperationState = async (expectedState, threshold) => {
     return false; // 타임아웃 처리
 };
 
+const useWash = async (recipe) => {
+    const isStopValid = await checkCupSensor("없음", 3);
+
+    if (!isStopValid) {
+        log.error("컵 센서 상태가 '없음'이 아니어서 세척 작업을 중단합니다.");
+        return; // 작업 중단
+    }
+
+    const combinedList = [...recipe.syrup, ...recipe.garucha];
+    for (let i = 0; i < combinedList.length; i++) {
+        const listData = combinedList[i];
+
+        log.info(`전체 세척 실행: ${JSON.stringify(listData)}`);
+
+        if (listData.garuchaNumber) {
+            await Order.purifyingTae(listData.garuchaNumber);
+        }
+        if (listData.syrupNumber) {
+            await Order.purifyingSyrup(listData.syrupNumber);
+        }
+    }
+
+    log.info("전체 세척 작업 완료");
+};
 // 주문 처리 시작
 processQueue();
 
