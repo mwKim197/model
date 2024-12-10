@@ -144,11 +144,11 @@ const dispenseIce = (recipe) => {
                 if (hexArray[6] !== totalTime) {
                     log.info('2단계 완료: 얼음 배출 완료 및 다음 플로우로 진행');
                     await Ice.sendIceStopPacket();
-                    reject();
+                    resolve();
                     return;
                 }
                 if(counter >= 59) {
-                    resolve(new Error('작업 시간이 초과되었습니다.'));
+                    reject(new Error('작업 시간이 초과되었습니다.'));
                     return;
                 }
 
