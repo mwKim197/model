@@ -120,15 +120,14 @@ const dispenseIce = (recipe) => {
 
             const initialStatus = await Ice.getKaiserInfo();
             log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(initialStatus)}`);
+            log.info(`얼음 세팅 중: ${recipe.iceTime}초, `)
             await Ice.sendIceTimePacket(convertTimeToHex(recipe.iceTime));
+            log.info(`물 ${convertTimeToHex(recipe.waterTime)}`);
             await Ice.sendWaterTimePacket(convertTimeToHex(recipe.waterTime));
             await Ice.sendIceRunPacket();
             log.info('출빙 요청이 완료되었습니다. 상태를 감시합니다.');
             log.info('얼음을 받아주세요'); // [TODO] 음성 메시지 호출
 
-            let state = { transitionedToReady: false };
-
-            totalTime = recipe.iceTime + recipe.waterTime;
             for (let counter = 0; counter < 60; counter++) {
                 const result = await Ice.getKaiserInfo();
 
