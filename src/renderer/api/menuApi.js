@@ -54,7 +54,7 @@ const setMenuInfo = async () => {
         iceYn: document.querySelector('input[name="iceYn"]:checked')?.value || 'No',
         iceTime: document.querySelector('input[name="iceTime"]')?.value || '0',
         waterTime: document.querySelector('input[name="waterTime"]')?.value || '0',
-        coffeeYn: document.querySelector('input[name="coffeeYn"]')?.value || 'No',
+        coffeeYn: document.querySelector('input[name="coffeeYn"]:checked')?.value || 'No',
         // 커피 데이터 저장
         coffee: Array.from(document.querySelectorAll('[id^="grinderOne"]')).map((coffeeElement, index) => ({
             grinderOne: coffeeElement.value || '0',
@@ -62,14 +62,14 @@ const setMenuInfo = async () => {
             extraction: document.getElementById(`extraction${index + 1}`)?.value || '0',
             hotWater: document.getElementById(`hotWater${index + 1}`)?.value || '0',
         })),
-        garuchaYn: document.querySelector('input[name="garuchaYn"]')?.value || 'No',
+        garuchaYn: document.querySelector('input[name="garuchaYn"]:checked')?.value || 'No',
         // 가루차 데이터 저장
         garucha: Array.from(document.querySelectorAll('[id^="garuchaNumber"]')).map((garuchaElement, index) => ({
             garuchaNumber: garuchaElement.value || '0',
             garuchaExtraction: document.getElementById(`garuchaExtraction${index + 1}`)?.value || '0',
             garuchaHotWater: document.getElementById(`garuchaHotWater${index + 1}`)?.value || '0',
         })),
-        syrupYn: document.querySelector('input[name="syrupYn"]')?.value || 'No',
+        syrupYn: document.querySelector('input[name="syrupYn"]:checked')?.value || 'No',
         // 시럽 데이터 저장
         syrup: Array.from(document.querySelectorAll('[id^="syrupNumber"]')).map((syrupElement, index) => ({
             syrupNumber: syrupElement.value || '0',

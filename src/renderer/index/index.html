@@ -255,9 +255,9 @@
         newFieldset.innerHTML = `
                 <legend>커피 ${coffeeCounter}</legend>
                 <label for="grinderOne${coffeeCounter}">글라인더1</label>
-                <input type="number" id="grinderOne${coffeeCounter}" name="grinderOne${coffeeCounter}" min="1">
-                <label for="grinderTwo${coffeeCounter}">글라인더1</label>
-                <input type="number" id="grinderTwo${coffeeCounter}" name="grinderTwo${coffeeCounter}" min="1">
+                <input type="number" id="grinderOne${coffeeCounter}" name="grinderOne${coffeeCounter}" min="0">
+                <label for="grinderTwo${coffeeCounter}">글라인더2</label>
+                <input type="number" id="grinderTwo${coffeeCounter}" name="grinderTwo${coffeeCounter}" min="0">
                 <label for="extraction${coffeeCounter}">추출시간</label>
                 <input type="number" id="extraction${coffeeCounter}" name="extraction${coffeeCounter}" value="0" min="0" step="0.5">
                 <label for="hotWater${coffeeCounter}">뜨거운물 시간</label>
@@ -324,7 +324,7 @@
             iceYn: document.querySelector('input[name="iceYn"]:checked')?.value || 'None',
             iceTime: document.querySelector('input[name="iceTime"]')?.value || 'None',
             waterTime: document.querySelector('input[name="waterTime"]')?.value || 'None',
-            coffeeYn: document.querySelector('input[name="coffeeYn"]')?.value || 'None',
+            coffeeYn: document.querySelector('input[name="coffeeYn"]:checked')?.value || 'None',
             // 가루차 데이터 저장
             coffee: Array.from(document.querySelectorAll('[id^="grinderOne"]')).map((coffeeElement, index) => ({
                 grinderOne: coffeeElement.value || 'None',
@@ -332,14 +332,14 @@
                 extraction: document.getElementById(`extraction${index + 1}`)?.value || 'None',
                 hotWater: document.getElementById(`hotWater${index + 1}`)?.value || 'None',
             })),
-            garuchaYn: document.querySelector('input[name="garuchaYn"]')?.value || 'None',
+            garuchaYn: document.querySelector('input[name="garuchaYn"]:checked')?.value || 'None',
             // 가루차 데이터 저장
             garucha: Array.from(document.querySelectorAll('[id^="garuchaNumber"]')).map((garuchaElement, index) => ({
                 garuchaNumber: garuchaElement.value || 'None',
                 garuchaExtraction: document.getElementById(`garuchaExtraction${index + 1}`)?.value || 'None',
                 garuchaHotWater: document.getElementById(`garuchaHotWater${index + 1}`)?.value || 'None',
             })),
-            syrupYn: document.querySelector('input[name="syrupYn"]')?.value || 'None',
+            syrupYn: document.querySelector('input[name="syrupYn"]:checked')?.value || 'None',
             // 시럽 데이터 저장
             syrup: Array.from(document.querySelectorAll('[id^="syrupNumber"]')).map((syrupElement, index) => ({
                 syrupNumber: syrupElement.value || 'None',

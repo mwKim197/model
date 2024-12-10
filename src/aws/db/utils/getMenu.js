@@ -18,7 +18,6 @@ const processUserAndProduct = async () => {
 processUserAndProduct().then();
 
 const addProduct = async (data) => {
-    log.info(await incrementCounter(user.userId));
     const params = {
         TableName: 'model_menu',
         Item: {

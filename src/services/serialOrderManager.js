@@ -57,15 +57,16 @@ const processQueue = async (orderList = [], menuList) => {
 
 // 주문 처리
 const processOrder = async (recipe) => {
-    //await dispenseCup(recipe);
+    await dispenseCup(recipe);
     if (recipe.iceYn === 'yes') await dispenseIce(recipe);
-   /* if (recipe.coffeeYn === 'yes') await dispenseMultipleCoffees(recipe);
+    if (recipe.coffeeYn === 'yes') await dispenseMultipleCoffees(recipe);
     if (recipe.garuchaYn === 'yes') await dispenseMultipleGarucha(recipe);
-    if (recipe.syrupYn === 'yes') await dispenseMultipleSyrup(recipe);*/
+    if (recipe.syrupYn === 'yes') await dispenseMultipleSyrup(recipe);
 };
 
 // 제조 단계 함수
 const dispenseCup = (recipe) => {
+    log.info(JSON.stringify(recipe));
     return new Promise(resolve => {
         setTimeout(async () => {
             const result = await Cup.getCupInfo(); // `getSomeData()`는 조회하는 함수입니다.
@@ -114,9 +115,12 @@ const dispenseCup = (recipe) => {
 const dispenseIce = (recipe) => {
     return new Promise(async (resolve, reject) => {
         try {
+            let totalTime =0;
             log.info(`얼음 세팅 중: ${recipe.iceTime}초, 물 세팅 중: ${recipe.waterTime}초`);
+
             const initialStatus = await Ice.getKaiserInfo();
             log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(initialStatus)}`);
+            await Ice.sendModePacket();   // 아이스 모드 세팅 얼음 +물로 강제세팅
             await Ice.sendIceTimePacket(convertTimeToHex(recipe.iceTime));
             await Ice.sendWaterTimePacket(convertTimeToHex(recipe.waterTime));
             await Ice.sendIceRunPacket();
@@ -125,15 +129,13 @@ const dispenseIce = (recipe) => {
 
             let state = { transitionedToReady: false };
 
-
-            for (let counter = 0; counter < 20; counter++) {
+            totalTime = recipe.iceTime + recipe.waterTime;
+            for (let counter = 0; counter < 60; counter++) {
                 const result = await Ice.getKaiserInfo();
 
-                /*log.info(
-                    `menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(result)} ${counter}/60`
-                );*/
+                log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(result)} ${counter}/60`);
 
-                /*if (
+                if (
                     result.wasTrue === 1 &&
                     result.data.b_wt_drink_rt === 1
                 ) {
@@ -148,8 +150,8 @@ const dispenseIce = (recipe) => {
                 ) {
                     log.info('2단계 완료: 얼음 배출 완료 및 다음 플로우로 진행');
 
-                }*/
-                if(counter >= 20) {
+                }
+                if(counter >= 60) {
                     resolve(new Error('작업 시간이 초과되었습니다.'));
                     return;
                 }
@@ -200,7 +202,7 @@ const dispenseMultipleCoffees = async (recipe) => {
     for (let i = 0; i < recipe.coffee.length; i++) {
         const coffee = recipe.coffee[i];
         log.info(`dispenseCoffee ${i + 1} START!!`);
-        const isAutoOperation =  await checkAutoOperationState("정지", 1);
+        const isAutoOperation =  await checkAutoOperationState("정지", 3);
 
         if (isAutoOperation) {
             // 각 커피 배출을 순차적으로 실행
@@ -259,7 +261,7 @@ const dispenseMultipleGarucha = async (recipe) => {
         log.info(`dispenseGarucha ${i + 1} START!!`);
         log.info(`garucha set!!!  : ${garucha.garuchaNumber}, ${garucha.garuchaExtraction}, , ${garucha.garuchaHotWater}`);
         // 각 가루차 배출을 순차적으로 실행
-        const isAutoOperation =  await checkAutoOperationState("정지", 1);
+        const isAutoOperation =  await checkAutoOperationState("정지", 3);
 
         if (isAutoOperation) {
             await dispenseGarucha(
@@ -316,7 +318,7 @@ const dispenseMultipleSyrup = async (recipe) => {
         log.info(`syrup set!!!  : ${syrup.syrupNumber}, ${syrup.syrupExtraction}, ${syrup.syrupHotWater}, ${syrup.syrupSparklingWater}`);
         // 각 시럽 배출을 순차적으로 실행
 
-        const isAutoOperation =  await checkAutoOperationState("정지", 1);
+        const isAutoOperation =  await checkAutoOperationState("정지", 3);
         if (isAutoOperation) {
             await dispenseSyrup(
                 syrup.syrupNumber,
