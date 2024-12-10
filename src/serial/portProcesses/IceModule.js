@@ -27,7 +27,7 @@ class IceModule {
             const id = 0x01;          // Device ID
             const len = 0x06;         // Packet Length
             const cmd = 0x01;         // Command
-            const data = 0x00;         // data  0x02, 0x03, 0x04
+            const data = 0x06;         // data  0x06
             const etx = 0x03;         // End Byte
 
             // 패킷 조립
