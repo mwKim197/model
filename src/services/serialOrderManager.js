@@ -133,24 +133,14 @@ const dispenseIce = (recipe) => {
                 const result = await Ice.getKaiserInfo();
 
                 log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(result)} ${counter}/60`);
-
-                if (
-                    result.wasTrue === 1 &&
-                    result.data.b_wt_drink_rt === 1
-                ) {
-                    log.info('1단계 완료: wasTrue=1, isIceOutDone=1 상태로 전환');
-                    state.transitionedToReady = true;
-                }
-
-                if (
-                    state.transitionedToReady &&
-                    result.wasTrue === 1 &&
-                    result.data.b_wt_drink_rt === 0
-                ) {
+                const hexArray = result.match(/.{1,2}/g);
+                if (hexArray[6] === "14") {
                     log.info('2단계 완료: 얼음 배출 완료 및 다음 플로우로 진행');
-
+                    await Ice.sendIceStopPacket();
+                    reject();
+                    return;
                 }
-                if(counter >= 60) {
+                if(counter >= 59) {
                     resolve(new Error('작업 시간이 초과되었습니다.'));
                     return;
                 }
@@ -158,8 +148,6 @@ const dispenseIce = (recipe) => {
                 await new Promise(r => setTimeout(r, 1000));
             }
 
-            await Ice.sendIceStopPacket();
-            reject();
         } catch (error) {
             log.error('dispenseIce 오류:', error.message);
             reject(error);
