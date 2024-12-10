@@ -45,11 +45,6 @@ class SerialPortManager {
             }
         });
 
-        this.port.on('data', (data) => {
-            log.info('Received Raw Data:', data.toString('hex')); // 데이터 로그
-            log.info('Received ASCII Data:', data.toString('ascii')); // ASCII로 출력
-        });
-
         // 데이터 수신 이벤트 처리
         this.port.on('data', (data) => this._onDataReceived(data));
     }
@@ -59,7 +54,6 @@ class SerialPortManager {
 
         // 수신된 데이터를 HEX 문자열로 누적
         this.hexBuffer += data.toString('hex');
-        console.log("data __" , this.hexBuffer);
         // HEX 패킷 처리 (7자리 또는 그 이상)
         while (this._isHexComplete(this.hexBuffer)) {
             const packetLength  = this._getHexPacketLength(this.hexBuffer); // 패킷 길이를 동적으로 계산
@@ -129,7 +123,6 @@ class SerialPortManager {
         if (asciiPacket.match(/^[a-zA-Z0-9+\s]*$/)) {
 
             const asciiPacket = this.asciiBuffer.trim();
-           // log.info("asciiPacket: ", asciiPacket);
             try {
                 // response data 사이즈가 다를수있다.
                 if (asciiPacket.length < 1) {
