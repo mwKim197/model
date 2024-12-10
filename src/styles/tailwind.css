@@ -2,13 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+    font-family: 'LightFont';
+    src: url('../assets/fonts/Gong Gothic Light.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
 @layer components {
+
     .menu-tab {
-        @apply px-8 py-4 text-white text-center cursor-pointer;
+        @apply px-8 py-4 text-gray-800 text-center cursor-pointer;
     }
 
     .menu-tab.active {
-        @apply bg-white text-black;
+        @apply bg-gray-400 text-black;
     }
 
     .product-card {

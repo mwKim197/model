@@ -11,7 +11,7 @@ sendLogToMain('error', '렌더러 에러 발생');*/
 const getMenuInfo = async () => {
     try {
         const response = await fetch('http://localhost:3000/get-menu-info');
-
+console.log(response)
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
         }

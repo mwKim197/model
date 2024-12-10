@@ -57,11 +57,11 @@ const processQueue = async (orderList = [], menuList) => {
 
 // 주문 처리
 const processOrder = async (recipe) => {
-    await dispenseCup(recipe);
+    //await dispenseCup(recipe);
     if (recipe.iceYn === 'yes') await dispenseIce(recipe);
-    if (recipe.coffeeYn === 'yes') await dispenseMultipleCoffees(recipe);
+   /* if (recipe.coffeeYn === 'yes') await dispenseMultipleCoffees(recipe);
     if (recipe.garuchaYn === 'yes') await dispenseMultipleGarucha(recipe);
-    if (recipe.syrupYn === 'yes') await dispenseMultipleSyrup(recipe);
+    if (recipe.syrupYn === 'yes') await dispenseMultipleSyrup(recipe);*/
 };
 
 // 제조 단계 함수
@@ -129,9 +129,9 @@ const dispenseIce = (recipe) => {
             for (let counter = 0; counter < 20; counter++) {
                 const result = await Ice.getKaiserInfo();
 
-                log.info(
+                /*log.info(
                     `menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(result)} ${counter}/60`
-                );
+                );*/
 
                 /*if (
                     result.wasTrue === 1 &&

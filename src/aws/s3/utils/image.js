@@ -25,7 +25,7 @@ const ensureDirectoryExists = (cacheDir) => {
 
 // 이미지 다운로드 함수
 const downloadImageFromS3 = async (bucketName, key) => {
-    const fileName = path.basename(key); // '파이리.jpg'
+    const fileName = path.basename(key);
     // S3 키를 기반으로 로컬 경로 생성
     const localFilePath = path.join(cacheDir, fileName);
 

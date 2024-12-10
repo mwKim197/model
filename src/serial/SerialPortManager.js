@@ -28,7 +28,7 @@ class SerialPortManager {
         });
 
         this.port.on('open', () => {
-            log.info(`Serial port opened successfully on path: ${portPath}`);
+         //   log.info(`Serial port opened successfully on path: ${portPath}`);
             this.retryCount = 0; // 포트가 성공적으로 열리면 재시도 횟수 초기화
         });
 
@@ -36,7 +36,7 @@ class SerialPortManager {
             log.error(`serial port error: ${err.message}`);
             if (this.retryCount < this.maxRetries) {
                 this.retryCount++;
-                log.info(`Retrying to open the port... Attempt ${this.retryCount}`);
+              //  log.info(`Retrying to open the port... Attempt ${this.retryCount}`);
                 setTimeout(() => {
                     this._openPort(portPath, baudRate); // 재시도
                 }, this.retryDelay);
@@ -46,8 +46,8 @@ class SerialPortManager {
         });
 
         this.port.on('data', (data) => {
-            log.info('Received Raw Data:', data.toString('hex')); // 데이터 로그
-            log.info('Received ASCII Data:', data.toString('ascii')); // ASCII로 출력
+         //   log.info('Received Raw Data:', data.toString('hex')); // 데이터 로그
+         //   log.info('Received ASCII Data:', data.toString('ascii')); // ASCII로 출력
         });
 
         // 데이터 수신 이벤트 처리
@@ -137,7 +137,7 @@ class SerialPortManager {
         if (asciiPacket.match(/^[a-zA-Z0-9+\s]*$/)) {
 
             const asciiPacket = this.asciiBuffer.trim();
-            log.info("asciiPacket: ", asciiPacket);
+           // log.info("asciiPacket: ", asciiPacket);
             try {
                 // response data 사이즈가 다를수있다.
                 if (asciiPacket.length < 1) {
@@ -173,7 +173,7 @@ class SerialPortManager {
                     log.error(`writeCommand error: ${err.message}`);
                     return reject(err);
                 }
-                log.info(`writeCommand success: ${command}`);
+               // log.info(`writeCommand success: ${command}`);
 
                 // 일정 시간 후 데이터를 반환
                 setTimeout(() => {

@@ -91,9 +91,15 @@ function createWindow() {
     const { ipcMain } = require('electron');
 
 // 페이지 변경 핸들러
-    ipcMain.on('navigate-to-page', (event, pageName) => {
+    ipcMain.on('navigate-to-page', (event,{pageName, data} ) => {
         const win = BrowserWindow.getFocusedWindow(); // 현재 활성화된 창
-        win.loadFile(path.join(__dirname, 'renderer', pageName, `${pageName}.html`));
+        const filePath = path.join(__dirname, 'renderer', pageName, `${pageName}.html`);
+        win.loadFile(filePath).then(() => {
+            // 페이지 로드 후 데이터 전달
+           win.webContents.send('page-data', data); // 데이터 렌더러로 전달
+        }).catch((err) => {
+            console.error('Failed to load page:', err.message);
+        });
     });
 
     // IPC 로그 이벤트 처리

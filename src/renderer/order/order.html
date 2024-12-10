@@ -7,16 +7,16 @@
         <link href="../../styles/output.css" rel="stylesheet">
     </head>
     <body class="bg-gray-100">
-    <div class="max-w-7xl mx-auto p-4">
+    <div class="w-full mx-auto p-4">
         <!-- Navigation -->
-        <nav class="bg-menu-gray flex rounded-t-lg">
+        <nav class="flex rounded-t-lg">
             <div class="menu-tab active" data-category="all">전체메뉴</div>
             <div class="menu-tab" data-category="coffee">커피</div>
             <div class="menu-tab" data-category="ade">에이드</div>
             <div class="menu-tab" data-category="tea">티</div>
             <div class="menu-tab" data-category="order">기타음료</div>
         </nav>
-
+        <hr class="mb-3 border-gray-400">
         <div class="flex"> <!-- flex 클래스를 추가하여 좌우 영역을 가로로 배치 -->
             <!-- 왼쪽 영역 (제품 그리드) -->
             <div class="w-4/5 bg-gray-100 p-4">
@@ -25,13 +25,28 @@
 
             <div class="fixed top-0 right-0 bg-gray-300 min-h-208 p-4 min-w-52 h-full flex flex-col justify-center">
                 <div class="flex flex-col gap-1 h-[740px] grid-flow-row overflow-y-auto scrollbar-hide" id="orderGrid" ></div>
-
                 <!-- 버튼을 absolute로 고정하고 부모 div 내에서 가로세로 가운데 배치 -->
                 <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-3/4"> <!-- 부모 너비의 3/4로 설정 -->
                     <button class="bg-[#E84118] text-white px-8 py-4 rounded-lg text-xl font-bold w-full" id="payment">
                         결제하기
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white p-5 rounded-lg shadow-lg w-[600px] h-[600px] relative">
+            <div class="m-5 text-3xl fixed justify-center">
+                <span class="text-red-600">신용카드</span>
+                <span>를 단말기 투입구에 넣어주세요</span>
+            </div>
+            <img src="../../assets/basicImage/card_pay.gif" alt="card_pay" />
+            <!-- 하단 텍스트 영역 -->
+            <div class="absolute bottom-10 right-5 text-gray-800">
+                <p id="orderAmount"    class="text-right">주문금액: W 0,000원</p>
+                <p id="discountAmount" class="text-right">할인금액: W 0,000원</p>
+                <p id="totalAmount"    class="text-2xl text-right font-bold">전체금액: W 0,000원</p>
             </div>
         </div>
     </div>

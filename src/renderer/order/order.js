@@ -3,6 +3,7 @@ const log = require("../../logger");
 const menuApi = require('../api/menuApi');
 const orderApi = require('../api/orderApi');
 const image = require('../../aws/s3/utils/image');
+const {ipcRenderer} = require("electron");
 
 let orderList = [];
 
@@ -151,19 +152,49 @@ document.getElementById('payment').addEventListener('click', async () => {
     orderList.map((order)=> {
         price += Number(order.price) * order.count;  // 수량만큼 가격 계산
     })
+    const orderAmount = price; // 주문 금액
+    const discountAmount = 0; // 할인 금액
+    const totalAmount = orderAmount - discountAmount; // 전체 금액 계산
+    
+    // 모달금액 세팅
+    document.getElementById('orderAmount').textContent = `주문금액: W ${orderAmount.toLocaleString()}원`;
+    document.getElementById('discountAmount').textContent = `할인금액: W ${discountAmount.toLocaleString()}원`;
+    document.getElementById('totalAmount').textContent = `전체금액: W ${totalAmount.toLocaleString()}원`;
 
-    const result = await orderApi.reqVCAT_HTTP( price, "00");
-    //const result = {success :true}
+    // 모달
+    const modal = document.getElementById('modal');
 
-    if (result.success) {
-        // 다음 단계로 진행
-        console.log(orderList);
-        await orderApi.reqOrder(orderList);
+    // 열기
+    modal.classList.remove('hidden');
+    try {
+        // 1초 대기 후 결제 API 호출
+        const result = await new Promise((resolve) => {
+            setTimeout(async () => {
+              //  const res = await orderApi.reqVCAT_HTTP(price, "00");
+                const res = {success: true};
+                resolve(res); // 결제 결과 반환
+            }, 1000);
+        });
 
-    } else {
-        alert("결제에 실패하였습니다. 다시 시도해주세요.");
-        console.error("결제 실패: ", result.message);
-        // 결제 실패 처리
+
+        // 결제 성공 여부 확인
+        if (result.success) {
+            console.log(orderList);
+            // 모달 닫기
+            modal.classList.add('hidden');
+            ipcRenderer.send('navigate-to-page', { pageName: 'make', data: orderList }); // 'make' 페이지로 이동
+            await orderApi.reqOrder(orderList); // 주문 처리
+        } else {
+            // 결제 실패 처리
+            modal.classList.add('hidden');
+            alert("결제에 실패하였습니다. 다시 시도해주세요.");
+            console.error("결제 실패: ", result.message);
+        }
+    } catch (error) {
+        // 오류 처리
+        modal.classList.add('hidden');
+        alert("결제 처리 중 오류가 발생했습니다.");
+        console.error("결제 오류: ", error.message);
     }
 });
 
