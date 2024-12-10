@@ -98,17 +98,21 @@ const dispenseCup = (recipe) => {
                 let stopCup = 0;
                 const result = await Cup.getCupInfo();
                 log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵디스펜서 상태 cup: ${recipe.cup}, 컵1(PL)모터ON=${result.plasticCup.motorActive}, 컵2(PA)모터ON=${result.paperCup.motorActive} ${counter + 1} / 60`);
-
+                console.log(result.plasticCup.motorActive === 0 || result.paperCup.motorActive === 0);
+                console.log(result.plasticCup.motorActive === 0);
+                console.log(result.paperCup.motorActive === 0);
+                console.log(stopCup);
                 // 조회한 값이 false 이면 멈추기
                 if (result.plasticCup.motorActive === 0 || result.paperCup.motorActive === 0) {
                     stopCup++;
                     console.log(stopCup);
-                    if ( stopCup >= 2) {
-                        log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵 추출이 완료되었습니다. 동작 정지 요청을 보냅니다.`);
-                        await Cup.stopCupMotor();
-                        resolve();
-                        return;
-                    }
+                }
+
+                if ( stopCup >= 2) {
+                    log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵 추출이 완료되었습니다. 동작 정지 요청을 보냅니다.`);
+                    await Cup.stopCupMotor();
+                    resolve();
+                    return;
                 }
 
                 // 1초 후에 다시 호출
