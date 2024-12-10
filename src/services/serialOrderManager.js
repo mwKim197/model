@@ -60,7 +60,10 @@ const processOrder = async (recipe) => {
     console.log("recipes : " , recipe);
     await dispenseCup(recipe);
     if (recipe.iceYn === 'yes') await dispenseIce(recipe);
-    if (recipe.coffeeYn === 'yes') await dispenseMultipleCoffees(recipe);
+    if (recipe.coffeeYn === 'yes') {
+        console.log("?????????????");
+        await dispenseMultipleCoffees(recipe);
+    }
     if (recipe.garuchaYn === 'yes') await dispenseMultipleGarucha(recipe);
     if (recipe.syrupYn === 'yes') await dispenseMultipleSyrup(recipe);
 };
