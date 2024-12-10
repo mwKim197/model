@@ -60,12 +60,7 @@ const processOrder = async (recipe) => {
 
     await dispenseCup(recipe);
     if (recipe.iceYn === 'yes') await dispenseIce(recipe);
-    console.log("recipes coffeeYn: " , recipe.coffeeYn === 'yes');
-    console.log("recipes coffeeYn: " , recipe.coffeeYn);
-    if (recipe.coffeeYn === 'yes') {
-        console.log("?????????????");
-        await dispenseMultipleCoffees(recipe);
-    }
+    if (recipe.coffeeYn === 'yes') await dispenseMultipleCoffees(recipe);
     if (recipe.garuchaYn === 'yes') await dispenseMultipleGarucha(recipe);
     if (recipe.syrupYn === 'yes') await dispenseMultipleSyrup(recipe);
 };
@@ -328,7 +323,7 @@ const dispenseMultipleSyrup = async (recipe) => {
 const checkCupSensor = async (expectedState, threshold) => {
     let stateCount = 0; // 상태 카운터
 
-    for (let counter = 0; counter < 60; counter++) {
+    for (let counter = 0; counter < 120; counter++) {
         await McData.updateSerialData('RD1', 'RD1');
         const data = McData.getSerialData('RD1');
         log.info(JSON.stringify(data));
@@ -344,7 +339,7 @@ const checkCupSensor = async (expectedState, threshold) => {
             stateCount = 0; // 상태가 맞지 않으면 카운터 초기화
         }
 
-        await new Promise((r) => setTimeout(r, 1000));
+        await new Promise((r) => setTimeout(r, 500));
     }
 
     log.warn(`Sensor state did not reach '${expectedState}' threshold within timeout.`);
