@@ -102,6 +102,7 @@ const dispenseCup = (recipe) => {
                 // 조회한 값이 false 이면 멈추기
                 if (result.plasticCup.motorActive === 0 || result.paperCup.motorActive === 0) {
                     stopCup++;
+                    console.log(stopCup);
                     if ( stopCup >= 2) {
                         log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵 추출이 완료되었습니다. 동작 정지 요청을 보냅니다.`);
                         await Cup.stopCupMotor();
