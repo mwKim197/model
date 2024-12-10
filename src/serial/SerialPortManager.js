@@ -61,18 +61,13 @@ class SerialPortManager {
         // 수신된 데이터를 HEX 문자열로 누적
         this.hexBuffer += data.toString('hex');
         console.log("data __" , this.hexBuffer);
-        // 문자열이 올바른 HEX 형식일 경우 Buffer로 변환
-        const hexBuffer = Buffer.from(this.hexBuffer, 'hex');
-        // HEX 패킷 처리
-        if (this._isHexComplete(hexBuffer)) {
+        // HEX 패킷 처리 (7자리 또는 그 이상)
+        while (this._isHexComplete(this.hexBuffer)) {
+            const packetLength = this._getHexPacketLength(this.hexBuffer); // 패킷 길이를 동적으로 계산
+            const hexPacket = this.hexBuffer.slice(0, packetLength * 2); // 패킷 길이(문자열 기준)에 맞게 추출
 
-            const hexPacket = this.hexBuffer.slice(0, 14); // HEX 패킷 길이에 맞게 추출
-
-            // Buffer -> Hex 문자열로 변환
-            const hexString = hexPacket.toString('hex');
-
-            this._processHexData(hexString); // 패킷 처리
-            this.hexBuffer =''; // 사용한 패킷 제거
+            this._processHexData(hexPacket); // 패킷 처리
+            this.hexBuffer = this.hexBuffer.slice(packetLength * 2); // 처리한 패킷을 hexBuffer에서 제거
         }
 
         // ASCII 패킷 처리
@@ -88,28 +83,29 @@ class SerialPortManager {
     }
     
     // Hex 데이터 검증
-    _isHexComplete(hexBuffer) {
+    _isHexComplete(hexString) {
         // 최소 패킷 길이 확인 (STX + ID + Length + Command + Data + CRC + ETX)
-        if (hexBuffer.length < 7) {
-            return false; // 최소 길이를 충족하지 않으면 패킷이 완전하지 않음
+        if (hexString.length < 14) {
+            return false; // 최소 길이를 충족하지 않으면 패킷이 불완전
         }
 
         // STX와 ETX 확인
-        const stx = hexBuffer[0]; // 첫 번째 바이트 (STX)
-        const etx = hexBuffer[hexBuffer.length - 1]; // 마지막 바이트 (ETX)
-        if (stx !== 0x02 || etx !== 0x03) {
-            return false; // STX와 ETX가 없으면 패킷이 유효하지 않음
+        const stx = hexString.slice(0, 2); // 첫 두 글자 (STX)
+        const etx = hexString.slice(-2); // 마지막 두 글자 (ETX)
+        if (stx !== '02' || etx !== '03') {
+            return false; // STX와 ETX가 유효하지 않으면 패킷이 불완전
         }
 
-        // Length 필드 확인
-        const length = hexBuffer[2]; // 세 번째 바이트가 Length
+        // Length 필드 확인 (3번째 바이트, HEX로 문자열의 4~6번째)
+        const length = parseInt(hexString.slice(4, 6), 16); // Length 필드는 16진수로 변환
+        return hexString.length >= length * 2;
 
-        // 길이 비교
-        if (hexBuffer.length !== length) {
-            return false; // 실제 길이와 Length 필드 값이 다르면 패킷 불완전
-        }
-        log.info("HEX DATA");
-        return true; // 모든 조건 충족 시 패킷 완전
+         // 모든 조건 충족 시 패킷 완전
+    }
+
+    _getHexPacketLength(hexString) {
+        // Length 필드 확인 (3번째 바이트, HEX로 문자열의 4~6번째)
+        return parseInt(hexString.slice(4, 6), 16); // 패킷 길이를 반환
     }
 
     // Hex 데이터 처리
