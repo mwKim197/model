@@ -120,7 +120,6 @@ const dispenseIce = (recipe) => {
 
             const initialStatus = await Ice.getKaiserInfo();
             log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(initialStatus)}`);
-            await Ice.sendModePacket();   // 아이스 모드 세팅 얼음 +물로 강제세팅
             await Ice.sendIceTimePacket(convertTimeToHex(recipe.iceTime));
             await Ice.sendWaterTimePacket(convertTimeToHex(recipe.waterTime));
             await Ice.sendIceRunPacket();

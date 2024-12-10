@@ -43,7 +43,6 @@ class IceModule {
         }
     };
 
-    // 얼음 시간 세팅
     async sendModePacket() {
         try {
             // SCF 명령어에 URL 파라미터 값을 포함시켜 시리얼 통신
