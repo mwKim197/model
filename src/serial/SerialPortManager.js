@@ -51,28 +51,46 @@ class SerialPortManager {
 
     // 데이터 리시브
     _onDataReceived(data) {
-
         // 수신된 데이터를 HEX 문자열로 누적
-        this.hexBuffer += data.toString('hex');
-        // HEX 패킷 처리 (7자리 또는 그 이상)
-        while (this._isHexComplete(this.hexBuffer)) {
-            const packetLength  = this._getHexPacketLength(this.hexBuffer); // 패킷 길이를 동적으로 계산
-            const hexPacket = this.hexBuffer.slice(0, packetLength * 2); // 패킷 길이(문자열 기준)에 맞게 추출
+        const hexData = data.toString('hex');
+        const asciiData = data.toString('ascii');
 
-            this._processHexData(hexPacket); // 패킷 처리
-            this.hexBuffer = this.hexBuffer.slice(packetLength * 2); // 처리한 패킷을 hexBuffer에서 제거
+        // HEX 데이터 처리
+        if (this._isHexData(hexData)) { // HEX 데이터 여부 확인
+            this.hexBuffer += hexData;
+
+            // HEX 패킷 처리 (7자리 또는 그 이상)
+            while (this._isHexComplete(this.hexBuffer)) {
+                const packetLength = this._getHexPacketLength(this.hexBuffer); // 패킷 길이를 동적으로 계산
+                const hexPacket = this.hexBuffer.slice(0, packetLength * 2); // 패킷 길이(문자열 기준)에 맞게 추출
+
+                this._processHexData(hexPacket); // 패킷 처리
+                this.hexBuffer = this.hexBuffer.slice(packetLength * 2); // 처리한 패킷을 hexBuffer에서 제거
+            }
         }
-
-        // ASCII 패킷 처리
-        this.asciiBuffer += data.toString('ascii'); // ASCII 형식으로 누적
 
         // ASCII 데이터 처리
-        while (this.asciiBuffer.includes('\n')) {
-            const newlineIndex = this.asciiBuffer.indexOf('\n');
-            const asciiPacket = this.asciiBuffer.slice(0, newlineIndex + 1).trim(); // 줄 단위로 추출
-            this._processAsciiData(asciiPacket); // ASCII 처리
-            this.asciiBuffer = ''; // 사용한 데이터 제거
+        if (this._isAsciiData(asciiData)) { // ASCII 데이터 여부 확인
+            this.asciiBuffer += asciiData;
+
+            // ASCII 데이터 처리
+            while (this.asciiBuffer.includes('\n')) {
+                const newlineIndex = this.asciiBuffer.indexOf('\n');
+                const asciiPacket = this.asciiBuffer.slice(0, newlineIndex + 1).trim(); // 줄 단위로 추출
+                this._processAsciiData(asciiPacket); // ASCII 처리
+                this.asciiBuffer = ''; // 사용한 데이터 제거
+            }
         }
+    }
+
+    // HEX 데이터 여부 확인
+    _isHexData(hexData) {
+        return /^[0-9a-f]+$/i.test(hexData); // HEX 형식 확인
+    }
+
+    // ASCII 데이터 여부 확인
+    _isAsciiData(asciiData) {
+        return /^[a-zA-Z0-9+\s]*$/.test(asciiData); // ASCII 형식 확인
     }
     
     // Hex 데이터 검증
