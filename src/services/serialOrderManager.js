@@ -117,18 +117,22 @@ const dispenseIce = (recipe) => {
         try {
             let totalTime ="";
             log.info(`얼음 세팅 중: ${recipe.iceTime}초, 물 세팅 중: ${recipe.waterTime}초`);
+            const initialStatus = await Ice.getKaiserInfo();
 
+            log.info('출빙 요청이 완료되었습니다. 상태를 감시합니다.');
             console.log(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(totalTime)}`);
             await Ice.sendIceTimePacket(convertTimeToHex(recipe.iceTime));
             await Ice.sendWaterTimePacket(convertTimeToHex(recipe.waterTime));
             await Ice.sendIceRunPacket();
-            const initialStatus = await Ice.getKaiserInfo();
-            totalTime = initialStatus.match(/.{1,2}/g)[6];
-            log.info('출빙 요청이 완료되었습니다. 상태를 감시합니다.');
+
             log.info('얼음을 받아주세요'); // [TODO] 음성 메시지 호출
 
             for (let counter = 0; counter < 60; counter++) {
                 const result = await Ice.getKaiserInfo();
+
+                if(counter === 1) {
+                    totalTime = result.match(/.{1,2}/g)[6];
+                }
 
                 log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(result)} ${counter}/60`);
                 const hexArray = result.match(/.{1,2}/g);
