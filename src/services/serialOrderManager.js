@@ -221,6 +221,7 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
             if (isStartValid) {
                 log.info(`${motor} Tea 추출 실행`);
                 await Order.extractTeaPowder();
+                resolve(); // 모든 작업 완료 후 Promise 성공
             } else {
                 reject(new Error("Timeout: Cup sensor did not reach '있음' state."));
 
@@ -267,6 +268,7 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
             if (isStartValid) {
                 log.info(`${motor} Syrup 추출 실행`);
                 await Order.extractSyrup();
+                resolve(); // 모든 작업 완료 후 Promise 성공
             } else {
                 reject(new Error("Timeout: Cup sensor did not reach '있음' state."));
             }
