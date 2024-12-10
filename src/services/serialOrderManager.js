@@ -167,12 +167,12 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
         try {
             await McData.updateSerialData('RD1', 'RD1');
             const data = McData.getSerialData('RD1');
-            log.info("GET COFFEE INFO " + data);
+            log.info("GET COFFEE INFO ", data);
             log.info(`coffee set!!!  : ${grinderOne}, ${grinderTwo}, ${extraction}, ${hotWater}`);
             await Order.sendCoffeeCommand(grinderOne, grinderTwo, extraction, hotWater);
 
             // "있음" 상태 3회 체크
-            const isStartValid = await checkCupSensor("있음", 3);
+            const isStartValid = await checkCupSensor("있음", 1);
             if (isStartValid) {
                 log.info(`coffee 추출 실행`);
                 await Order.extractCoffee();
@@ -221,7 +221,7 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
             await Order.sendTeaCommand(motor, extraction, hotwater);
 
             // "있음" 상태 3회 체크
-            const isStartValid = await checkCupSensor("있음", 3);
+            const isStartValid = await checkCupSensor("있음", 1);
             if (isStartValid) {
                 log.info(`${motor} Tea 추출 실행`);
                 await Order.extractTeaPowder();
@@ -277,7 +277,7 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
             await Order.setSyrup(motor, extraction, hotwater, sparkling);
 
             // "있음" 상태 3회 체크
-            const isStartValid = await checkCupSensor("있음", 3);
+            const isStartValid = await checkCupSensor("있음", 1);
             if (isStartValid) {
                 log.info(`${motor} Syrup 추출 실행`);
                 await Order.extractSyrup();
