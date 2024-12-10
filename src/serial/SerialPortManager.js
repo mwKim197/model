@@ -46,24 +46,23 @@ class SerialPortManager {
         });
 
         this.port.on('data', (data) => {
-         //   log.info('Received Raw Data:', data.toString('hex')); // 데이터 로그
-         //   log.info('Received ASCII Data:', data.toString('ascii')); // ASCII로 출력
+            log.info('Received Raw Data:', data.toString('hex')); // 데이터 로그
+            log.info('Received ASCII Data:', data.toString('ascii')); // ASCII로 출력
         });
 
         // 데이터 수신 이벤트 처리
         this.port.on('data', (data) => this._onDataReceived(data));
     }
 
-    // Hex 데이터 여부 판별
     // 데이터 리시브
     _onDataReceived(data) {
-        // 수신된 데이터를 hexBuffer에 누적
+
         // 수신된 데이터를 HEX 문자열로 누적
         this.hexBuffer += data.toString('hex');
         console.log("data __" , this.hexBuffer);
         // HEX 패킷 처리 (7자리 또는 그 이상)
         while (this._isHexComplete(this.hexBuffer)) {
-            const packetLength = this._getHexPacketLength(this.hexBuffer); // 패킷 길이를 동적으로 계산
+            const packetLength  = this._getHexPacketLength(this.hexBuffer); // 패킷 길이를 동적으로 계산
             const hexPacket = this.hexBuffer.slice(0, packetLength * 2); // 패킷 길이(문자열 기준)에 맞게 추출
 
             this._processHexData(hexPacket); // 패킷 처리
