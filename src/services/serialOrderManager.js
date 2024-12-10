@@ -57,9 +57,11 @@ const processQueue = async (orderList = [], menuList) => {
 
 // 주문 처리
 const processOrder = async (recipe) => {
-    console.log("recipes : " , recipe);
+
     await dispenseCup(recipe);
     if (recipe.iceYn === 'yes') await dispenseIce(recipe);
+    console.log("recipes coffeeYn: " , recipe.coffeeYn === 'yes');
+    console.log("recipes coffeeYn: " , recipe.coffeeYn);
     if (recipe.coffeeYn === 'yes') {
         console.log("?????????????");
         await dispenseMultipleCoffees(recipe);
@@ -70,8 +72,6 @@ const processOrder = async (recipe) => {
 
 // 제조 단계 함수
 const dispenseCup = (recipe) => {
-    log.info(JSON.stringify(recipe));
-
     return new Promise(resolve => {
         setTimeout(async () => {
             const result = await Cup.getCupInfo(); // `getSomeData()`는 조회하는 함수입니다.
