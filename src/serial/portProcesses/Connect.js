@@ -44,4 +44,16 @@ Connect.post('/get-data', (req, res) => {
     }
 });
 
+// 주문 완료 후 조회 재개 엔드포인트
+Connect.post('/end-order', (req, res) => {
+    try {
+        log.info("Order process stopped, polling started");
+        const { serialCommCom1 } = req; // 시리얼 통신 객체 가져오기
+        startPolling(serialCommCom1, 10000); // 주문 작업이 끝난 후 조회 재개
+        res.json({ success: true, message: '조회 재개 완료' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 module.exports = Connect;

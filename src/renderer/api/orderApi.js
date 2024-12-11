@@ -139,6 +139,27 @@ const reqOrder = async (orderList) => {
     }
 }
 
+const useWash = async (orderList) => {
+    try {
+        const response = await fetch('http://localhost:3000/wash', {
+            method: 'POST', // POST 요청
+            headers: {
+                'Content-Type': 'application/json', // JSON 형식으로 전송
+            },
+        });
+        if (!response.ok) {
+            sendLogToMain('error','워시 실패: 네트워크 응답 실패');
+            throw new Error('네트워크 응답 실패');
+        }
+
+        const data = await response.json();
+        sendLogToMain('info',`워시 성공 - ${JSON.stringify(data)}`);
+
+    } catch (error) {
+        sendLogToMain('error','워시 실패:', error);
+    }
+}
+
 const reStartCheck = async (orderList) => {
     try {
         const response = await fetch('http://localhost:3000/start-order', {
@@ -215,5 +236,6 @@ const reqNCData = async (rawData) => {
 
 module.exports = {
     reqVCAT_HTTP,
-    reqOrder
+    reqOrder,
+    useWash
 };

@@ -45,13 +45,14 @@ const processQueue = async (orderList = [], menuList) => {
 
     for (const order of orderList) {
         const recipe = menuList.find(menu => menu.menuId === order.menuId); // 제조 레시피 찾기
+
         if (!recipe) {
             log.error(`레시피를 찾을 수 없음: 메뉴 ID ${order.menuId}`);
             continue;
         }
         log.info(`${recipe.name} - [${recipe.menuId}] : 주문 처리 시작`);
-        await processOrder(recipe); // 주문 처리
-        await useWash(recipe);
+//        await processOrder(recipe); // 주문 처리
+//        await useWash(recipe);
         log.info(`${recipe.name} - [${recipe.menuId}] : 주문 처리 완료`);
     }
 };
@@ -297,7 +298,7 @@ const dispenseMultipleSyrup = async (recipe) => {
         log.info(`dispenseSyrup ${i + 1} START!!`);
         log.info(`syrup set!!!  : ${syrup.syrupNumber}, ${syrup.syrupExtraction}, ${syrup.syrupHotWater}, ${syrup.syrupSparklingWater}`);
         // 각 시럽 배출을 순차적으로 실행
-        const isAutoOperation =  await checkAutoOperationState("정지", 3);
+        const isAutoOperation = await checkAutoOperationState("정지", 3);
 
         const formatValue = (value) => value.toString().padStart(3, "0");
         const grinder = (coffee) => {
@@ -348,20 +349,19 @@ const checkAutoOperationState = async (expectedState, threshold) => {
     for (let counter = 0; counter < 60; counter++) {
         await McData.updateSerialData('RD1', 'RD1');
         const data = McData.getSerialData('RD1');
-        log.info(JSON.stringify(data));
 
         if (data.autoOperationState === expectedState) {
             stateCount++;
-            log.info(`Sensor state is '${expectedState}', count: ${stateCount}`);
+            log.info(`자동운전 동작상태: '${expectedState}', count: ${stateCount}`);
             if (stateCount >= threshold) {
-                log.info(`Sensor state reached '${expectedState}' ${threshold} times. Exiting loop.`);
+                log.info(`자동운전 동작상태: '${expectedState}' ${threshold} 회 END.`);
                 return true; // 조건 충족 시 함수 종료
             }
         } else {
             stateCount = 0; // 상태가 맞지 않으면 카운터 초기화
         }
 
-        await new Promise((r) => setTimeout(r, 1000));
+        await new Promise((r) => setTimeout(r, 500));
     }
 
     log.warn(`Sensor state did not reach '${expectedState}' threshold within timeout.`);
@@ -384,17 +384,17 @@ const useWash = async (recipe) => {
 
         if (listData.garuchaNumber) {
             await Order.purifyingTae(listData.garuchaNumber);
+            await checkAutoOperationState("정지", 3);
         }
         if (listData.syrupNumber) {
             await Order.purifyingSyrup(listData.syrupNumber);
+            await checkAutoOperationState("정지", 3);
         }
+        await new Promise((r) => setTimeout(r, 1000));
     }
 
     log.info("전체 세척 작업 완료");
 };
-
-
-
 
 // 주문 처리 시작
 processQueue();

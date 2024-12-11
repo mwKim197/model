@@ -14,7 +14,6 @@ if (log.transports.file) {
     log.transports.file.maxSize = 10 * 1024 * 1024;
     log.transports.file.level = 'info'; // 파일에 기록할 최소 레벨
     log.transports.file.fileName = getFormattedDate()+'_model.log'; // 로그 파일 이름 변경 (기본값: main.log)
-
 }
 
 // Console 로그 설정

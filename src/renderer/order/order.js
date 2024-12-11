@@ -5,11 +5,13 @@ const orderApi = require('../api/orderApi');
 const image = require('../../aws/s3/utils/image');
 const {ipcRenderer} = require("electron");
 
+function sendLogToMain(level, message) {
+    ipcRenderer.send('log-to-main', { level, message });
+}
 let orderList = [];
 
-
 const data = image.downloadAllFromS3WithCache("model-narrow-road", "model/test_user1");
-log.info(data);
+
 // 메뉴 데이터
 let allProducts = [
     { name: '아메리카노', nameEn: 'Americano', category: '커피', price: 2000,          image: 'https://placehold.co/200x300/png' },
@@ -49,7 +51,6 @@ function displayProducts(products) {
         const card = document.createElement('div');
         card.className = 'product-card';
         card.innerHTML = `
-        
                     <img src="${product.image}" alt="${product.name}" class="w-full mb-2">
                     <h3 class="text-lg font-bold">${product.name}</h3>
                     <div class="flex gap-2 mt-2">
@@ -125,7 +126,6 @@ function updateItemQuantity(button, change, orderId) {
 
     // 수량 업데이트
     quantityElement.textContent = currentQuantity;
-    console.log(orderList);
     // orderList에서 해당 주문을 찾아 수량 업데이트
     const order = orderList.find(order => order.orderId === orderId);
     if (order) {
@@ -144,6 +144,9 @@ document.querySelectorAll('.menu-tab').forEach(tab => {
         const filteredProducts = category === 'all' ? allProducts : allProducts.filter(product => product.category === category);
         displayProducts(filteredProducts);
     });
+});
+document.getElementById('wash').addEventListener('click', async () => {
+    await orderApi.useWash(); // 세척처리
 });
 
 document.getElementById('payment').addEventListener('click', async () => {
@@ -170,8 +173,8 @@ document.getElementById('payment').addEventListener('click', async () => {
         // 1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {
             setTimeout(async () => {
-                const res = await orderApi.reqVCAT_HTTP(price, "00");
-                //const res = {success: true};
+                //const res = await orderApi.reqVCAT_HTTP(price, "00");
+                const res = {success: true};
                 resolve(res); // 결제 결과 반환
             }, 1000);
         });
@@ -179,22 +182,29 @@ document.getElementById('payment').addEventListener('click', async () => {
 
         // 결제 성공 여부 확인
         if (result.success) {
-            console.log(orderList);
+            sendLogToMain('info', `결제 성공 - 결제 금액:  ${price}`);
+            sendLogToMain('info', `주문 목록 ${JSON.stringify(orderList)}`);
             // 모달 닫기
             modal.classList.add('hidden');
-            ipcRenderer.send('navigate-to-page', { pageName: 'make', data: orderList }); // 'make' 페이지로 이동
+            //ipcRenderer.send('navigate-to-page', { pageName: 'make', data: orderList }); // 'make' 페이지로 이동
             await orderApi.reqOrder(orderList); // 주문 처리
+            orderList = [];
         } else {
             // 결제 실패 처리
             modal.classList.add('hidden');
+
             alert("결제에 실패하였습니다. 다시 시도해주세요.");
             console.error("결제 실패: ", result.message);
+            sendLogToMain('error', `결제 실패: ${result.message}`);
+
         }
     } catch (error) {
         // 오류 처리
         modal.classList.add('hidden');
         alert("결제 처리 중 오류가 발생했습니다.");
+        sendLogToMain('error', `결제 오류: ${error.message}`);
         console.error("결제 오류: ", error.message);
+        orderList = [];
     }
 });
 
