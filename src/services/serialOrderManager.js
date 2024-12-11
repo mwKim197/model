@@ -41,7 +41,7 @@ const startOrder = async (data) => {
 };
 
 // 주문 처리 큐
-const processQueue = async (orderList = [], menuList) => {
+const processQueue = async (orderList, menuList) => {
 
     for (const order of orderList) {
         const recipe = menuList.find(menu => menu.menuId === order.menuId); // 제조 레시피 찾기
@@ -388,10 +388,11 @@ const useWash = async (data) => {
             log.error("컵 센서 상태가 '없음'이 아니어서 세척 작업을 중단합니다.");
             return; // 작업 중단
         }
-        const recipe = menuData.find(menu => menu.menuId === orderData.menuId); // 제조 레시피 찾기
+        const recipe = menuData.filter(menu => orderData.some(ord => ord.menuId === menu.menuId));
 
         log.info(`전체 세척 레시피: ${JSON.stringify(recipe)}`);
-        const combinedList = [...recipe.syrup, ...recipe.garucha];
+        const combinedList = recipe.flatMap(item => [...item.garucha, ...item.syrup]);
+
         log.info(`전체 세척 레시피 리스트: ${JSON.stringify(combinedList)}`);
 
         for (let i = 0; i < combinedList.length; i++) {
