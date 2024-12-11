@@ -146,7 +146,8 @@ document.querySelectorAll('.menu-tab').forEach(tab => {
     });
 });
 document.getElementById('wash').addEventListener('click', async () => {
-    await orderApi.useWash(); // 세척처리
+    sendLogToMain('info', `워시 목록 ${JSON.stringify(orderList)}`);
+    await orderApi.useWash(orderList); // 세척처리
 });
 
 document.getElementById('payment').addEventListener('click', async () => {

@@ -146,6 +146,7 @@ const useWash = async (orderList) => {
             headers: {
                 'Content-Type': 'application/json', // JSON 형식으로 전송
             },
+            body: JSON.stringify(orderList),
         });
         if (!response.ok) {
             sendLogToMain('error','워시 실패: 네트워크 응답 실패');

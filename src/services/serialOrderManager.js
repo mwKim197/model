@@ -400,5 +400,6 @@ const useWash = async (recipe) => {
 processQueue();
 
 module.exports = {
-    startOrder
+    startOrder,
+    useWash
 };
