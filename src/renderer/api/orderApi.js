@@ -148,10 +148,7 @@ const useWash = async (orderList) => {
             },
             body: JSON.stringify(orderList),
         });
-        if (!response.ok) {
-            sendLogToMain('error','워시 실패: 네트워크 응답 실패');
-            throw new Error('네트워크 응답 실패');
-        }
+        console.log(response);
 
         const data = await response.json();
         sendLogToMain('info',`워시 성공 - ${JSON.stringify(data)}`);

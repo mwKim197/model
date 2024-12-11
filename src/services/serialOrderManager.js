@@ -51,8 +51,8 @@ const processQueue = async (orderList = [], menuList) => {
             continue;
         }
         log.info(`${recipe.name} - [${recipe.menuId}] : 주문 처리 시작`);
-//        await processOrder(recipe); // 주문 처리
-//        await useWash(recipe);
+        await processOrder(recipe); // 주문 처리
+        await useWash(recipe);
         log.info(`${recipe.name} - [${recipe.menuId}] : 주문 처리 완료`);
     }
 };
@@ -368,31 +368,51 @@ const checkAutoOperationState = async (expectedState, threshold) => {
     return false; // 타임아웃 처리
 };
 
-const useWash = async (recipe) => {
-    const isStopValid = await checkCupSensor("없음", 3);
+const useWash = async (data) => {
+    let orderData = data;  // 주문 데이터
 
-    if (!isStopValid) {
-        log.error("컵 센서 상태가 '없음'이 아니어서 세척 작업을 중단합니다.");
-        return; // 작업 중단
+    // 전체 메뉴 조회
+    const menu = await allProduct();
+    if (!menu || !menu.Items) {
+        throw new Error("메뉴 데이터 조회에 실패하였습니다.");
     }
+    let menuData = menu.Items;
 
-    const combinedList = [...recipe.syrup, ...recipe.garucha];
-    for (let i = 0; i < combinedList.length; i++) {
-        const listData = combinedList[i];
+    // 메뉴와 주문 데이터가 정상적으로 로드되었으면 세척 시작
+    if (menuData.length > 0) {
+        log.info("세척 시작...!");
 
-        log.info(`전체 세척 실행: ${JSON.stringify(listData)}`);
-
-        if (listData.garuchaNumber) {
-            await Order.purifyingTae(listData.garuchaNumber);
-            await checkAutoOperationState("정지", 3);
+        // 컵 센서 체크
+        const isStopValid = await checkCupSensor("없음", 3);
+        if (!isStopValid) {
+            log.error("컵 센서 상태가 '없음'이 아니어서 세척 작업을 중단합니다.");
+            return; // 작업 중단
         }
-        if (listData.syrupNumber) {
-            await Order.purifyingSyrup(listData.syrupNumber);
-            await checkAutoOperationState("정지", 3);
+        const recipe = menuData.find(menu => menu.menuId === orderData.menuId); // 제조 레시피 찾기
+
+        log.info(`전체 세척 레시피: ${JSON.stringify(recipe)}`);
+        const combinedList = [...recipe.syrup, ...recipe.garucha];
+        log.info(`전체 세척 레시피 리스트: ${JSON.stringify(combinedList)}`);
+
+        for (let i = 0; i < combinedList.length; i++) {
+            const listData = combinedList[i];
+
+            log.info(`전체 세척 실행: ${JSON.stringify(listData)}`);
+
+            if (listData.garuchaNumber) {
+                await Order.purifyingTae(listData.garuchaNumber);
+                await checkAutoOperationState("정지", 3);
+            }
+            if (listData.syrupNumber) {
+                await Order.purifyingSyrup(listData.syrupNumber);
+                await checkAutoOperationState("정지", 3);
+            }
+            await new Promise((r) => setTimeout(r, 1000));
         }
-        await new Promise((r) => setTimeout(r, 1000));
+
+    } else {
+        log.warn("[세척] 메뉴 데이터가 없거나, 오더 데이터가 없습니다.");
     }
-
     log.info("전체 세척 작업 완료");
 };
 
