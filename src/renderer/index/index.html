@@ -20,7 +20,7 @@
         <button id="goToOrder">Go to Order</button>
         <button id="goToTest">Go to Test</button>
     </div>
-    <div>
+    <fieldset>
         <h1>Menu Options</h1>
 
         <!-- 메뉴 선택 폼 -->
@@ -28,7 +28,7 @@
             <h2>Menu ID: 1</h2>
             <!-- 메뉴명 -->
             <fieldset>
-                <legend>Cup</legend>
+                <legend>MENU-ITEM</legend>
                 <label for="menuName">메뉴명</label>
                 <input type="text" id="menuName" name="menuName">
             </fieldset>
@@ -42,6 +42,11 @@
                     <option value="ade">에이드</option>
                     <option value="other">기타음료</option>
                 </select>
+            </fieldset>
+            <fieldset id="priceInput">
+                <legend>금액</legend>
+                <label for="price">금액</label>
+                <input type="number" id="price" name="price" min="0">
             </fieldset>
             <!-- 컵 옵션 -->
             <fieldset>
@@ -70,62 +75,19 @@
                 <input type="number" id="waterTime" name="waterTime" min="0" step="0.5" placeholder="Enter water time">
             </div>
 
-            <!-- 커피 여부 -->
             <fieldset>
-                <legend>커피</legend>
-                <label for="coffeeYes">Yes</label>
-                <input type="radio" id="coffeeYes" name="coffeeYn" value="yes">
-                <label for="coffeeNo">No</label>
-                <input type="radio" id="coffeeNo" name="coffeeYn" value="no">
+                <!-- 결과 출력 영역 -->
+                <div id="selectedOptions"></div>
             </fieldset>
-
-            <!-- 커피 옵션 -->
-            <div id="coffeeContainer" >
-            </div>
-            <button id="addCoffeeBtn">+ 커피 추가</button>
-
-            <!-- 가루차 여부 -->
-            <fieldset>
-                <legend>가루차</legend>
-                <label for="garuchaYes">Yes</label>
-                <input type="radio" id="garuchaYes" name="garuchaYn" value="yes">
-                <label for="garuchaNo">No</label>
-                <input type="radio" id="garuchaNo" name="garuchaYn" value="no">
-
-            </fieldset>
-            <!-- 가루차 옵션 -->
-            <div id="garuchaContainer">
-            </div>
-            <button id="addGaruchaBtn">+ 가루차 추가</button>
-            <!-- 시럽 여부 -->
-            <fieldset>
-                <legend>시럽</legend>
-                <label for="syrupYes">Yes</label>
-                <input type="radio" id="syrupYes" name="syrupYn" value="yes">
-                <label for="syrupNo">No</label>
-                <input type="radio" id="syrupNo" name="syrupYn" value="no">
-            </fieldset>
-
-            <!-- 시럽 옵션 -->
-            <div id="syrupContainer">
-            </div>
-            <button id="addSyrupBtn">+ 시럽 추가</button>
-
-            <fieldset id="priceInput">
-                <legend>금액</legend>
-                <label for="price">금액</label>
-                <input type="number" id="price" name="price" min="0">
-            </fieldset>
-
-            <!-- 제출 버튼 -->
-            <button type="submit">메뉴저장</button>
         </form>
-        <!-- 결과 출력 영역 -->
-        <div id="result">
-            <h3>선택한 옵션노출 </h3>
-            <p id="selectedOptions">No options selected yet.</p>
-        </div>
-    </div>
+        <fieldset>
+            <legend>ITEM</legend>
+            <div id="itemContainer">
+                <button id="addItemBtn">+ 항목 추가</button>
+            </div>
+            <button id="saveMenuBtn">저장</button>
+        </fieldset>
+    </fieldset>
     <div>
         <button id="setToMenu" > 메뉴 정보 저장</button>>
     </div>
@@ -237,140 +199,102 @@
         }
     });
 
+    let itemCounter = 0; // 순번 카운터
 
-    let coffeeCounter = 0; // 커피 필드셋 카운터
-    let garuchaCounter = 0; // 가루차 필드셋 카운터
-    let syrupCounter = 0; // 시럽 필드셋 카운터
+    // 항목 추가 버튼
+    document.getElementById('addItemBtn').addEventListener('click', () => {
+        // 순번 증가
+        itemCounter++;
 
-    document.getElementById('addCoffeeBtn').addEventListener('click', () => {
-        if (coffeeCounter === 3 ) {
-            return alert("샷은 최대 3 개 까지입니다.");
-        }
-        coffeeCounter++;
-        const coffeeContainer = document.getElementById('coffeeContainer');
+        // itemContainer에 새로운 필드셋 추가
+        const itemContainer = document.getElementById('itemContainer');
         const newFieldset = document.createElement('fieldset');
-        newFieldset.id = `coffeeInput${coffeeCounter}`;
-        newFieldset.className = 'time-inputs';
-        newFieldset.style.display = 'block';
+        newFieldset.id = `item${itemCounter}`;
+        newFieldset.className = 'item-input';
         newFieldset.innerHTML = `
-                <legend>커피 ${coffeeCounter}</legend>
-                <label for="grinderOne${coffeeCounter}">글라인더1</label>
-                <input type="number" id="grinderOne${coffeeCounter}" name="grinderOne${coffeeCounter}" min="0">
-                <label for="grinderTwo${coffeeCounter}">글라인더2</label>
-                <input type="number" id="grinderTwo${coffeeCounter}" name="grinderTwo${coffeeCounter}" min="0">
-                <label for="extraction${coffeeCounter}">추출시간</label>
-                <input type="number" id="extraction${coffeeCounter}" name="extraction${coffeeCounter}" value="0" min="0" step="0.5">
-                <label for="hotWater${coffeeCounter}">뜨거운물 시간</label>
-                <input type="number" id="hotWater${coffeeCounter}" name="hotWater${coffeeCounter}" value="0" min="0" step="0.5">
-            `;
-        coffeeContainer.appendChild(newFieldset);
+        <legend>항목 ${itemCounter}</legend>
+        <label for="itemType${itemCounter}">타입</label>
+        <select id="itemType${itemCounter}" name="itemType${itemCounter}">
+            <option value="coffee">커피</option>
+            <option value="garucha">가루차</option>
+            <option value="syrup">시럽</option>
+        </select>
+        <label for="value1-${itemCounter}">값 1</label>
+        <input type="number" id="value1-${itemCounter}" name="value1-${itemCounter}" min="0">
+        <label for="value2-${itemCounter}">값 2</label>
+        <input type="number" id="value2-${itemCounter}" name="value2-${itemCounter}" min="0">
+        <label for="value3-${itemCounter}">값 3</label>
+        <input type="number" id="value3-${itemCounter}" name="value3-${itemCounter}" min="0">
+        <label for="value4-${itemCounter}">값 4</label>
+        <input type="number" id="value4-${itemCounter}" name="value4-${itemCounter}" min="0">
+        <button type="button" class="deleteItemBtn" data-id="${itemCounter}">삭제</button>
+    `;
+        itemContainer.appendChild(newFieldset);
+
+        // 삭제 버튼 이벤트 추가
+        const deleteBtn = newFieldset.querySelector('.deleteItemBtn');
+        deleteBtn.addEventListener('click', () => deleteItem(itemCounter));
     });
 
-
-    document.getElementById('addGaruchaBtn').addEventListener('click', () => {
-        if (garuchaCounter === 6 ) {
-            return alert("가루차는 최대 6 개 까지입니다.");
+    // 항목 삭제 함수
+    const deleteItem = (id) => {
+        const itemElement = document.getElementById(`item${id}`);
+        if (itemElement) {
+            itemElement.remove(); // 해당 필드셋 삭제
+            console.log(`항목 ${id} 삭제됨`);
         }
-        garuchaCounter++;
-        const garuchaContainer = document.getElementById('garuchaContainer');
-        const newFieldset = document.createElement('fieldset');
-        newFieldset.id = `garuchaInput${garuchaCounter}`;
-        newFieldset.className = 'time-inputs';
-        newFieldset.style.display = 'block';
-        newFieldset.innerHTML = `
-                <legend>가루차 ${garuchaCounter}</legend>
-                <label for="garuchaNumber${garuchaCounter}">가루차 넘버</label>
-                <input type="number" id="garuchaNumber${garuchaCounter}" name="garuchaNumber${garuchaCounter}" min="1">
-                <label for="garuchaExtraction${garuchaCounter}">추출시간</label>
-                <input type="number" id="garuchaExtraction${garuchaCounter}" name="garuchaExtraction${garuchaCounter}" value="0" min="0" step="0.5">
-                <label for="garuchaHotWater${garuchaCounter}">뜨거운물 시간</label>
-                <input type="number" id="garuchaHotWater${garuchaCounter}" name="garuchaHotWater${garuchaCounter}" value="0" min="0" step="0.5">
-            `;
-        garuchaContainer.appendChild(newFieldset);
-    });
+    };
 
-    document.getElementById('addSyrupBtn').addEventListener('click', () => {
-        if (syrupCounter === 5 ) {
-            return alert("시럽은 최대 5 개 까지입니다.");
-        }
-        syrupCounter++;
-        const syrupContainer = document.getElementById('syrupContainer');
-        const newFieldset = document.createElement('fieldset');
-        newFieldset.id = `syrupInput${syrupCounter}`;
-        newFieldset.className = 'time-inputs';
-        newFieldset.style.display = 'block';
-        newFieldset.innerHTML = `
-                <legend>시럽 ${syrupCounter}</legend>
-                <label for="syrupNumber${syrupCounter}">시럽 넘버</label>
-                <input type="number" id="syrupNumber${syrupCounter}" name="syrupNumber${syrupCounter}" min="1">
-                <label for="syrupExtraction${syrupCounter}">추출시간</label>
-                <input type="number" id="syrupExtraction${syrupCounter}" name="syrupExtraction${syrupCounter}" value="0" min="0" step="0.5">
-                <label for="syrupHotWater${syrupCounter}">뜨거운물 시간</label>
-                <input type="number" id="syrupHotWater${syrupCounter}" name="syrupHotWater${syrupCounter}" value="0" min="0" step="0.5">
-                <label for="syrupSparklingWater${syrupCounter}">탄산수 시간</label>
-                <input type="number" id="syrupSparklingWater${syrupCounter}" name="syrupSparklingWater${syrupCounter}" value="0" min="0" step="0.5">
-            `;
-        syrupContainer.appendChild(newFieldset);
-    });
+    // 저장 버튼 이벤트 리스너
+    document.getElementById('saveMenuBtn').addEventListener('click', () => {
+        const items = [];
 
+        // 모든 item-input 필드셋에서 데이터 수집
+        document.querySelectorAll('.item-input').forEach((fieldset) => {
+            const itemId = fieldset.id.replace('item', ''); // 항목 ID 추출
+            const itemType = document.getElementById(`itemType${itemId}`)?.value || 'None';
+            const value1 = document.getElementById(`value1-${itemId}`)?.value || '0';
+            const value2 = document.getElementById(`value2-${itemId}`)?.value || '0';
+            const value3 = document.getElementById(`value3-${itemId}`)?.value || '0';
+            const value4 = document.getElementById(`value4-${itemId}`)?.value || '0';
 
-    document.getElementById('menuForm').addEventListener('submit', function (event) {
-        event.preventDefault();
+            items.push({
+                type: itemType,
+                no: parseInt(itemId, 10),
+                value1,
+                value2,
+                value3,
+                value4,
+            });
+        });
 
         // 각 옵션 값을 저장할 객체
         const selectedOptions = {
             name: document.getElementById('menuName')?.value || 'None',
             cup: document.querySelector('input[name="cup"]:checked')?.value || 'None',
-            iceYn: document.querySelector('input[name="iceYn"]:checked')?.value || 'None',
-            iceTime: document.querySelector('input[name="iceTime"]')?.value || 'None',
-            waterTime: document.querySelector('input[name="waterTime"]')?.value || 'None',
-            coffeeYn: document.querySelector('input[name="coffeeYn"]:checked')?.value || 'None',
-            // 가루차 데이터 저장
-            coffee: Array.from(document.querySelectorAll('[id^="grinderOne"]')).map((coffeeElement, index) => ({
-                grinderOne: coffeeElement.value || 'None',
-                grinderTwo: document.getElementById(`grinderTwo${index + 1}`)?.value || 'None',
-                extraction: document.getElementById(`extraction${index + 1}`)?.value || 'None',
-                hotWater: document.getElementById(`hotWater${index + 1}`)?.value || 'None',
-            })),
-            garuchaYn: document.querySelector('input[name="garuchaYn"]:checked')?.value || 'None',
-            // 가루차 데이터 저장
-            garucha: Array.from(document.querySelectorAll('[id^="garuchaNumber"]')).map((garuchaElement, index) => ({
-                garuchaNumber: garuchaElement.value || 'None',
-                garuchaExtraction: document.getElementById(`garuchaExtraction${index + 1}`)?.value || 'None',
-                garuchaHotWater: document.getElementById(`garuchaHotWater${index + 1}`)?.value || 'None',
-            })),
-            syrupYn: document.querySelector('input[name="syrupYn"]:checked')?.value || 'None',
-            // 시럽 데이터 저장
-            syrup: Array.from(document.querySelectorAll('[id^="syrupNumber"]')).map((syrupElement, index) => ({
-                syrupNumber: syrupElement.value || 'None',
-                syrupExtraction: document.getElementById(`syrupExtraction${index + 1}`)?.value || 'None',
-                syrupHotWater: document.getElementById(`syrupHotWater${index + 1}`)?.value || 'None',
-                syrupSparklingWater: document.getElementById(`syrupSparklingWater${index + 1}`)?.value || 'None',
-            })),
+            iceYn: document.querySelector('input[name="iceYn"]:checked')?.value || 'No',
+            iceTime: document.querySelector('input[name="iceTime"]')?.value || '0',
+            waterTime: document.querySelector('input[name="waterTime"]')?.value || '0',
             price: document.getElementById('price').value || 'None',
             image: 'https://placehold.co/200x300/png',
             category: document.getElementById('category').value || 'None',
+            items, // 통합된 items 배열 추가
         };
 
-        // 선택된 옵션 결과 출력
-        // 결과 출력 영역에 표시
+        // 결과 출력
         document.getElementById('selectedOptions').innerHTML = `
         Name: ${selectedOptions.name}<br>
         Cup: ${selectedOptions.cup}<br>
         IceYn: ${selectedOptions.iceYn}<br>
-        iceTime: ${selectedOptions.iceTime}<br>
-        waterTime: ${selectedOptions.waterTime}<br>
-        CoffeeYn:${selectedOptions.coffeeYn} <br>
-        Coffee: ${JSON.stringify(selectedOptions.coffee)}<br>
-        GaruchaYn:${selectedOptions.garuchaYn} <br>
-        Garucha: ${JSON.stringify(selectedOptions.garucha)}<br>
-        SyrupYn:${selectedOptions.syrupYn} <br>
-        Syrup: ${JSON.stringify(selectedOptions.syrup)}<br>
-        price: ${selectedOptions.price}<br>
-        image: ${selectedOptions.image}<br>
-        category: ${selectedOptions.category}<br>
+        IceTime: ${selectedOptions.iceTime}<br>
+        WaterTime: ${selectedOptions.waterTime}<br>
+        Price: ${selectedOptions.price}<br>
+        Image: ${selectedOptions.image}<br>
+        Category: ${selectedOptions.category}<br>
+        Items: ${JSON.stringify(selectedOptions.items, null, 2)}
     `;
     });
+
 </script>
 <script src="index.js"></script>
 <script src="../../nvcat/Nvcat.js"> console.log('Nvcat.js 로드 완료'); </script>

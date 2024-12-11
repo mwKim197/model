@@ -29,10 +29,11 @@ const startOrder = async (data) => {
 
         // 메뉴와 주문 데이터가 정상적으로 로드되었으면 주문 처리 시작
         if (menuData.length > 0) {
-            log.info("Processing order...");
+            log.info("주문 제조...");
             await processQueue(orderData, menuData);
+            await useWash(orderData);
         } else {
-            log.warn("Menu data is empty, cannot process order.");
+            log.warn("메뉴, 주문 정보 없음.");
         }
     } catch (error) {
         log.error("Error in startOrder:", error.message);
@@ -42,29 +43,66 @@ const startOrder = async (data) => {
 
 // 주문 처리 큐
 const processQueue = async (orderList, menuList) => {
-
     for (const order of orderList) {
-        const recipe = menuList.find(menu => menu.menuId === order.menuId); // 제조 레시피 찾기
+        try {
+            const recipe = menuList.find(menu => menu.menuId === order.menuId);
 
-        if (!recipe) {
-            log.error(`레시피를 찾을 수 없음: 메뉴 ID ${order.menuId}`);
-            continue;
+            if (!recipe) {
+                log.error(`레시피를 찾을 수 없음: 메뉴 ID ${order.menuId}`);
+                continue;
+            }
+
+            log.info(`주문 처리 시작: ${recipe.name} - [메뉴 ID: ${recipe.menuId}, 주문 ID: ${order.orderId}]`);
+            await processOrder(recipe);
+            log.info(`주문 처리 완료: ${recipe.name} - [메뉴 ID: ${recipe.menuId}, 주문 ID: ${order.orderId}]`);
+        } catch (error) {
+            log.error(`주문 처리 중 오류 발생: 메뉴 ID ${order.menuId}, 주문 ID ${order.orderId}, 오류: ${error.message}`);
         }
-        log.info(`${recipe.name} - [${recipe.menuId}] : 주문 처리 시작`);
-        await processOrder(recipe); // 주문 처리
-        await useWash(recipe);
-        log.info(`${recipe.name} - [${recipe.menuId}] : 주문 처리 완료`);
     }
 };
 
 // 주문 처리
 const processOrder = async (recipe) => {
-
     await dispenseCup(recipe);
     if (recipe.iceYn === 'yes') await dispenseIce(recipe);
-    if (recipe.coffeeYn === 'yes') await dispenseMultipleCoffees(recipe);
-    if (recipe.garuchaYn === 'yes') await dispenseMultipleGarucha(recipe);
-    if (recipe.syrupYn === 'yes') await dispenseMultipleSyrup(recipe);
+    console.log(`제조 menu: ${recipe.menuId} - ${recipe.name}`);
+
+    const sortedItems = [...recipe.items].sort((a, b) => a.no - b.no);
+    for (const [index, item] of sortedItems.entries()) {
+        try {
+            console.log(`제조 item: No ${item.no}, Type ${item.type}`);
+
+            // 첫 번째 항목에만 컵 센서 체크 로직 추가
+            if (index === 0) {
+                console.log(`컵 센서 체크 시작: item No ${item.no}`);
+                const isStartValid = await checkCupSensor("있음", 3); // 3회 "있음" 상태 체크
+                if (!isStartValid) {
+                    console.error(`[에러] 컵 센서 상태가 유효하지 않음: menuId ${recipe.menuId}`);
+                    throw new Error(`Invalid cup sensor state for menuId ${recipe.menuId}`);
+                }
+                console.log(`컵 센서 상태 확인 완료: menuId ${recipe.menuId}`);
+            }
+
+            switch (item.type) {
+                case 'coffee':
+                    await dispenseMultipleCoffees(item);
+                    break;
+                case 'garucha':
+                    await dispenseMultipleGarucha(item);
+                    break;
+                case 'syrup':
+                    await dispenseMultipleSyrup(item);
+                    break;
+                default:
+                    console.warn(`아이템 타입을 찾을수 없습니다.: ${item.type}`);
+                    break;
+            }
+        } catch (error) {
+            console.error(`[에러] 제조 item No ${item.no} in menu ${recipe.menuId}: ${error.message}`);
+        }
+    }
+
+    console.log(`제조완료 menu: ${recipe.menuId}`);
 };
 
 // 제조 단계 함수
@@ -336,7 +374,7 @@ const checkCupSensor = async (expectedState, threshold) => {
             stateCount = 0; // 상태가 맞지 않으면 카운터 초기화
         }
 
-        await new Promise((r) => setTimeout(r, 500));
+        await new Promise((r) => setTimeout(r, 1000));
     }
 
     log.warn(`Sensor state did not reach '${expectedState}' threshold within timeout.`);
@@ -361,7 +399,7 @@ const checkAutoOperationState = async (expectedState, threshold) => {
             stateCount = 0; // 상태가 맞지 않으면 카운터 초기화
         }
 
-        await new Promise((r) => setTimeout(r, 500));
+        await new Promise((r) => setTimeout(r, 1000));
     }
 
     log.warn(`Sensor state did not reach '${expectedState}' threshold within timeout.`);
@@ -418,7 +456,7 @@ const useWash = async (data) => {
 };
 
 // 주문 처리 시작
-processQueue();
+processQueue().then();
 
 module.exports = {
     startOrder,

@@ -45,66 +45,68 @@ const getMenuInfoAll = async () => {
 }
 
 const setMenuInfo = async () => {
+    document.getElementById('setToMenu').addEventListener('click', async () => {
+        try {
+            const items = [];
 
-    // 각 옵션 값을 저장할 객체
-    const selectedOptions = {
-        name: document.getElementById('menuName')?.value || 'None',
-        cup: document.querySelector('input[name="cup"]:checked')?.value || 'None',
-        iceYn: document.querySelector('input[name="iceYn"]:checked')?.value || 'No',
-        iceTime: document.querySelector('input[name="iceTime"]')?.value || '0',
-        waterTime: document.querySelector('input[name="waterTime"]')?.value || '0',
-        coffeeYn: document.querySelector('input[name="coffeeYn"]:checked')?.value || 'No',
-        // 커피 데이터 저장
-        coffee: Array.from(document.querySelectorAll('[id^="grinderOne"]')).map((coffeeElement, index) => ({
-            grinderOne: coffeeElement.value || '0',
-            grinderTwo: document.getElementById(`grinderTwo${index + 1}`)?.value || '0',
-            extraction: document.getElementById(`extraction${index + 1}`)?.value || '0',
-            hotWater: document.getElementById(`hotWater${index + 1}`)?.value || '0',
-        })),
-        garuchaYn: document.querySelector('input[name="garuchaYn"]:checked')?.value || 'No',
-        // 가루차 데이터 저장
-        garucha: Array.from(document.querySelectorAll('[id^="garuchaNumber"]')).map((garuchaElement, index) => ({
-            garuchaNumber: garuchaElement.value || '0',
-            garuchaExtraction: document.getElementById(`garuchaExtraction${index + 1}`)?.value || '0',
-            garuchaHotWater: document.getElementById(`garuchaHotWater${index + 1}`)?.value || '0',
-        })),
-        syrupYn: document.querySelector('input[name="syrupYn"]:checked')?.value || 'No',
-        // 시럽 데이터 저장
-        syrup: Array.from(document.querySelectorAll('[id^="syrupNumber"]')).map((syrupElement, index) => ({
-            syrupNumber: syrupElement.value || '0',
-            syrupExtraction: document.getElementById(`syrupExtraction${index + 1}`)?.value || '0',
-            syrupHotWater: document.getElementById(`syrupHotWater${index + 1}`)?.value || '0',
-            syrupSparklingWater: document.getElementById(`syrupSparklingWater${index + 1}`)?.value || '0',
-        })),
-        price: document.getElementById('price').value || '0',
-        image: 'https://placehold.co/200x300/png',
-        category: document.getElementById('category').value || 'None',
-    };
+            // 모든 item-input 필드셋에서 데이터 수집
+            document.querySelectorAll('.item-input').forEach((fieldset) => {
+                const itemId = fieldset.id.replace('item', ''); // 항목 ID 추출
+                const itemType = document.getElementById(`itemType${itemId}`)?.value || 'None';
+                const value1 = document.getElementById(`value1-${itemId}`)?.value || '0';
+                const value2 = document.getElementById(`value2-${itemId}`)?.value || '0';
+                const value3 = document.getElementById(`value3-${itemId}`)?.value || '0';
+                const value4 = document.getElementById(`value4-${itemId}`)?.value || '0';
 
+                items.push({
+                    type: itemType,
+                    no: parseInt(itemId, 10),
+                    value1,
+                    value2,
+                    value3,
+                    value4,
+                });
+            });
 
-    log.info("data : " + JSON.stringify(selectedOptions));
+            // 각 옵션 값을 저장할 객체
+            const selectedOptions = {
+                name: document.getElementById('menuName')?.value || 'None',
+                cup: document.querySelector('input[name="cup"]:checked')?.value || 'None',
+                iceYn: document.querySelector('input[name="iceYn"]:checked')?.value || 'No',
+                iceTime: document.querySelector('input[name="iceTime"]')?.value || '0',
+                waterTime: document.querySelector('input[name="waterTime"]')?.value || '0',
+                price: document.getElementById('price').value || 'None',
+                image: 'https://placehold.co/200x300/png',
+                category: document.getElementById('category').value || 'None',
+                items, // 통합된 items 배열 추가
+            };
 
-    try {
-        const response = await fetch('http://localhost:3000/set-menu-info', {
-            method: 'POST', // POST 요청
-            headers: {
-                'Content-Type': 'application/json', // JSON 형식으로 전송
-            },
-            body: JSON.stringify(selectedOptions), // 선택된 옵션 객체를 JSON으로 직렬화하여 전송
-        });
+            log.info("data : " + JSON.stringify(selectedOptions));
 
-        if (!response.ok) {
-            throw new Error(`Network response was not ok: ${response.statusText}`);
+            // Fetch 요청 보내기
+            const response = await fetch('http://localhost:3000/set-menu-info', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(selectedOptions),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Network response was not ok: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            sendLogToMain('info', '메뉴 저장: ', data); // 디버깅용 로그
+            log.info(data);
+
+            // 결과 표시
+            document.getElementById('data').textContent = JSON.stringify(data);
+        } catch (error) {
+            sendLogToMain('error', 'Error fetching menu info:', error);
+            log.error(error);
         }
-        log.info(selectedOptions);
-        const data = await response.json();
-        sendLogToMain('info','SCF: ', data);  // 디버깅용 콘솔
-        log.info(data);
-        document.getElementById('data').textContent = JSON.stringify(data);
-    } catch (error) {
-        sendLogToMain('error','Error fetching menu info:', error);
-        log.error(error);
-    }
+    });
 }
 
 const fetchCoffeeInfo = async (grinder1, grinder2, extraction, hotwater) => {

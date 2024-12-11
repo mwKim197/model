@@ -148,7 +148,6 @@ const useWash = async (orderList) => {
             },
             body: JSON.stringify(orderList),
         });
-        console.log(response);
 
         const data = await response.json();
         sendLogToMain('info',`워시 성공 - ${JSON.stringify(data)}`);
