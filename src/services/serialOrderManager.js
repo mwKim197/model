@@ -231,7 +231,7 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
                     resolve(); // 모든 작업 완료 후 Promise 성공
                     break; // 완료되었으면 루프 종료
                 }
-                await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기 후 재확인
+                await new Promise(resolve => setTimeout(resolve, 200)); // 0.2초 대기 후 재확인
             }
             resolve(); // 성공 시
         } catch (error) {
@@ -265,7 +265,7 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
                     log.info("Tea 추출 완료 확인");
                     break; // 완료되었으면 루프 종료
                 }
-                await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기 후 재확인
+                await new Promise(resolve => setTimeout(resolve, 200)); // 0.2초 대기 후 재확인
             }
             resolve(); // 성공 시
         } catch (error) {
@@ -298,7 +298,7 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
                     log.info("Syrup 추출 완료 확인");
                     break; // 완료되었으면 루프 종료
                 }
-                await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기 후 재확인
+                await new Promise(resolve => setTimeout(resolve, 200)); // 0.2초 대기 후 재확인
             }
             resolve(); // 성공 시
         } catch (error) {
