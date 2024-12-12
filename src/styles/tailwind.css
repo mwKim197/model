@@ -19,10 +19,6 @@
         @apply bg-gray-400 text-black;
     }
 
-    .product-card {
-        @apply bg-gray-100 p-4 rounded-lg relative flex flex-col items-center;
-    }
-
     .badge {
         @apply absolute top-2 left-2 w-12 h-12 flex items-center justify-center rounded-full text-white text-sm font-bold;
     }

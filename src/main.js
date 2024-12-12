@@ -80,9 +80,9 @@ function createWindow() {
     const win = new BrowserWindow({
         width: 1200,
         height: 900,
-        alwaysOnTop: true,          // 항상 윈도우가맨위
+        //alwaysOnTop: true,          // 항상 윈도우가맨위
         //fullscreen: true,           // 전체화면
-        autoHideMenuBar: true,      // 메뉴바 숨기기
+        //autoHideMenuBar: true,      // 메뉴바 숨기기
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false

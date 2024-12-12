@@ -1,13 +1,13 @@
 /////// 최초 전체 목록 조회해서 뿌리기, 여기서 주문 전송
-const log = require("../../logger");
 const menuApi = require('../api/menuApi');
 const orderApi = require('../api/orderApi');
 const image = require('../../aws/s3/utils/image');
 const {ipcRenderer} = require("electron");
 
 function sendLogToMain(level, message) {
-    ipcRenderer.send('log-to-main', { level, message });
+    ipcRenderer.send('log-to-main', {level, message});
 }
+
 let orderList = [];
 
 const data = image.downloadAllFromS3WithCache("model-narrow-road", "model/test_user1");
@@ -20,93 +20,137 @@ let isDataLoaded = false;
 const productGrid = document.getElementById('productGrid');
 const orderGrid = document.getElementById('orderGrid');
 
+
 // 필터된 제품을 표시하는 함수
 function displayProducts(products) {
-    console.log("products + ", products);
     productGrid.innerHTML = '';
     products.forEach(product => {
         const card = document.createElement('div');
-        card.className = 'product-card';
+        card.className = 'product-card bg-gray-200 rounded-lg p-2 text-center shadow-md hover:bg-gray-300 cursor-pointer';
+
+        // 클릭 이벤트 처리
+        card.addEventListener('click', () => {
+            // 클릭된 아이템 시각적 강조
+            card.classList.add('bg-blue-100', 'border-blue-500');
+            card.classList.remove('bg-gray-200');
+
+            // 주문 처리 함수 호출
+            addItemToOrder(product.menuId).then();
+
+            // 1초 후 강조 스타일 초기화
+            setTimeout(() => {
+                card.classList.remove('bg-blue-100', 'border-blue-500');
+                card.classList.add('bg-gray-200');
+            }, 200);
+        });
+
+        // 카드 내용 추가
         card.innerHTML = `
-                    <img src="${product.image}" alt="${product.name}" class="w-full mb-2">
-                    <h3 class="text-lg font-bold">${product.name}</h3>
-                    <div class="flex gap-2 mt-2">
-                        <span class="flex items-center">
-                            <span class="text-blue-500 mr-1">I</span>
-                            ₩${product.price.toLocaleString()}
-                        </span>
-                    </div>
-                    <button class="bg-blue-500 text-white p-2 rounded mt-2 " onclick="addItemToOrder('${product.menuId}')">주문하기</button>
-                `;
+        <div class="relative">
+            <img src="https://via.placeholder.com/100" alt="${product.name}" class="w-full rounded-md"/>
+            <span class="absolute top-0 left-0 bg-red-500 text-white text-xs px-2 py-1 rounded-bl-lg">EVENT</span>
+        </div>
+        <div class="mt-2">
+            <span class="block font-bold">${product.name}</span>
+            <span class="block text-gray-600">${`₩ ` + product.price.toLocaleString()}</span>
+        </div>
+        <!-- 숨겨진 버튼 -->
+        <button id="${product.menuId}" class="hidden" onclick="addItemToOrder('${product.menuId}')">주문하기</button>
+    `;
+
+        // 부모 컨테이너에 추가
         productGrid.appendChild(card);
     });
 }
-
-// 주문된 아이템을 오른쪽에 추가하는 함수
-async function addItemToOrder(itemName) {
-
-    // 데이터 로드 확인
-    if (!Array.isArray(allProducts) || allProducts.length === 0) {
-        console.warn("allProducts가 로드되지 않았습니다. 데이터를 로드합니다.");
-        await fetchData(); // 데이터 로드 완료 대기
-    }
+async function addItemToOrder(menuId) {
     // 상품 검색
-    const product = allProducts.find(p => String(p.menuId) === itemName);
-
+    const product = allProducts.find(p => p.menuId === menuId);
     if (!product) {
-        console.error(`Product not found for itemName: ${itemName}`);
+        console.error(`Product not found for menuId: ${menuId}`);
         return;
     }
 
-    // 중복 추가 방지
-    const existingOrder = orderList.find(order => String(order.menuId) === String(product.menuId));
+    // 기존 항목 검색
+    const existingOrder = orderList.find(order => order.menuId === product.menuId);
+
     if (existingOrder) {
-        console.warn(`Item already in order: ${product.name}`);
-        return;
+        // 이미 존재하면 수량 증가
+        existingOrder.count += 1;
+
+        // UI 업데이트 - 수량 및 금액
+        const orderItem = document.querySelector(`[data-order-id="${existingOrder.orderId}"]`);
+        if (orderItem) {
+            // 수량 업데이트
+            const quantitySpan = orderItem.querySelector('.quantity');
+            const itemTotalElement = orderItem.querySelector('.item-total');
+            if (quantitySpan) {
+                quantitySpan.textContent = existingOrder.count;
+            }
+            if (itemTotalElement) {
+                itemTotalElement.textContent = (existingOrder.count * existingOrder.price).toLocaleString();
+            }
+        }
+
+        // 주문 요약 업데이트
+        updateOrderSummary();
+        return; // 새로운 항목 추가를 중단
     }
 
     // 주문 항목 추가
-    const orderId = `${product.menuId}-${product.userId}`; // 고유 ID 생성
+    const orderId = `${product.menuId}-${product.userId}`;
     orderList.push({
         orderId,
         userId: product.userId,
         menuId: product.menuId,
-        price: product.price,
-        count: 1, // 초기 수량
+        price: Number(product.price),
+        count: 1,
     });
 
-    // 주문 아이템 UI 생성
+    // UI 업데이트
     const orderItem = document.createElement('div');
-    orderItem.className = 'order-item bg-gray-300 p-2 rounded-lg flex justify-between items-center w-[190px] min-h-32 h-32';
+    orderItem.className = 'order-item bg-gray-300 p-2 rounded-lg flex justify-between items-center w-full min-h-24';
+    orderItem.setAttribute('data-order-id', orderId); // 고유 ID 설정
     orderItem.innerHTML = `
-        <div class="border-2 border-gray-300 rounded-2xl">
-            <img src="${product.image || 'https://placehold.co/200x300/png'}" alt="${product.name}" class="w-full mb-2">
-            <span>${product.name}</span>
-            <div class="flex justify-between">
-                <div class="flex items-center space-x-2">
-                    <!-- 수량 조정 버튼 -->
-                    <button 
-                        class="bg-blue-500 text-white px-2 py-1 rounded-lg" 
-                        onclick="updateItemQuantity(this, -1, '${orderId}')">
-                        -
-                    </button>
-                    <span class="quantity bg-white px-3 py-1 rounded-lg text-center">1</span>
-                    <button 
-                        class="bg-green-500 text-white px-2 py-1 rounded-lg" 
-                        onclick="updateItemQuantity(this, 1, '${orderId}')">
-                        +
-                    </button>
+        <div class="bg-white w-full rounded-lg p-3 flex items-start space-x-4 shadow-md">
+            <img src="${product.image}" alt="${product.name}" class="w-12 h-12 rounded-md">
+            <div class="flex-1">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-sm">${product.name}</h3>
+                    <p class="text-gray-600 text-sm font-bold">₩<span class="item-total font-bold">${product.price.toLocaleString()}</span></p>
                 </div>
-                <button 
-                    class="bg-red-500 text-white px-2 py-1 rounded-lg" 
-                    onclick="removeItemFromOrder(this, '${orderId}')">
-                    삭제
-                </button>  
+                <div class="flex items-center space-x-2 mt-2">
+                    <button class="px-2 py-1 bg-blue-500 text-white rounded-lg" 
+                        onclick="updateItemQuantity(this, -1, '${orderId}')">-</button>
+                    <span class="quantity bg-gray-100 px-3 py-1 rounded-lg text-center">1</span>
+                    <button class="px-2 py-1 bg-green-500 text-white rounded-lg" 
+                        onclick="updateItemQuantity(this, 1, '${orderId}')">+</button>
+                </div>
             </div>
+            <button class="text-red-500 text-sm" onclick="removeItemFromOrder(this, '${orderId}')">✖</button>
         </div>
     `;
+    orderGrid.appendChild(orderItem);
 
-    orderGrid.appendChild(orderItem); // UI에 추가
+    // 주문 요약 업데이트
+    updateOrderSummary();
+}
+
+// 주문한 아이템 추가
+function updateOrderSummary() {
+    // 총 금액 및 총 개수 계산
+    const totalPrice = orderList.reduce((sum, order) => sum + (Number(order.price) * order.count), 0);
+    const totalCount = orderList.reduce((sum, order) => sum + order.count, 0);
+
+    // 하단 버튼 영역의 요소 업데이트
+    const priceElement = document.getElementById("totalAmt");
+    const countElement = document.getElementById("totalCount");
+
+    if (priceElement) {
+        priceElement.textContent = `₩ ${totalPrice.toLocaleString()}`;
+    }
+    if (countElement) {
+        countElement.textContent = `${totalCount}개`;
+    }
 }
 
 // 아이템 삭제
@@ -122,9 +166,12 @@ function removeItemFromOrder(button, orderId) {
     if (orderItem) {
         orderItem.remove();
     }
+
+    // 주문 요약 업데이트
+    updateOrderSummary();
 }
 
-// 수량 추가
+// 수량추가
 function updateItemQuantity(button, delta, orderId) {
     const order = orderList.find(o => o.orderId === orderId);
     if (!order) {
@@ -141,11 +188,21 @@ function updateItemQuantity(button, delta, orderId) {
         console.warn("Quantity cannot be less than 1");
     }
 
-    // UI 업데이트
+    // UI 업데이트 - 수량
     const quantitySpan = button.parentElement.querySelector('.quantity');
-    quantitySpan.textContent = order.count;
-}
+    if (quantitySpan) {
+        quantitySpan.textContent = order.count;
+    }
 
+    // UI 업데이트 - 금액
+    const itemTotalElement = button.closest('.flex-1').querySelector('.item-total');
+    if (itemTotalElement) {
+        itemTotalElement.textContent = (order.count * order.price).toLocaleString();
+    }
+
+    // 주문 요약 업데이트
+    updateOrderSummary();
+}
 // 전체 아이템 삭제 함수
 function removeAllItemsFromOrder() {
     // 주문 목록 초기화
@@ -165,23 +222,31 @@ function removeAllItemsFromOrder() {
 document.querySelectorAll('.menu-tab').forEach(tab => {
     tab.addEventListener('click', () => {
         // 활성화된 탭 변경
-        document.querySelector('.menu-tab.active').classList.remove('active');
+        document.querySelector('.menu-tab.active')?.classList.remove('active');
         tab.classList.add('active');
 
+        // 카테고리 필터링
         const category = tab.getAttribute('data-category');
-        const filteredProducts = category === 'all' ? allProducts : allProducts.filter(product => product.category === category);
+        const filteredProducts = category === 'all'
+            ? allProducts
+            : allProducts.filter(product => product.category === category);
+
+        if (!filteredProducts.length) {
+            console.warn(`해당 카테고리에 제품이 없습니다: ${category}`);
+        }
+
         displayProducts(filteredProducts);
     });
 });
-/*document.getElementById('wash').addEventListener('click', async () => {
-    sendLogToMain('info', `워시 목록 ${JSON.stringify(orderList)}`);
-    await orderApi.useWash(orderList); // 세척처리
-});*/
-
 document.getElementById('payment').addEventListener('click', async () => {
 
+    if (orderList.length === 0) {
+        return alert("상품을 선택해 주세요");
+    }
+
+    console.log(orderList);
     let price = 0;
-    orderList.map((order)=> {
+    orderList.map((order) => {
         price += Number(order.price) * order.count;  // 수량만큼 가격 계산
     })
     const orderAmount = price; // 주문 금액
@@ -235,15 +300,23 @@ document.getElementById('payment').addEventListener('click', async () => {
     }
 });
 
-
 async function fetchData() {
     try {
         const allData = await menuApi.getMenuInfoAll();
-        allProducts = allData.Items;
-        isDataLoaded = true; // 데이터 로드 완료
+        console.log('Fetched Data:', allData);
+
+        // 데이터가 올바르게 로드되었는지 확인
+        if (!allData || !Array.isArray(allData.Items)) {
+            throw new Error('올바르지 않은 데이터 구조입니다.');
+        }
+
+        allProducts = allData.Items; // 데이터를 Items 배열로 설정
+
+        // 초기 데이터 로드
         displayProducts(allProducts);
     } catch (error) {
         console.error("데이터 로드 중 오류 발생:", error);
     }
 }
+
 fetchData().then();  // 함수 호출
