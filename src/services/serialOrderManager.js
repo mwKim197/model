@@ -30,7 +30,10 @@ const startOrder = async (data) => {
         // 메뉴와 주문 데이터가 정상적으로 로드되었으면 주문 처리 시작
         if (menuData.length > 0) {
             log.info("주문 제조...");
-            await processQueue(orderData, menuData);
+            await processQueue(orderData, menuData).catch((error) => {
+                log.error("Error in startOrder:", error.message);
+                throw error; // 명시적으로 에러를 다시 던짐
+            });
             await useWash(orderData);
         } else {
             log.warn("메뉴, 주문 정보 없음.");
