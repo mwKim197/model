@@ -467,7 +467,7 @@ const useWash = async (data) => {
         const recipe = menuData.filter(menu => orderData.some(ord => ord.menuId === menu.menuId));
 
         log.info(`전체 세척 레시피: ${JSON.stringify(recipe)}!`);
-        const combinedList = list.flatMap(entry =>
+        const combinedList = recipe.flatMap(entry =>
             entry.items.filter(item => item.type === "garucha" || item.type === "syrup")
         );
 
