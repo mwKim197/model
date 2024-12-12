@@ -211,21 +211,13 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
             const data = McData.getSerialData('RD1');
             log.info("GET COFFEE INFO ", data);
             log.info(`coffee set!!!  : ${grinderOne}, ${grinderTwo}, ${extraction}, ${hotWater}`);
-            const isAutoOperation =  await checkAutoOperationState("정지", 3);
+            const isAutoOperation =  await checkAutoOperationState("정지", 1);
             if (isAutoOperation) {
                 log.info("이전 동작 종료 확인");
                 await Order.sendCoffeeCommand(grinder(grinderOne), grinder(grinderTwo), formatValue(extraction), formatValue(hotWater));
-            }
-            // "있음" 상태 3회 체크
-            const isStartValid = await checkCupSensor("있음", 1);
-            if (isStartValid) {
                 log.info(`coffee 추출 실행`);
                 await Order.extractCoffee();
-            } else {
-                reject(new Error("Timeout: Cup sensor did not reach '있음' state."));
-                return;
             }
-
             resolve(); // 성공 시
 
         } catch (error) {
@@ -273,21 +265,15 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
             await McData.updateSerialData('RD1', 'RD1');
             const data = McData.getSerialData('RD1');
             log.info("GET GARUCHA INFO ", JSON.stringify(data));
-            const isAutoOperation =  await checkAutoOperationState("정지", 3);
+            const isAutoOperation =  await checkAutoOperationState("정지", 1);
             if (isAutoOperation) {
                 log.info("이전 동작 종료 확인");
                 await Order.sendTeaCommand(motor, grinder(extraction), formatValue(hotwater));
-            }
-            // "있음" 상태 3회 체크
-            const isStartValid = await checkCupSensor("있음", 1);
-            if (isStartValid) {
                 log.info(`${motor} Tea 추출 실행`);
                 await Order.extractTeaPowder();
                 resolve(); // 모든 작업 완료 후 Promise 성공
-            } else {
-                reject(new Error("Timeout: Cup sensor did not reach '있음' state."));
-
             }
+
 
         } catch (error) {
             log.error('dispenseGarucha 오류:', error.message);
@@ -332,22 +318,14 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
             await McData.updateSerialData('RD1', 'RD1');
             const data = McData.getSerialData('RD1');
             log.info("GET SYRUP INFO ", JSON.stringify(data));
-            const isAutoOperation =  await checkAutoOperationState("정지", 3);
+            const isAutoOperation =  await checkAutoOperationState("정지", 1);
             if (isAutoOperation) {
                 log.info("이전 동작 종료 확인");
                 await Order.setSyrup(motor, grinder(extraction), formatValue(hotwater), formatValue(sparkling));
-            }
-            // "있음" 상태 3회 체크
-            const isStartValid = await checkCupSensor("있음", 1);
-            if (isStartValid) {
                 log.info(`${motor} Syrup 추출 실행`);
                 await Order.extractSyrup();
                 resolve(); // 모든 작업 완료 후 Promise 성공
-            } else {
-                reject(new Error("Timeout: Cup sensor did not reach '있음' state."));
             }
-
-
         } catch (error) {
             log.error('dispenseSyrup 오류:', error.message);
             reject(error);
