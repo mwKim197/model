@@ -304,7 +304,7 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
                 while (true) {
                     const isStopped = await checkAutoOperationState("정지", 3);
                     if (isStopped) {
-                        log.info("coffee 추출 완료 확인");
+                        log.info("Syrup 추출 완료 확인");
                         break; // 완료되었으면 루프 종료
                     }
                     await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기 후 재확인
@@ -325,8 +325,6 @@ const checkCupSensor = async (expectedState, threshold) => {
     for (let counter = 0; counter < 120; counter++) {
         await McData.updateSerialData('RD1', 'RD1');
         const data = McData.getSerialData('RD1');
-        log.info(JSON.stringify(data));
-
         if (data.cupSensor === expectedState) {
             stateCount++;
             log.info(`Sensor state is '${expectedState}', count: ${stateCount}`);
@@ -355,7 +353,6 @@ const checkAutoOperationState = async (expectedState, threshold) => {
         if (data.autoOperationState === expectedState) {
             stateCount++;
             // 1회차 1번, 1초에 한번씩 로그
-            if(counter === 0)log.info(`자동운전 동작상태: '${expectedState}', count: ${stateCount}`);
             if((counter % 10) === 0)log.info(`자동운전 동작상태: '${expectedState}', count: ${stateCount}`);
             if (stateCount >= threshold) {
                 log.info(`자동운전 동작상태: '${expectedState}' ${threshold} 회 END.`);
