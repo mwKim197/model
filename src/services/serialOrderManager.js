@@ -478,12 +478,12 @@ const useWash = async (data) => {
 
             log.info(`전체 세척 실행: ${JSON.stringify(listData)}`);
 
-            if (listData.garuchaNumber) {
-                await Order.purifyingTae(listData.garuchaNumber);
+            if (listData.type === "garucha") {
+                await Order.purifyingTae(listData.value1);
                 await checkAutoOperationState("정지", 3);
             }
-            if (listData.syrupNumber) {
-                await Order.purifyingSyrup(listData.syrupNumber);
+            if (listData.type === "syrup") {
+                await Order.purifyingSyrup(listData.value1);
                 await checkAutoOperationState("정지", 3);
             }
             await new Promise((r) => setTimeout(r, 1000));
