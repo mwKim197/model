@@ -258,9 +258,8 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
                 }
 
                 const isStopped = await checkAutoOperationState("정지", 3);
-                const isStopValid = await checkCupSensor("없음", 3);
 
-                if (isStopped && isStopValid) {
+                if (isStopped) {
                     log.info("coffee 추출 완료 확인");
                     resolve(); // 성공적으로 종료
                     break; // 루프 중단
@@ -308,9 +307,8 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
                 }
 
                 const isStopped = await checkAutoOperationState("정지", 3);
-                const isStopValid = await checkCupSensor("없음", 3);
 
-                if (isStopped && isStopValid) {
+                if (isStopped) {
                     log.info("Tea 추출 완료 확인");
                     resolve(); // 성공적으로 종료
                     break; // 루프 중단
@@ -357,9 +355,8 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
                 }
 
                 const isStopped = await checkAutoOperationState("정지", 3);
-                const isStopValid = await checkCupSensor("없음", 3);
 
-                if (isStopped && isStopValid) {
+                if (isStopped) {
                     log.info("Syrup 추출 완료 확인");
                     resolve(); // 성공적으로 종료
                     break; // 루프 중단
