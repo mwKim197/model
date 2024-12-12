@@ -213,7 +213,7 @@ function removeAllItemsFromOrder() {
     if (orderGrid) {
         orderGrid.innerHTML = ''; // 모든 하위 요소 제거
     }
-
+    updateOrderSummary();
     console.log('모든 주문 항목이 삭제되었습니다.');
 }
 

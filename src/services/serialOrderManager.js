@@ -214,28 +214,24 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
             log.info("GET COFFEE INFO ", data);
             log.info(`coffee set!!!  : ${grinderOne}, ${grinderTwo}, ${extraction}, ${hotWater}`);
 
-            const isAutoOperation = await checkAutoOperationState("정지", 3);
-            if (isAutoOperation) {
-                log.info("이전 동작 종료 확인");
-                await Order.sendCoffeeCommand(
-                    grinder(grinderOne),
-                    grinder(grinderTwo),
-                    formatValue(extraction),
-                    formatValue(hotWater)
-                );
-                log.info(`coffee 추출 실행`);
-                await Order.extractCoffee();
+            await Order.sendCoffeeCommand(
+                grinder(grinderOne),
+                grinder(grinderTwo),
+                formatValue(extraction),
+                formatValue(hotWater)
+            );
+            log.info(`coffee 추출 실행`);
+            await Order.extractCoffee();
 
-                // 이전 동작 완료 여부를 동작 종료 후 확인
-                while (true) {
-                    const isStopped = await checkAutoOperationState("정지", 3);
-                    if (isStopped) {
-                        log.info("coffee 추출 완료 확인");
-                        resolve(); // 모든 작업 완료 후 Promise 성공
-                        break; // 완료되었으면 루프 종료
-                    }
-                    await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기 후 재확인
+            // 이전 동작 완료 여부를 동작 종료 후 확인
+            while (true) {
+                const isStopped = await checkAutoOperationState("정지", 3);
+                if (isStopped) {
+                    log.info("coffee 추출 완료 확인");
+                    resolve(); // 모든 작업 완료 후 Promise 성공
+                    break; // 완료되었으면 루프 종료
                 }
+                await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기 후 재확인
             }
             resolve(); // 성공 시
         } catch (error) {
@@ -256,24 +252,20 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
             await McData.updateSerialData('RD1', 'RD1');
             const data = McData.getSerialData('RD1');
             log.info("GET GARUCHA INFO ", JSON.stringify(data));
-            const isAutoOperation =  await checkAutoOperationState("정지", 3);
 
-            if (isAutoOperation) {
-                log.info("이전 동작 종료 확인");
-                await Order.sendTeaCommand(motor, grinder(extraction), formatValue(hotwater));
-                log.info(`${motor} Tea 추출 실행`);
-                await Order.extractTeaPowder();
-                resolve(); // 모든 작업 완료 후 Promise 성공
+            await Order.sendTeaCommand(motor, grinder(extraction), formatValue(hotwater));
+            log.info(`${motor} Tea 추출 실행`);
+            await Order.extractTeaPowder();
+            resolve(); // 모든 작업 완료 후 Promise 성공
 
-                // 이전 동작 완료 여부를 동작 종료 후 확인
-                while (true) {
-                    const isStopped = await checkAutoOperationState("정지", 3);
-                    if (isStopped) {
-                        log.info("Tea 추출 완료 확인");
-                        break; // 완료되었으면 루프 종료
-                    }
-                    await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기 후 재확인
+            // 이전 동작 완료 여부를 동작 종료 후 확인
+            while (true) {
+                const isStopped = await checkAutoOperationState("정지", 3);
+                if (isStopped) {
+                    log.info("Tea 추출 완료 확인");
+                    break; // 완료되었으면 루프 종료
                 }
+                await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기 후 재확인
             }
             resolve(); // 성공 시
         } catch (error) {
@@ -296,21 +288,17 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
             const data = McData.getSerialData('RD1');
             log.info("GET SYRUP INFO ", JSON.stringify(data));
 
-            const isAutoOperation = await checkAutoOperationState("정지", 3);
-            if (isAutoOperation) {
-                log.info("이전 동작 종료 확인");
-                await Order.setSyrup(motor, grinder(extraction), formatValue(hotwater), formatValue(sparkling));
-                log.info(`${motor} Syrup 추출 실행`);
-                await Order.extractSyrup();
-                // 이전 동작 완료 여부를 동작 종료 후 확인
-                while (true) {
-                    const isStopped = await checkAutoOperationState("정지", 3);
-                    if (isStopped) {
-                        log.info("Syrup 추출 완료 확인");
-                        break; // 완료되었으면 루프 종료
-                    }
-                    await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기 후 재확인
+            await Order.setSyrup(motor, grinder(extraction), formatValue(hotwater), formatValue(sparkling));
+            log.info(`${motor} Syrup 추출 실행`);
+            await Order.extractSyrup();
+            // 이전 동작 완료 여부를 동작 종료 후 확인
+            while (true) {
+                const isStopped = await checkAutoOperationState("정지", 3);
+                if (isStopped) {
+                    log.info("Syrup 추출 완료 확인");
+                    break; // 완료되었으면 루프 종료
                 }
+                await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기 후 재확인
             }
             resolve(); // 성공 시
         } catch (error) {
