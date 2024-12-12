@@ -250,7 +250,8 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
             while (true) {
                 if (Date.now() - startTime > timeout) {
                     log.error("120초 타임아웃 발생");
-                    return reject(new Error("coffee 추출 중 타임아웃 발생"));
+                    reject(new Error("coffee 추출 중 타임아웃 발생"));
+                    break; // 루프 중단
                 }
 
                 const isStopped = await checkAutoOperationState("정지", 3);
@@ -258,17 +259,19 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
 
                 if (isStopped && isStopValid) {
                     log.info("coffee 추출 완료 확인");
-                    return resolve(); // 성공적으로 종료
+                    resolve(); // 성공적으로 종료
+                    break; // 루프 중단
                 }
 
                 await new Promise((r) => setTimeout(r, 200)); // 0.2초 대기 후 재확인
             }
         } catch (error) {
             log.error('dispenseCoffee 오류:', error.message);
-            return reject(error);
+            return reject(error); // 상위 호출자로 에러 전파
         }
     });
 };
+
 
 
 const dispenseGarucha = (motor, extraction, hotwater) => {
@@ -297,7 +300,8 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
             while (true) {
                 if (Date.now() - startTime > timeout) {
                     log.error("120초 타임아웃 발생");
-                    return reject(new Error("Tea 추출 중 타임아웃 발생"));
+                    reject(new Error("Tea 추출 중 타임아웃 발생"));
+                    break; // 루프 중단
                 }
 
                 const isStopped = await checkAutoOperationState("정지", 3);
@@ -305,7 +309,8 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
 
                 if (isStopped && isStopValid) {
                     log.info("Tea 추출 완료 확인");
-                    return resolve(); // 성공적으로 종료
+                    resolve(); // 성공적으로 종료
+                    break; // 루프 중단
                 }
 
                 await new Promise((r) => setTimeout(r, 200)); // 0.2초 대기 후 재확인
@@ -344,7 +349,8 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
             while (true) {
                 if (Date.now() - startTime > timeout) {
                     log.error("120초 타임아웃 발생");
-                    return reject(new Error("Syrup 추출 중 타임아웃 발생"));
+                    reject(new Error("Syrup 추출 중 타임아웃 발생"));
+                    break; // 루프 중단
                 }
 
                 const isStopped = await checkAutoOperationState("정지", 3);
@@ -352,7 +358,8 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
 
                 if (isStopped && isStopValid) {
                     log.info("Syrup 추출 완료 확인");
-                    return resolve(); // 성공적으로 종료
+                    resolve(); // 성공적으로 종료
+                    break; // 루프 중단
                 }
 
                 await new Promise((r) => setTimeout(r, 200)); // 0.2초 대기 후 재확인
