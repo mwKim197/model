@@ -85,13 +85,14 @@ const processOrder = async (recipe) => {
 
             switch (item.type) {
                 case 'coffee':
-                    await dispenseMultipleCoffees(item);
+                    await dispenseCoffee(item.value1, item.value2, item.value3, item.value4);
                     break;
                 case 'garucha':
-                    await dispenseMultipleGarucha(item);
+                    await dispenseGarucha(item.value1, item.value2, item.value3);
+
                     break;
                 case 'syrup':
-                    await dispenseMultipleSyrup(item);
+                    await dispenseSyrup(item.value1, item.value2, item.value3, item.value4);
                     break;
                 default:
                     console.warn(`아이템 타입을 찾을수 없습니다.: ${item.type}`);
@@ -200,11 +201,16 @@ const dispenseIce = (recipe) => {
 const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
     return new Promise(async (resolve, reject) => {
         try {
+            const formatValue = (value) => value.toString().padStart(3, "0");
+            const grinder = (coffee) => {
+                const result = Math.round(coffee * 10);
+                return formatValue(result);
+            };
             await McData.updateSerialData('RD1', 'RD1');
             const data = McData.getSerialData('RD1');
             log.info("GET COFFEE INFO ", data);
             log.info(`coffee set!!!  : ${grinderOne}, ${grinderTwo}, ${extraction}, ${hotWater}`);
-            await Order.sendCoffeeCommand(grinderOne, grinderTwo, extraction, hotWater);
+            await Order.sendCoffeeCommand(grinder(grinderOne), grinder(grinderTwo), formatValue(extraction), formatValue(hotWater));
 
             // "있음" 상태 3회 체크
             const isStartValid = await checkCupSensor("있음", 1);
@@ -255,10 +261,15 @@ const dispenseMultipleCoffees = async (recipe) => {
 const dispenseGarucha = (motor, extraction, hotwater) => {
     return new Promise(async (resolve, reject) => {
         try {
+            const formatValue = (value) => value.toString().padStart(3, "0");
+            const grinder = (coffee) => {
+                const result = Math.round(coffee * 10);
+                return formatValue(result);
+            };
             await McData.updateSerialData('RD1', 'RD1');
             const data = McData.getSerialData('RD1');
             log.info("GET GARUCHA INFO ", JSON.stringify(data));
-            await Order.sendTeaCommand(motor, extraction, hotwater);
+            await Order.sendTeaCommand(motor, grinder(extraction), formatValue(hotwater));
 
             // "있음" 상태 3회 체크
             const isStartValid = await checkCupSensor("있음", 1);
@@ -306,10 +317,15 @@ const dispenseMultipleGarucha = async (recipe) => {
 const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
     return new Promise(async (resolve, reject) => {
         try {
+            const formatValue = (value) => value.toString().padStart(3, "0");
+            const grinder = (coffee) => {
+                const result = Math.round(coffee * 10);
+                return formatValue(result);
+            };
             await McData.updateSerialData('RD1', 'RD1');
             const data = McData.getSerialData('RD1');
             log.info("GET SYRUP INFO ", JSON.stringify(data));
-            await Order.setSyrup(motor, extraction, hotwater, sparkling);
+            await Order.setSyrup(motor, grinder(extraction), formatValue(hotwater), formatValue(sparkling));
 
             // "있음" 상태 3회 체크
             const isStartValid = await checkCupSensor("있음", 1);
