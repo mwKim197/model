@@ -173,10 +173,10 @@ document.querySelectorAll('.menu-tab').forEach(tab => {
         displayProducts(filteredProducts);
     });
 });
-document.getElementById('wash').addEventListener('click', async () => {
+/*document.getElementById('wash').addEventListener('click', async () => {
     sendLogToMain('info', `워시 목록 ${JSON.stringify(orderList)}`);
     await orderApi.useWash(orderList); // 세척처리
-});
+});*/
 
 document.getElementById('payment').addEventListener('click', async () => {
 
