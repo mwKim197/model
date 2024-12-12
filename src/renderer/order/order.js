@@ -221,11 +221,9 @@ document.getElementById('payment').addEventListener('click', async () => {
         } else {
             // 결제 실패 처리
             modal.classList.add('hidden');
-
             alert("결제에 실패하였습니다. 다시 시도해주세요.");
             console.error("결제 실패: ", result.message);
             sendLogToMain('error', `결제 실패: ${result.message}`);
-
         }
     } catch (error) {
         // 오류 처리
