@@ -52,9 +52,11 @@ const processQueue = async (orderList, menuList) => {
                 continue;
             }
 
-            log.info(`주문 처리 시작: ${recipe.name} - [메뉴 ID: ${recipe.menuId}, 주문 ID: ${order.orderId}]`);
-            await processOrder(recipe);
-            log.info(`주문 처리 완료: ${recipe.name} - [메뉴 ID: ${recipe.menuId}, 주문 ID: ${order.orderId}]`);
+            for (let i = 0; i < order.count; i++) {
+                log.info(`주문 처리 시작 (${i + 1}/${order.count}): ${recipe.name} - [메뉴 ID: ${recipe.menuId}, 주문 ID: ${order.orderId}]`);
+                await processOrder(recipe); // 레시피 처리
+                log.info(`주문 처리 완료 (${i + 1}/${order.count}): ${recipe.name} - [메뉴 ID: ${recipe.menuId}, 주문 ID: ${order.orderId}]`);
+            }
         } catch (error) {
             log.error(`주문 처리 중 오류 발생: 메뉴 ID ${order.menuId}, 주문 ID ${order.orderId}, 오류: ${error.message}`);
         }
