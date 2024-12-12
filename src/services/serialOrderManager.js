@@ -312,7 +312,7 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
 const checkCupSensor = async (expectedState, threshold) => {
     let stateCount = 0; // 상태 카운터
 
-    for (let counter = 0; counter < 120; counter++) {
+    for (let counter = 0; counter < 60; counter++) {
         const startTime = Date.now(); // 루프 시작 시간 기록
 
         await McData.updateSerialData('RD1', 'RD1');
@@ -329,7 +329,7 @@ const checkCupSensor = async (expectedState, threshold) => {
         }
 
         const elapsedTime = Date.now() - startTime; // 루프 실행 시간 계산
-        const remainingTime = 500 - elapsedTime; // 남은 시간 계산
+        const remainingTime = 1000 - elapsedTime; // 남은 시간 계산
         if (remainingTime > 0) {
             await new Promise((r) => setTimeout(r, remainingTime)); // 남은 시간만큼 대기
         }
