@@ -226,10 +226,14 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
             // 이전 동작 완료 여부를 동작 종료 후 확인
             while (true) {
                 const isStopped = await checkAutoOperationState("정지", 3);
-                if (isStopped) {
+                const isStopValid = await checkCupSensor("없음", 3, 120);
+                if (isStopped && isStopValid) {
                     log.info("coffee 추출 완료 확인");
                     resolve(); // 모든 작업 완료 후 Promise 성공
                     break; // 완료되었으면 루프 종료
+                } else {
+                    log.error("120초 타임아웃");
+                    reject();
                 }
                 await new Promise(resolve => setTimeout(resolve, 200)); // 0.2초 대기 후 재확인
             }
@@ -261,9 +265,13 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
             // 이전 동작 완료 여부를 동작 종료 후 확인
             while (true) {
                 const isStopped = await checkAutoOperationState("정지", 3);
-                if (isStopped) {
+                const isStopValid = await checkCupSensor("없음", 3, 120);
+                if (isStopped && isStopValid) {
                     log.info("Tea 추출 완료 확인");
                     break; // 완료되었으면 루프 종료
+                } else {
+                    log.error("120초 타임아웃");
+                    reject();
                 }
                 await new Promise(resolve => setTimeout(resolve, 200)); // 0.2초 대기 후 재확인
             }
@@ -294,9 +302,13 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
             // 이전 동작 완료 여부를 동작 종료 후 확인
             while (true) {
                 const isStopped = await checkAutoOperationState("정지", 3);
-                if (isStopped) {
+                const isStopValid = await checkCupSensor("없음", 3, 120);
+                if (isStopped && isStopValid) {
                     log.info("Syrup 추출 완료 확인");
                     break; // 완료되었으면 루프 종료
+                } else {
+                    log.error("120초 타임아웃");
+                    reject();
                 }
                 await new Promise(resolve => setTimeout(resolve, 200)); // 0.2초 대기 후 재확인
             }
@@ -309,10 +321,10 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
     });
 };
 
-const checkCupSensor = async (expectedState, threshold) => {
+const checkCupSensor = async (expectedState, threshold, roofTime = 60) => {
     let stateCount = 0; // 상태 카운터
 
-    for (let counter = 0; counter < 60; counter++) {
+    for (let counter = 0; counter < roofTime; counter++) {
         const startTime = Date.now(); // 루프 시작 시간 기록
 
         await McData.updateSerialData('RD1', 'RD1');
@@ -338,7 +350,6 @@ const checkCupSensor = async (expectedState, threshold) => {
     log.warn(`Sensor state did not reach '${expectedState}' threshold within timeout.`);
     return false; // 타임아웃 처리
 };
-
 
 const checkAutoOperationState = async (expectedState, threshold) => {
     let stateCount = 0; // 상태 카운터
