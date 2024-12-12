@@ -18,7 +18,6 @@ class serialDataManager {
     async updateSerialData(command, key) {
         try {
             this.serialData[key] = await this.serialComm.writeCommand(`${command}\x0d`); // 데이터 저장
-            log.info(`Data updated for ${key}:`, this.serialData[key]);
         } catch (err) {
             log.error(`Error updating ${key}: ${err.message}`);
         }
