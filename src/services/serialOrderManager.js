@@ -313,6 +313,8 @@ const checkCupSensor = async (expectedState, threshold) => {
     let stateCount = 0; // 상태 카운터
 
     for (let counter = 0; counter < 120; counter++) {
+        const startTime = Date.now(); // 루프 시작 시간 기록
+
         await McData.updateSerialData('RD1', 'RD1');
         const data = McData.getSerialData('RD1');
         if (data.cupSensor === expectedState) {
@@ -326,12 +328,17 @@ const checkCupSensor = async (expectedState, threshold) => {
             stateCount = 0; // 상태가 맞지 않으면 카운터 초기화
         }
 
-        await new Promise((r) => setTimeout(r, 500));
+        const elapsedTime = Date.now() - startTime; // 루프 실행 시간 계산
+        const remainingTime = 500 - elapsedTime; // 남은 시간 계산
+        if (remainingTime > 0) {
+            await new Promise((r) => setTimeout(r, remainingTime)); // 남은 시간만큼 대기
+        }
     }
 
     log.warn(`Sensor state did not reach '${expectedState}' threshold within timeout.`);
     return false; // 타임아웃 처리
 };
+
 
 const checkAutoOperationState = async (expectedState, threshold) => {
     let stateCount = 0; // 상태 카운터
