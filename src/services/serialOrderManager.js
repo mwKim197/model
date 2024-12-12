@@ -328,7 +328,7 @@ const checkCupSensor = async (expectedState, threshold, roofTime = 60) => {
         const startTime = Date.now(); // 루프 시작 시간 기록
         await McData.updateSerialData('RD1', 'RD1');
         const data = McData.getSerialData('RD1');
-        log.info(`컵 센서 time out 체크 ${counter}/ 120`);
+        log.info(`컵 센서 time out 체크 ${counter}/ ${roofTime}`);
         if (data.cupSensor === expectedState) {
             stateCount++;
             log.info(`Sensor state is '${expectedState}', count: ${stateCount}`);
