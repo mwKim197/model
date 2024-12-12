@@ -412,7 +412,7 @@ const checkCupSensor = async (expectedState, threshold) => {
             stateCount = 0; // 상태가 맞지 않으면 카운터 초기화
         }
 
-        await new Promise((r) => setTimeout(r, 1000));
+        await new Promise((r) => setTimeout(r, 500));
     }
 
     log.warn(`Sensor state did not reach '${expectedState}' threshold within timeout.`);
