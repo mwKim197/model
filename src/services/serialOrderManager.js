@@ -206,12 +206,16 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
                 const result = Math.round(coffee * 10);
                 return formatValue(result);
             };
+
             await McData.updateSerialData('RD1', 'RD1');
             const data = McData.getSerialData('RD1');
             log.info("GET COFFEE INFO ", data);
             log.info(`coffee set!!!  : ${grinderOne}, ${grinderTwo}, ${extraction}, ${hotWater}`);
-            await Order.sendCoffeeCommand(grinder(grinderOne), grinder(grinderTwo), formatValue(extraction), formatValue(hotWater));
-
+            const isAutoOperation =  await checkAutoOperationState("정지", 3);
+            if (isAutoOperation) {
+                log.info("이전 동작 종료 확인");
+                await Order.sendCoffeeCommand(grinder(grinderOne), grinder(grinderTwo), formatValue(extraction), formatValue(hotWater));
+            }
             // "있음" 상태 3회 체크
             const isStartValid = await checkCupSensor("있음", 1);
             if (isStartValid) {
@@ -269,8 +273,11 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
             await McData.updateSerialData('RD1', 'RD1');
             const data = McData.getSerialData('RD1');
             log.info("GET GARUCHA INFO ", JSON.stringify(data));
-            await Order.sendTeaCommand(motor, grinder(extraction), formatValue(hotwater));
-
+            const isAutoOperation =  await checkAutoOperationState("정지", 3);
+            if (isAutoOperation) {
+                log.info("이전 동작 종료 확인");
+                await Order.sendTeaCommand(motor, grinder(extraction), formatValue(hotwater));
+            }
             // "있음" 상태 3회 체크
             const isStartValid = await checkCupSensor("있음", 1);
             if (isStartValid) {
@@ -325,8 +332,11 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
             await McData.updateSerialData('RD1', 'RD1');
             const data = McData.getSerialData('RD1');
             log.info("GET SYRUP INFO ", JSON.stringify(data));
-            await Order.setSyrup(motor, grinder(extraction), formatValue(hotwater), formatValue(sparkling));
-
+            const isAutoOperation =  await checkAutoOperationState("정지", 3);
+            if (isAutoOperation) {
+                log.info("이전 동작 종료 확인");
+                await Order.setSyrup(motor, grinder(extraction), formatValue(hotwater), formatValue(sparkling));
+            }
             // "있음" 상태 3회 체크
             const isStartValid = await checkCupSensor("있음", 1);
             if (isStartValid) {
@@ -415,7 +425,7 @@ const checkAutoOperationState = async (expectedState, threshold) => {
             stateCount = 0; // 상태가 맞지 않으면 카운터 초기화
         }
 
-        await new Promise((r) => setTimeout(r, 1000));
+        await new Promise((r) => setTimeout(r, 500));
     }
 
     log.warn(`Sensor state did not reach '${expectedState}' threshold within timeout.`);
