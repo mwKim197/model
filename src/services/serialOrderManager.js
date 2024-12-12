@@ -212,7 +212,7 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
             log.info("GET COFFEE INFO ", data);
             log.info(`coffee set!!!  : ${grinderOne}, ${grinderTwo}, ${extraction}, ${hotWater}`);
 
-            const isAutoOperation = await checkAutoOperationState("정지", 1);
+            const isAutoOperation = await checkAutoOperationState("정지", 3);
             if (isAutoOperation) {
                 log.info("이전 동작 종료 확인");
                 await Order.sendCoffeeCommand(
@@ -224,9 +224,9 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
                 log.info(`coffee 추출 실행`);
                 await Order.extractCoffee();
 
-                // 이전 동작 완료 여부를 계속 확인
+                // 이전 동작 완료 여부를 동작 종료 후 확인
                 while (true) {
-                    const isStopped = await checkAutoOperationState("정지", 1);
+                    const isStopped = await checkAutoOperationState("정지", 3);
                     if (isStopped) {
                         log.info("coffee 추출 완료 확인");
                         resolve(); // 모든 작업 완료 후 Promise 성공
@@ -243,31 +243,6 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
     });
 };
 
-const dispenseMultipleCoffees = async (recipe) => {
-    log.info(`JSON.stringify(recipe) : ${JSON.stringify(recipe)}`);
-    for (let i = 0; i < recipe.coffee.length; i++) {
-        const coffee = recipe.coffee[i];
-        log.info(`dispenseCoffee ${i + 1} START!!`);
-        const isAutoOperation =  await checkAutoOperationState("정지", 3);
-
-        const formatValue = (value) => value.toString().padStart(3, "0");
-        const grinder = (coffee) => {
-            const result = Math.round(coffee * 10);
-            return formatValue(result);
-        };
-        if (isAutoOperation) {
-            // 각 커피 배출을 순차적으로 실행
-            await dispenseCoffee(
-                grinder(coffee.grinderOne),
-                grinder(coffee.grinderTwo),
-                formatValue(coffee.extraction),
-                formatValue(coffee.hotWater)
-            );
-        }
-    }
-    log.info('모든 커피 배출 완료');
-};
-
 const dispenseGarucha = (motor, extraction, hotwater) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -279,7 +254,7 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
             await McData.updateSerialData('RD1', 'RD1');
             const data = McData.getSerialData('RD1');
             log.info("GET GARUCHA INFO ", JSON.stringify(data));
-            const isAutoOperation =  await checkAutoOperationState("정지", 1);
+            const isAutoOperation =  await checkAutoOperationState("정지", 3);
 
             if (isAutoOperation) {
                 log.info("이전 동작 종료 확인");
@@ -288,9 +263,9 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
                 await Order.extractTeaPowder();
                 resolve(); // 모든 작업 완료 후 Promise 성공
 
-                // 이전 동작 완료 여부를 계속 확인
+                // 이전 동작 완료 여부를 동작 종료 후 확인
                 while (true) {
-                    const isStopped = await checkAutoOperationState("정지", 1);
+                    const isStopped = await checkAutoOperationState("정지", 3);
                     if (isStopped) {
                         log.info("Tea 추출 완료 확인");
                         break; // 완료되었으면 루프 종료
@@ -307,30 +282,6 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
     });
 };
 
-const dispenseMultipleGarucha = async (recipe) => {
-    log.info(`JSON.stringify(recipe) : ${JSON.stringify(recipe)}`);
-    for (let i = 0; i < recipe.garucha.length; i++) {
-        const garucha = recipe.garucha[i];
-        log.info(`dispenseGarucha ${i + 1} START!!`);
-        log.info(`garucha set!!!  : ${garucha.garuchaNumber}, ${garucha.garuchaExtraction}, , ${garucha.garuchaHotWater}`);
-        // 각 가루차 배출을 순차적으로 실행
-        const isAutoOperation =  await checkAutoOperationState("정지", 3);
-        const formatValue = (value) => value.toString().padStart(3, "0");
-        const grinder = (coffee) => {
-            const result = Math.round(coffee * 10);
-            return formatValue(result);
-        };
-        if (isAutoOperation) {
-            await dispenseGarucha(
-                garucha.garuchaNumber,
-                grinder(garucha.garuchaExtraction),
-                formatValue(garucha.garuchaHotWater)
-            );
-        }
-    }
-    log.info('모든 차 배출 완료');
-};
-
 const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -343,15 +294,15 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
             const data = McData.getSerialData('RD1');
             log.info("GET SYRUP INFO ", JSON.stringify(data));
 
-            const isAutoOperation = await checkAutoOperationState("정지", 1);
+            const isAutoOperation = await checkAutoOperationState("정지", 3);
             if (isAutoOperation) {
                 log.info("이전 동작 종료 확인");
                 await Order.setSyrup(motor, grinder(extraction), formatValue(hotwater), formatValue(sparkling));
                 log.info(`${motor} Syrup 추출 실행`);
                 await Order.extractSyrup();
-                // 이전 동작 완료 여부를 계속 확인
+                // 이전 동작 완료 여부를 동작 종료 후 확인
                 while (true) {
-                    const isStopped = await checkAutoOperationState("정지", 1);
+                    const isStopped = await checkAutoOperationState("정지", 3);
                     if (isStopped) {
                         log.info("coffee 추출 완료 확인");
                         break; // 완료되었으면 루프 종료
@@ -366,31 +317,6 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
         }
 
     });
-};
-
-const dispenseMultipleSyrup = async (recipe) => {
-    for (let i = 0; i < recipe.syrup.length; i++) {
-        const syrup = recipe.syrup[i];
-        log.info(`dispenseSyrup ${i + 1} START!!`);
-        log.info(`syrup set!!!  : ${syrup.syrupNumber}, ${syrup.syrupExtraction}, ${syrup.syrupHotWater}, ${syrup.syrupSparklingWater}`);
-        // 각 시럽 배출을 순차적으로 실행
-        const isAutoOperation = await checkAutoOperationState("정지", 3);
-
-        const formatValue = (value) => value.toString().padStart(3, "0");
-        const grinder = (coffee) => {
-            const result = Math.round(coffee * 10);
-            return formatValue(result);
-        };
-        if (isAutoOperation) {
-            await dispenseSyrup(
-                syrup.syrupNumber,
-                grinder(syrup.syrupExtraction),
-                formatValue(syrup.syrupHotWater),
-                formatValue(syrup.syrupSparklingWater)
-            );
-        }
-    }
-    log.info('모든 시럽 배출 완료');
 };
 
 const checkCupSensor = async (expectedState, threshold) => {
@@ -422,13 +348,15 @@ const checkCupSensor = async (expectedState, threshold) => {
 const checkAutoOperationState = async (expectedState, threshold) => {
     let stateCount = 0; // 상태 카운터
 
-    for (let counter = 0; counter < 60; counter++) {
+    for (let counter = 0; counter < 600; counter++) {
         await McData.updateSerialData('RD1', 'RD1');
         const data = McData.getSerialData('RD1');
 
         if (data.autoOperationState === expectedState) {
             stateCount++;
-            log.info(`자동운전 동작상태: '${expectedState}', count: ${stateCount}`);
+            // 1회차 1번, 1초에 한번씩 로그
+            if(counter === 0)log.info(`자동운전 동작상태: '${expectedState}', count: ${stateCount}`);
+            if((counter % 10) === 0)log.info(`자동운전 동작상태: '${expectedState}', count: ${stateCount}`);
             if (stateCount >= threshold) {
                 log.info(`자동운전 동작상태: '${expectedState}' ${threshold} 회 END.`);
                 return true; // 조건 충족 시 함수 종료
@@ -437,7 +365,7 @@ const checkAutoOperationState = async (expectedState, threshold) => {
             stateCount = 0; // 상태가 맞지 않으면 카운터 초기화
         }
 
-        await new Promise((r) => setTimeout(r, 500));
+        await new Promise((r) => setTimeout(r, 100));
     }
 
     log.warn(`Sensor state did not reach '${expectedState}' threshold within timeout.`);
@@ -457,14 +385,11 @@ const useWash = async (data) => {
     // 메뉴와 주문 데이터가 정상적으로 로드되었으면 세척 시작
     if (menuData.length > 0) {
         log.info("세척 시작...!");
-
         const recipe = menuData.filter(menu => orderData.some(ord => ord.menuId === menu.menuId));
-
         log.info(`전체 세척 레시피: ${JSON.stringify(recipe)}!`);
         const combinedList = recipe.flatMap(entry =>
             entry.items.filter(item => item.type === "garucha" || item.type === "syrup")
         );
-
         log.info(`전체 세척 레시피 리스트: ${JSON.stringify(combinedList)}`);
 
         for (let i = 0; i < combinedList.length; i++) {
