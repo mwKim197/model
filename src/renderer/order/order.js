@@ -26,22 +26,14 @@ function displayProducts(products) {
     productGrid.innerHTML = '';
     products.forEach(product => {
         const card = document.createElement('div');
-        card.className = 'product-card bg-gray-200 rounded-lg p-2 text-center shadow-md hover:bg-gray-300 cursor-pointer';
+        card.className = 'product-card rounded-lg p-2 text-center cursor-pointer';
 
         // 클릭 이벤트 처리
         card.addEventListener('click', () => {
-            // 클릭된 아이템 시각적 강조
-            card.classList.add('bg-blue-100', 'border-blue-500');
-            card.classList.remove('bg-gray-200');
 
             // 주문 처리 함수 호출
             addItemToOrder(product.menuId).then();
 
-            // 1초 후 강조 스타일 초기화
-            setTimeout(() => {
-                card.classList.remove('bg-blue-100', 'border-blue-500');
-                card.classList.add('bg-gray-200');
-            }, 200);
         });
 
         // 카드 내용 추가
@@ -51,8 +43,8 @@ function displayProducts(products) {
             <span class="absolute top-0 left-0 bg-red-500 text-white text-xs px-2 py-1 rounded-bl-lg">EVENT</span>
         </div>
         <div class="mt-2">
-            <span class="block font-bold">${product.name}</span>
-            <span class="block text-gray-600 pl-32">${`₩ ` + product.price.toLocaleString()}</span>
+            <span class="block text-xl font-bold">${product.name}</span>
+            <span class="block text-gray-600 text-xl font-bold pl-32">${`₩ ` + product.price.toLocaleString()}</span>
         </div>
         <!-- 숨겨진 버튼 -->
         <button id="${product.menuId}" class="prevent-double-click hidden" onclick="addItemToOrder('${product.menuId}')">주문하기</button>
@@ -108,26 +100,39 @@ async function addItemToOrder(menuId) {
 
     // UI 업데이트
     const orderItem = document.createElement('div');
-    orderItem.className = 'order-item bg-gray-300 p-2 rounded-lg flex justify-between items-center w-full min-h-24';
+    orderItem.className = 'order-item bg-gray-100 p-2 rounded-lg flex justify-between items-center w-full min-h-24';
     orderItem.setAttribute('data-order-id', orderId); // 고유 ID 설정
     orderItem.innerHTML = `
-        <div class="bg-white w-full rounded-lg p-3 flex items-start space-x-4 shadow-md">
-            <img src="${product.image}" alt="${product.name}" class="w-12 h-12 rounded-md">
-            <div class="flex-1">
-                <div class="flex justify-between items-center">
-                    <h3 class="font-bold text-sm">${product.name}</h3>
-                    <p class="text-gray-600 text-sm font-bold">₩<span class="item-total font-bold">${product.price.toLocaleString()}</span></p>
-                </div>
+        <div class="w-full flex space-x-4">
+            <div class="flex flex-col items-center">
+                <!-- 이미지 -->
+                <img src="${product.image}" alt="${product.name}" class="w-14 h-14 rounded-md">
+                <!-- 버튼 그룹 -->
                 <div class="flex items-center space-x-2 mt-2">
-                    <button class="prevent-double-click px-2 py-1 bg-blue-500 text-white rounded-lg" 
-                        onclick="updateItemQuantity(this, -1, '${orderId}')">-</button>
-                    <span class="quantity bg-gray-100 px-3 py-1 rounded-lg text-center">1</span>
-                    <button class="prevent-double-click px-2 py-1 bg-green-500 text-white rounded-lg" 
-                        onclick="updateItemQuantity(this, 1, '${orderId}')">+</button>
+                    <button class="prevent-double-click h-6 text-white rounded-lg" 
+                        onclick="updateItemQuantity(this, -1, '${orderId}')">
+                    <img class="h-6" src="../../assets/basicImage/20241208_153430.png" alt="manus" />    
+                    </button>
+                    <span class="quantity h-6 rounded-lg text-center">1</span>
+                    <button class="prevent-double-click h-6 text-white rounded-lg" 
+                        onclick="updateItemQuantity(this, 1, '${orderId}')">
+                    <img class="h-6" src="../../assets/basicImage/20241208_153438.png" alt="plus" />    
+                    </button>
                 </div>
             </div>
-            <button class="text-red-500 text-sm" onclick="removeItemFromOrder(this, '${orderId}')">✖</button>
+            <div class="flex-1">
+                <!-- 상품명 및 가격 -->
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-xl">${product.name}</h3>
+                    <p class="text-gray-600 text-xl font-bold">₩<span class="item-total font-bold">${product.price.toLocaleString()}</span></p>
+                </div>
+            </div>
+            <!-- 삭제 버튼 -->
+            <button class="text-red-500 text-sm h-5" onclick="removeItemFromOrder(this, '${orderId}')">
+                <img class="h-6" src="../../assets/basicImage/20241208_154625.png" alt="delete" />
+            </button>
         </div>
+
     `;
     orderGrid.appendChild(orderItem);
 
@@ -146,7 +151,7 @@ function updateOrderSummary() {
     const countElement = document.getElementById("totalCount");
 
     if (priceElement) {
-        priceElement.textContent = `₩ ${totalPrice.toLocaleString()}`;
+        priceElement.textContent = `₩   ${totalPrice.toLocaleString()}`;
     }
     if (countElement) {
         countElement.textContent = `${totalCount}개`;

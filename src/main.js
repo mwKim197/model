@@ -83,6 +83,7 @@ function createWindow() {
         //alwaysOnTop: true,          // 항상 윈도우가맨위
         //fullscreen: true,           // 전체화면
         //autoHideMenuBar: true,      // 메뉴바 숨기기
+        icon: path.join(__dirname, "assets", "icons", "coffee_bean_icon.png"),
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
