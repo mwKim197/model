@@ -68,6 +68,7 @@ const processQueue = async (orderList, menuList) => {
             }
         } catch (error) {
             log.error(`주문 처리 중 오류 발생: 메뉴 ID ${order.menuId}, 주문 ID ${order.orderId}, 오류: ${error.message}`);
+            throw error; // 전체 프로세스 중단
         }
     }
 };
@@ -194,7 +195,7 @@ const dispenseIce = (recipe) => {
             log.info('출빙 요청이 완료되었습니다. 상태를 감시합니다.');
             log.info('얼음을 받아주세요'); // [TODO] 음성 메시지 호출
 
-            for (let counter = 0; counter < 60; counter++) {
+            for (let counter = 0; counter < 120; counter++) {
                 const result = await Ice.getKaiserInfo();
 
                 log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(result)} ${counter}/60`);
@@ -206,7 +207,7 @@ const dispenseIce = (recipe) => {
                     resolve();
                     return;
                 }
-                if(counter >= 59) {
+                if(counter >= 119) {
                     reject(new Error('작업 시간이 초과되었습니다.'));
                     return;
                 }
@@ -258,9 +259,10 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
                 }
 
                 const isStopped = await checkAutoOperationState("정지", 3);
+                const isStartValid = await checkCupSensor("없음", 3);
 
-                if (isStopped) {
-                    log.info("coffee 추출 완료 확인");
+                if (isStopped && isStartValid) {
+                    log.info(`coffee 추출 완료: ${isStopped} 음료 회수여부 확인: ${isStartValid}`);
                     resolve(); // 성공적으로 종료
                     break; // 루프 중단
                 }
@@ -307,9 +309,10 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
                 }
 
                 const isStopped = await checkAutoOperationState("정지", 3);
+                const isStartValid = await checkCupSensor("없음", 3);
 
-                if (isStopped) {
-                    log.info("Tea 추출 완료 확인");
+                if (isStopped && isStartValid) {
+                    log.info(`Tea 추출 완료: ${isStopped} 음료 회수여부 확인: ${isStartValid}`);
                     resolve(); // 성공적으로 종료
                     break; // 루프 중단
                 }
@@ -355,9 +358,10 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
                 }
 
                 const isStopped = await checkAutoOperationState("정지", 3);
+                const isStartValid = await checkCupSensor("없음", 3);
 
-                if (isStopped) {
-                    log.info("Syrup 추출 완료 확인");
+                if (isStopped && isStartValid) {
+                    log.info(`Syrup 추출 완료: ${isStopped} 음료 회수여부 확인: ${isStartValid}`);
                     resolve(); // 성공적으로 종료
                     break; // 루프 중단
                 }
@@ -404,7 +408,7 @@ const checkCupSensor = async (expectedState, threshold) => {
 const checkAutoOperationState = async (expectedState, threshold) => {
     let stateCount = 0; // 상태 카운터
 
-    for (let counter = 0; counter < 600; counter++) {
+    for (let counter = 0; counter < 1200; counter++) {
         const startTime = Date.now(); // 루프 시작 시간 기록
 
         await McData.updateSerialData('RD1', 'RD1');
