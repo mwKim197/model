@@ -274,7 +274,7 @@ document.getElementById('payment').addEventListener('click', async () => {
                 const res = await orderApi.reqVCAT_HTTP(price, "00");
                 //const res = {success: true};
                 resolve(res); // 결제 결과 반환
-            }, 1000);
+            }, 500);
         });
 
 
