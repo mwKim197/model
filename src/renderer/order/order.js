@@ -53,6 +53,12 @@ function displayProducts(products) {
         // 부모 컨테이너에 추가
         productGrid.appendChild(card);
     });
+
+    // 스크롤을 최상단으로 이동
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth', // 부드러운 스크롤
+    });
 }
 async function addItemToOrder(menuId) {
     // 상품 검색
@@ -312,7 +318,9 @@ document.getElementById('payment').addEventListener('click', async () => {
 async function fetchData() {
     try {
         const allData = await menuApi.getMenuInfoAll();
+        const userInfo = await menuApi.getUserInfo();
         console.log('Fetched Data:', allData);
+        console.log('Fetched Data:', userInfo);
 
         // 데이터가 올바르게 로드되었는지 확인
         if (!allData || !Array.isArray(allData.Items)) {

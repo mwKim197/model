@@ -8,6 +8,23 @@ function sendLogToMain(level, message) {
 /*sendLogToMain('info', '렌더러에서 보내는 정보 로그');
 sendLogToMain('error', '렌더러 에러 발생');*/
 
+const getUserInfo = async () => {
+    try {
+        const response = await fetch('http://localhost:3000/get-user-info');
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        sendLogToMain('info','SCF: ', data);  // 디버깅용 콘솔
+        return data;
+    } catch (error) {
+        sendLogToMain('error','Error fetching menu info:', error);
+        log.error(error);
+    }
+}
+
+
 const getMenuInfo = async () => {
     try {
         const response = await fetch('http://localhost:3000/get-menu-info');
@@ -16,7 +33,7 @@ const getMenuInfo = async () => {
         }
 
         const data = await response.json();
-        sendLogToMain('info','SCF: ', data);  // 디버깅용 콘솔
+        sendLogToMain('info','MENU: ', data);  // 디버깅용 콘솔
         log.info(data);
         document.getElementById('data').textContent = JSON.stringify(data);
     } catch (error) {
@@ -36,7 +53,7 @@ const getMenuInfoAll = async () => {
 
         const data = await response.json();
         log.info(data);
-        sendLogToMain('info','DATA: ', data);  // 디버깅용 콘솔
+        sendLogToMain('info','MENU-ALL: ', data);  // 디버깅용 콘솔
         return data;
     } catch (error) {
         sendLogToMain('error','Error fetching menu info:', error);
@@ -366,6 +383,7 @@ const fetchIceInfo = async () => {
 
 
 module.exports = {
+    getUserInfo,
     getMenuInfo,
     getMenuInfoAll,
     setMenuInfo,

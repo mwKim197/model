@@ -1,7 +1,22 @@
 const express = require('express');
 const Menu = express.Router();
 const {checkProduct, addProduct, allProduct} = require('./utils/getMenu');
+const getUser = require('../../util/getUser');
 const log = require("../../logger");
+
+
+
+Menu.get('/get-user-info', async (req, res) => {
+    try {
+        const data = await getUser();
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.json(data);
+    } catch (err) {
+        log.error(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
 
 Menu.get('/get-menu-info', async (req, res) => {
     try {

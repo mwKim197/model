@@ -9,10 +9,10 @@
 <body>
     <div id="buttonContainer" class="flex h-screen">
         <!-- 왼쪽: 메뉴 그리드 -->
-        <div class="flex-1 bg-white p-4 h-screen overflow-y-scroll scrollbar-hide bg-no-repeat bg-cover bg-center" style="background-image: url('../../assets/basicImage/투명.png'); background-size: 80%; background-position: center;" >
+        <div class="flex-1 bg-white px-4 h-screen overflow-y-scroll scrollbar-hide bg-no-repeat bg-cover bg-center" style="background-image: url('../../assets/basicImage/투명.png'); background-size: 80%; background-position: center;" >
 
             <!-- 카테고리 -->
-            <nav class="flex justify-between mb-4 border-b">
+            <nav class="sticky top-0 h-12 bg-white flex justify-between mb-4 border-b z-50">
                 <div class="menu-tab active flex-1 text-center py-2 hover:bg-gray-200 transition-colors duration-200" data-category="all">전체메뉴</div>
                 <div class="menu-tab flex-1 text-center py-2 hover:bg-gray-200 transition-colors duration-200" data-category="coffee">커피</div>
                 <div class="menu-tab flex-1 text-center py-2 hover:bg-gray-200 transition-colors duration-200" data-category="ade">에이드</div>
@@ -20,21 +20,30 @@
                 <div class="menu-tab flex-1 text-center py-2 hover:bg-gray-200 transition-colors duration-200" data-category="order">기타음료</div>
             </nav>
 
-            <!-- 메뉴 아이템 그리드 -->
-            <div id="productGrid" class="grid grid-cols-6 gap-4">
-                <!-- 예시 메뉴 카드 -->
-                <div class="bg-gray-200 rounded-lg p-2 text-center shadow-md">
-                    <div class="relative">
-                        <img src="https://via.placeholder.com/100" alt="아메리카노 (HOT)" class="w-full rounded-md">
-                        <span class="absolute top-0 left-0 bg-red-500 text-white text-xs px-2 py-1 rounded-bl-lg">EVENT</span>
+            <!-- productGrid 컨테이너 -->
+            <div id="productGridContainer" class="relative">
+                <div id="productGrid" class="grid grid-cols-6 gap-4 pb-14">
+                    <!-- 예시 메뉴 카드 -->
+                    <div class="bg-gray-200 rounded-lg p-2 text-center shadow-md">
+                        <div class="relative">
+                            <img src="https://via.placeholder.com/100" alt="아메리카노 (HOT)" class="w-full rounded-md">
+                            <span class="absolute top-0 left-0 bg-red-500 text-white text-xs px-2 py-1 rounded-bl-lg">EVENT</span>
+                        </div>
+                        <div class="mt-2">
+                            <span class="block font-bold">아메리카노 (HOT)</span>
+                            <span class="block text-gray-600">₩3,000</span>
+                        </div>
                     </div>
-                    <div class="mt-2">
-                        <span class="block font-bold">아메리카노 (HOT)</span>
-                        <span class="block text-gray-600">₩3,000</span>
-                    </div>
+                    <!-- 다른 메뉴 카드 반복 -->
                 </div>
-                <!-- 다른 메뉴 카드 반복 -->
             </div>
+
+            <!-- 고정된 한 줄 -->
+            <div class="fixed bottom-0 left-0 w-[calc(100%-25%)] bg-white p-4 mt-4 border-t text-center z-50">
+                <p class="font-bold text-lg text-gray-700">고정된 한 줄 메시지: 여기에 중요한 정보를 표시하세요.</p>
+            </div>
+
+
         </div>
 
         <!-- 오른쪽: 주문 리스트 -->
@@ -52,20 +61,22 @@
             <!-- 하단 버튼 -->
             <div class="flex justify-between items-end border-t pt-2 relative h-56">
                 <!-- 왼쪽: 금액 및 개수와 전체취소 버튼 묶음 -->
-                <div class="flex flex-col ml-10">
+                <div class="flex flex-col justify-between w-1/2 ml-4 pr-1 mr-4">
                     <div class="text-right">
                         <span id="totalCount" class="text-xl text-gray-600">0개</span>
                         <span id="totalAmt" class="block font-bold text-2xl">₩ 0</span>
                     </div>
-                    <button class="prevent-double-click bg-red-500 pb-1 w-96 h-24 text-xl text-white px-4 py-2 rounded-t-lg mt-2" onclick="removeAllItemsFromOrder()">전체취소</button>
+                    <button class="prevent-double-click bg-red-500 text-xl text-white w-full py-4 rounded-t-3xl mt-4" onclick="removeAllItemsFromOrder()">전체취소</button>
                 </div>
 
                 <!-- 오른쪽: 결제하기 버튼 -->
-                <button id="payment"
-                        class="prevent-double-click bg-blue-500 text-xl text-white py-10 px-28 rounded-tl-lg absolute bottom-0 right-0 mt-1">
-                    <img class="w-20" src="../../assets/basicImage/wallet.png" alt="wallet" />
-                    결제하기
-                </button>
+                <div class="flex flex-col w-1/2 h-44">
+                    <button id="payment"
+                            class="prevent-double-click bg-blue-500 text-xl text-white w-full h-full py-4 rounded-tl-3xl flex flex-col items-center justify-center space-y-2">
+                        <img class="w-10" src="../../assets/basicImage/wallet.png" alt="wallet" />
+                        <span>결제하기</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

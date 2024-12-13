@@ -59,8 +59,8 @@ const allProduct = async () => {
 
 const checkProduct = async () => {
     const menuId = await getCounterValue(user.userId);
-    console.log(user.userId)
-    console.log(menuId)
+    console.log(user.userId);
+    console.log(menuId);
     const params = {
         TableName: 'model_menu',
         Key: {
