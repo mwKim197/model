@@ -198,7 +198,7 @@ const dispenseIce = (recipe) => {
             for (let counter = 0; counter < 120; counter++) {
                 const result = await Ice.getKaiserInfo();
 
-                log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(result)} ${counter}/60`);
+                log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(result)} ${counter}/120`);
                 const hexArray = result.match(/.{1,2}/g);
                 console.log(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(hexArray)}`);
                 if (hexArray[6] !== totalTime) {
@@ -208,6 +208,7 @@ const dispenseIce = (recipe) => {
                     return;
                 }
                 if(counter >= 119) {
+                    await Ice.sendIceStopPacket();
                     reject(new Error('작업 시간이 초과되었습니다.'));
                     return;
                 }
