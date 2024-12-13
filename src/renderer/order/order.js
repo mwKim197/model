@@ -268,13 +268,13 @@ document.getElementById('payment').addEventListener('click', async () => {
     // 열기
     modal.classList.remove('hidden');
     try {
-        // 1초 대기 후 결제 API 호출
+        // 0.1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {
             setTimeout(async () => {
                 const res = await orderApi.reqVCAT_HTTP(price, "00");
                 //const res = {success: true};
                 resolve(res); // 결제 결과 반환
-            }, 500);
+            }, 100);
         });
 
 
