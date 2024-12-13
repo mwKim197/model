@@ -52,10 +52,10 @@ function displayProducts(products) {
         </div>
         <div class="mt-2">
             <span class="block font-bold">${product.name}</span>
-            <span class="block text-gray-600">${`₩ ` + product.price.toLocaleString()}</span>
+            <span class="block text-gray-600 pl-32">${`₩ ` + product.price.toLocaleString()}</span>
         </div>
         <!-- 숨겨진 버튼 -->
-        <button id="${product.menuId}" class="hidden" onclick="addItemToOrder('${product.menuId}')">주문하기</button>
+        <button id="${product.menuId}" class="prevent-double-click hidden" onclick="addItemToOrder('${product.menuId}')">주문하기</button>
     `;
 
         // 부모 컨테이너에 추가
@@ -119,10 +119,10 @@ async function addItemToOrder(menuId) {
                     <p class="text-gray-600 text-sm font-bold">₩<span class="item-total font-bold">${product.price.toLocaleString()}</span></p>
                 </div>
                 <div class="flex items-center space-x-2 mt-2">
-                    <button class="px-2 py-1 bg-blue-500 text-white rounded-lg" 
+                    <button class="prevent-double-click px-2 py-1 bg-blue-500 text-white rounded-lg" 
                         onclick="updateItemQuantity(this, -1, '${orderId}')">-</button>
                     <span class="quantity bg-gray-100 px-3 py-1 rounded-lg text-center">1</span>
-                    <button class="px-2 py-1 bg-green-500 text-white rounded-lg" 
+                    <button class="prevent-double-click px-2 py-1 bg-green-500 text-white rounded-lg" 
                         onclick="updateItemQuantity(this, 1, '${orderId}')">+</button>
                 </div>
             </div>
@@ -205,16 +205,20 @@ function updateItemQuantity(button, delta, orderId) {
 }
 // 전체 아이템 삭제 함수
 function removeAllItemsFromOrder() {
-    // 주문 목록 초기화
-    orderList = [];
+    
+    // [TODO] 추후 모달 적용
+    if (orderList.length > 0 && confirm("모든 주문을 삭제 하시겠습니까?")) {
+        // 주문 목록 초기화
+        orderList = [];
 
-    // UI에서 모든 주문 항목 삭제
-    const orderGrid = document.getElementById('orderGrid');
-    if (orderGrid) {
-        orderGrid.innerHTML = ''; // 모든 하위 요소 제거
+        // UI에서 모든 주문 항목 삭제
+        const orderGrid = document.getElementById('orderGrid');
+        if (orderGrid) {
+            orderGrid.innerHTML = ''; // 모든 하위 요소 제거
+        }
+        updateOrderSummary();
+        console.log('모든 주문 항목이 삭제되었습니다.');    
     }
-    updateOrderSummary();
-    console.log('모든 주문 항목이 삭제되었습니다.');
 }
 
 
@@ -318,5 +322,37 @@ async function fetchData() {
         console.error("데이터 로드 중 오류 발생:", error);
     }
 }
+
+
+/* 버튼 비동기 처리 0.2 초대기*/
+// 플래그 객체로 버튼 ID별 상태 관리
+const buttonFlags = {};
+
+// 이벤트 위임을 통해 모든 버튼 처리
+document.getElementById("buttonContainer").addEventListener("click", async (event) => {
+    const button = event.target;
+
+    // 특정 클래스(`prevent-double-click`)만 처리
+    if (!button.classList.contains("prevent-double-click")) return;
+
+    const buttonId = button.innerText; // 버튼의 고유 ID 또는 다른 구분자
+    if (buttonFlags[buttonId]) return; // 중복 클릭 방지
+
+    try {
+        buttonFlags[buttonId] = true; // 상태 설정
+        button.disabled = true; // 버튼 비활성화
+        console.log(`${buttonId} 작업 시작`);
+
+        // 비동기 작업 시뮬레이션
+        await new Promise(resolve => setTimeout(resolve, 200)); // 0.2초 대기
+        console.log(`${buttonId} 작업 완료`);
+    } catch (error) {
+        console.error(`${buttonId} 작업 중 에러 발생:`, error);
+    } finally {
+        buttonFlags[buttonId] = false; // 상태 초기화
+        button.disabled = false; // 버튼 활성화
+    }
+});
+
 
 fetchData().then();  // 함수 호출

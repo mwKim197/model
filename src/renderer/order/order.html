@@ -7,7 +7,7 @@
     <link href="../../styles/output.css" rel="stylesheet">
 </head>
 <body>
-    <div class="flex h-screen bg-gray-100">
+    <div id="buttonContainer" class="flex h-screen bg-gray-100">
         <!-- 왼쪽: 메뉴 그리드 -->
         <div class="flex-1 bg-white p-4 h-screen overflow-y-scroll scrollbar-hide">
             <!-- 카테고리 -->
@@ -20,7 +20,7 @@
             </nav>
 
             <!-- 메뉴 아이템 그리드 -->
-            <div id="productGrid" class="grid grid-cols-4 gap-4">
+            <div id="productGrid" class="grid grid-cols-6 gap-4">
                 <!-- 예시 메뉴 카드 -->
                 <div class="bg-gray-200 rounded-lg p-2 text-center shadow-md">
                     <div class="relative">
@@ -37,7 +37,7 @@
         </div>
 
         <!-- 오른쪽: 주문 리스트 -->
-        <div class="w-1/3 bg-gray-200 p-4 flex flex-col justify-between">
+        <div class="w-1/3 bg-gray-200 pt-4 pl-4 flex flex-col justify-between">
             <!-- 주문 리스트 헤더 -->
             <div class="flex items-center justify-between border-b pb-2 mb-4">
                 <h2 class="text-xl font-bold">Model Zero</h2>
@@ -48,13 +48,22 @@
                 <!-- 다른 주문 아이템 반복 -->
             </div>
             <!-- 하단 버튼 -->
-            <div class="flex items-center justify-between border-t pt-2">
-                <button class="bg-red-500 text-white px-4 py-2 rounded-lg" onclick="removeAllItemsFromOrder()" >전체취소</button>
-                <div class="text-center">
-                    <span id="totalAmt" class="block font-bold text-lg">₩0</span>
-                    <span id="totalCount" class="text-xs text-gray-600">0개</span>
+            <div class="flex justify-between items-end border-t pt-2 relative h-[135px]">
+                <!-- 왼쪽: 금액 및 개수와 전체취소 버튼 묶음 -->
+                <div class="flex flex-col ml-10">
+                    <div class="text-right">
+                        <span id="totalCount" class="text-xl text-gray-600">0개</span>
+                        <span id="totalAmt" class="block font-bold text-2xl">₩0</span>
+                    </div>
+                    <button class="prevent-double-click bg-red-500 w-48 h-12 text-white px-4 py-2 rounded-lg mt-2" onclick="removeAllItemsFromOrder()">전체취소</button>
                 </div>
-                <button id="payment" class="bg-blue-500 text-white px-4 py-2 rounded-lg">결제하기</button>
+
+                <!-- 오른쪽: 결제하기 버튼 -->
+                <button id="payment"
+                        class="prevent-double-click bg-blue-500 text-white px-6 rounded-lg absolute bottom-0 right-0">
+                    <img src="../../assets/basicImage/wallet.png" alt="wallet" />
+                    결제하기
+                </button>
             </div>
         </div>
     </div>
