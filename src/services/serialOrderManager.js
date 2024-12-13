@@ -63,7 +63,7 @@ const processQueue = async (orderList, menuList) => {
                     log.info(`주문 처리 완료 (${i + 1}/${order.count}): ${recipe.name} - [메뉴 ID: ${recipe.menuId}, 주문 ID: ${order.orderId}]`);
                 } catch (error) {
                     log.error(`주문 처리 중 오류 발생 (count ${i + 1}/${order.count}): 메뉴 ID ${recipe.menuId}, 오류: ${error.message}`);
-                    throw error;// 전체 주문 중단 (다음 주문으로 이동)
+                    throw error;// 전체 주문 중단
                 }
             }
         } catch (error) {
