@@ -26,7 +26,6 @@ let isDataLoaded = false;
 const productGrid = document.getElementById('productGrid');
 const orderGrid = document.getElementById('orderGrid');
 
-
 // 필터된 제품을 표시하는 함수
 function displayProducts(products) {
     productGrid.innerHTML = '';
@@ -42,11 +41,37 @@ function displayProducts(products) {
 
         });
 
+        // 왼쪽, 오른쪽, 하단 배지 데이터
+        const leftBadge = product.state?.eventTop; // 왼쪽 배지
+        const rightBadge = product.state?.hotAndIce; // 오른쪽 배지
+        const bottomBadge = product.state?.eventBottom; // 하단 배지
+
+        // 왼쪽 배지 이미지 렌더링
+        const leftBadgeImage = leftBadge
+            ? `<img src="../../assets/basicImage/${leftBadge}.png" alt="Left Badge" 
+                class="absolute top-0 left-0 w-16 h-16 object-cover"/>`
+            : '';
+
+        // 오른쪽 배지 이미지 렌더링
+        const rightBadgeImage = rightBadge
+            ? `<img src="../../assets/basicImage/${rightBadge}.png" alt="Right Badge" 
+                class="absolute top-0 right-0 w-12 h-12 object-cover"/>`
+            : '';
+
+        // 하단 배지 이미지 렌더링
+        const bottomBadgeImage = bottomBadge
+            ? `<img src="../../assets/basicImage/${bottomBadge}.png" alt="Bottom Badge" 
+                class="absolute bottom-0 left-0 w-16 h-16 object-cover"/>`
+            : '';
+
         // 카드 내용 추가
         card.innerHTML = `
         <div class="relative">
             <img src="https://via.placeholder.com/100" alt="${product.name}" class="w-full rounded-md"/>
-            <span class="absolute top-0 left-0 bg-red-500 text-white text-xs px-2 py-1 rounded-bl-lg">EVENT</span>
+             <!-- 겹쳐지는 이미지 -->
+            ${leftBadgeImage} <!-- 왼쪽 배지 -->
+            ${rightBadgeImage} <!-- 오른쪽 배지 -->
+            ${bottomBadgeImage} <!-- 하단 배지 -->
         </div>
         <div class="mt-2">
             <span class="block text-xl font-bold">${product.name}</span>
@@ -60,12 +85,8 @@ function displayProducts(products) {
         productGrid.appendChild(card);
     });
 
-    // 스크롤을 최상단으로 이동
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth', // 부드러운 스크롤
-    });
 }
+
 async function addItemToOrder(menuId) {
     // 상품 검색
     const product = allProducts.find(p => p.menuId === menuId);
