@@ -80,25 +80,22 @@ const processOrder = async (recipe) => {
         await dispenseCup(recipe);
 
         if (recipe.iceYn === 'yes') await dispenseIce(recipe);
-        console.log(`제조 menu: ${recipe.menuId} - ${recipe.name}`);
 
         const sortedItems = [...recipe.items].sort((a, b) => a.no - b.no);
         for (const [index, item] of sortedItems.entries()) {
             try {
-                console.log(`제조 item: No ${item.no}, Type ${item.type}`);
 
                 // 첫 번째 항목에만 컵 센서 체크 로직 추가
                 if (index === 0) {
-                    console.log(`컵 센서 체크 시작: item No ${item.no}`);
 
                     // 타임아웃 체크
                     const isStartValid = await checkCupSensor("있음", 3);
                     if (!isStartValid) {
-                        console.error(`[에러] 컵 센서 상태가 유효하지 않음: menuId ${recipe.menuId}`);
+                        log.error(`[에러] 컵 센서 상태가 유효하지 않음: menuId ${recipe.menuId}`);
                         throw new Error(`Invalid cup sensor state for menuId ${recipe.menuId}`);
                     }
 
-                    console.log(`컵 센서 상태 확인 완료: menuId ${recipe.menuId}`);
+                    log.info(`컵 센서 상태 확인 완료: menuId ${recipe.menuId}`);
                 }
 
                 // 각 타입별 작업 처리
@@ -113,18 +110,28 @@ const processOrder = async (recipe) => {
                         await dispenseSyrup(item.value1, item.value2, item.value3, item.value4);
                         break;
                     default:
-                        console.warn(`아이템 타입을 찾을 수 없습니다.: ${item.type}`);
+                        log.warn(`아이템 타입을 찾을 수 없습니다.: ${item.type}`);
                         break;
                 }
+
+                if (index === sortedItems.length - 1) {
+                    const isEndValid = await checkCupSensor("없음", 3);
+                    if (!isEndValid) {
+                        log.error(`[에러] 컵 센서 상태가 유효하지 않음 (회수 실패): menuId ${recipe.menuId}`);
+                        throw new Error(`Invalid cup sensor state after manufacturing for menuId ${recipe.menuId}`);
+                    }
+
+                    log.info(`컵 센서 상태 확인 완료 (회수 성공): menuId ${recipe.menuId}`);
+                }
             } catch (error) {
-                console.error(`[에러] 제조 item No ${item.no} in menu ${recipe.menuId}: ${error.message}`);
+                log.error(`[에러] 제조 item No ${item.no} in menu ${recipe.menuId}: ${error.message}`);
                 throw error; // 에러를 상위로 전파
             }
         }
 
-        console.log(`제조완료 menu: ${recipe.menuId}`);
+        log.info(`제조완료 menu: ${recipe.menuId}`);
     } catch (error) {
-        console.error(`[에러] 메뉴 제조 실패: menuId ${recipe.menuId}, 이유: ${error.message}`);
+        log.error(`[에러] 메뉴 제조 실패: menuId ${recipe.menuId}, 이유: ${error.message}`);
         throw error; // 상위 호출자로 에러 전파
     }
 };
@@ -191,7 +198,7 @@ const dispenseIce = (recipe) => {
             await Ice.sendIceRunPacket();
             const initialStatus = await Ice.getKaiserInfo();
             totalTime = initialStatus.match(/.{1,2}/g)[6];
-            console.log(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(totalTime)}`);
+            log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(totalTime)}`);
             log.info('출빙 요청이 완료되었습니다. 상태를 감시합니다.');
             log.info('얼음을 받아주세요'); // [TODO] 음성 메시지 호출
 
@@ -200,7 +207,7 @@ const dispenseIce = (recipe) => {
 
                 log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(result)} ${counter}/120`);
                 const hexArray = result.match(/.{1,2}/g);
-                console.log(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(hexArray)}`);
+                log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(hexArray)}`);
                 if (hexArray[6] !== totalTime) {
                     log.info('2단계 완료: 얼음 배출 완료 및 다음 플로우로 진행');
                     await Ice.sendIceStopPacket();
@@ -248,27 +255,11 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
             log.info(`coffee 추출 실행`);
             await Order.extractCoffee();
 
-            // 상태 확인을 위한 루프
-            const startTime = Date.now(); // 시작 시간 기록
-            const timeout = 120 * 1000; // 120초 제한
+            const isStopped = await checkAutoOperationState("정지", 3);
 
-            while (true) {
-                if (Date.now() - startTime > timeout) {
-                    log.error("120초 타임아웃 발생");
-                    reject(new Error("coffee 추출 중 타임아웃 발생"));
-                    break; // 루프 중단
-                }
-
-                const isStopped = await checkAutoOperationState("정지", 3);
-                const isStartValid = await checkCupSensor("없음", 3);
-
-                if (isStopped && isStartValid) {
-                    log.info(`coffee 추출 완료: ${isStopped} 음료 회수여부 확인: ${isStartValid}`);
-                    resolve(); // 성공적으로 종료
-                    break; // 루프 중단
-                }
-
-                await new Promise((r) => setTimeout(r, 200)); // 0.2초 대기 후 재확인
+            if (isStopped) {
+                log.info(`coffee 추출 완료: ${isStopped}`);
+                resolve(); // 성공적으로 종료
             }
         } catch (error) {
             log.error('dispenseCoffee 오류:', error.message);
@@ -298,28 +289,13 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
             log.info(`${motor} Tea 추출 실행`);
             await Order.extractTeaPowder();
 
-            // 상태 확인을 위한 루프
-            const startTime = Date.now(); // 시작 시간 기록
-            const timeout = 120 * 1000; // 120초 제한
+            const isStopped = await checkAutoOperationState("정지", 3);
 
-            while (true) {
-                if (Date.now() - startTime > timeout) {
-                    log.error("120초 타임아웃 발생");
-                    reject(new Error("Tea 추출 중 타임아웃 발생"));
-                    break; // 루프 중단
-                }
-
-                const isStopped = await checkAutoOperationState("정지", 3);
-                const isStartValid = await checkCupSensor("없음", 3);
-
-                if (isStopped && isStartValid) {
-                    log.info(`Tea 추출 완료: ${isStopped} 음료 회수여부 확인: ${isStartValid}`);
-                    resolve(); // 성공적으로 종료
-                    break; // 루프 중단
-                }
-
-                await new Promise((r) => setTimeout(r, 200)); // 0.2초 대기 후 재확인
+            if (isStopped) {
+                log.info(`Tea 추출 완료: ${isStopped}`);
+                resolve(); // 성공적으로 종료
             }
+
         } catch (error) {
             log.error('dispenseGarucha 오류:', error.message);
             return reject(error);
@@ -347,27 +323,11 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
             log.info(`${motor} Syrup 추출 실행`);
             await Order.extractSyrup();
 
-            // 상태 확인을 위한 루프
-            const startTime = Date.now(); // 시작 시간 기록
-            const timeout = 120 * 1000; // 120초 제한
+            const isStopped = await checkAutoOperationState("정지", 3);
 
-            while (true) {
-                if (Date.now() - startTime > timeout) {
-                    log.error("120초 타임아웃 발생");
-                    reject(new Error("Syrup 추출 중 타임아웃 발생"));
-                    break; // 루프 중단
-                }
-
-                const isStopped = await checkAutoOperationState("정지", 3);
-                const isStartValid = await checkCupSensor("없음", 3);
-
-                if (isStopped && isStartValid) {
-                    log.info(`Syrup 추출 완료: ${isStopped} 음료 회수여부 확인: ${isStartValid}`);
-                    resolve(); // 성공적으로 종료
-                    break; // 루프 중단
-                }
-
-                await new Promise((r) => setTimeout(r, 200)); // 0.2초 대기 후 재확인
+            if (isStopped) {
+                log.info(`Syrup 추출 완료: ${isStopped}`);
+                resolve(); // 성공적으로 종료
             }
         } catch (error) {
             log.error('dispenseSyrup 오류:', error.message);
@@ -383,7 +343,7 @@ const checkCupSensor = async (expectedState, threshold) => {
         const startTime = Date.now(); // 루프 시작 시간 기록
         await McData.updateSerialData('RD1', 'RD1');
         const data = McData.getSerialData('RD1');
-        log.info(`컵 센서 time out 체크 ${counter}/ 120}`);
+        log.info(`컵 센서 time out 여부 ${expectedState} :  ${counter}/ 120`);
         if (data.cupSensor === expectedState) {
             stateCount++;
             log.info(`Sensor state is '${expectedState}', count: ${stateCount}`);
