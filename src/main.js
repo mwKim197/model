@@ -50,7 +50,6 @@ appServer.use(Ice);     // 카이저 ICE
 appServer.use(Cup);     // 컵 디스펜서
 appServer.use(Menu);    // MENU DB
 
-
 appServer.use((req, res, next) => {
     console.log(`Request URL: ${req.url}`);
     next();
@@ -75,6 +74,7 @@ appServer.get('/version', (req, res) => {
     res.json({ version: packageJson.version });
 });
 
+
 // Electron 창 설정
 function createWindow() {
     const win = new BrowserWindow({
@@ -92,9 +92,18 @@ function createWindow() {
 
     win.loadFile(path.join(__dirname, 'renderer', 'index', 'index.html'));
 
+
+    // 주기적으로 렌더러에 데이터 전송
+    setInterval(() => {
+        const serialData = polling.getSerialData('RD1'); // RD1 데이터 가져오기
+        console.log('Sending serialData to renderer:', serialData);
+        win.webContents.send('update-serial-data', serialData);
+    }, 3000); // 3초마다 데이터 전송
+
+
     const { ipcMain } = require('electron');
 
-// 페이지 변경 핸들러
+    // 페이지 변경 핸들러
     ipcMain.on('navigate-to-page', (event,{pageName, data} ) => {
         const win = BrowserWindow.getFocusedWindow(); // 현재 활성화된 창
         const filePath = path.join(__dirname, 'renderer', pageName, `${pageName}.html`);
@@ -160,7 +169,7 @@ app.whenReady().then(async () => {
     // polling.startPolling() 호출 전 상태 확인
     console.log('Before startPolling:', polling.pollingTimer, polling.isPollingActive);
 
-    // polling.startPolling() 호출
+    // 폴링 호출
     await polling.startPolling();
 
     // polling.startPolling() 호출 후 상태 확인

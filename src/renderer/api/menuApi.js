@@ -24,7 +24,6 @@ const getUserInfo = async () => {
     }
 }
 
-
 const getMenuInfo = async () => {
     try {
         const response = await fetch('http://localhost:3000/get-menu-info');

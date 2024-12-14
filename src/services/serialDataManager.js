@@ -49,8 +49,6 @@ class serialDataManager {
                 this.isPollingActive = false;
             }
         }, this.interval);
-
-
     }
     // 데이터 조회 정지 함수
     async stopPolling() {

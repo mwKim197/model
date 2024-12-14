@@ -319,6 +319,11 @@ document.getElementById('payment').addEventListener('click', async () => {
     }
 });
 
+// polling 으로 받아온 RD1상태를 노출한다.
+ipcRenderer.on('update-serial-data', (event, data) => {
+    console.log('Received serial data:', data);
+});
+
 async function fetchData() {
     try {
         const allData = await menuApi.getMenuInfoAll();
