@@ -1174,9 +1174,9 @@ video {
 }
 
 @font-face {
-  font-family: 'LightFont';
+  font-family: 'Light';
 
-  src: url('../assets/fonts/Gong Gothic Light.ttf') format('truetype');
+  src: url('../styles/fonts/Light.ttf') format('truetype');
 
   font-weight: normal;
 

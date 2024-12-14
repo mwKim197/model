@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 @font-face {
-    font-family: 'LightFont';
-    src: url('../assets/fonts/Gong Gothic Light.ttf') format('truetype');
+    font-family: 'Light';
+    src: url('../styles/fonts/Light.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
