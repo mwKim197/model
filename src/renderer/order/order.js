@@ -220,16 +220,20 @@ function removeAllItemsFromOrder() {
     // [TODO] 추후 모달 적용
     if (orderList.length > 0 && confirm("모든 주문을 삭제 하시겠습니까?")) {
         // 주문 목록 초기화
-        orderList = [];
-
-        // UI에서 모든 주문 항목 삭제
-        const orderGrid = document.getElementById('orderGrid');
-        if (orderGrid) {
-            orderGrid.innerHTML = ''; // 모든 하위 요소 제거
-        }
-        updateOrderSummary();
-        console.log('모든 주문 항목이 삭제되었습니다.');    
+        removeAllItem();
     }
+}
+
+function removeAllItem() {
+    orderList = [];
+
+    // UI에서 모든 주문 항목 삭제
+    const orderGrid = document.getElementById('orderGrid');
+    if (orderGrid) {
+        orderGrid.innerHTML = ''; // 모든 하위 요소 제거
+    }
+    updateOrderSummary();
+    console.log('모든 주문 항목이 삭제되었습니다.');
 }
 
 
@@ -297,7 +301,7 @@ document.getElementById('payment').addEventListener('click', async () => {
             modal.classList.add('hidden');
             //ipcRenderer.send('navigate-to-page', { pageName: 'make', data: orderList }); // 'make' 페이지로 이동
             await orderApi.reqOrder(orderList); // 주문 처리
-            removeAllItemsFromOrder(); // 주문 목록삭제
+            removeAllItem(); // 주문 목록삭제
         } else {
             // 결제 실패 처리
             modal.classList.add('hidden');
@@ -311,7 +315,7 @@ document.getElementById('payment').addEventListener('click', async () => {
         alert("결제 처리 중 오류가 발생했습니다.");
         sendLogToMain('error', `결제 오류: ${error.message}`);
         console.error("결제 오류: ", error.message);
-        removeAllItemsFromOrder(); // 주문 목록삭제
+        removeAllItem(); // 주문 목록삭제
     }
 });
 
