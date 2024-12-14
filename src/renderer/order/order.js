@@ -8,7 +8,11 @@ function sendLogToMain(level, message) {
     ipcRenderer.send('log-to-main', {level, message});
 }
 
+// 주문리스트
 let orderList = [];
+
+// polling 된 RD1 데이터
+let rd1Info = {};
 
 const data = image.downloadAllFromS3WithCache("model-narrow-road", "model/test_user1");
 
@@ -321,7 +325,7 @@ document.getElementById('payment').addEventListener('click', async () => {
 
 // polling 으로 받아온 RD1상태를 노출한다.
 ipcRenderer.on('update-serial-data', (event, data) => {
-    console.log('Received serial data:', data);
+    rd1Info = data;
 });
 
 async function fetchData() {
@@ -376,5 +380,39 @@ document.getElementById("buttonContainer").addEventListener("click", async (even
     }
 });
 
+function getCurrentFormattedTime() {
+    const now = new Date();
+
+    // 연도
+    const year = now.getFullYear();
+
+    // 월 (0부터 시작하므로 1을 더함)
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+
+    // 일
+    const day = String(now.getDate()).padStart(2, '0');
+
+    // 시간
+    const hours = String(now.getHours()).padStart(2, '0');
+
+    // 분
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+
+    // 초
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+
+    // 형식에 맞게 조합
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+function updateTime() {
+    const currentTimeElement = document.getElementById('current-time');
+    const currentTemperatureElement = document.getElementById('current-temperature');
+    currentTimeElement.textContent = getCurrentFormattedTime();
+    currentTemperatureElement.currentTemperatureElement = rd1Info.boilerTemperature;
+}
+
+// 1초마다 시간 업데이트
+setInterval(updateTime, 1000);
 
 fetchData().then();  // 함수 호출
