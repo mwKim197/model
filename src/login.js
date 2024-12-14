@@ -55,6 +55,9 @@ const loginUser = async (userId, password) => {
                 store.set('user', {
                     userId: user.userId,
                     name: user.name,  // DB에 name이 있다면 저장
+                    category: user.category,
+                    storeName: user.storeName,
+                    tel: user.tel
                 });
                 // 저장된 사용자 정보 확인
                 log.info('User stored in electron-store:', store.get('user'));

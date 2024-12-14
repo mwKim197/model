@@ -12,13 +12,7 @@
         <div class="flex-1 bg-white px-4 h-screen overflow-y-scroll scrollbar-hide bg-no-repeat bg-cover bg-center" style="background-image: url('../../assets/basicImage/투명.png'); background-size: 80%; background-position: center;" >
 
             <!-- 카테고리 -->
-            <nav class="sticky top-0 h-12 bg-white flex justify-between mb-4 border-b z-50">
-                <div class="menu-tab active flex-1 text-center py-2 hover:bg-gray-200 transition-colors duration-200" data-category="all">전체메뉴</div>
-                <div class="menu-tab flex-1 text-center py-2 hover:bg-gray-200 transition-colors duration-200" data-category="coffee">커피</div>
-                <div class="menu-tab flex-1 text-center py-2 hover:bg-gray-200 transition-colors duration-200" data-category="ade">에이드</div>
-                <div class="menu-tab flex-1 text-center py-2 hover:bg-gray-200 transition-colors duration-200" data-category="tea">티</div>
-                <div class="menu-tab flex-1 text-center py-2 hover:bg-gray-200 transition-colors duration-200" data-category="order">기타음료</div>
-            </nav>
+            <nav id="menu-nav" class="sticky top-0 h-12 bg-white flex justify-between mb-4 border-b z-50"></nav>
 
             <!-- productGrid 컨테이너 -->
             <div id="productGridContainer" class="relative">
@@ -48,9 +42,10 @@
                     <img src="../../assets/basicImage/20241208_153635.png" alt="wifi" class="w-4">
                     <span class="font-bold text-lg" id="current-temperature"></span>
                 </span>
-                <span class="font-bold text-lg">상태</span>
-                <span class="font-bold text-lg">매장명</span>
-                <span class="font-bold text-lg">비상연락처</span>
+                <span class="font-bold text-lg">상태: 정상</span>
+                <span class="font-bold text-lg" id="storeName">매장명</span>
+                <span class="font-bold text-lg" >비상연락처:</span>
+                <span class="font-bold text-lg" id="tel">비상연락처</span>
             </div>
 
 

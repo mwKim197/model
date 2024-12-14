@@ -3,6 +3,7 @@ const menuApi = require('../api/menuApi');
 const orderApi = require('../api/orderApi');
 const image = require('../../aws/s3/utils/image');
 const {ipcRenderer} = require("electron");
+const {getUserInfo} = require("../api/menuApi");
 
 function sendLogToMain(level, message) {
     ipcRenderer.send('log-to-main', {level, message});
@@ -18,6 +19,7 @@ const data = image.downloadAllFromS3WithCache("model-narrow-road", "model/test_u
 
 // 메뉴 데이터
 let allProducts = [];
+let userInfo = {};
 let isDataLoaded = false;
 
 // Product Grid
@@ -242,8 +244,12 @@ function removeAllItem() {
 
 
 // 메뉴 탭 클릭 시 제품 필터링
-document.querySelectorAll('.menu-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
+document.addEventListener('DOMContentLoaded', () => {
+    const nav = document.getElementById('menu-nav'); // 부모 요소
+    nav.addEventListener('click', (event) => {
+        const tab = event.target.closest('.menu-tab'); // 클릭한 요소 확인
+        if (!tab) return; // menu-tab이 아니면 무시
+
         // 활성화된 탭 변경
         document.querySelector('.menu-tab.active')?.classList.remove('active');
         tab.classList.add('active');
@@ -261,6 +267,7 @@ document.querySelectorAll('.menu-tab').forEach(tab => {
         displayProducts(filteredProducts);
     });
 });
+
 document.getElementById('payment').addEventListener('click', async () => {
 
     if (orderList.length === 0) {
@@ -328,27 +335,6 @@ ipcRenderer.on('update-serial-data', (event, data) => {
     rd1Info = data;
 });
 
-async function fetchData() {
-    try {
-        const allData = await menuApi.getMenuInfoAll();
-        const userInfo = await menuApi.getUserInfo();
-        console.log('Fetched Data:', allData);
-        console.log('Fetched Data:', userInfo);
-
-        // 데이터가 올바르게 로드되었는지 확인
-        if (!allData || !Array.isArray(allData.Items)) {
-            throw new Error('올바르지 않은 데이터 구조입니다.');
-        }
-
-        allProducts = allData.Items; // 데이터를 Items 배열로 설정
-
-        // 초기 데이터 로드
-        displayProducts(allProducts);
-    } catch (error) {
-        console.error("데이터 로드 중 오류 발생:", error);
-    }
-}
-
 
 /* 버튼 비동기 처리 0.2 초대기*/
 // 플래그 객체로 버튼 ID별 상태 관리
@@ -405,6 +391,7 @@ function getCurrentFormattedTime() {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
+// 시간, 보일러 온도 업데이트
 function updateTime() {
     const currentTimeElement = document.getElementById('current-time');
     const currentTemperatureElement = document.getElementById('current-temperature');
@@ -414,5 +401,69 @@ function updateTime() {
 
 // 1초마다 시간 업데이트
 setInterval(updateTime, 1000);
+
+// 매장명, 비상연락쳐 업데이트
+function updateStoreInfo() {
+    const currentStoreNameElement = document.getElementById('storeName');
+    const currentTelElement = document.getElementById('tel');
+    currentStoreNameElement.textContent = userInfo.storeName;
+    currentTelElement.textContent = userInfo.tel;
+    console.log(userInfo);
+}
+
+
+
+// 한글 이름 매핑
+const categoryLabels = {
+    all: "전체메뉴",
+    coffee: "커피",
+    ade: "에이드",
+    tea: "티",
+    season: "시즌메뉴",
+    dessert: "디저트",
+    order: "기타음료"
+};
+
+// 동적으로 메뉴 생성 함수
+function generateMenu(categories) {
+    const nav = document.getElementById('menu-nav'); // <nav> 요소 가져오기
+
+    categories.forEach((category, index) => {
+        const menuTab = document.createElement('div');
+        menuTab.className = `menu-tab flex-1 text-center py-2 hover:bg-gray-200 transition-colors duration-200 ${index === 0 ? 'active' : ''}`;
+        menuTab.setAttribute('data-category', category.item || category.item4); // item 또는 item4 사용
+        menuTab.textContent = category.name; // 메뉴 이름 설정
+        nav.appendChild(menuTab);
+    });
+}
+
+async function fetchData() {
+    try {
+        const allData = await menuApi.getMenuInfoAll();
+        userInfo = await menuApi.getUserInfo();
+        console.log('Fetched Data:', allData);
+        console.log('Fetched Data:', userInfo);
+
+        // 데이터가 올바르게 로드되었는지 확인
+        if (!allData || !Array.isArray(allData.Items)) {
+            throw new Error('올바르지 않은 데이터 구조입니다.');
+        }
+
+        if (!userInfo) {
+            throw new Error('유저정보조회에 실패했습니다.');
+        }
+
+        allProducts = allData.Items; // 데이터를 Items 배열로 설정
+
+        // 매장명, 비상연락처
+        updateStoreInfo();
+        // 메뉴 생성 실행
+        generateMenu(userInfo.category);
+        // 초기 데이터 로드
+        displayProducts(allProducts);
+    } catch (error) {
+        console.error("데이터 로드 중 오류 발생:", error);
+    }
+}
 
 fetchData().then();  // 함수 호출
