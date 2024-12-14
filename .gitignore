@@ -1,3 +1,5 @@
 /node_modules/
 .env
 /dist
+/pem/cert.pem
+/pem/key.pem
