@@ -12,14 +12,13 @@ const Cup = require('./serial/portProcesses/Cup');
 const Menu = require('./aws/db/Menu');
 const fs = require('fs');
 const appServer = express();
-
 const { createServer } = require("http");
 const server = createServer(appServer);
-
 const {serialCommCom1, serialCommCom3, serialCommCom4} = require("./serial/serialCommManager")
-
 // MC 머신 Data - SerialPolling 인스턴스 생성
 const polling = new serialDataManager(serialCommCom1);
+
+const { ipcMain } = require('electron');
 
 // Express 서버에서 serialComm을 각 포트에 맞게 사용하도록 설정
 appServer.use((req, res, next) => {
@@ -59,11 +58,6 @@ appServer.use('/renderer', express.static(path.join(__dirname, 'renderer'), {
     }
 }));
 
-/*// html 를 정적 파일로 제공
-appServer.get('/web/modelAdmin.html', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'renderer', 'web', 'modelAdmin.html'));
-});*/
-
 
 appServer.use(express.json());
 appServer.use(Connect); // MC연결
@@ -94,7 +88,15 @@ appServer.get('/version', (req, res) => {
 
 
 // Electron 창 설정
-function createWindow() {
+async function createWindow() {
+    const { default: Store } = await import('electron-store'); // 비동기 Import
+    const store = new Store();
+
+    // 데이터 초기화
+    if (!store.has('user')) {
+        store.set('user', { userId: false });
+    }
+
     const win = new BrowserWindow({
         width: 1200,
         height: 900,
@@ -110,7 +112,6 @@ function createWindow() {
 
     win.loadFile(path.join(__dirname, 'renderer', 'index', 'index.html'));
 
-
     // 주기적으로 렌더러에 데이터 전송 [TODO]
    /* setInterval(() => {
         const serialData = polling.getSerialData('RD1'); // RD1 데이터 가져오기
@@ -119,7 +120,10 @@ function createWindow() {
     }, 3000); // 3초마다 데이터 전송*/
 
 
-    const { ipcMain } = require('electron');
+    // Renderer Process에 데이터 전달
+    ipcMain.handle('get-user-data', () => {
+        return store.get('user');
+    });
 
     // 페이지 변경 핸들러
     ipcMain.on('navigate-to-page', (event,{pageName, data} ) => {
@@ -155,6 +159,7 @@ function createWindow() {
 
 }
 
+
 /* Updater ======================================================*/
 
 autoUpdater.on('checking-for-update', () => {
@@ -184,16 +189,6 @@ autoUpdater.on('update-downloaded', () => {
 /** 초기화가 끝나게 되면 실행 */
 app.whenReady().then(async () => {
 
-    // 자체 서명된 인증서 오류 무시
-    /*app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
-        if (url.startsWith('https://localhost')) {
-            console.log(`Ignoring certificate error for ${url}`);
-            event.preventDefault(); // 기본 동작 막기
-            callback(true); // 인증서를 신뢰하도록 허용
-        } else {
-            callback(false); // 다른 도메인 인증서는 허용하지 않음
-        }
-    });*/
 
     createWindow();
     // polling.startPolling() 호출 전 상태 확인

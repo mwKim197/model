@@ -4,6 +4,7 @@ const Connect = express.Router();
 const log = require('../../logger');
 let { startOrder, useWash }= require('../../services/serialOrderManager.js');
 const {serialCommCom1} = require("../../serial/serialCommManager")
+const {signupUser} = require("../../login");
 // MC 머신 Data - SerialPolling 인스턴스 생성
 const polling = new serialDataManager(serialCommCom1);
 
@@ -16,6 +17,7 @@ Connect.post('/start-order', async (req, res) => {
         await polling.stopPolling(); // 주문 작업을 시작하기 전에 조회 정지
         const reqBody = req.body;
         await startOrder(reqBody);
+        await polling.startPolling(serialCommCom1, 10000).then(); // 주문 작업이 끝난 후 조회 재개
         // list 받음 -> 메뉴판에 있는 데이터 불러서 조합 시작!
         res.json({ success: true, message: '주문 완료' });
     } catch (err) {
@@ -24,12 +26,11 @@ Connect.post('/start-order', async (req, res) => {
 });
 
 // 주문 완료 후 조회 재개 엔드포인트
-Connect.post('/end-order', (req, res) => {
+Connect.post('/set-user-info', async(req, res) => {
     try {
-        log.info("Order process stopped, polling started");
-        const { serialCommCom1 } = req; // 시리얼 통신 객체 가져오기
-        startPolling(serialCommCom1, 10000); // 주문 작업이 끝난 후 조회 재개
-        res.json({ success: true, message: '조회 재개 완료' });
+        const userInfo = req.body;
+        await signupUser(userInfo.userId, userInfo.password, userInfo.ipAddress, userInfo.storeName, userInfo.tel).then();
+        res.json({ success: true, message: '회원 가입 완료.' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

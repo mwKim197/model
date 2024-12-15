@@ -11,14 +11,48 @@ const hashPassword = async (password) => {
 };
 
 // 회원가입 처리 함수
-const signupUser = async (userId, password) => {
+const signupUser = async (userId, password, ipAddress, storeName, tel) => {
     const hashedPassword = await hashPassword(password);
-
     const params = {
         TableName: 'model_user',
         Item: {
             userId: userId,
             password: hashedPassword,  // 해시된 비밀번호 저장
+            ipAddress: ipAddress,
+            category: [
+                {
+                    name: "전체메뉴",
+                    no: "0",
+                    item: "all"
+                },
+                {
+                    name: "커피(COFFEE)",
+                    no: "1",
+                    item: "coffee"
+                },
+                {
+                    name: "계절메뉴",
+                    no: "2",
+                    item: "season"
+                },
+                {
+                    item4: "ade",
+                    name: "주스/에이드(JUICE/ADE)",
+                    no: "3"
+                },
+                {
+                    name: "차(TEA)",
+                    no: "4",
+                    item: "tea"
+                },
+                {
+                    name: "디저트(DESSERT)",
+                    no: "5",
+                    item: "dessert"
+                }
+            ],
+            storeName: storeName,
+            tel: tel
         },
     };
 
@@ -55,6 +89,7 @@ const loginUser = async (userId, password) => {
                 store.set('user', {
                     userId: user.userId,
                     name: user.name,  // DB에 name이 있다면 저장
+                    ipAddress: user.ipAddress,
                     category: user.category,
                     storeName: user.storeName,
                     tel: user.tel
