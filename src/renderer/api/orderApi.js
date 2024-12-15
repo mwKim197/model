@@ -23,7 +23,7 @@ const reqVCAT_HTTP = async (cost, halbu) => {
             sendbuf = make_send_data(sendMsg);
 
             try {
-                const response = await fetch("http://127.0.0.1:9189", {
+                const response = await fetch("https://127.0.0.1:9189", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/x-www-form-urlencoded"
@@ -54,7 +54,7 @@ const reqVCAT_HTTP = async (cost, halbu) => {
                 iFlag = '1';
 
                 try {
-                    const response = await fetch("http://127.0.0.1:9188", {
+                    const response = await fetch("https://127.0.0.1:9188", {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/x-www-form-urlencoded"
@@ -122,7 +122,7 @@ const NCpad = (n, width) => {
 }
 const reqOrder = async (orderList) => {
     try {
-        const response = await fetch('http://localhost:3000/start-order', {
+        const response = await fetch('http://test_user1.narrowroad-model.com:3000/start-order', {
             method: 'POST', // POST 요청
             headers: {
                 'Content-Type': 'application/json', // JSON 형식으로 전송
@@ -141,7 +141,7 @@ const reqOrder = async (orderList) => {
 
 const useWash = async (orderList) => {
     try {
-        const response = await fetch('http://localhost:3000/wash', {
+        const response = await fetch('http://test_user1.narrowroad-model.com:3000/wash', {
             method: 'POST', // POST 요청
             headers: {
                 'Content-Type': 'application/json', // JSON 형식으로 전송
@@ -159,7 +159,7 @@ const useWash = async (orderList) => {
 
 const reStartCheck = async (orderList) => {
     try {
-        const response = await fetch('http://localhost:3000/start-order', {
+        const response = await fetch('http://test_user1.narrowroad-model.com:3000/start-order', {
             method: 'POST', // POST 요청
             headers: {
                 'Content-Type': 'application/json', // JSON 형식으로 전송

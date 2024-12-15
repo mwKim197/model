@@ -1,12 +1,7 @@
-const log = require("../../logger");
-const { ipcRenderer } = require('electron');
 
 function sendLogToMain(level, message) {
-    ipcRenderer.send('log-to-main', { level, message });
+    console[level](message); // 브라우저에서는 단순히 콘솔 출력
 }
-
-/*sendLogToMain('info', '렌더러에서 보내는 정보 로그');
-sendLogToMain('error', '렌더러 에러 발생');*/
 
 const getUserInfo = async () => {
     try {
@@ -16,11 +11,10 @@ const getUserInfo = async () => {
         }
 
         const data = await response.json();
-        sendLogToMain('info','SCF: ', data);  // 디버깅용 콘솔
         return data;
     } catch (error) {
-        sendLogToMain('error','Error fetching menu info:', error);
-        log.error(error);
+
+        console.error(error);
     }
 }
 
@@ -31,13 +25,9 @@ const getMenuInfo = async () => {
             throw new Error(`Network response was not ok: ${response.statusText}`);
         }
 
-        const data = await response.json();
-        sendLogToMain('info','MENU: ', data);  // 디버깅용 콘솔
-        log.info(data);
-        document.getElementById('data').textContent = JSON.stringify(data);
+        return await response.json();
     } catch (error) {
-        sendLogToMain('error','Error fetching menu info:', error);
-        log.error(error);
+        console.error(error);
     }
 }
 
@@ -51,12 +41,10 @@ const getMenuInfoAll = async () => {
         }
 
         const data = await response.json();
-        log.info(data);
-        sendLogToMain('info','MENU-ALL: ', data);  // 디버깅용 콘솔
+        console.log(data);
         return data;
     } catch (error) {
-        sendLogToMain('error','Error fetching menu info:', error);
-        log.error(error);
+        console.error(error);
     }
 }
 
@@ -97,7 +85,7 @@ const setMenuInfo = async () => {
                 items, // 통합된 items 배열 추가
             };
 
-            log.info("data : " + JSON.stringify(selectedOptions));
+            console.log("data : " + JSON.stringify(selectedOptions));
 
             // Fetch 요청 보내기
             const response = await fetch('http://test_user1.narrowroad-model.com:3000/set-menu-info', {
@@ -113,14 +101,12 @@ const setMenuInfo = async () => {
             }
 
             const data = await response.json();
-            sendLogToMain('info', '메뉴 저장: ', data); // 디버깅용 로그
-            log.info(data);
+            console.log(data);
 
             // 결과 표시
             document.getElementById('data').textContent = JSON.stringify(data);
         } catch (error) {
-            sendLogToMain('error', 'Error fetching menu info:', error);
-            log.error(error);
+            console.error(error);
         }
     });
 }
@@ -134,11 +120,9 @@ const fetchCoffeeInfo = async (grinder1, grinder2, extraction, hotwater) => {
         }
 
         const data = await response.json();
-        sendLogToMain('info','SCF: ', data);  // 디버깅용 콘솔
-        log.info(data);
+        console.log(data);
     } catch (error) {
-        sendLogToMain('error','Error fetching coffee info:', error);
-        log.error(error);
+        console.error(error);
     }
 }
 
@@ -152,10 +136,9 @@ const fetchCoffeeUse = async () => {
 
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
-        log.info(data);
+        console.log(data);
     } catch (error) {
-        sendLogToMain('error','Error fetching coffee info:', error);
-        log.error(error);
+        console.error(error);
     }
 }
 
@@ -169,10 +152,9 @@ const fetchCoffeeUse1 = async () => {
 
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
-        log.info(data);
+        console.log(data);
     } catch (error) {
-        sendLogToMain('error','Error fetching coffee info:', error);
-        log.error(error);
+        console.error(error);
     }
 }
 
@@ -186,10 +168,9 @@ const fetchTeaInfo = async (motor, extraction, hotwater) => {
 
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
-        log.info(data);
+        console.log(data);
     } catch (error) {
-        sendLogToMain('error','Error fetching coffee info:', error);
-        log.error(error);
+        console.error(error);
     }
 }
 
@@ -203,10 +184,9 @@ const fetchTeaUse = async () => {
 
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
-        log.info(data);
+        console.log(data);
     } catch (error) {
-        sendLogToMain('error','Error fetching coffee info:', error);
-        log.error(error);
+        console.error(error);
     }
 }
 
@@ -220,10 +200,9 @@ const fetchSyrupInfo = async (syrup, pump, hotwater, sparkling) => {
 
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
-        log.info(data);
+        console.log(data);
     } catch (error) {
-        sendLogToMain('error','Error fetching coffee info:', error);
-        log.error(error);
+        console.error(error);
     }
 }
 
@@ -237,10 +216,9 @@ const fetchSyrupUse = async () => {
 
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
-        log.info(data);
+        console.log(data);
     } catch (error) {
-        sendLogToMain('error','Error fetching coffee info:', error);
-        log.error(error);
+        console.error(error);
     }
 }
 
@@ -254,10 +232,9 @@ const fetchWaterTime = async (waterTime) => {
 
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
-        log.info(data);
+        console.log(data);
     } catch (error) {
-        sendLogToMain('error','Error fetching coffee info:', error);
-        log.error(error);
+        console.error(error);
     }
 }
 
@@ -271,10 +248,9 @@ const fetchIceTime = async (iceTime) => {
 
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
-        log.info(data);
+        console.log(data);
     } catch (error) {
-        sendLogToMain('error','Error fetching coffee info:', error);
-        log.error(error);
+        console.error(error);
     }
 }
 
@@ -288,10 +264,9 @@ const fetchIceRun = async () => {
 
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
-        log.info(data);
+        console.log(data);
     } catch (error) {
-        sendLogToMain('error','Error fetching coffee info:', error);
-        log.error(error);
+        console.error(error);
     }
 }
 
@@ -305,10 +280,9 @@ const fetchIceStop = async () => {
 
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
-        log.info(data);
+        console.log(data);
     } catch (error) {
-        sendLogToMain('error','Error fetching coffee info:', error);
-        log.error(error);
+        console.error(error);
     }
 }
 
@@ -322,10 +296,9 @@ const fetchCupInfo = async () => {
 
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
-        log.info(data);
+        console.log(data);
     } catch (error) {
-        sendLogToMain('error','Error fetching coffee info:', error);
-        log.error(error);
+        console.error(error);
     }
 }
 
@@ -339,10 +312,9 @@ const fetchCupPlUse = async () => {
 
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
-        log.info(data);
+        console.log(data);
     } catch (error) {
-        sendLogToMain('error','Error fetching coffee info:', error);
-        log.error(error);
+        console.error(error);
     }
 }
 
@@ -356,10 +328,10 @@ const fetchCupPaUse = async () => {
 
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
-        log.info(data);
+        console.log(data);
     } catch (error) {
-        sendLogToMain('error','Error fetching coffee info:', error);
-        log.error(error);
+
+        console.error(error);
     }
 }
 
@@ -373,15 +345,14 @@ const fetchIceInfo = async () => {
 
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
-        log.info(data);
+        console.log(data);
     } catch (error) {
-        sendLogToMain('error','Error fetching coffee info:', error);
-        log.error(error);
+        console.error(error);
     }
 }
 
 
-module.exports = {
+export {
     getUserInfo,
     getMenuInfo,
     getMenuInfoAll,
@@ -400,6 +371,5 @@ module.exports = {
     fetchCupInfo,
     fetchCupPlUse,
     fetchCupPaUse,
-    fetchIceInfo
-    // 필요한 함수들 추가
+    fetchIceInfo,
 };

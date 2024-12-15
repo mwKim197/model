@@ -2,7 +2,6 @@ const { app, BrowserWindow} = require('electron');
 const { autoUpdater } = require("electron-updater");
 const path = require('path');
 const express = require('express');
-const http = require('http');
 const log = require('./logger');
 const { signupUser, loginUser } = require('./login');
 const Connect = require('./serial/portProcesses/Connect');
@@ -13,7 +12,10 @@ const Cup = require('./serial/portProcesses/Cup');
 const Menu = require('./aws/db/Menu');
 const fs = require('fs');
 const appServer = express();
-const server = http.createServer(appServer);
+
+const { createServer } = require("http");
+const server = createServer(appServer);
+
 const {serialCommCom1, serialCommCom3, serialCommCom4} = require("./serial/serialCommManager")
 
 // MC 머신 Data - SerialPolling 인스턴스 생성
@@ -30,18 +32,38 @@ appServer.use((req, res, next) => {
 // 시리얼 통신 부
 const cors = require('cors');
 
-// assets 디렉토리를 정적 파일로 제공
-appServer.use('/assets', express.static(path.resolve(__dirname, 'assets')));
-
 appServer.use((req, res, next) => {
     res.set('Content-Type', 'text/html');
     next();
 });
 appServer.use(cors());
-// html 를 정적 파일로 제공
+
+appServer.use(cors({
+    origin: ['http://test_user1.narrowroad-model.com:3000', 'http://localhost:3000'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type'],
+}));
+
+appServer.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Private-Network', 'true'); // PNA 허용
+    next();
+});
+
+// assets 디렉토리를 정적 파일로 제공
+appServer.use('/assets', express.static(path.resolve(__dirname, 'assets')));
+appServer.use('/renderer', express.static(path.join(__dirname, 'renderer'), {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+        }
+    }
+}));
+
+/*// html 를 정적 파일로 제공
 appServer.get('/web/modelAdmin.html', (req, res) => {
     res.sendFile(path.resolve(__dirname, 'renderer', 'web', 'modelAdmin.html'));
-});
+});*/
+
 
 appServer.use(express.json());
 appServer.use(Connect); // MC연결
@@ -59,12 +81,8 @@ appServer.use((req, res, next) => {
 loginUser("test_user1", "test_user1").then();
 
 // 서버 시작
-server.listen(3000, '0.0.0.0',() => {
-    log.info('server: http://localhost:3000 ' ,'http://0.0.0.0:3000');
-});
-
-appServer.get('/api/data', (req, res) => {
-    res.json({ message: 'Electron Node.js 서버에서 전송된 데이터!' });
+server.listen(3000, '0.0.0.0', () => {
+    log.info('Server running on http://localhost:3000');
 });
 
 // 버전읽기
@@ -93,12 +111,12 @@ function createWindow() {
     win.loadFile(path.join(__dirname, 'renderer', 'index', 'index.html'));
 
 
-    // 주기적으로 렌더러에 데이터 전송
-    setInterval(() => {
+    // 주기적으로 렌더러에 데이터 전송 [TODO]
+   /* setInterval(() => {
         const serialData = polling.getSerialData('RD1'); // RD1 데이터 가져오기
         console.log('Sending serialData to renderer:', serialData);
         win.webContents.send('update-serial-data', serialData);
-    }, 3000); // 3초마다 데이터 전송
+    }, 3000); // 3초마다 데이터 전송*/
 
 
     const { ipcMain } = require('electron');
@@ -165,6 +183,18 @@ autoUpdater.on('update-downloaded', () => {
 
 /** 초기화가 끝나게 되면 실행 */
 app.whenReady().then(async () => {
+
+    // 자체 서명된 인증서 오류 무시
+    /*app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
+        if (url.startsWith('https://localhost')) {
+            console.log(`Ignoring certificate error for ${url}`);
+            event.preventDefault(); // 기본 동작 막기
+            callback(true); // 인증서를 신뢰하도록 허용
+        } else {
+            callback(false); // 다른 도메인 인증서는 허용하지 않음
+        }
+    });*/
+
     createWindow();
     // polling.startPolling() 호출 전 상태 확인
     console.log('Before startPolling:', polling.pollingTimer, polling.isPollingActive);

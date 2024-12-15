@@ -33,18 +33,11 @@ function displayProducts(products) {
         const card = document.createElement('div');
         card.className = 'product-card rounded-lg p-2 text-center cursor-pointer';
 
-        // 클릭 이벤트 처리
-        card.addEventListener('click', () => {
-
-            // 주문 처리 함수 호출
-            addItemToOrder(product.menuId).then();
-
-        });
-
         // 왼쪽, 오른쪽, 하단 배지 데이터
         const leftBadge = product.state?.eventTop; // 왼쪽 배지
         const rightBadge = product.state?.hotAndIce; // 오른쪽 배지
         const bottomBadge = product.state?.eventBottom; // 하단 배지
+        const isEmpty = product.state?.empty; // 품절 여부
 
         // 왼쪽 배지 이미지 렌더링
         const leftBadgeImage = leftBadge
@@ -61,7 +54,13 @@ function displayProducts(products) {
         // 하단 배지 이미지 렌더링
         const bottomBadgeImage = bottomBadge
             ? `<img src="../../assets/basicImage/${bottomBadge}.png" alt="Bottom Badge" 
-                class="absolute bottom-0 left-0 w-16 h-16 object-cover"/>`
+                class="absolute bottom-0 left-0 w-36 object-cover"/>`
+            : '';
+
+        // 품절 배지 이미지 렌더링
+        const emptyBadgeImage = isEmpty
+            ? `<img src="../../assets/basicImage/품절.png" alt="Sold Out Badge" 
+                class="absolute top-0 left-0 w-full h-full object-cover opacity-70 z-50"/>`
             : '';
 
         // 카드 내용 추가
@@ -72,20 +71,36 @@ function displayProducts(products) {
             ${leftBadgeImage} <!-- 왼쪽 배지 -->
             ${rightBadgeImage} <!-- 오른쪽 배지 -->
             ${bottomBadgeImage} <!-- 하단 배지 -->
+            ${emptyBadgeImage} <!-- 품절 배지 -->
         </div>
         <div class="mt-2">
             <span class="block text-xl font-bold">${product.name}</span>
-            <span class="block text-gray-600 text-xl font-bold pl-32">${`₩ ` + product.price.toLocaleString()}</span>
+            <span class="block text-gray-600 text-xl font-bold">${`₩ ` + product.price.toLocaleString()}</span>
         </div>
-        <!-- 숨겨진 버튼 -->
-        <button id="${product.menuId}" class="prevent-double-click hidden" onclick="addItemToOrder('${product.menuId}')">주문하기</button>
+        <!-- 주문 버튼 -->
+        <button 
+            id="${product.menuId}" 
+            class="prevent-double-click ${isEmpty ? 'disabled:opacity-50' : ''}" 
+            ${isEmpty ? 'disabled' : ''} 
+            onclick="${!isEmpty ? `addItemToOrder('${product.menuId}')` : ''}">
+            주문하기
+        </button>
     `;
 
         // 부모 컨테이너에 추가
         productGrid.appendChild(card);
-    });
 
+        // 클릭 이벤트 처리 (품절 상태에서는 동작하지 않도록 추가 검증)
+        if (!isEmpty) {
+            card.addEventListener('click', () => {
+                addItemToOrder(product.menuId).then();
+            });
+        } else {
+            card.classList.add('cursor-not-allowed'); // 품절 상태일 때 커서 비활성화
+        }
+    });
 }
+
 
 async function addItemToOrder(menuId) {
     // 상품 검색

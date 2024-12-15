@@ -172,7 +172,7 @@
 
 <script>
     // 서버에서 version 값을 가져와서 화면에 표시
-    fetch('http://localhost:3000/version')
+    fetch('http://test_user1.narrowroad-model.com:3000/version')
         .then(response => response.json())
         .then(data => {
             document.getElementById('version').textContent = data.version;

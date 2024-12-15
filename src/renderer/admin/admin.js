@@ -22,7 +22,7 @@ document.getElementById('getData').addEventListener('click', () => {
 
 async function getData() {
     try {
-        const response = await fetch('http://localhost:3000/get-data', {
+        const response = await fetch('http://test_user1.narrowroad-model.com:3000/get-data', {
             method: 'POST', // POST 요청
             headers: {
                 'Content-Type': 'application/json', // JSON 형식으로 전송
@@ -40,7 +40,7 @@ async function getData() {
 
 async function fetchSerialDataRd1() {
     try {
-        const response = await fetch('http://localhost:3000/serial-data-rd1');
+        const response = await fetch('http://test_user1.narrowroad-model.com:3000/serial-data-rd1');
         if (!response.ok) throw new Error('네트워크 응답 실패');
 
         const data = await response.json();
@@ -72,7 +72,7 @@ async function fetchSerialDataRd1() {
 
 async function fetchSerialDataRd2() {
     try {
-        const response = await fetch('http://localhost:3000/serial-data-rd2');
+        const response = await fetch('http://test_user1.narrowroad-model.com:3000/serial-data-rd2');
         if (!response.ok) throw new Error('네트워크 응답 실패');
 
         const data = await response.json();
@@ -84,7 +84,7 @@ async function fetchSerialDataRd2() {
 
 async function fetchSerialDataRd3() {
     try {
-        const response = await fetch('http://localhost:3000/serial-data-rd3');
+        const response = await fetch('http://test_user1.narrowroad-model.com:3000/serial-data-rd3');
         if (!response.ok) throw new Error('네트워크 응답 실패');
         const data = await response.json();
 
@@ -95,7 +95,7 @@ async function fetchSerialDataRd3() {
 
 async function fetchSerialDataRd4() {
     try {
-        const response = await fetch('http://localhost:3000/serial-data-rd4');
+        const response = await fetch('http://test_user1.narrowroad-model.com:3000/serial-data-rd4');
         if (!response.ok) throw new Error('네트워크 응답 실패');
 
         const data = await response.json();
