@@ -9,16 +9,16 @@ const cacheDir = path.resolve(__dirname, '../../../assets/images');
 // 캐싱 디렉토리가 없으면 생성
 if (!fs.existsSync(cacheDir)) {
     fs.mkdirSync(cacheDir, { recursive: true }); // 디렉토리 생성
-    console.log(`디렉토리 생성됨: ${cacheDir}`);
+    log.info(`디렉토리 생성됨: ${cacheDir}`);
 } else {
-    console.log(`이미 존재하는 디렉토리: ${cacheDir}`);
+    log.info(`이미 존재하는 디렉토리: ${cacheDir}`);
 }
 
 // 디렉토리 생성 함수
 const ensureDirectoryExists = (cacheDir) => {
     if (!fs.existsSync(cacheDir)) {
         fs.mkdirSync(cacheDir, { recursive: true });
-        console.log(`디렉토리 생성됨: ${cacheDir}`);
+        log.info(`디렉토리 생성됨: ${cacheDir}`);
     }
 };
 
@@ -37,7 +37,7 @@ const downloadImageFromS3 = async (bucketName, key) => {
 
     // 로컬 파일이 존재하면 그대로 반환
     if (fs.existsSync(localFilePath)) {
-        console.log(`캐시 사용: ${localFilePath}`);
+        log.info(`캐시 사용: ${localFilePath}`);
         return localFilePath;
     }
 
@@ -48,7 +48,7 @@ const downloadImageFromS3 = async (bucketName, key) => {
 
         // 로컬에 저장
         fs.writeFileSync(localFilePath, data.Body);
-        console.log(`S3에서 다운로드: ${localFilePath}`);
+        log.info(`S3에서 다운로드: ${localFilePath}`);
         return localFilePath;
     } catch (err) {
         console.error(`S3에서 이미지 다운로드 실패: ${err.message}`);
@@ -69,7 +69,7 @@ const downloadAllFromS3WithCache = async (bucketName, prefix) => {
 
         // 객체 리스트 확인
         if (!list.Contents.length) {
-            console.log('S3에 다운로드할 객체가 없습니다.');
+            log.info('S3에 다운로드할 객체가 없습니다.');
             return;
         }
 
@@ -93,7 +93,7 @@ const downloadAllFromS3WithCache = async (bucketName, prefix) => {
 
                 // S3와 로컬 파일 수정 시간을 비교
                 if (localFileStats.mtime >= s3LastModified) {
-                    console.log(`캐시 사용: ${localFilePath}`);
+                    log.info(`캐시 사용: ${localFilePath}`);
                     continue; // 최신 파일이면 다운로드 건너뜀
                 }
             }
@@ -101,7 +101,7 @@ const downloadAllFromS3WithCache = async (bucketName, prefix) => {
             // S3에서 객체 다운로드
             const objectData = await s3.getObject({ Bucket: bucketName, Key: key }).promise();
             fs.writeFileSync(localFilePath, objectData.Body);
-            console.log(`S3에서 다운로드: ${localFilePath}`);
+            log.info(`S3에서 다운로드: ${localFilePath}`);
         }
     } catch (err) {
         console.error(`S3에서 객체 다운로드 실패: ${err.message}`);
@@ -126,7 +126,7 @@ const uploadImageToS3 = async (bucketName, localFilePath, s3Key) => {
 
         // S3에 업로드
         const result = await s3.upload(params).promise();
-        console.log(`파일 업로드 성공: ${result.Location}`);
+        log.info(`파일 업로드 성공: ${result.Location}`);
         return result.Location; // 업로드된 파일의 URL 반환
     } catch (err) {
         console.error(`S3 업로드 실패: ${err.message}`);

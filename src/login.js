@@ -1,8 +1,10 @@
 const log = require('./logger');
 const bcrypt =  require('bcrypt');
 
+
 // DynamoDB 설정
 const { dynamoDB } = require('./aws/aws');
+const {addSubdomainSafely} = require("./aws/route53/route53");
 
 // 비밀번호 해시화 함수
 const hashPassword = async (password) => {
@@ -13,6 +15,7 @@ const hashPassword = async (password) => {
 // 회원가입 처리 함수
 const signupUser = async (userId, password, ipAddress, storeName, tel) => {
     const hashedPassword = await hashPassword(password);
+    const url = await addSubdomainSafely(userId, ipAddress);
     const params = {
         TableName: 'model_user',
         Item: {
@@ -52,7 +55,8 @@ const signupUser = async (userId, password, ipAddress, storeName, tel) => {
                 }
             ],
             storeName: storeName,
-            tel: tel
+            tel: tel,
+            url: url
         },
     };
 
