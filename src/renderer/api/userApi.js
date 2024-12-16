@@ -6,8 +6,7 @@ const setUserInfo = async (userInfo) => {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(userInfo),});
-        console.log(response);
+            body: JSON.stringify(userInfo)});
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
         }

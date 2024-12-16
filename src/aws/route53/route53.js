@@ -51,10 +51,10 @@ const checkSubdomainExists = async (subdomain) => {
         );
 
         if (existingRecord) {
-            log.info(`Subdomain already exists: ${subdomain}.narrowroad-model.com`);
+            log.info(`이미 등록된 서브 도메인입니다. : ${subdomain}.narrowroad-model.com`);
             return true;
         } else {
-            log.info(`Subdomain is available: ${subdomain}.narrowroad-model.com`);
+            log.info(`서브도메인 등록 시작 : ${subdomain}.narrowroad-model.com`);
             return false;
         }
     } catch (error) {
@@ -67,12 +67,12 @@ const checkSubdomainExists = async (subdomain) => {
 const addSubdomainSafely = async (subdomain, ipAddress) => {
     const exists = await checkSubdomainExists(subdomain);
     if (exists) {
-        log.info('Subdomain already exists. Updating...');
+        log.info('서브 도메인 업데이트 처리...');
     } else {
-        log.info('Subdomain does not exist. Creating...');
+        log.info('서브 도메인 등록 처리...');
     }
 
-    await addSubdomain(subdomain, ipAddress);
+    return await addSubdomain(subdomain, ipAddress);
 };
 
 

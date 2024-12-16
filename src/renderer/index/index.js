@@ -7,7 +7,7 @@ window.onload = async () => {
         const userData = await ipcRenderer.invoke('get-user-data'); // 데이터 요청
         console.log('User Data from Main Process:', userData);
         if (userData.userId) {
-           // ipcRenderer.send('navigate-to-page', {pageName: 'order'});
+           ipcRenderer.send('navigate-to-page', {pageName: 'order'});
         }
     } catch (error) {
         console.error('Error fetching user data:', error);

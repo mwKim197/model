@@ -22,7 +22,7 @@ const signupUser = async (userId, password, ipAddress, storeName, tel) => {
             userId: userId,
             password: hashedPassword,  // 해시된 비밀번호 저장
             ipAddress: ipAddress,
-            category: [
+            category: [ // 초기 카테고리 저장
                 {
                     name: "전체메뉴",
                     no: "0",
@@ -62,7 +62,7 @@ const signupUser = async (userId, password, ipAddress, storeName, tel) => {
 
     try {
         await dynamoDB.put(params).promise();
-        log.info('User signed up successfully');
+        log.info('회원 가입 성공');
     } catch (error) {
         log.error('Error signing up:', error.message);
     }
@@ -96,15 +96,16 @@ const loginUser = async (userId, password) => {
                     ipAddress: user.ipAddress,
                     category: user.category,
                     storeName: user.storeName,
-                    tel: user.tel
+                    tel: user.tel,
+                    url: user.url,
                 });
                 // 저장된 사용자 정보 확인
-                log.info('User stored in electron-store:', store.get('user'));
+                log.info('스토어 회원 정보 확인:', store.get('user'));
             } else {
-                log.info('Incorrect password');
+                log.info('페스워드 오류');
             }
         } else {
-            log.info('User not found');
+            log.info('유저 정보 없음');
         }
     } catch (error) {
         log.error('Error during login:', error.message);

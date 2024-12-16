@@ -29,7 +29,9 @@ Connect.post('/start-order', async (req, res) => {
 Connect.post('/set-user-info', async(req, res) => {
     try {
         const userInfo = req.body;
-        await signupUser(userInfo.userId, userInfo.password, userInfo.ipAddress, userInfo.storeName, userInfo.tel).then();
+
+        const result = await signupUser(userInfo.userId, userInfo.password, userInfo.ipAddress, userInfo.storeName, userInfo.tel).then();
+        console.log(result);
         res.json({ success: true, message: '회원 가입 완료.' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
