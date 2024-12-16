@@ -71,9 +71,6 @@ appServer.use((req, res, next) => {
     next();
 });
 
-// 로그인처리 임시
-//loginUser("test_user1", "test_user1").then();
-
 // 서버 시작
 server.listen(3000, '0.0.0.0', () => {
     log.info('Server running on http://localhost:3000');

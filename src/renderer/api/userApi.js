@@ -1,8 +1,9 @@
 const log = require("../../logger");
 
+
 const setUserInfo = async (userInfo) => {
     try {
-        const response = await fetch('http://test_user1.narrowroad-model.com:3000/set-user-info',{method: 'POST',
+        const response = await fetch('http://narrowroad-model.com:3000/set-user-info',{method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -21,8 +22,7 @@ const setUserInfo = async (userInfo) => {
 
 const setUserLogin = async (userInfo) => {
     try {
-        console.log("setUserLogin", userInfo);
-        const response = await fetch('http://test_user1.narrowroad-model.com:3000/set-user-login',{method: 'POST',
+        const response = await fetch(`http://${userInfo.url}:3000/set-user-login`,{method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },

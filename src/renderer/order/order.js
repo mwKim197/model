@@ -464,12 +464,10 @@ async function fetchData() {
     try {
         const allData = await menuApi.getMenuInfoAll();
         userInfo = await menuApi.getUserInfo();
-        console.log('Fetched Data:', allData);
-        console.log('Fetched Data:', userInfo);
 
         // 데이터가 올바르게 로드되었는지 확인
         if (!allData || !Array.isArray(allData.Items)) {
-            throw new Error('올바르지 않은 데이터 구조입니다.');
+            alert("메뉴를 등록해 주세요.");
         }
 
         if (!userInfo) {

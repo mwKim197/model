@@ -1,9 +1,31 @@
 const log = require("../../logger");
 const { ipcRenderer } = require('electron');
 
+// 전역 변수 선언
+let userData = null;
+
 function sendLogToMain(level, message) {
     ipcRenderer.send('log-to-main', { level, message });
 }
+
+const initializeUserData = async () => {
+    try {
+        userData = await ipcRenderer.invoke('get-user-data'); // 메인 프로세스에서 데이터 가져오기
+        console.log('유저 정보 조회 완료:', userData);
+        return true;
+    } catch (error) {
+        console.error('유저 정보 조회 실패:', error);
+        throw error; // 초기화 실패 시 에러 던지기
+    }
+};
+
+// 초기화 완료 후 호출 가능하도록 보장
+const ensureUserDataInitialized = async () => {
+    if (!userData) {
+        await initializeUserData();
+    }
+};
+
 
 /**결제 요청
  * */
@@ -122,7 +144,10 @@ const NCpad = (n, width) => {
 }
 const reqOrder = async (orderList) => {
     try {
-        const response = await fetch('http://test_user1.narrowroad-model.com:3000/start-order', {
+        
+        await ensureUserDataInitialized();
+        
+        const response = await fetch(`http://${userData.url}:3000/start-order`, {
             method: 'POST', // POST 요청
             headers: {
                 'Content-Type': 'application/json', // JSON 형식으로 전송
@@ -141,7 +166,10 @@ const reqOrder = async (orderList) => {
 
 const useWash = async (orderList) => {
     try {
-        const response = await fetch('http://test_user1.narrowroad-model.com:3000/wash', {
+
+        await ensureUserDataInitialized();
+        
+        const response = await fetch(`http://${userData.url}:3000/wash`, {
             method: 'POST', // POST 요청
             headers: {
                 'Content-Type': 'application/json', // JSON 형식으로 전송
@@ -159,7 +187,10 @@ const useWash = async (orderList) => {
 
 const reStartCheck = async (orderList) => {
     try {
-        const response = await fetch('http://test_user1.narrowroad-model.com:3000/start-order', {
+
+        await ensureUserDataInitialized();
+        
+        const response = await fetch(`http://${userData.url}:3000/start-order`, {
             method: 'POST', // POST 요청
             headers: {
                 'Content-Type': 'application/json', // JSON 형식으로 전송

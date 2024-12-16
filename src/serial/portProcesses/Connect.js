@@ -32,13 +32,6 @@ Connect.post('/set-user-info', async(req, res) => {
 
         const result = await signupUser(userInfo.userId, userInfo.password, userInfo.ipAddress, userInfo.storeName, userInfo.tel).then();
 
-        console.log("result : " ,result);
-        /*if(result.state) {
-            res.json({ success: true, message: '회원 가입 완료.' });    
-        } else {
-            res.json({ success: false, message: '회원 가입 실패' });
-        }*/
-
         res.json({ success: true, message: '회원 가입 완료.', data:result });
         return result;
     } catch (err) {
