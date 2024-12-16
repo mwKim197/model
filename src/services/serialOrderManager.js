@@ -191,7 +191,7 @@ const dispenseCup = (recipe) => {
 const dispenseIce = (recipe) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let totalTime = "";
+            let totalTime;
             log.info(`얼음 세팅 중: ${recipe.iceTime}초, 물 세팅 중: ${recipe.waterTime}초`);
             await Ice.sendIceTimePacket(convertTimeToHex(recipe.iceTime));
             await Ice.sendWaterTimePacket(convertTimeToHex(recipe.waterTime));
