@@ -4,7 +4,7 @@ const Connect = express.Router();
 const log = require('../../logger');
 let { startOrder, useWash }= require('../../services/serialOrderManager.js');
 const {serialCommCom1} = require("../../serial/serialCommManager")
-const {signupUser} = require("../../login");
+const {signupUser, loginUser} = require("../../login");
 // MC 머신 Data - SerialPolling 인스턴스 생성
 const polling = new serialDataManager(serialCommCom1);
 
@@ -25,14 +25,35 @@ Connect.post('/start-order', async (req, res) => {
     }
 });
 
-// 주문 완료 후 조회 재개 엔드포인트
+// 회원 가입
 Connect.post('/set-user-info', async(req, res) => {
     try {
         const userInfo = req.body;
 
         const result = await signupUser(userInfo.userId, userInfo.password, userInfo.ipAddress, userInfo.storeName, userInfo.tel).then();
+
+        console.log("result : " ,result);
+        /*if(result.state) {
+            res.json({ success: true, message: '회원 가입 완료.' });    
+        } else {
+            res.json({ success: false, message: '회원 가입 실패' });
+        }*/
+
+        res.json({ success: true, message: '회원 가입 완료.', data:result });
+        return result;
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 회원 로그인
+Connect.post('/set-user-login', async(req, res) => {
+    try {
+        const userInfo = req.body;
+        console.log("set-user-login", userInfo);
+        const result = await loginUser(userInfo.userId, userInfo.userId).then();
         console.log(result);
-        res.json({ success: true, message: '회원 가입 완료.' });
+        res.json({ success: true, message: '로그인 완료.' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

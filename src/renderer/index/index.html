@@ -52,28 +52,6 @@
 </div>
 <script src="index.js" ></script>
 <script>
-    const userApi = require( "../api/userApi");
-
-    document.getElementById('signup-form').addEventListener('submit', function(event) {
-        event.preventDefault(); // 기본 제출 방지
-
-        // 입력된 값 가져오기
-        const userId = document.getElementById('userId').value;
-        const password = document.getElementById('password').value;
-        const ipAddress = document.getElementById('ipAddress').value;
-        const storeName = document.getElementById('storeName').value;
-        const tel = document.getElementById('tel').value;
-
-         userApi.setUserInfo({
-             userId: userId,
-             password: password,
-             ipAddress: ipAddress,
-             storeName: storeName,
-             tel: tel
-        }).then(() =>
-            alert("회원가입 완료.")
-        );
-    });
 
 </script>
 </body>

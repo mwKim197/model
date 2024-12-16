@@ -63,6 +63,7 @@ const signupUser = async (userId, password, ipAddress, storeName, tel) => {
     try {
         await dynamoDB.put(params).promise();
         log.info('회원 가입 성공');
+        return params;
     } catch (error) {
         log.error('Error signing up:', error.message);
     }
