@@ -447,19 +447,6 @@ function updateStoreInfo() {
     console.log(userInfo);
 }
 
-
-
-// 한글 이름 매핑
-const categoryLabels = {
-    all: "전체메뉴",
-    coffee: "커피",
-    ade: "에이드",
-    tea: "티",
-    season: "시즌메뉴",
-    dessert: "디저트",
-    order: "기타음료"
-};
-
 // 동적으로 메뉴 생성 함수
 function generateMenu(categories) {
     const nav = document.getElementById('menu-nav'); // <nav> 요소 가져오기
