@@ -191,13 +191,12 @@ const dispenseCup = (recipe) => {
 const dispenseIce = (recipe) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let totalTime;
+            let totalTime = "";
             log.info(`얼음 세팅 중: ${recipe.iceTime}초, 물 세팅 중: ${recipe.waterTime}초`);
             await Ice.sendIceTimePacket(convertTimeToHex(recipe.iceTime));
             await Ice.sendWaterTimePacket(convertTimeToHex(recipe.waterTime));
             await Ice.sendIceRunPacket();
             const initialStatus = await Ice.getKaiserInfo();
-            let mismatchCount  = 0;
             totalTime = initialStatus.match(/.{1,2}/g)[6];
             log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(totalTime)}`);
             log.info('출빙 요청이 완료되었습니다. 상태를 감시합니다.');
@@ -209,20 +208,12 @@ const dispenseIce = (recipe) => {
                 log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(result)} ${counter}/120`);
                 const hexArray = result.match(/.{1,2}/g);
                 log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(hexArray)}`);
-
                 if (hexArray[6] !== totalTime) {
-                    mismatchCount ++;
-                } else {
-                    mismatchCount = 0; // 조건이 맞으면 카운터 초기화
-                }
-
-                if (mismatchCount >= 3) {
                     log.info('2단계 완료: 얼음 배출 완료 및 다음 플로우로 진행');
-                    await Ice.sendIceStopPacket();
+                    //await Ice.sendIceStopPacket();
                     resolve();
                     return;
                 }
-
                 if(counter >= 119) {
                     await Ice.sendIceStopPacket();
                     reject(new Error('작업 시간이 초과되었습니다.'));
