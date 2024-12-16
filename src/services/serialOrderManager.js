@@ -416,9 +416,11 @@ const useWash = async (data) => {
     if (menuData.length > 0) {
         log.info("세척 시작...!");
         const recipe = menuData.filter(menu => orderData.some(ord => ord.menuId === menu.menuId));
-        const combinedList = recipe.flatMap(entry =>
-            entry.items.filter(item => item.type === "garucha" || item.type === "syrup")
-        );
+        const combinedList = [ ...new Set(
+            recipe.flatMap(entry =>
+                entry.items.filter(item => item.type === "garucha" || item.type === "syrup")
+            )
+        )];
         log.info(`전체 세척 레시피 리스트: ${JSON.stringify(combinedList)}`);
 
         for (let i = 0; i < combinedList.length; i++) {
