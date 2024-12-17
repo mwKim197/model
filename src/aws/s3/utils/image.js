@@ -2,6 +2,7 @@ const { s3 } = require('../../aws');
 const fs = require('fs');
 const path = require('path');
 const log = require('../../../logger');
+const getUser = require('../../../util/getUser');
 
 // 현재 파일(__dirname)을 기준으로 assets/images 경로 계산
 const cacheDir = path.resolve(__dirname, '../../../assets/images');
@@ -108,6 +109,36 @@ const downloadAllFromS3WithCache = async (bucketName, prefix) => {
     }
 };
 
+// 로컬 업로드 및 S3 저장
+const uploadImageToS3andLocal = async (bucketName, buffer, originalFileName, menuId) => {
+    // 파일명: menuId + 원본 이미지 파일명
+    const userInfo = await getUser();
+    const fileName = `${menuId}_${originalFileName}`;
+    const s3Key = `model/${userInfo.userId}/${fileName}`;
+
+    const localFilePath = path.join(cacheDir, fileName);
+
+    try {
+        // 1. 로컬 저장
+        fs.writeFileSync(localFilePath, buffer);
+
+        // 2. S3 업로드
+        const params = {
+            Bucket: bucketName,
+            Key: s3Key,
+            Body: buffer,
+            ContentType: 'image/jpeg',
+        };
+        const uploadResult = await s3.upload(params).promise();
+
+        console.log(`Image uploaded: ${uploadResult.Location}`);
+        return { s3Url: uploadResult.Location, localPath: localFilePath, fileName };
+    } catch (error) {
+        console.error('Image upload failed:', error.message);
+        throw error;
+    }
+};
+
 
 // S3 업로드 함수
 const uploadImageToS3 = async (bucketName, localFilePath, s3Key) => {
@@ -137,5 +168,6 @@ const uploadImageToS3 = async (bucketName, localFilePath, s3Key) => {
 module.exports = {
     downloadImageFromS3,
     downloadAllFromS3WithCache,
+    uploadImageToS3andLocal,
     uploadImageToS3
 };

@@ -3,13 +3,13 @@ const { autoUpdater } = require("electron-updater");
 const path = require('path');
 const express = require('express');
 const log = require('./logger');
-const { signupUser, loginUser } = require('./login');
 const Connect = require('./serial/portProcesses/Connect');
 const serialDataManager  = require('./services/serialDataManager');
 const Order = require('./serial/portProcesses/Order');
 const Ice = require('./serial/portProcesses/Ice');
 const Cup = require('./serial/portProcesses/Cup');
 const Menu = require('./aws/db/Menu');
+const Image = require('./aws/s3/Image');
 const fs = require('fs');
 const appServer = express();
 const { createServer } = require("http");
@@ -30,6 +30,7 @@ appServer.use((req, res, next) => {
 
 // 시리얼 통신 부
 const cors = require('cors');
+const {uploadImageToS3, uploadImageToS3andLocal} = require("./aws/s3/utils/image");
 
 appServer.use((req, res, next) => {
     res.set('Content-Type', 'text/html');
@@ -65,6 +66,7 @@ appServer.use(Order);   // MC주문
 appServer.use(Ice);     // 카이저 ICE
 appServer.use(Cup);     // 컵 디스펜서
 appServer.use(Menu);    // MENU DB
+appServer.use(Image);    // Image S3
 
 appServer.use((req, res, next) => {
     console.log(`Request URL: ${req.url}`);
@@ -102,8 +104,10 @@ async function createWindow() {
         //autoHideMenuBar: true,      // 메뉴바 숨기기
         icon: path.join(__dirname, "assets", "icons", "coffee_bean_icon.png"),
         webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false
+            preload: path.join(__dirname, 'preload.js'), // preload.js 경로 설정
+            nodeIntegration: false,
+            contextIsolation: true,
+            sandbox: false // sandbox 비활성화
         },
     });
 
@@ -186,8 +190,8 @@ autoUpdater.on('update-downloaded', () => {
 /** 초기화가 끝나게 되면 실행 */
 app.whenReady().then(async () => {
 
+    await createWindow();
 
-    createWindow();
     // polling.startPolling() 호출 전 상태 확인
     console.log('Before startPolling:', polling.pollingTimer, polling.isPollingActive);
 

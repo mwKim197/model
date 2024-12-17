@@ -26,6 +26,7 @@
                         <!-- 이미지 -->
                         <div class="menu-image w-40 h-40 item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
                             <img src="" alt="이미지" class="w-full h-full object-cover rounded-lg">
+                            <input type="file" id="fileInput" accept="image/*" />
                         </div>
                         <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
                             <label for="no" class="text-sm text-gray-600">순번</label>
@@ -122,6 +123,7 @@
                             <button id="saveItemBtn" class="flex gap-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 self-start">
                                 저장
                             </button>
+                            <button id="uploadButton">이미지 업로드</button>
                         </div>
 
                     </div>
@@ -432,7 +434,7 @@
 
         // 결과 JSON 확인
         console.log('Generated Menu JSON:', JSON.stringify(menuData, null, 2));
-        alert('메뉴 데이터가 JSON 형식으로 저장되었습니다!');
+
     });
 </script>
 

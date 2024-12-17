@@ -1,36 +1,75 @@
-/*
-/!*const imageContainer = document.getElementById('image-container');
-const img = document.createElement('img');
-img.src = '/assets/images/꼬부기.jpg'; // 이미지 경로
-img.alt = '커피 이미지';
-img.className = 'w-full h-full object-cover rounded-lg';
+const url = window.location.hostname;
 
-imageContainer.appendChild(img);*!/
+document.getElementById('saveItemBtn').addEventListener('click', async () => {
+    const fileInput = document.getElementById('fileInput');
 
-let userInfo = {};
-let userInfo = {};
-let allProducts = [];
+    // 메인 메뉴 데이터 수집
+    const menuData = {
+        no: 0, // 순번 (임시, 나중에 동적으로 변경 가능)
+        name: document.getElementById('name').value || '',
+        category: document.getElementById('category').value || '',
+        price: document.getElementById('price').value || '0',
+        cup: document.querySelector('input[name="cup"]:checked')?.value || '',
+        iceYn: document.querySelector('input[name="iceYn"]:checked')?.value || '',
+        iceTime: document.getElementById('iceTime').value || '0',
+        waterTime: document.getElementById('waterTime').value || '0',
+        state: {
+            new: document.getElementById('new').value || '',
+            best: document.getElementById('best').value || '',
+            event: document.getElementById('event').value || ''
+        },
+        items: [],
+        image: "https://placehold.co/200x300/png" // 임시 이미지 URL
+    };
 
-async function fetchData() {
-    try {
-        const allData = await menuApi.getMenuInfoAll();
-        userInfo = await menuApi.getUserInfo();
-        console.log('Fetched Data:', allData);
-        console.log('Fetched Data:', userInfo);
+    // items 데이터 수집
+    let itemCounter = 0; // 항목 번호를 위한 카운터
+    document.querySelectorAll('#itemContainer fieldset').forEach((fieldset) => {
+        itemCounter++;
 
-        // 데이터가 올바르게 로드되었는지 확인
-        if (!allData || !Array.isArray(allData.Items)) {
-            throw new Error('올바르지 않은 데이터 구조입니다.');
+        const itemType = fieldset.querySelector('select')?.value || '';
+        const value1 = fieldset.querySelector('[name*="value1"]')?.value || '0';
+        const value2 = fieldset.querySelector('[name*="value2"]')?.value || '0';
+        const value3 = fieldset.querySelector('[name*="value3"]')?.value || '0';
+        const value4 = fieldset.querySelector('[name*="value4"]')?.value || '0';
+
+        const itemData = {
+            no: itemCounter,
+            type: itemType,
+            value1,
+            value2,
+            value3,
+            value4
+        };
+
+        menuData.items.push(itemData); // items 배열에 추가
+    });
+
+
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const formData = new FormData();
+        const userId = 'test_user1';
+        formData.append('image', file);
+        formData.append('userId', userId);
+        formData.append('menuData', JSON.stringify(menuData));
+        console.log(menuData);
+        try {
+            const response = await fetch(`http://${url}:3000/set-admin-menu-info`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                console.log('업로드 성공:', result.data);
+            } else {
+                console.error('업로드 실패:', result.message);
+            }
+        } catch (error) {
+            console.error('업로드 중 오류:', error);
         }
-
-        if (!userInfo) {
-            throw new Error('유저정보조회에 실패했습니다.');
-        }
-
-        allProducts = allData.Items; // 데이터를 Items 배열로 설정
-
-    } catch (error) {
-        console.error("데이터 로드 중 오류 발생:", error);
+    } else {
+        alert('이미지를 선택해주세요.');
     }
-}
-fetchData().then();*/
+});

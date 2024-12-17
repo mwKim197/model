@@ -3,8 +3,11 @@ const Menu = express.Router();
 const {checkProduct, addProduct, allProduct} = require('./utils/getMenu');
 const getUser = require('../../util/getUser');
 const log = require("../../logger");
-
-
+const {uploadImageToS3andLocal} = require("../s3/utils/image");
+const {incrementCounter} = require("./utils/getCount");
+const multer = require("multer");
+const {memoryStorage} = require("multer");
+const upload = multer({ storage: memoryStorage() }); // 메모리 저장소 사용
 
 Menu.get('/get-user-info', async (req, res) => {
     try {
@@ -57,6 +60,51 @@ Menu.post('/set-menu-info', async (req, res) => {
     } catch (err) {
         log.error(err.message);
         res.status(500).send(err.message);
+    }
+});
+
+Menu.post('/set-admin-menu-info', upload.single('image'), async (req, res) => {
+    let localFilePath = ''; // 이미지 저장 경로
+    try {
+        let { menuData, userId} = req.body;
+        const getMenuId = await incrementCounter(userId);
+        const file = req.file; // 업로드된 파일
+        const bucketName = 'model-narrow-road';
+
+        if (typeof menuData === 'string') {
+            menuData = JSON.parse(menuData);
+        }
+
+        if (!file || !getMenuId) {
+            return res.status(400).json({ success: false, message: '파일과 메뉴 ID가 필요합니다.' });
+        }
+        // 1. 이미지 저장 (로컬 + S3)
+        console.log('Uploading image...');
+        const uploadResult = await uploadImageToS3andLocal(bucketName,file.buffer, file.originalname, getMenuId);
+        // 로컬이미지 경로
+        menuData.image = uploadResult.localPath;
+        console.log(menuData);
+        // 순번
+        menuData.no = getMenuId;
+        // 2. 데이터 저장
+        console.log('Saving menu data...');
+        const savedData = await addProduct(menuData); // 데이터 저장
+        console.log('Menu data saved successfully.');
+
+        // 3. 성공 응답 반환
+        res.json({
+            message: 'Menu info and image uploaded successfully',
+            data: savedData,
+            image: uploadResult.s3Url
+        });
+    } catch (err) {
+        console.error('Error during operation:', err.message);
+
+        // 이미지 롤백 (로컬 파일 삭제)
+
+        // 데이터 롤백 (여기서는 DB에 따라 삭제 처리 필요)
+        console.error('Rolling back changes...');
+        res.status(500).json({ message: 'Failed to save menu info and image', error: err.message });
     }
 });
 

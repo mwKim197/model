@@ -55,9 +55,7 @@ const getCounterValue = async (userId) => {
     };
 
     try {
-        console.log("count", params)
         const result = await dynamoDB.get(params).promise();
-        console.log(result)
         if (result.Item) {
             console.log(`Current counter value for ${userId}:`, result.Item.counterValue);
             return result.Item.counterValue;

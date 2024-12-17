@@ -1,11 +1,8 @@
-
-function sendLogToMain(level, message) {
-    console[level](message); // 브라우저에서는 단순히 콘솔 출력
-}
+const url = window.location.hostname;
 
 const getUserInfo = async () => {
     try {
-        const response = await fetch('http://test_user1.narrowroad-model.com:3000/get-user-info');
+        const response = await fetch(`http://${url}:3000/get-user-info`);
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
         }
@@ -20,7 +17,7 @@ const getUserInfo = async () => {
 
 const getMenuInfo = async () => {
     try {
-        const response = await fetch('http://test_user1.narrowroad-model.com:3000/get-menu-info');
+        const response = await fetch(`http://${url}:3000/get-menu-info`);
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
         }
@@ -34,7 +31,7 @@ const getMenuInfo = async () => {
 // 메뉴정보 전체 조회
 const getMenuInfoAll = async () => {
     try {
-        const response = await fetch('http://test_user1.narrowroad-model.com:3000/get-menu-info-all');
+        const response = await fetch(`http://${url}:3000/get-menu-info-all`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -48,47 +45,37 @@ const getMenuInfoAll = async () => {
     }
 }
 
-const setMenuInfo = async () => {
+const setAdminMenuInfo = async (selectedOptions) => {
+    try {
+        // Fetch 요청 보내기
+        const response = await fetch(`http://${url}:3000//set-admin-menu-info`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(selectedOptions),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log(data);
+
+        // 결과 표시
+        document.getElementById('data').textContent = JSON.stringify(data);
+    } catch (error) {
+        console.error(error);
+    }
+
+}
+
+const setMenuImg = async () => {
     document.getElementById('setToMenu').addEventListener('click', async () => {
         try {
-            const items = [];
-
-            // 모든 item-input 필드셋에서 데이터 수집
-            document.querySelectorAll('.item-input').forEach((fieldset) => {
-                const itemId = fieldset.id.replace('item', ''); // 항목 ID 추출
-                const itemType = document.getElementById(`itemType${itemId}`)?.value || 'None';
-                const value1 = document.getElementById(`value1-${itemId}`)?.value || '0';
-                const value2 = document.getElementById(`value2-${itemId}`)?.value || '0';
-                const value3 = document.getElementById(`value3-${itemId}`)?.value || '0';
-                const value4 = document.getElementById(`value4-${itemId}`)?.value || '0';
-
-                items.push({
-                    type: itemType,
-                    no: parseInt(itemId, 10),
-                    value1,
-                    value2,
-                    value3,
-                    value4,
-                });
-            });
-
-            // 각 옵션 값을 저장할 객체
-            const selectedOptions = {
-                name: document.getElementById('menuName')?.value || 'None',
-                cup: document.querySelector('input[name="cup"]:checked')?.value || 'None',
-                iceYn: document.querySelector('input[name="iceYn"]:checked')?.value || 'No',
-                iceTime: document.querySelector('input[name="iceTime"]')?.value || '0',
-                waterTime: document.querySelector('input[name="waterTime"]')?.value || '0',
-                price: document.getElementById('price').value || 'None',
-                image: 'https://placehold.co/200x300/png',
-                category: document.getElementById('category').value || 'None',
-                items, // 통합된 items 배열 추가
-            };
-
-            console.log("data : " + JSON.stringify(selectedOptions));
-
             // Fetch 요청 보내기
-            const response = await fetch('http://test_user1.narrowroad-model.com:3000/set-menu-info', {
+            const response = await fetch(`http://${url}:3000/set-menu-info`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -128,7 +115,7 @@ const fetchCoffeeInfo = async (grinder1, grinder2, extraction, hotwater) => {
 
 const fetchCoffeeUse = async () => {
     try {
-        const response = await fetch('http://test_user1.narrowroad-model.com:3000/serial-order-coffee-use');
+        const response = await fetch(`http://${url}:3000/serial-order-coffee-use`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -144,7 +131,7 @@ const fetchCoffeeUse = async () => {
 
 const fetchCoffeeUse1 = async () => {
     try {
-        const response = await fetch('http://test_user1.narrowroad-model.com:3000/serial-order-coffee-use1');
+        const response = await fetch(`http://${url}:3000/serial-order-coffee-use1`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -176,7 +163,7 @@ const fetchTeaInfo = async (motor, extraction, hotwater) => {
 
 const fetchTeaUse = async () => {
     try {
-        const response = await fetch('http://test_user1.narrowroad-model.com:3000/serial-order-tea-use');
+        const response = await fetch(`http://${url}:3000/serial-order-tea-use`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -208,7 +195,7 @@ const fetchSyrupInfo = async (syrup, pump, hotwater, sparkling) => {
 
 const fetchSyrupUse = async () => {
     try {
-        const response = await fetch('http://test_user1.narrowroad-model.com:3000/serial-order-syrup-use');
+        const response = await fetch(`http://${url}:3000/serial-order-syrup-use`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -256,7 +243,7 @@ const fetchIceTime = async (iceTime) => {
 
 const fetchIceRun = async () => {
     try {
-        const response = await fetch('http://test_user1.narrowroad-model.com:3000/serial-ice-run');
+        const response = await fetch(`http://${url}:3000/serial-ice-run`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -272,7 +259,7 @@ const fetchIceRun = async () => {
 
 const fetchIceStop = async () => {
     try {
-        const response = await fetch('http://test_user1.narrowroad-model.com:3000/serial-ice-stop');
+        const response = await fetch(`http://${url}:3000/serial-ice-stop`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -288,7 +275,7 @@ const fetchIceStop = async () => {
 
 const fetchCupInfo = async () => {
     try {
-        const response = await fetch('http://test_user1.narrowroad-model.com:3000/serial-cup-info');
+        const response = await fetch(`http://${url}:3000/serial-cup-info`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -304,7 +291,7 @@ const fetchCupInfo = async () => {
 
 const fetchCupPlUse = async () => {
     try {
-        const response = await fetch('http://test_user1.narrowroad-model.com:3000/serial-cup-plastic-use');
+        const response = await fetch(`http://${url}:3000/serial-cup-plastic-use`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -320,7 +307,7 @@ const fetchCupPlUse = async () => {
 
 const fetchCupPaUse = async () => {
     try {
-        const response = await fetch('http://test_user1.narrowroad-model.com:3000/serial-cup-paper-use');
+        const response = await fetch(`http://${url}:3000/serial-cup-paper-use`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -337,7 +324,7 @@ const fetchCupPaUse = async () => {
 
 const fetchIceInfo = async () => {
     try {
-        const response = await fetch('http://test_user1.narrowroad-model.com:3000/serial-ice-info');
+        const response = await fetch(`http://${url}:3000/serial-ice-info`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -356,7 +343,8 @@ export {
     getUserInfo,
     getMenuInfo,
     getMenuInfoAll,
-    setMenuInfo,
+    setAdminMenuInfo,
+    setMenuImg,
     fetchCoffeeInfo,
     fetchCoffeeUse,
     fetchCoffeeUse1,

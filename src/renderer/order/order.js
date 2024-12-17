@@ -1,12 +1,6 @@
-/////// 최초 전체 목록 조회해서 뿌리기, 여기서 주문 전송
-const menuApi = require('../api/menuApi');
-const orderApi = require('../api/orderApi');
-const image = require('../../aws/s3/utils/image');
-const {ipcRenderer} = require("electron");
-const {getUserInfo} = require("../api/menuApi");
 
-function sendLogToMain(level, message) {
-    ipcRenderer.send('log-to-main', {level, message});
+function sendLogToMain (level, message) {
+    window.electronAPI.logToMain(level, message);
 }
 
 // 주문리스트
@@ -14,8 +8,6 @@ let orderList = [];
 
 // polling 된 RD1 데이터
 let rd1Info = {};
-
-const data = image.downloadAllFromS3WithCache("model-narrow-road", "model/test_user1");
 
 // 메뉴 데이터
 let allProducts = [];
@@ -340,7 +332,7 @@ document.getElementById('payment').addEventListener('click', async () => {
         // 0.1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {
             setTimeout(async () => {
-                const res = await orderApi.reqVCAT_HTTP(price, "00");
+                const res = await window.electronAPI.reqVcatHttp(price);
                 //const res = {success: true};
                 resolve(res); // 결제 결과 반환
             }, 100);
@@ -354,7 +346,7 @@ document.getElementById('payment').addEventListener('click', async () => {
             // 모달 닫기
             modal.classList.add('hidden');
             //ipcRenderer.send('navigate-to-page', { pageName: 'make', data: orderList }); // 'make' 페이지로 이동
-            await orderApi.reqOrder(orderList); // 주문 처리
+            await window.electronAPI.setOrder(orderList); // 주문 처리
             removeAllItem(); // 주문 목록삭제
         } else {
             // 결제 실패 처리
@@ -374,9 +366,7 @@ document.getElementById('payment').addEventListener('click', async () => {
 });
 
 // polling 으로 받아온 RD1상태를 노출한다.
-ipcRenderer.on('update-serial-data', (event, data) => {
-    rd1Info = data;
-});
+window.electronAPI.updateSerialData();
 
 
 /* 버튼 비동기 처리 0.2 초대기*/
@@ -469,9 +459,11 @@ function generateMenu(categories) {
 
 async function fetchData() {
     try {
-        const allData = await menuApi.getMenuInfoAll();
-        userInfo = await menuApi.getUserInfo();
+        const allData = await window.electronAPI.getMenuInfoAll();
+        userInfo = await window.electronAPI.getUserInfo();
 
+        // 이미지 받아오기
+        await window.electronAPI.downloadAllFromS3WithCache("model-narrow-road", `model/${userInfo.userId}`);
         // 데이터가 올바르게 로드되었는지 확인
         if (!allData || !Array.isArray(allData.Items)) {
             alert("메뉴를 등록해 주세요.");
