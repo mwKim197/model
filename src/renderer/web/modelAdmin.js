@@ -48,9 +48,7 @@ document.getElementById('saveItemBtn').addEventListener('click', async () => {
     if (fileInput.files.length > 0) {
         const file = fileInput.files[0];
         const formData = new FormData();
-        const userId = 'test_user1';
         formData.append('image', file);
-        formData.append('userId', userId);
         formData.append('menuData', JSON.stringify(menuData));
         console.log(menuData);
         try {
