@@ -66,8 +66,9 @@ Menu.post('/set-menu-info', async (req, res) => {
 Menu.post('/set-admin-menu-info', upload.single('image'), async (req, res) => {
     let localFilePath = ''; // 이미지 저장 경로
     try {
-        let { menuData, userId} = req.body;
-        const getMenuId = await incrementCounter(userId);
+        let { menuData } = req.body;
+        const data = await getUser();
+        const getMenuId = await incrementCounter(data.userId);
         const file = req.file; // 업로드된 파일
         const bucketName = 'model-narrow-road';
 

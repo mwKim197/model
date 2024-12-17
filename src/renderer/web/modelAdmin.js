@@ -45,7 +45,6 @@ document.getElementById('saveItemBtn').addEventListener('click', async () => {
         menuData.items.push(itemData); // items 배열에 추가
     });
 
-
     if (fileInput.files.length > 0) {
         const file = fileInput.files[0];
         const formData = new FormData();
