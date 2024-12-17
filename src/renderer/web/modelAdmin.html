@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 text-gray-800">
-<div class="w-full mx-auto my-10 p-8 bg-white shadow-lg rounded-lg">
+<div class="w-full mx-auto my-10 md:p-8 bg-white shadow-lg rounded-lg">
     <!-- 헤더 -->
     <header class="text-center mb-10">
         <h1 class="text-3xl font-extrabold text-gray-700">커피 메뉴 관리</h1>
@@ -17,37 +17,31 @@
 
     <!-- 메뉴 리스트 -->
     <main class="space-y-8">
-        <div class="menu-item-wrapper">
-            <!-- 메뉴 아이템 -->
-            <div id="menu-list" class="menu-item w-full flex flex-col md:flex-nowrap gap-6 p-6 bg-gray-100 border border-gray-300 rounded-lg shadow-sm">
-            </div>
-        </div>
 
-
+        <!-- 신규 메뉴 추가 -->
         <div class="menu-new-item-wrapper overflow-x-auto">
-            <!-- 메뉴 아이템 -->
-            <div class="menu-new-item min-w-[800px] flex flex-wrap md:flex-nowrap gap-6 p-6 bg-gray-100 border border-gray-300 rounded-lg shadow-sm ">
+            <div class="menu-new-item flex flex-col gap-6 p-4 sm:p-6 bg-gray-100 border border-gray-300 rounded-lg shadow-sm">
                 <!-- 이미지 -->
                 <div class="menu-image w-40 h-40 bg-gray-200 flex items-center justify-center rounded-lg text-sm text-gray-500">
                     <img src="" alt="이미지" class="w-full h-full object-cover rounded-lg">
                 </div>
                 <!-- 메뉴 상세 -->
-                <div class="menu-details flex flex-col gap-6 flex-1 min-w-max">
-                    <!-- 고정된 첫 번째 행 -->
-                    <div class="fixed-row grid grid-cols-7 gap-4">
+                <div class="menu-details flex flex-col gap-6 flex-1">
+                    <div class="fixed-row grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
                         <!-- 순번 -->
-                        <div class="item h-[85px] w-[100px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
-                            <label for="no" class="text-sm text-gray-600 w-full text-center">순번</label>
-                            <input id="no" type="text" class="w-20 mx-auto border border-gray-400 rounded-md px-2 py-1">
+                        <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                            <label for="no" class="text-sm text-gray-600">순번</label>
+                            <input id="no" type="text" class="w-full border border-gray-400 rounded-md px-2 py-1">
                         </div>
-                        <!-- 매뉴명 -->
-                        <div class="item h-[85px] w-[100px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
-                            <label for="name" class="text-sm text-gray-600 w-full text-center">매뉴명</label>
-                            <input id="name" type="text" class="w-20 mx-auto border border-gray-400 rounded-md px-2 py-1">
+                        <!-- 메뉴명 -->
+                        <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                            <label for="name" class="text-sm text-gray-600">메뉴명</label>
+                            <input id="name" type="text" class="w-full border border-gray-400 rounded-md px-2 py-1">
                         </div>
-                        <div class="item h-[85px] w-[100px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
-                            <label for="category" class="text-sm text-gray-600 w-full text-center">카테고리</label>
-                            <select id="category" name="Category" class="w-20 mx-auto border border-gray-400 rounded-md px-2 py-1">
+                        <!-- 카테고리 -->
+                        <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                            <label for="category" class="text-sm text-gray-600">카테고리</label>
+                            <select id="category" name="Category" class="w-full border border-gray-400 rounded-md px-2 py-1">
                                 <option value="coffee">커피</option>
                                 <option value="tea">티</option>
                                 <option value="ade">에이드</option>
@@ -55,9 +49,9 @@
                             </select>
                         </div>
                         <!-- 컵 -->
-                        <div class="item h-[85px] w-[100px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
-                            <label class="text-sm text-gray-600 w-full text-center">컵</label>
-                            <fieldset class="flex flex-col items-center gap-2">
+                        <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                            <label class="text-sm text-gray-600">컵</label>
+                            <fieldset class="flex items-center gap-2">
                                 <label for="cupPlastic" class="flex items-center gap-2">
                                     <input type="radio" id="cupPlastic" name="cup" value="plastic">
                                     <span>플라스틱</span>
@@ -69,9 +63,9 @@
                             </fieldset>
                         </div>
                         <!-- 얼음 -->
-                        <div class="item h-[85px] w-[100px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
-                            <label class="text-sm text-gray-600 w-full text-center">얼음</label>
-                            <fieldset class="flex flex-col items-center gap-2">
+                        <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                            <label class="text-sm text-gray-600">얼음</label>
+                            <fieldset class="flex items-center gap-2">
                                 <label for="iceYes" class="flex items-center gap-2">
                                     <input type="radio" id="iceYes" name="iceYn" value="yes">
                                     <span>Yes</span>
@@ -83,35 +77,68 @@
                             </fieldset>
                         </div>
                         <!-- 얼음 시간 및 물 시간 -->
-                        <div class="item h-[85px] w-[100px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
-                            <div class="flex items-center gap-2">
-                                <label for="iceTime" class="text-sm text-gray-600 w-20 text-right">얼음 시간</label>
-                                <input type="number" id="iceTime" name="iceTime" min="0" step="0.5" class="w-14 border border-gray-400 rounded-md px-2 py-1">
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <label for="waterTime" class="text-sm text-gray-600 w-20 text-right">물 시간</label>
-                                <input type="number" id="waterTime" name="waterTime" min="0" step="0.5" class="w-14 border border-gray-400 rounded-md px-2 py-1">
-                            </div>
+                        <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                            <label for="iceTime" class="text-sm text-gray-600">얼음 시간</label>
+                            <input type="number" id="iceTime" name="iceTime" min="0" step="0.5" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                        </div>
+                        <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                            <label for="waterTime" class="text-sm text-gray-600">물 시간</label>
+                            <input type="number" id="waterTime" name="waterTime" min="0" step="0.5" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                        </div>
+                        <!-- 상태 -->
+                        <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                            <label class="text-sm text-gray-600">상태</label>
+                            <fieldset class="flex flex-col gap-2">
+                                <div class="flex items-center gap-2">
+                                    <label for="new" class="text-sm">New</label>
+                                    <select id="new" name="new" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                                        <option value="new1">New1</option>
+                                        <option value="new2">New2</option>
+                                        <option value="new3">New3</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <label for="event" class="text-sm">Event</label>
+                                    <select id="event" name="event" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                                        <option value="event1">Event1</option>
+                                        <option value="event2">Event2</option>
+                                        <option value="event3">Event3</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <label for="best" class="text-sm">Best</label>
+                                    <select id="best" name="best" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                                        <option value="best1">Best1</option>
+                                        <option value="best2">Best2</option>
+                                        <option value="best3">Best3</option>
+                                    </select>
+                                </div>
+                            </fieldset>
                         </div>
                         <!-- 금액 -->
-                        <div class="item h-[85px] w-[100px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
-                            <label for="price" class="text-sm text-gray-600 w-full text-center">금액</label>
-                            <input type="number" id="price" name="price" min="0" class="w-20 mx-auto border border-gray-400 rounded-md px-2 py-1">
+                        <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                            <label for="price" class="text-sm text-gray-600">금액</label>
+                            <input type="number" id="price" name="price" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1">
                         </div>
                     </div>
 
-                    <div id="itemContainer" class="flex flex-wrap gap-4 items-start">
-                        <!-- 동적으로 추가될 항목 -->
-                        <!-- 항목 추가 버튼 -->
-                        <button id="addItemBtn" class="bg-blue-500 text-white px-2 py-1 h-10 text-sm rounded-md hover:bg-blue-600 self-start">
+                    <!-- 아이템 추가 버튼 -->
+                    <div id="itemContainer" class="flex flex-col sm:flex-row gap-4">
+                        <button id="addItemBtn" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 self-start">
                             + 항목 추가
                         </button>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- 메뉴 리스트 -->
+        <div id="menu-list" class="space-y-4">
+            <!-- 메뉴 아이템이 추가되는 위치 -->
+        </div>
     </main>
 </div>
+
 <script>
     // 등록데이터 조회
     // 메뉴 생성 함수
@@ -128,17 +155,17 @@
             <div class="menu-details flex flex-col gap-6 flex-1 min-w-max">
                 <div class="fixed-row grid grid-cols-7 gap-4 min-w-[900px]">
                     <!-- 순번 -->
-                    <div class="item h-[85px] w-[100px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
+                    <div class="item h-[150px] w-[150px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
                         <label for="no-${menu.no}" class="text-sm text-gray-600 w-full text-center">순번</label>
                         <input id="no-${menu.no}" type="text" value="${menu.no}" class="w-20 mx-auto border border-gray-400 rounded-md px-2 py-1" readonly>
                     </div>
                     <!-- 매뉴명 -->
-                    <div class="item h-[85px] w-[100px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
+                    <div class="item h-[150px] w-[150px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
                         <label for="name-${menu.no}" class="text-sm text-gray-600 w-full text-center">메뉴명</label>
                         <input id="name-${menu.no}" type="text" value="${menu.name}" class="w-20 mx-auto border border-gray-400 rounded-md px-2 py-1">
                     </div>
                     <!-- 카테고리 -->
-                    <div class="item h-[85px] w-[100px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
+                    <div class="item h-[150px] w-[150px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
                         <label for="category-${menu.no}" class="text-sm text-gray-600 w-full text-center">카테고리</label>
                         <select id="category-${menu.no}" name="Category" class="w-20 mx-auto border border-gray-400 rounded-md px-2 py-1">
                             <option value="coffee" ${menu.category === 'coffee' ? 'selected' : ''}>커피</option>
@@ -148,7 +175,7 @@
                         </select>
                     </div>
                     <!-- 컵 -->
-                    <div class="item h-[85px] w-[100px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
+                    <div class="item h-[150px] w-[150px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
                         <label class="text-sm text-gray-600 w-full text-center">컵</label>
                         <fieldset class="flex flex-col items-center gap-2">
                             <label for="cupPlastic-${menu.no}" class="flex items-center gap-2">
@@ -162,7 +189,7 @@
                         </fieldset>
                     </div>
                     <!-- 얼음 -->
-                    <div class="item h-[85px] w-[100px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
+                    <div class="item h-[150px] w-[150px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
                         <label class="text-sm text-gray-600 w-full text-center">얼음</label>
                         <fieldset class="flex flex-col items-center gap-2">
                             <label for="iceYes-${menu.no}" class="flex items-center gap-2">
@@ -176,7 +203,7 @@
                         </fieldset>
                     </div>
                     <!-- 얼음 시간 및 물 시간 -->
-                    <div class="item h-[85px] w-[100px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
+                    <div class="item h-[150px] w-[150px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
                         <div class="flex items-center gap-2">
                             <label for="iceTime-${menu.no}" class="text-sm text-gray-600 w-20 text-right">얼음 시간</label>
                             <input type="number" id="iceTime-${menu.no}" value="${menu.iceTime}" class="w-14 border border-gray-400 rounded-md px-2 py-1">
@@ -187,7 +214,7 @@
                         </div>
                     </div>
                     <!-- 금액 -->
-                    <div class="item h-[85px] w-[100px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
+                    <div class="item h-[150px] w-[150px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
                         <label for="price-${menu.no}" class="text-sm text-gray-600 w-full text-center">금액</label>
                         <input type="number" id="price-${menu.no}" value="${menu.price}" class="w-20 mx-auto border border-gray-400 rounded-md px-2 py-1">
                     </div>
@@ -366,16 +393,12 @@
 <script type="module" src="/renderer/api/menuApi.browser.js"></script>
 <script type="module">
     import {getMenuInfoAll} from '/renderer/api/menuApi.browser.js';
-    document.getElementById('menu-list').innerText = "??";
     document.addEventListener('DOMContentLoaded', async () => {
         const data = await getMenuInfoAll();
-        console.log('Menu Info:', data.Items);
-        document.getElementById('menu-list').innerText = "??" + JSON.stringify(data.Items);
         // 렌더링
         if(data?.Items) {
-            document.getElementById('menu-list').innerText = "??1";
             // 메뉴 데이터 렌더링
-            data?.Items.forEach(menu => renderMenu(menu));
+           // data?.Items.forEach(menu => renderMenu(menu));
         }
 
 

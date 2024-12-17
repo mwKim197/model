@@ -153,6 +153,7 @@ const dispenseCup = (recipe) => {
                 log.info(`menu: ${recipe.name} - [${recipe.menuId}] : GoCupOut, cup: 'paper'`);
                 await Cup.getPaperCupUsage();
             }
+
             let stopCup = 0;
             const checkCondition = async (counter = 0) => {
                 // 비동기 함수 실행 후 일정 시간 지연
@@ -167,7 +168,10 @@ const dispenseCup = (recipe) => {
                 log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵디스펜서 상태 cup: ${recipe.cup}, 컵1(PL)모터ON=${result.plasticCup.motorActive}, 컵2(PA)모터ON=${result.paperCup.motorActive} ${counter + 1} / 60`);
 
                 // 조회한 값이 false 이면 멈추기
-                if (result.plasticCup.motorActive === 0 || result.paperCup.motorActive === 0) {
+                if (recipe.cup === "plastic" && result.plasticCup.motorActive === 0 ) {
+                    stopCup++;
+                }
+                if (recipe.cup === "paper" && result.paperCup.motorActive === 0) {
                     stopCup++;
                 }
 
@@ -418,11 +422,12 @@ const useWash = async (data) => {
         const recipe = menuData.filter(menu => orderData.some(ord => ord.menuId === menu.menuId));
         const combinedList = recipe
             .flatMap(entry =>
-                entry.items.filter(item => item.type === "garucha" || item.type === "syrup")
+                entry.items.filter(item => item.type === "garucha" || item.type === "syrup") // 조건 필터링
             )
             .reduce((unique, item) => {
-                if (!unique.some(existing => existing.id === item.id)) { // 중복 체크 조건 (id 기반)
-                    unique.push(item);
+                // 중복 여부 확인 (type과 no 기준)
+                if (!unique.some(existing => existing.type === item.type && existing.value1 === item.value1)) {
+                    unique.push(item); // 중복되지 않은 항목만 추가
                 }
                 return unique;
             }, []);

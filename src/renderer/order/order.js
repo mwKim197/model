@@ -33,28 +33,35 @@ function displayProducts(products) {
         const card = document.createElement('div');
         card.className = 'product-card rounded-lg p-2 text-center cursor-pointer';
 
-        // 왼쪽, 오른쪽, 하단 배지 데이터
-        const leftBadge = product.state?.eventTop; // 왼쪽 배지
+        // 뉴, 베스트, 이벤트, 오른쪽 배지 데이터
+        const newBadge = product.state?.new; // new 배지
+        const bestBadge = product.state?.best; // best 배지
+        const eventBadge = product.state?.event; // event 배지
         const rightBadge = product.state?.hotAndIce; // 오른쪽 배지
-        const bottomBadge = product.state?.eventBottom; // 하단 배지
         const isEmpty = product.state?.empty; // 품절 여부
 
-        // 왼쪽 배지 이미지 렌더링
-        const leftBadgeImage = leftBadge
-            ? `<img src="../../assets/basicImage/${leftBadge}.png" alt="Left Badge" 
-                class="absolute top-0 left-0 w-16 h-16 object-cover"/>`
+        // 뉴 배지 이미지 렌더링
+        const newBadgeImage = newBadge
+            ? `<img src="../../assets/basicImage/${newBadge}.png" alt="Left Badge" 
+                class="absolute top-0 left-0 w-full h-full object-cover"/>`
+            : '';
+        
+        // 베스트 배지 이미지 렌더링
+        const bestBadgeImage = bestBadge
+            ? `<img src="../../assets/basicImage/${bestBadge}.png" alt="Bottom Badge" 
+                class="absolute bottom-0 left-0 w-full h-full object-cover"/>`
+            : '';
+        
+        // 이벤트 배지 이미지 렌더링
+        const eventBadgeImage = eventBadge
+            ? `<img src="../../assets/basicImage/${eventBadge}.png" alt="Bottom Badge" 
+                class="absolute bottom-0 left-0 w-full h-full object-cover"/>`
             : '';
 
         // 오른쪽 배지 이미지 렌더링
         const rightBadgeImage = rightBadge
             ? `<img src="../../assets/basicImage/${rightBadge}.png" alt="Right Badge" 
                 class="absolute top-0 right-0 w-12 h-12 object-cover"/>`
-            : '';
-
-        // 하단 배지 이미지 렌더링
-        const bottomBadgeImage = bottomBadge
-            ? `<img src="../../assets/basicImage/${bottomBadge}.png" alt="Bottom Badge" 
-                class="absolute bottom-0 left-0 w-36 object-cover"/>`
             : '';
 
         // 품절 배지 이미지 렌더링
@@ -68,9 +75,10 @@ function displayProducts(products) {
         <div class="relative">
             <img src="https://via.placeholder.com/100" alt="${product.name}" class="w-full rounded-md"/>
              <!-- 겹쳐지는 이미지 -->
-            ${leftBadgeImage} <!-- 왼쪽 배지 -->
+            ${newBadgeImage} <!-- 뉴 배지 -->
+            ${bestBadgeImage} <!-- 베스트 배지 -->
+            ${eventBadgeImage} <!-- 이벤트 배지 -->
             ${rightBadgeImage} <!-- 오른쪽 배지 -->
-            ${bottomBadgeImage} <!-- 하단 배지 -->
             ${emptyBadgeImage} <!-- 품절 배지 -->
         </div>
         <div class="mt-2">
@@ -83,7 +91,6 @@ function displayProducts(products) {
             class="prevent-double-click ${isEmpty ? 'disabled:opacity-50' : ''}" 
             ${isEmpty ? 'disabled' : ''} 
             onclick="${!isEmpty ? `addItemToOrder('${product.menuId}')` : ''}">
-            주문하기
         </button>
     `;
 
