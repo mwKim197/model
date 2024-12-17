@@ -37,13 +37,13 @@ function displayProducts(products) {
             ? `<img src="../../assets/basicImage/${newBadge}.png" alt="Left Badge" 
                 class="absolute top-0 left-0 w-full h-full object-cover"/>`
             : '';
-        
+
         // 베스트 배지 이미지 렌더링
         const bestBadgeImage = bestBadge
             ? `<img src="../../assets/basicImage/${bestBadge}.png" alt="Bottom Badge" 
                 class="absolute bottom-0 left-0 w-full h-full object-cover"/>`
             : '';
-        
+
         // 이벤트 배지 이미지 렌더링
         const eventBadgeImage = eventBadge
             ? `<img src="../../assets/basicImage/${eventBadge}.png" alt="Bottom Badge" 
@@ -64,8 +64,8 @@ function displayProducts(products) {
 
         // 카드 내용 추가
         card.innerHTML = `
-        <div class="relative">
-            <img src="https://via.placeholder.com/100" alt="${product.name}" class="w-full rounded-md"/>
+        <div class="relative bg-gray-200 w-full aspect-square overflow-hidden rounded-md">
+            <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover rounded-md"/>
              <!-- 겹쳐지는 이미지 -->
             ${newBadgeImage} <!-- 뉴 배지 -->
             ${bestBadgeImage} <!-- 베스트 배지 -->
@@ -75,7 +75,7 @@ function displayProducts(products) {
         </div>
         <div class="mt-2">
             <span class="block text-xl font-bold">${product.name}</span>
-            <span class="block text-gray-600 text-xl font-bold">${`₩ ` + product.price.toLocaleString()}</span>
+            <span class="block text-gray-600 text-xl font-bold text-right pr-4">${`₩ ` + product.price.toLocaleString()}</span>
         </div>
         <!-- 주문 버튼 -->
         <button 
