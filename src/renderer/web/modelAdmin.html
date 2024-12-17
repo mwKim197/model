@@ -17,24 +17,19 @@
 
     <!-- 메뉴 리스트 -->
     <main class="space-y-8">
-
         <!-- 신규 메뉴 추가 -->
         <div class="menu-new-item-wrapper overflow-x-auto">
             <div class="menu-new-item flex flex-col gap-6 p-4 sm:p-6 bg-gray-100 border border-gray-300 rounded-lg shadow-sm">
-                <!-- 이미지 -->
-                <div class="menu-image w-40 h-40 bg-gray-200 flex items-center justify-center rounded-lg text-sm text-gray-500">
-                    <img src="" alt="이미지" class="w-full h-full object-cover rounded-lg">
-                </div>
                 <!-- 메뉴 상세 -->
                 <div class="menu-details flex flex-col gap-6 flex-1">
                     <div class="fixed-row grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                        <!-- 순번 -->
+                        <!-- 이미지 -->
+                        <div class="menu-image w-40 h-40 item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                            <img src="" alt="이미지" class="w-full h-full object-cover rounded-lg">
+                        </div>
                         <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
                             <label for="no" class="text-sm text-gray-600">순번</label>
                             <input id="no" type="text" class="w-full border border-gray-400 rounded-md px-2 py-1">
-                        </div>
-                        <!-- 메뉴명 -->
-                        <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
                             <label for="name" class="text-sm text-gray-600">메뉴명</label>
                             <input id="name" type="text" class="w-full border border-gray-400 rounded-md px-2 py-1">
                         </div>
@@ -47,6 +42,8 @@
                                 <option value="ade">에이드</option>
                                 <option value="other">기타음료</option>
                             </select>
+                            <label for="price" class="text-sm text-gray-600">금액</label>
+                            <input type="number" id="price" name="price" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1">
                         </div>
                         <!-- 컵 -->
                         <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
@@ -61,9 +58,6 @@
                                     <span>종이컵</span>
                                 </label>
                             </fieldset>
-                        </div>
-                        <!-- 얼음 -->
-                        <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
                             <label class="text-sm text-gray-600">얼음</label>
                             <fieldset class="flex items-center gap-2">
                                 <label for="iceYes" class="flex items-center gap-2">
@@ -75,13 +69,12 @@
                                     <span>No</span>
                                 </label>
                             </fieldset>
+
                         </div>
                         <!-- 얼음 시간 및 물 시간 -->
                         <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
                             <label for="iceTime" class="text-sm text-gray-600">얼음 시간</label>
                             <input type="number" id="iceTime" name="iceTime" min="0" step="0.5" class="w-full border border-gray-400 rounded-md px-2 py-1">
-                        </div>
-                        <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
                             <label for="waterTime" class="text-sm text-gray-600">물 시간</label>
                             <input type="number" id="waterTime" name="waterTime" min="0" step="0.5" class="w-full border border-gray-400 rounded-md px-2 py-1">
                         </div>
@@ -92,6 +85,7 @@
                                 <div class="flex items-center gap-2">
                                     <label for="new" class="text-sm">New</label>
                                     <select id="new" name="new" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                                        <option value="" selected disabled hidden>선택</option>
                                         <option value="new1">New1</option>
                                         <option value="new2">New2</option>
                                         <option value="new3">New3</option>
@@ -100,6 +94,7 @@
                                 <div class="flex items-center gap-2">
                                     <label for="event" class="text-sm">Event</label>
                                     <select id="event" name="event" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                                        <option value="" selected disabled hidden>선택</option>
                                         <option value="event1">Event1</option>
                                         <option value="event2">Event2</option>
                                         <option value="event3">Event3</option>
@@ -108,6 +103,7 @@
                                 <div class="flex items-center gap-2">
                                     <label for="best" class="text-sm">Best</label>
                                     <select id="best" name="best" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                                        <option value="" selected disabled hidden>선택</option>
                                         <option value="best1">Best1</option>
                                         <option value="best2">Best2</option>
                                         <option value="best3">Best3</option>
@@ -115,18 +111,19 @@
                                 </div>
                             </fieldset>
                         </div>
-                        <!-- 금액 -->
-                        <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
-                            <label for="price" class="text-sm text-gray-600">금액</label>
-                            <input type="number" id="price" name="price" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1">
-                        </div>
                     </div>
 
                     <!-- 아이템 추가 버튼 -->
-                    <div id="itemContainer" class="flex flex-col sm:flex-row gap-4">
-                        <button id="addItemBtn" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 self-start">
-                            + 항목 추가
-                        </button>
+                    <div id="itemContainer" class="flex flex-col grid-cols-2 sm:flex-row gap-4">
+                        <div id="bitContainer" class="flex flex-col gap-4 w-48 ">
+                            <button id="addItemBtn" class="flex gap-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 self-start">
+                                + 항목 추가
+                            </button>
+                            <button id="saveItemBtn" class="flex gap-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 self-start">
+                                저장
+                            </button>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -267,7 +264,7 @@
         // 새로운 항목 생성
         const newFieldset = document.createElement('fieldset');
         newFieldset.id = `item${itemCounter}`;
-        newFieldset.className = 'menu-new-item flex flex-wrap gap-0.5 p-1 bg-gray-200 border border-gray-300 rounded-md shadow-sm w-48';
+        newFieldset.className = 'menu-new-item flex flex-wrap gap-0.5 p-2 bg-gray-200 border border-gray-300 rounded-md shadow-sm w-52';
 
         // 새 항목의 HTML 템플릿
         newFieldset.innerHTML = `
@@ -277,7 +274,7 @@
         <div>
             <label for="itemType${itemCounter}" class="text-sm text-gray-600">타입</label>
             <select id="itemType${itemCounter}" name="itemType${itemCounter}" class="w-full border border-gray-400 rounded-md px-2 py-1 itemTypeSelector">
-                <option value="select">선택</option>
+                <option value="" selected disabled hidden>선택</option>
                 <option value="coffee">커피</option>
                 <option value="garucha">가루차</option>
                 <option value="syrup">시럽</option>
@@ -299,8 +296,8 @@
 
         // 버튼 앞에 새 항목 삽입
         const itemContainer = document.getElementById('itemContainer');
-        const addItemBtn = document.getElementById('addItemBtn');
-        itemContainer.insertBefore(newFieldset, addItemBtn);
+        const bitContainer = document.getElementById('bitContainer');
+        itemContainer.insertBefore(newFieldset, bitContainer);
 
         // select의 change 이벤트 등록
         const selectElement = newFieldset.querySelector(`#itemType${itemCounter}`);
@@ -337,57 +334,106 @@
             newFieldsHTML = `
             <div>
                 <label for="value1-${itemId}" class="text-sm text-gray-600">글라인더1</label>
-                <input type="number" id="value1-${itemId}" name="value1-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                <input type="number" id="value1-${itemId}" name="value1-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="0">
             </div>
             <div>
                 <label for="value2-${itemId}" class="text-sm text-gray-600">글라인더2</label>
-                <input type="number" id="value2-${itemId}" name="value2-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                <input type="number" id="value2-${itemId}" name="value2-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="0">
             </div>
             <div>
                 <label for="value3-${itemId}" class="text-sm text-gray-600">추출량</label>
-                <input type="number" id="value3-${itemId}" name="value3-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                <input type="number" id="value3-${itemId}" name="value3-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="0" />
             </div>
             <div>
                 <label for="value4-${itemId}" class="text-sm text-gray-600">핫워터</label>
-                <input type="number" id="value4-${itemId}" name="value4-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                <input type="number" id="value4-${itemId}" name="value4-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="0">
             </div>`;
         } else if (selectedType === 'garucha') {
             newFieldsHTML = `
             <div>
-                <label for="value1-${itemId}" class="text-sm text-gray-600">가루량</label>
-                <input type="number" id="value1-${itemId}" name="value1-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                <label for="value1-${itemId}" class="text-sm text-gray-600">차 종류</label>
+                <input type="number" id="value1-${itemId}" name="value1-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="0">
             </div>
             <div>
                 <label for="value2-${itemId}" class="text-sm text-gray-600">추출 시간</label>
-                <input type="number" id="value2-${itemId}" name="value2-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                <input type="number" id="value2-${itemId}" name="value2-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="0">
             </div>
             <div>
                 <label for="value4-${itemId}" class="text-sm text-gray-600">핫워터</label>
-                <input type="number" id="value4-${itemId}" name="value4-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                <input type="number" id="value4-${itemId}" name="value4-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="0">
             </div>`;
         } else if (selectedType === 'syrup') {
             newFieldsHTML = `
             <div>
                 <label for="value1-${itemId}" class="text-sm text-gray-600">시럽 종류</label>
-                <input type="text" id="value1-${itemId}" name="value1-${itemId}" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                <input type="text" id="value1-${itemId}" name="value1-${itemId}" class="w-full border border-gray-400 rounded-md px-2 py-1" value="0">
             </div>
             <div>
                 <label for="value2-${itemId}" class="text-sm text-gray-600">펌프 시간</label>
-                <input type="number" id="value2-${itemId}" name="value2-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                <input type="number" id="value2-${itemId}" name="value2-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="0">
             </div>
             <div>
                 <label for="value4-${itemId}" class="text-sm text-gray-600">핫워터</label>
-                <input type="number" id="value4-${itemId}" name="value4-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                <input type="number" id="value4-${itemId}" name="value4-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="0">
             </div>
             <div>
                 <label for="value4-${itemId}" class="text-sm text-gray-600">탄산수</label>
-                <input type="number" id="value4-${itemId}" name="value4-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                <input type="number" id="value4-${itemId}" name="value4-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="0">
             </div>`;
         }
 
         // 기존 필드를 새로 생성된 내용으로 대체
         dynamicFields.innerHTML = newFieldsHTML;
     }
+
+
+    document.getElementById('saveItemBtn').addEventListener('click', () => {
+        // 메인 메뉴 데이터 수집
+        const menuData = {
+            no: 1, // 순번 (임시, 나중에 동적으로 변경 가능)
+            name: document.getElementById('name').value || '',
+            category: document.getElementById('category').value || '',
+            price: document.getElementById('price').value || '0',
+            cup: document.querySelector('input[name="cup"]:checked')?.value || '',
+            iceYn: document.querySelector('input[name="iceYn"]:checked')?.value || '',
+            iceTime: document.getElementById('iceTime').value || '0',
+            waterTime: document.getElementById('waterTime').value || '0',
+            state: {
+                new: document.getElementById('new').value || '',
+                best: document.getElementById('best').value || '',
+                event: document.getElementById('event').value || ''
+            },
+            items: [],
+            image: "https://placehold.co/200x300/png" // 임시 이미지 URL
+        };
+
+        // items 데이터 수집
+        let itemCounter = 0; // 항목 번호를 위한 카운터
+        document.querySelectorAll('#itemContainer fieldset').forEach((fieldset) => {
+            itemCounter++;
+
+            const itemType = fieldset.querySelector('select')?.value || '';
+            const value1 = fieldset.querySelector('[name*="value1"]')?.value || '0';
+            const value2 = fieldset.querySelector('[name*="value2"]')?.value || '0';
+            const value3 = fieldset.querySelector('[name*="value3"]')?.value || '0';
+            const value4 = fieldset.querySelector('[name*="value4"]')?.value || '0';
+
+            const itemData = {
+                no: itemCounter,
+                type: itemType,
+                value1,
+                value2,
+                value3,
+                value4
+            };
+
+            menuData.items.push(itemData); // items 배열에 추가
+        });
+
+        // 결과 JSON 확인
+        console.log('Generated Menu JSON:', JSON.stringify(menuData, null, 2));
+        alert('메뉴 데이터가 JSON 형식으로 저장되었습니다!');
+    });
 </script>
 
 <script type="module" src="/renderer/api/menuApi.browser.js"></script>
