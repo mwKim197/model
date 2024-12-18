@@ -36,7 +36,6 @@ appServer.use((req, res, next) => {
     res.set('Content-Type', 'text/html');
     next();
 });
-appServer.use(cors());
 
 const regex = /^http:\/\/.*\.narrowroad-model\.com:3000$/;
 
@@ -57,6 +56,13 @@ appServer.use((req, res, next) => {
     next();
 });
 
+// 요청 값 콘솔에 찍기.
+appServer.use((req, res, next) => {
+    console.log('Incoming Origin:', req.headers.origin);
+    console.log('Access-Control-Allow-Origin:', res.getHeader('Access-Control-Allow-Origin'));
+    next();
+});
+
 // assets 디렉토리를 정적 파일로 제공
 appServer.use('/assets', express.static(path.resolve(__dirname, 'assets')));
 appServer.use('/renderer', express.static(path.join(__dirname, 'renderer'), {
@@ -66,7 +72,6 @@ appServer.use('/renderer', express.static(path.join(__dirname, 'renderer'), {
         }
     }
 }));
-
 
 appServer.use(express.json());
 appServer.use(Connect); // MC연결
