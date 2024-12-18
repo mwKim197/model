@@ -48,7 +48,7 @@ const getMenuInfoAll = async () => {
 const setAdminMenuInfo = async (selectedOptions) => {
     try {
         // Fetch 요청 보내기
-        const response = await fetch(`http://${url}:3000//set-admin-menu-info`, {
+        const response = await fetch(`http://${url}:3000/set-admin-menu-info`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

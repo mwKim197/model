@@ -1,6 +1,7 @@
 const { dynamoDB } = require('../../aws');
 const log = require('../../../logger');
 
+// 카운터 ID가 존제하지 않을때만 카운터 ID, 초기값 UPDATE
 const initializeCounter = async (userId) => {
     const params = {
         TableName: 'model_counter',
@@ -8,6 +9,7 @@ const initializeCounter = async (userId) => {
             counterId: userId,  // userId로 카운터 식별
             counterValue: 0,     // 초기값 (0으로 시작)
         },
+        ConditionExpression: 'attribute_not_exists(counterId)', // counterId가 존재하지 않을 경우에만 실행
     };
 
     try {
