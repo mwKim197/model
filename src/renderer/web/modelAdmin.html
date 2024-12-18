@@ -46,8 +46,8 @@
                             <div class="fixed-row grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
                                 <!-- 이미지 -->
                                 <div class="menu-image w-40 h-40 item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
-                                    <img src="" alt="이미지" class="w-full h-full object-cover rounded-lg">
-                                    <input type="file" id="fileInput" accept="image/*" />
+                                    <img src="" alt="이미지" class="w-full h-full object-cover rounded-lg" id="imagePreview">
+                                    <input type="file"  accept="image/*" class="hidden" id="fileInput" />
                                 </div>
                                 <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
                                     <label for="no" class="text-sm text-gray-600">순번</label>
@@ -170,7 +170,7 @@
 </div>
 
 <script>
-    // 등록데이터 조회
+    /* [MENU SET] 등록 메뉴 조회 START */
     // 메뉴 생성 함수
     const renderMenu = (menu) => {
         const menuItem = document.createElement('div');
@@ -286,7 +286,20 @@
         document.getElementById('menu-list').appendChild(menuItem);
     };
 
+    /* [MENU SET] 등록 메뉴 조회 END */
 
+    /* [MENU SET] 등록 START */
+    /* [MENU SET] 등록 IMAGE START */
+    // 이미지 클릭 시 input 트리거
+    const imagePreview = document.getElementById('imagePreview');
+    const fileInput = document.getElementById('fileInput');
+
+    imagePreview.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    /* [MENU SET] 등록 IMAGE END */
+    /* [MENU SET] 등록 ITEM 추가, 삭제 START */
     // 신규 등록 시작
     let itemCounter = 0; // 항목 번호를 위한 변수
 
@@ -356,7 +369,9 @@
             fieldset.remove();
         }
     });
+    /* [MENU SET] 등록 ITEM 추가, 삭제 END */
 
+    /* [MENU SET] 등록 ITEM 동적 등록 START */
     // 선택값에 따라 필드 업데이트
     function updateItemFields(itemId, selectedType) {
         const dynamicFields = document.getElementById(`dynamicFields${itemId}`);
@@ -419,7 +434,10 @@
         dynamicFields.innerHTML = newFieldsHTML;
     }
 
+    /* [MENU SET] 등록 ITEM 동적 등록 END */
 
+
+    /* [MENU SET] 등록 버튼 START */
     document.getElementById('saveItemBtn').addEventListener('click', () => {
         // 메인 메뉴 데이터 수집
         const menuData = {
@@ -467,10 +485,11 @@
         console.log('Generated Menu JSON:', JSON.stringify(menuData, null, 2));
 
     });
+    /* [MENU SET] 등록 버튼 END */
+    /* [MENU SET] 등록 END */
 
 
-
-
+    /* 텝 컨트롤 START */
     document.addEventListener('DOMContentLoaded', () => {
         const tabs = document.querySelectorAll('.tab-btn');
         const panels = document.querySelectorAll('.tab-panel');
@@ -492,6 +511,7 @@
         // 첫 번째 탭 활성화
         tabs[0].click();
     });
+    /* 텝 컨트롤 END */
 </script>
 
 <script type="module" src="/renderer/api/menuApi.browser.js"></script>

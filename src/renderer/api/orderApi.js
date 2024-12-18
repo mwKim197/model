@@ -45,7 +45,7 @@ const reqVCAT_HTTP = async (cost, halbu) => {
             sendbuf = make_send_data(sendMsg);
 
             try {
-                const response = await fetch("https://127.0.0.1:9189", {
+                const response = await fetch("http://127.0.0.1:9189", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/x-www-form-urlencoded"
@@ -76,7 +76,7 @@ const reqVCAT_HTTP = async (cost, halbu) => {
                 iFlag = '1';
 
                 try {
-                    const response = await fetch("https://127.0.0.1:9188", {
+                    const response = await fetch("http://127.0.0.1:9188", {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/x-www-form-urlencoded"
