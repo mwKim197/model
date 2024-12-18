@@ -38,8 +38,16 @@ appServer.use((req, res, next) => {
 });
 appServer.use(cors());
 
+const regex = /^http:\/\/.*\.narrowroad-model\.com:3000$/;
+
 appServer.use(cors({
-    origin: ['http://test_user1.narrowroad-model.com:3000', 'http://localhost:3000'],
+    origin: (origin, callback) => {
+        if (!origin || regex.test(origin) || origin === 'http://localhost:3000') {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type'],
 }));
