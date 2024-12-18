@@ -12,50 +12,42 @@
         <div class="flex-1 bg-white px-4 h-screen overflow-y-scroll scrollbar-hide bg-no-repeat bg-cover bg-center" style="background-image: url('../../assets/basicImage/투명.png'); background-size: 80%; background-position: center;" >
 
             <!-- 카테고리 -->
-            <nav id="menu-nav" class="sticky top-0 h-12 bg-white flex justify-between mb-4 border-b z-50"></nav>
+            <nav id="menu-nav" class="sticky top-0 h-12 bg-white flex justify-between mb-4 border-b border-gray-400 z-50"></nav>
 
             <!-- productGrid 컨테이너 -->
             <div id="productGridContainer" class="relative">
                 <div id="productGrid" class="grid grid-cols-6 gap-4 pb-14">
-                    <!-- 예시 메뉴 카드 -->
-                    <div class="bg-gray-200 rounded-lg p-2 text-center shadow-md">
-                        <div class="relative">
-                            <img src="https://via.placeholder.com/100" alt="아메리카노 (HOT)" class="w-full rounded-md">
-                            <span class="absolute top-0 left-0 bg-red-500 text-white text-xs px-2 py-1 rounded-bl-lg">EVENT</span>
-                        </div>
-                        <div class="mt-2">
-                            <span class="block font-bold">아메리카노 (HOT)</span>
-                            <span class="block text-gray-600">₩3,000</span>
-                        </div>
-                    </div>
-                    <!-- 다른 메뉴 카드 반복 -->
+
                 </div>
             </div>
 
             <!-- 고정된 한 줄 -->
-            <div class="fixed bottom-0 left-0 w-[calc(100%-25%)] bg-white p-4 mt-4 border-t z-50 flex items-center space-x-2">
-                <span class="font-bold text-lg" id="current-time"></span>
-                <span class="pb-1">
-                    <img src="../../assets/basicImage/20241209_213115.png" alt="wifi" class="w-8">
-                </span>
-                <span class="flex items-center space-x-1">
-                    <img src="../../assets/basicImage/20241208_153635.png" alt="wifi" class="w-4">
-                    <span class="font-bold text-lg" id="current-temperature"></span>
-                </span>
-                <span class="font-bold text-lg">상태: 정상</span>
-                <span class="font-bold text-lg" id="storeName">매장명</span>
-                <span class="font-bold text-lg" >비상연락처:</span>
-                <span class="font-bold text-lg" id="tel">비상연락처</span>
+            <div class="fixed bottom-0 left-0 w-[calc(100%-25%)] bg-white px-4 mt-4 z-50 flex flex-col space-x-2">
+                <hr class="w-full h-[1px] border-gray-400">
+                <div class="flex items-center space-x-2 h-10">
+                    <span class="font-bold text-lg" id="current-time"></span>
+                    <span class="pb-1">
+                        <img src="../../assets/basicImage/20241209_213115.png" alt="wifi" class="w-8">
+                    </span>
+                    <span class="flex items-center space-x-1">
+                        <img src="../../assets/basicImage/20241208_153635.png" alt="wifi" class="w-4">
+                        <span class="font-bold text-lg" id="current-temperature"></span>
+                    </span>
+                    <span class="font-bold text-lg">상태: 정상</span>
+                    <span class="font-bold text-lg" id="storeName">매장명</span>
+                    <span class="font-bold text-lg" >비상연락처:</span>
+                    <span class="font-bold text-lg" id="tel">비상연락처</span>
+                </div>
             </div>
 
 
         </div>
 
         <!-- 오른쪽: 주문 리스트 -->
-        <div class="w-1/4 border-l pt-4 pl-4 flex flex-col justify-between">
+        <div class="w-1/4 border-l border-gray-400 pl-4 flex flex-col justify-between">
             <!-- 주문 리스트 헤더 -->
 
-            <div class="flex items-center justify-center border-b pb-2 mb-4">
+            <div class="flex items-center justify-center pt-4 pb-2 mb-4">
                 <img src="../../assets/basicImage/로고.png" alt="logo" class="w-48" />
             </div>
 
@@ -64,7 +56,7 @@
                 <!-- 다른 주문 아이템 반복 -->
             </div>
             <!-- 하단 버튼 -->
-            <div class="flex justify-between items-end border-t pt-2 relative h-56">
+            <div class="flex justify-between items-end pt-2 relative h-56">
                 <!-- 왼쪽: 금액 및 개수와 전체취소 버튼 묶음 -->
                 <div class="flex flex-col justify-between w-1/2 ml-4 pr-1 mr-4">
                     <div class="text-right">
