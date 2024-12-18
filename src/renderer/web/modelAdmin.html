@@ -9,131 +9,162 @@
 </head>
 <body class="bg-gray-50 text-gray-800">
 <div class="w-full mx-auto my-10 md:p-8 bg-white shadow-lg rounded-lg">
-    <!-- 헤더 -->
     <header class="text-center mb-10">
         <h1 class="text-3xl font-extrabold text-gray-700">커피 메뉴 관리</h1>
         <p class="text-gray-500 mt-2">메뉴 정보를 확인하고 재료를 관리하세요</p>
     </header>
-
-    <!-- 메뉴 리스트 -->
     <main class="space-y-8">
-        <!-- 신규 메뉴 추가 -->
-        <div class="menu-new-item-wrapper overflow-x-auto">
-            <div class="menu-new-item flex flex-col gap-6 p-4 sm:p-6 bg-gray-100 border border-gray-300 rounded-lg shadow-sm">
-                <!-- 메뉴 상세 -->
-                <div class="menu-details flex flex-col gap-6 flex-1">
-                    <div class="fixed-row grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                        <!-- 이미지 -->
-                        <div class="menu-image w-40 h-40 item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
-                            <img src="" alt="이미지" class="w-full h-full object-cover rounded-lg">
-                            <input type="file" id="fileInput" accept="image/*" />
-                        </div>
-                        <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
-                            <label for="no" class="text-sm text-gray-600">순번</label>
-                            <input id="no" type="text" class="w-full border border-gray-400 rounded-md px-2 py-1">
-                            <label for="name" class="text-sm text-gray-600">메뉴명</label>
-                            <input id="name" type="text" class="w-full border border-gray-400 rounded-md px-2 py-1">
-                        </div>
-                        <!-- 카테고리 -->
-                        <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
-                            <label for="category" class="text-sm text-gray-600">카테고리</label>
-                            <select id="category" name="Category" class="w-full border border-gray-400 rounded-md px-2 py-1">
-                                <option value="coffee">커피</option>
-                                <option value="tea">티</option>
-                                <option value="ade">에이드</option>
-                                <option value="other">기타음료</option>
-                            </select>
-                            <label for="price" class="text-sm text-gray-600">금액</label>
-                            <input type="number" id="price" name="price" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1">
-                        </div>
-                        <!-- 컵 -->
-                        <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
-                            <label class="text-sm text-gray-600">컵</label>
-                            <fieldset class="flex items-center gap-2">
-                                <label for="cupPlastic" class="flex items-center gap-2">
-                                    <input type="radio" id="cupPlastic" name="cup" value="plastic">
-                                    <span>플라스틱</span>
-                                </label>
-                                <label for="cupPaper" class="flex items-center gap-2">
-                                    <input type="radio" id="cupPaper" name="cup" value="paper">
-                                    <span>종이컵</span>
-                                </label>
-                            </fieldset>
-                            <label class="text-sm text-gray-600">얼음</label>
-                            <fieldset class="flex items-center gap-2">
-                                <label for="iceYes" class="flex items-center gap-2">
-                                    <input type="radio" id="iceYes" name="iceYn" value="yes">
-                                    <span>Yes</span>
-                                </label>
-                                <label for="iceNo" class="flex items-center gap-2">
-                                    <input type="radio" id="iceNo" name="iceYn" value="no">
-                                    <span>No</span>
-                                </label>
-                            </fieldset>
+        <div id="tabs" class="border-b border-gray-200 mb-4">
+            <button
+                    class="tab-btn py-2 px-4 text-gray-600 border-b-2 border-transparent hover:text-blue-500"
+                    data-tab="tab1"
+            >
+                메뉴등록
+            </button>
+            <button
+                    class="tab-btn py-2 px-4 text-gray-600 border-b-2 border-transparent hover:text-blue-500"
+                    data-tab="tab2"
+            >
+                메뉴목록
+            </button>
+            <button
+                    class="tab-btn py-2 px-4 text-gray-600 border-b-2 border-transparent hover:text-blue-500"
+                    data-tab="tab3"
+            >
+                메뉴조작
+            </button>
+        </div>
 
-                        </div>
-                        <!-- 얼음 시간 및 물 시간 -->
-                        <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
-                            <label for="iceTime" class="text-sm text-gray-600">얼음 시간</label>
-                            <input type="number" id="iceTime" name="iceTime" min="0" step="0.5" class="w-full border border-gray-400 rounded-md px-2 py-1">
-                            <label for="waterTime" class="text-sm text-gray-600">물 시간</label>
-                            <input type="number" id="waterTime" name="waterTime" min="0" step="0.5" class="w-full border border-gray-400 rounded-md px-2 py-1">
-                        </div>
-                        <!-- 상태 -->
-                        <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
-                            <label class="text-sm text-gray-600">상태</label>
-                            <fieldset class="flex flex-col gap-2">
-                                <div class="flex items-center gap-2">
-                                    <label for="new" class="text-sm">New</label>
-                                    <select id="new" name="new" class="w-full border border-gray-400 rounded-md px-2 py-1">
-                                        <option value="" selected disabled hidden>선택</option>
-                                        <option value="new1">New1</option>
-                                        <option value="new2">New2</option>
-                                        <option value="new3">New3</option>
-                                    </select>
+        <div id="tab-content">
+            <!--메뉴 등록 START-->
+            <div class="tab-panel hidden" id="tab1">
+                <!-- 신규 메뉴 추가 -->
+                <div class="menu-new-item-wrapper overflow-x-auto">
+                    <div class="menu-new-item flex flex-col gap-6 p-4 sm:p-6 bg-gray-100 border border-gray-300 rounded-lg shadow-sm">
+                        <!-- 메뉴 상세 -->
+                        <div class="menu-details flex flex-col gap-6 flex-1">
+                            <div class="fixed-row grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                                <!-- 이미지 -->
+                                <div class="menu-image w-40 h-40 item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                                    <img src="" alt="이미지" class="w-full h-full object-cover rounded-lg">
+                                    <input type="file" id="fileInput" accept="image/*" />
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <label for="event" class="text-sm">Event</label>
-                                    <select id="event" name="event" class="w-full border border-gray-400 rounded-md px-2 py-1">
-                                        <option value="" selected disabled hidden>선택</option>
-                                        <option value="event1">Event1</option>
-                                        <option value="event2">Event2</option>
-                                        <option value="event3">Event3</option>
-                                    </select>
+                                <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                                    <label for="no" class="text-sm text-gray-600">순번</label>
+                                    <input id="no" type="text" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                                    <label for="name" class="text-sm text-gray-600">메뉴명</label>
+                                    <input id="name" type="text" class="w-full border border-gray-400 rounded-md px-2 py-1">
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <label for="best" class="text-sm">Best</label>
-                                    <select id="best" name="best" class="w-full border border-gray-400 rounded-md px-2 py-1">
-                                        <option value="" selected disabled hidden>선택</option>
-                                        <option value="best1">Best1</option>
-                                        <option value="best2">Best2</option>
-                                        <option value="best3">Best3</option>
+                                <!-- 카테고리 -->
+                                <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                                    <label for="category" class="text-sm text-gray-600">카테고리</label>
+                                    <select id="category" name="Category" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                                        <option value="coffee">커피</option>
+                                        <option value="tea">티</option>
+                                        <option value="ade">에이드</option>
+                                        <option value="other">기타음료</option>
                                     </select>
+                                    <label for="price" class="text-sm text-gray-600">금액</label>
+                                    <input type="number" id="price" name="price" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1">
                                 </div>
-                            </fieldset>
-                        </div>
-                    </div>
+                                <!-- 컵 -->
+                                <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                                    <label class="text-sm text-gray-600">컵</label>
+                                    <fieldset class="flex items-center gap-2">
+                                        <label for="cupPlastic" class="flex items-center gap-2">
+                                            <input type="radio" id="cupPlastic" name="cup" value="plastic">
+                                            <span>플라스틱</span>
+                                        </label>
+                                        <label for="cupPaper" class="flex items-center gap-2">
+                                            <input type="radio" id="cupPaper" name="cup" value="paper">
+                                            <span>종이컵</span>
+                                        </label>
+                                    </fieldset>
+                                    <label class="text-sm text-gray-600">얼음</label>
+                                    <fieldset class="flex items-center gap-2">
+                                        <label for="iceYes" class="flex items-center gap-2">
+                                            <input type="radio" id="iceYes" name="iceYn" value="yes">
+                                            <span>Yes</span>
+                                        </label>
+                                        <label for="iceNo" class="flex items-center gap-2">
+                                            <input type="radio" id="iceNo" name="iceYn" value="no">
+                                            <span>No</span>
+                                        </label>
+                                    </fieldset>
 
-                    <!-- 아이템 추가 버튼 -->
-                    <div id="itemContainer" class="flex flex-col grid-cols-2 sm:flex-row gap-4">
-                        <div id="bitContainer" class="flex flex-col gap-4 w-48 ">
-                            <button id="addItemBtn" class="flex gap-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 self-start">
-                                + 항목 추가
-                            </button>
-                            <button id="saveItemBtn" class="flex gap-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 self-start">
-                                저장
-                            </button>
-                            <button id="uploadButton">이미지 업로드</button>
-                        </div>
+                                </div>
+                                <!-- 얼음 시간 및 물 시간 -->
+                                <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                                    <label for="iceTime" class="text-sm text-gray-600">얼음 시간</label>
+                                    <input type="number" id="iceTime" name="iceTime" min="0" step="0.5" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                                    <label for="waterTime" class="text-sm text-gray-600">물 시간</label>
+                                    <input type="number" id="waterTime" name="waterTime" min="0" step="0.5" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                                </div>
+                                <!-- 상태 -->
+                                <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                                    <label class="text-sm text-gray-600">상태</label>
+                                    <fieldset class="flex flex-col gap-2">
+                                        <div class="flex items-center gap-2">
+                                            <label for="new" class="text-sm">New</label>
+                                            <select id="new" name="new" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                                                <option value="" selected disabled hidden>선택</option>
+                                                <option value="new1">New1</option>
+                                                <option value="new2">New2</option>
+                                                <option value="new3">New3</option>
+                                            </select>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <label for="event" class="text-sm">Event</label>
+                                            <select id="event" name="event" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                                                <option value="" selected disabled hidden>선택</option>
+                                                <option value="event1">Event1</option>
+                                                <option value="event2">Event2</option>
+                                                <option value="event3">Event3</option>
+                                            </select>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <label for="best" class="text-sm">Best</label>
+                                            <select id="best" name="best" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                                                <option value="" selected disabled hidden>선택</option>
+                                                <option value="best1">Best1</option>
+                                                <option value="best2">Best2</option>
+                                                <option value="best3">Best3</option>
+                                            </select>
+                                        </div>
+                                    </fieldset>
+                                </div>
+                            </div>
 
+                            <!-- 아이템 추가 버튼 -->
+                            <div id="itemContainer" class="flex flex-col grid-cols-2 sm:flex-row gap-4">
+                                <div id="bitContainer" class="flex flex-col gap-4 w-48 ">
+                                    <button id="addItemBtn" class="flex gap-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 self-start">
+                                        + 항목 추가
+                                    </button>
+                                    <button id="saveItemBtn" class="flex gap-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 self-start">
+                                        저장
+                                    </button>
+                                    <button id="uploadButton">이미지 업로드</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- 메뉴 리스트 -->
-        <div id="menu-list" class="space-y-4">
-            <!-- 메뉴 아이템이 추가되는 위치 -->
+            <!--메뉴 등록 END-->
+            <!--메뉴 목록 START-->
+            <div class="tab-panel hidden" id="tab2">
+                <!-- 메뉴 리스트 -->
+                <div id="menu-list" class="space-y-4">
+                    <!-- 메뉴 아이템이 추가되는 위치 -->
+                </div>
+            </div>
+            <!--메뉴 목록 END-->
+            <!--메뉴 조작 START-->
+            <div class="tab-panel hidden" id="tab3">
+                <p class="p-4 bg-white border border-gray-200 rounded">Content for Tab 3</p>
+            </div>
+            <!--메뉴 조작 END-->
         </div>
     </main>
 </div>
@@ -436,6 +467,31 @@
         console.log('Generated Menu JSON:', JSON.stringify(menuData, null, 2));
 
     });
+
+
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const tabs = document.querySelectorAll('.tab-btn');
+        const panels = document.querySelectorAll('.tab-panel');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.getAttribute('data-tab');
+
+                // 모든 탭과 패널 초기화
+                tabs.forEach(t => t.classList.remove('text-blue-500', 'border-blue-500'));
+                panels.forEach(panel => panel.classList.add('hidden'));
+
+                // 선택된 탭과 패널 활성화
+                tab.classList.add('text-blue-500', 'border-blue-500');
+                document.getElementById(target).classList.remove('hidden');
+            });
+        });
+
+        // 첫 번째 탭 활성화
+        tabs[0].click();
+    });
 </script>
 
 <script type="module" src="/renderer/api/menuApi.browser.js"></script>
@@ -446,7 +502,7 @@
         // 렌더링
         if(data?.Items) {
             // 메뉴 데이터 렌더링
-           // data?.Items.forEach(menu => renderMenu(menu));
+           data?.Items.forEach(menu => renderMenu(menu));
         }
 
 
