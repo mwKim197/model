@@ -22,7 +22,7 @@ const setUserInfo = async (userInfo) => {
 
 const setUserLogin = async (userInfo) => {
     try {
-        const response = await fetch(`http://${userInfo.url}:3000/set-user-login`,{method: 'POST',
+        const response = await fetch(`http://localhost:3000/set-user-login`,{method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },

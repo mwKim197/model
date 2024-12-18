@@ -32,11 +32,6 @@ appServer.use((req, res, next) => {
 const cors = require('cors');
 const {uploadImageToS3, uploadImageToS3andLocal} = require("./aws/s3/utils/image");
 
-appServer.use((req, res, next) => {
-    res.set('Content-Type', 'text/html');
-    next();
-});
-
 const regex = /^http:\/\/.*\.narrowroad-model\.com:3000$/;
 
 appServer.use(cors({
@@ -51,10 +46,18 @@ appServer.use(cors({
     allowedHeaders: ['Content-Type'],
 }));
 
+/*
 appServer.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Private-Network', 'true'); // PNA 허용
     next();
 });
+
+appServer.use((req, res, next) => {
+    res.set('Content-Type', 'text/html');
+    next();
+});
+*/
+
 
 // 요청 값 콘솔에 찍기.
 appServer.use((req, res, next) => {
