@@ -48,7 +48,7 @@ Menu.post('/set-menu-info', async (req, res) => {
         const selectedOptions = req.body; // 클라이언트에서 전송한 JSON 데이터
 
         // 받은 데이터를 콘솔에 출력
-        console.log('Received menu info:', selectedOptions);
+        log.info('Received menu info:', selectedOptions);
 
         const data = await addProduct(selectedOptions);
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -80,17 +80,17 @@ Menu.post('/set-admin-menu-info', upload.single('image'), async (req, res) => {
             return res.status(400).json({ success: false, message: '파일과 메뉴 ID가 필요합니다.' });
         }
         // 1. 이미지 저장 (로컬 + S3)
-        console.log('Uploading image...');
+        log.info('Uploading image...');
         const uploadResult = await uploadImageToS3andLocal(bucketName,file.buffer, file.originalname, getMenuId);
         // 로컬이미지 경로
         menuData.image = uploadResult.localPath;
-        console.log(menuData);
+        log.info(menuData);
         // 순번
         menuData.no = getMenuId;
         // 2. 데이터 저장
-        console.log('Saving menu data...');
+        log.info('Saving menu data...');
         const savedData = await addProduct(menuData); // 데이터 저장
-        console.log('Menu data saved successfully.');
+        log.info('Menu data saved successfully.');
 
         // 3. 성공 응답 반환
         res.json({
@@ -99,12 +99,12 @@ Menu.post('/set-admin-menu-info', upload.single('image'), async (req, res) => {
             image: uploadResult.s3Url
         });
     } catch (err) {
-        console.error('Error during operation:', err.message);
+        log.error('Error during operation:', err.message);
 
         // 이미지 롤백 (로컬 파일 삭제)
 
         // 데이터 롤백 (여기서는 DB에 따라 삭제 처리 필요)
-        console.error('Rolling back changes...');
+        log.error('Rolling back changes...');
         res.status(500).json({ message: 'Failed to save menu info and image', error: err.message });
     }
 });
