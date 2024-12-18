@@ -1,6 +1,6 @@
 const { dynamoDB } = require('../../aws');
 const log = require('../../../logger');
-const { initializeCounter, incrementCounter, getCounterValue } = require('./getCount');
+const { getCounterValue } = require('./getCount');
 const getUser = require('../../../util/getUser');  // 유틸 함수 가져오기
 let user;
 
@@ -22,7 +22,7 @@ const addProduct = async (data) => {
         TableName: 'model_menu',
         Item: {
             userId: user.userId,
-            menuId: await incrementCounter(user.userId),
+            menuId: await getCounterValue(user.userId), // 이미지에서 카운터 추가하고 현재 값으로 조회
             ...data,
         },
     };

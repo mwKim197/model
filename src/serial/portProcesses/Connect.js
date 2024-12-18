@@ -5,6 +5,7 @@ const log = require('../../logger');
 let { startOrder, useWash }= require('../../services/serialOrderManager.js');
 const {serialCommCom1} = require("../../serial/serialCommManager")
 const {signupUser, loginUser} = require("../../login");
+const {initializeCounter} = require("../../aws/db/utils/getCount");
 // MC 머신 Data - SerialPolling 인스턴스 생성
 const polling = new serialDataManager(serialCommCom1);
 

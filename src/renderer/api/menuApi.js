@@ -1,5 +1,6 @@
 const log = require("../../logger");
 const { ipcRenderer } = require('electron');
+const {initializeCounter} = require("../../aws/db/utils/getCount");
 
 // 전역 변수 선언
 let userData = null;
@@ -39,7 +40,7 @@ const getUserInfo = async () => {
         if (!userData) {
             throw new Error('User data is not initialized');
         }
-        console.log("url: " , userData.url);
+
         const response = await fetch(`http://localhost:3000/get-user-info`);
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);

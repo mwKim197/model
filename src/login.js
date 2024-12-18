@@ -5,6 +5,7 @@ const bcrypt =  require('bcrypt');
 // DynamoDB 설정
 const { dynamoDB } = require('./aws/aws');
 const {addSubdomainSafely} = require("./aws/route53/route53");
+const {initializeCounter} = require("./aws/db/utils/getCount");
 
 // 비밀번호 해시화 함수
 const hashPassword = async (password) => {
@@ -89,6 +90,9 @@ const loginUser = async (userId, password) => {
                 // 로그인 성공 시 사용자 정보를 electron-store에 저장
                 const { default: Store } = await import('electron-store');
                 const store = new Store();
+
+                // S3 카운터 DB 데이터 생성
+                await initializeCounter(user.userId);
 
                 // 사용자 정보를 저장 (예시: 사용자 이름과 ID)
                 store.set('user', {
