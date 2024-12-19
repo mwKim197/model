@@ -390,8 +390,8 @@
                 const { width, height } = imgElement;
 
                 // 이미지 픽셀 크기 제한 (예: 300x300)
-                if (width > 300 || height > 300) {
-                    alert('이미지 크기는 300x300 이하로 제한됩니다.');
+                if (width > 600 || height > 600) {
+                    alert('이미지 크기는 600x600 이하로 제한됩니다.');
                     event.target.value = ''; // 파일 선택 취소
                 } else {
                     imagePreview.src = imgUrl; // 제한 통과 시 이미지 표시
