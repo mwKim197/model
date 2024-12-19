@@ -73,8 +73,8 @@ function displayProducts(products) {
             ${emptyBadgeImage} <!-- 품절 배지 -->
         </div>
         <div class="mt-2">
-            <span class="block text-xl font-bold">${product.name}</span>
-            <span class="block text-gray-600 text-xl font-bold text-right pr-4">${`₩ ` + product.price.toLocaleString()}</span>
+            <span class="block text-xl ">${product.name}</span>
+            <span class="block text-gray-600 text-xl  text-right pr-4">${`₩ ` + product.price.toLocaleString()}</span>
         </div>
         <!-- 주문 버튼 -->
         <button 
@@ -179,8 +179,8 @@ async function addItemToOrder(menuId) {
             <div class="flex-1">
                 <!-- 상품명 및 가격 -->
                 <div class="flex justify-between items-center">
-                    <h3 class="font-bold text-xl">${product.name}</h3>
-                    <p class="text-gray-600 text-xl font-bold">₩<span class="item-total font-bold">${product.price.toLocaleString()}</span></p>
+                    <h3 class=" text-xl">${product.name}</h3>
+                    <p class="text-gray-600 text-xl ">₩<span class="item-total ">${product.price.toLocaleString()}</span></p>
                 </div>
             </div>
             <!-- 삭제 버튼 -->
@@ -470,7 +470,7 @@ function updateTime() {
 }
 
 // 1초마다 시간 업데이트
-setInterval(updateTime, 3000);
+setInterval(updateTime, 1000);
 
 // 매장명, 비상연락쳐 업데이트
 function updateStoreInfo() {
