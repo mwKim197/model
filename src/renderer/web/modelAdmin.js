@@ -1,3 +1,4 @@
+/*
 const url = window.location.hostname;
 
 document.getElementById('saveItemBtn').addEventListener('click', async () => {
@@ -11,6 +12,7 @@ document.getElementById('saveItemBtn').addEventListener('click', async () => {
         price: document.getElementById('price').value || '0',
         cup: document.querySelector('input[name="cup"]:checked')?.value || '',
         iceYn: document.querySelector('input[name="iceYn"]:checked')?.value || '',
+        hotAndIce: document.querySelector('input[name="hotAndIce"]:checked')?.value || 'None',
         iceTime: document.getElementById('iceTime').value || '0',
         waterTime: document.getElementById('waterTime').value || '0',
         state: {
@@ -19,7 +21,7 @@ document.getElementById('saveItemBtn').addEventListener('click', async () => {
             event: document.getElementById('event').value || ''
         },
         items: [],
-        image: "https://placehold.co/200x300/png" // 임시 이미지 URL
+        image: "" // 임시 이미지 URL
     };
 
     // items 데이터 수집
@@ -69,4 +71,4 @@ document.getElementById('saveItemBtn').addEventListener('click', async () => {
     } else {
         alert('이미지를 선택해주세요.');
     }
-});
+});*/

@@ -144,6 +144,7 @@ const setMenuInfo = async () => {
                 name: document.getElementById('menuName')?.value || 'None',
                 cup: document.querySelector('input[name="cup"]:checked')?.value || 'None',
                 iceYn: document.querySelector('input[name="iceYn"]:checked')?.value || 'No',
+                hotAndIce: document.querySelector('input[name="hotAndIce"]:checked')?.value || 'None',
                 iceTime: document.querySelector('input[name="iceTime"]')?.value || '0',
                 waterTime: document.querySelector('input[name="waterTime"]')?.value || '0',
                 price: document.getElementById('price').value || 'None',

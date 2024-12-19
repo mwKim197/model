@@ -17,6 +17,7 @@ const processUserAndProduct = async () => {
 }
 processUserAndProduct().then();
 
+// 단건 아이템 등록
 const addProduct = async (data) => {
     const params = {
         TableName: 'model_menu',
@@ -36,7 +37,7 @@ const addProduct = async (data) => {
 };
 
 
-
+// 전체 아이템 조회
 const allProduct = async () => {
     let params = {
         TableName: 'model_menu',       // 테이블 이름
@@ -56,7 +57,7 @@ const allProduct = async () => {
     }
 }
 
-
+// 최근 아이템 조회
 const checkProduct = async () => {
     const menuId = await getCounterValue(user.userId);
 
@@ -77,9 +78,50 @@ const checkProduct = async () => {
     }
 };
 
+// 아이템 삭제
+const deleteProduct = async (userId, menuId) => {
+    const params = {
+        TableName: 'model_menu',
+        Key: {
+            userId: userId, // 파티션 키
+            menuId: menuId, // 정렬 키 (필요한 경우)
+        },
+    };
+
+    try {
+        // DynamoDB에서 항목 삭제
+        await dynamoDB.delete(params).promise();
+        console.log('[DB] 삭제 성공:', menuId);
+    } catch (error) {
+        console.error('[DB] 삭제 실패:', error.message); // 오류 메시지 출력
+    }
+};
+
+// 아이템 수정
+const replaceProduct = async (userId, menuId, newData) => {
+    const params = {
+        TableName: 'model_menu',
+        Item: {
+            userId: userId, // 기존 항목의 파티션 키
+            menuId: menuId, // 기존 항목의 정렬 키
+            ...newData, // 새 데이터
+        },
+    };
+
+    try {
+        // 기존 항목 삭제 없이 새 항목 삽입 (동일한 키로 덮어쓰기)
+        await dynamoDB.put(params).promise();
+        console.log('[DB] 항목 대체 성공:', menuId);
+    } catch (error) {
+        console.error('[DB] 항목 대체 실패:', error.message); // 오류 메시지 출력
+    }
+};
+
 
 module.exports = {
     addProduct,
     allProduct,
     checkProduct,
+    deleteProduct,
+    replaceProduct,
 };

@@ -43,8 +43,7 @@
                     <div class="menu-new-item flex flex-col gap-6 p-4 sm:p-6 bg-gray-100 border border-gray-300 rounded-lg shadow-sm">
                         <!-- 메뉴 상세 -->
                         <div class="menu-details flex flex-col gap-6 flex-1">
-                            <div class="fixed-row grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                                <!-- 이미지 -->
+                            <div class="fixed-row grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
                                 <!-- 이미지 -->
                                 <div class="menu-image relative w-40 h-40 item flex flex-col bg-gray-200 border border-gray-300 rounded-md">
                                     <img src="../../assets/basicImage/300x300.png" alt="이미지" class="w-full h-full object-cover rounded-lg hover:cursor-pointer" id="imagePreview">
@@ -101,7 +100,6 @@
                                             <span>No</span>
                                         </label>
                                     </fieldset>
-
                                 </div>
                                 <!-- 얼음 시간 및 물 시간 -->
                                 <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
@@ -143,6 +141,20 @@
                                         </div>
                                     </fieldset>
                                 </div>
+                                <!-- 핫 엔 아이스 -->
+                                <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                                    <label class="text-sm text-gray-600">Hot and Ice</label>
+                                    <fieldset class="flex items-center gap-2">
+                                        <label for="hot" class="flex items-center gap-2">
+                                            <input type="radio" id="hot" name="hotAndIce" value="hot" checked>
+                                            <span>Hot</span>
+                                        </label>
+                                        <label for="ice" class="flex items-center gap-2">
+                                            <input type="radio" id="ice" name="hotAndIce" value="ice">
+                                            <span>Ice</span>
+                                        </label>
+                                    </fieldset>
+                                </div>
                             </div>
 
                             <!-- 아이템 추가 버튼 -->
@@ -179,181 +191,8 @@
 </div>
 
 <script>
+    const url = window.location.hostname;
     /* [MENU SET] 등록 메뉴 조회 START */
-    // 메뉴 생성 함수
-    /*const renderMenu = (menu) => {
-        const menuItem = document.createElement('div');
-        menuItem.className = "menu-new-item min-w-[835px] flex flex-col gap-6 p-6 bg-gray-100 border border-gray-300 rounded-lg shadow-sm overflow-x-auto";
-
-        menuItem.innerHTML = `
-            <!-- 이미지 -->
-            <div class="menu-image w-40 h-40 bg-gray-200 flex items-center justify-center rounded-lg text-sm text-gray-500">
-                <img src="${menu.image}" alt="${menu.name}" class="w-full h-full object-cover rounded-lg">
-            </div>
-            <!-- 메뉴 상세 -->
-            <div class="menu-details flex flex-col gap-6 flex-1 min-w-max">
-                <div class="fixed-row grid grid-cols-7 gap-4 min-w-[900px]">
-                    <!-- 순번 -->
-                    <div class="item h-[150px] w-[150px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
-                        <label for="no-${menu.no}" class="text-sm text-gray-600 w-full text-center">순번</label>
-                        <input id="no-${menu.no}" type="text" value="${menu.no}" class="w-20 mx-auto border border-gray-400 rounded-md px-2 py-1" readonly>
-                    </div>
-                    <!-- 매뉴명 -->
-                    <div class="item h-[150px] w-[150px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
-                        <label for="name-${menu.no}" class="text-sm text-gray-600 w-full text-center">메뉴명</label>
-                        <input id="name-${menu.no}" type="text" value="${menu.name}" class="w-20 mx-auto border border-gray-400 rounded-md px-2 py-1">
-                    </div>
-                    <!-- 카테고리 -->
-                    <div class="item h-[150px] w-[150px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
-                        <label for="category-${menu.no}" class="text-sm text-gray-600 w-full text-center">카테고리</label>
-                        <select id="category-${menu.no}" name="Category" class="w-20 mx-auto border border-gray-400 rounded-md px-2 py-1">
-                            <option value="coffee" ${menu.category === 'coffee' ? 'selected' : ''}>커피</option>
-                            <option value="tea" ${menu.category === 'tea' ? 'selected' : ''}>티</option>
-                            <option value="ade" ${menu.category === 'ade' ? 'selected' : ''}>에이드</option>
-                            <option value="latte" ${menu.category === 'latte' ? 'selected' : ''}>라떼</option>
-                        </select>
-                    </div>
-                    <!-- 컵 -->
-                    <div class="item h-[150px] w-[150px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
-                        <label class="text-sm text-gray-600 w-full text-center">컵</label>
-                        <fieldset class="flex flex-col items-center gap-2">
-                            <label for="cupPlastic-${menu.no}" class="flex items-center gap-2">
-                                <input type="radio" id="cupPlastic-${menu.no}" name="cup-${menu.no}" value="plastic" ${menu.cup === 'plastic' ? 'checked' : ''}>
-                                <span>플라스틱</span>
-                            </label>
-                            <label for="cupPaper-${menu.no}" class="flex items-center gap-2">
-                                <input type="radio" id="cupPaper-${menu.no}" name="cup-${menu.no}" value="paper" ${menu.cup === 'paper' ? 'checked' : ''}>
-                                <span>종이컵</span>
-                            </label>
-                        </fieldset>
-                    </div>
-                    <!-- 얼음 -->
-                    <div class="item h-[150px] w-[150px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
-                        <label class="text-sm text-gray-600 w-full text-center">얼음</label>
-                        <fieldset class="flex flex-col items-center gap-2">
-                            <label for="iceYes-${menu.no}" class="flex items-center gap-2">
-                                <input type="radio" id="iceYes-${menu.no}" name="iceYn-${menu.no}" value="yes" ${menu.iceYn === 'yes' ? 'checked' : ''}>
-                                <span>Yes</span>
-                            </label>
-                            <label for="iceNo-${menu.no}" class="flex items-center gap-2">
-                                <input type="radio" id="iceNo-${menu.no}" name="iceYn-${menu.no}" value="no" ${menu.iceYn === 'no' ? 'checked' : ''}>
-                                <span>No</span>
-                            </label>
-                        </fieldset>
-                    </div>
-                    <!-- 얼음 시간 및 물 시간 -->
-                    <div class="item h-[150px] w-[150px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
-                        <div class="flex items-center gap-2">
-                            <label for="iceTime-${menu.no}" class="text-sm text-gray-600 w-20 text-right">얼음 시간</label>
-                            <input type="number" id="iceTime-${menu.no}" value="${menu.iceTime}" class="w-14 border border-gray-400 rounded-md px-2 py-1">
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <label for="waterTime-${menu.no}" class="text-sm text-gray-600 w-20 text-right">물 시간</label>
-                            <input type="number" id="waterTime-${menu.no}" value="${menu.waterTime}" class="w-14 border border-gray-400 rounded-md px-2 py-1">
-                        </div>
-                    </div>
-                    <!-- 금액 -->
-                    <div class="item h-[150px] w-[150px] bg-gray-200 border border-gray-300 rounded-md flex flex-col justify-center gap-0.5 p-0.5">
-                        <label for="price-${menu.no}" class="text-sm text-gray-600 w-full text-center">금액</label>
-                        <input type="number" id="price-${menu.no}" value="${menu.price}" class="w-20 mx-auto border border-gray-400 rounded-md px-2 py-1">
-                    </div>
-                </div>
-
-                <!-- 아이템 -->
-                <div id="itemContainer-${menu.no}" class="flex flex-wrap gap-4 items-start">
-                    ${menu.items.map((item, index) => `
-                        <fieldset id="item-${menu.no}-${index}" class="menu-new-item flex flex-wrap gap-0.5 p-1 bg-gray-200 border border-gray-300 rounded-md shadow-sm w-48">
-                            <legend class="text-sm font-semibold mb-2">${index + 1}항목</legend>
-                            <div class="menu-details grid grid-cols-2 gap-4 w-full">
-                                <div>
-                                    <label for="itemType-${menu.no}-${index}" class="text-sm text-gray-600">타입</label>
-                                    <input type="text" id="itemType-${menu.no}-${index}" value="${item.type}" class="w-full border border-gray-400 rounded-md px-2 py-1">
-                                </div>
-                                <div>
-                                    <label for="value1-${menu.no}-${index}" class="text-sm text-gray-600">Value1</label>
-                                    <input type="number" id="value1-${menu.no}-${index}" value="${item.value1}" class="w-full border border-gray-400 rounded-md px-2 py-1">
-                                </div>
-                                <div>
-                                    <label for="value2-${menu.no}-${index}" class="text-sm text-gray-600">Value2</label>
-                                    <input type="number" id="value2-${menu.no}-${index}" value="${item.value2}" class="w-full border border-gray-400 rounded-md px-2 py-1">
-                                </div>
-                                <div>
-                                    <label for="value3-${menu.no}-${index}" class="text-sm text-gray-600">Value3</label>
-                                    <input type="number" id="value3-${menu.no}-${index}" value="${item.value3}" class="w-full border border-gray-400 rounded-md px-2 py-1">
-                                </div>
-                                <div>
-                                    <label for="value4-${menu.no}-${index}" class="text-sm text-gray-600">Value4</label>
-                                    <input type="number" id="value4-${menu.no}-${index}" value="${item.value4}" class="w-full border border-gray-400 rounded-md px-2 py-1">
-                                </div>
-                            </div>
-                        </fieldset>
-                    `).join('')}
-                </div>
-            </div>
-        `;*/
-
-  /*  function renderMenu(menu) {
-        const container = document.createElement('div');
-        container.className = "menu-list flex flex-col gap-6";
-
-        // Menu Header
-        const menuHeader = document.createElement('div');
-        menuHeader.className = "menu-image relative w-40 h-40 border rounded-md overflow-hidden";
-        menuHeader.innerHTML = `<img src="${menu.image}" alt="Menu Image" class="w-full h-full object-cover">`;
-        container.appendChild(menuHeader);
-
-        // Menu Details
-        const menuDetails = document.createElement('div');
-        menuDetails.className = "menu-details flex flex-col gap-4 p-4 bg-white border rounded-lg";
-        menuDetails.innerHTML = `
-        <label class="text-sm text-gray-600">메뉴 ID</label>
-        <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${menu.menuId}" readonly>
-
-        <label class="text-sm text-gray-600">카테고리</label>
-        <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${menu.category}" readonly>
-
-        <label class="text-sm text-gray-600">가격</label>
-        <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${menu.price}" readonly>
-
-        <label class="text-sm text-gray-600">이름</label>
-        <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${menu.name}" readonly>
-    `;
-        container.appendChild(menuDetails);
-
-        // Items List
-        const itemsList = document.createElement('div');
-        itemsList.className = "items-list grid gap-4";
-
-        menu.items.forEach(item => {
-            const itemFieldset = document.createElement('fieldset');
-            itemFieldset.className = "item flex flex-col gap-2 border border-gray-300 rounded-md p-2";
-            itemFieldset.innerHTML = `
-            <legend class="text-sm font-semibold">Item ${item.no}</legend>
-
-            <label class="text-sm text-gray-600">타입</label>
-            <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${item.type}" readonly>
-
-            <label class="text-sm text-gray-600">값 1</label>
-            <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${item.value1}" readonly>
-
-            <label class="text-sm text-gray-600">값 2</label>
-            <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${item.value2}" readonly>
-
-            <label class="text-sm text-gray-600">값 3</label>
-            <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${item.value3}" readonly>
-
-            <label class="text-sm text-gray-600">값 4</label>
-            <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${item.value4}" readonly>
-        `;
-            itemsList.appendChild(itemFieldset);
-        });
-
-        container.appendChild(itemsList);
-
-        return container; // DOM 요소 반환
-    }
-
-    document.getElementById('menuContainer').appendChild(renderMenu(data));*/
 
     /* [MENU SET] 등록 메뉴 조회 END */
 
@@ -544,8 +383,8 @@
                 <input type="number" id="value2-${itemId}" name="value2-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="0" max="100">
             </div>
             <div>
-                <label for="value4-${itemId}" class="text-sm text-gray-600">핫워터</label>
-                <input type="number" id="value4-${itemId}" name="value4-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="0" max="200">
+                <label for="value3-${itemId}" class="text-sm text-gray-600">핫워터</label>
+                <input type="number" id="value3-${itemId}" name="value3-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="0" max="200">
             </div>`;
         } else if (selectedType === 'syrup') {
             newFieldsHTML = `
@@ -558,8 +397,8 @@
                 <input type="number" id="value2-${itemId}" name="value2-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="0" max="10">
             </div>
             <div>
-                <label for="value4-${itemId}" class="text-sm text-gray-600">핫워터</label>
-                <input type="number" id="value4-${itemId}" name="value4-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="0" max="100">
+                <label for="value3-${itemId}" class="text-sm text-gray-600">핫워터</label>
+                <input type="number" id="value3-${itemId}" name="value3-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="0" max="100">
             </div>
             <div>
                 <label for="value4-${itemId}" class="text-sm text-gray-600">탄산수</label>
@@ -575,15 +414,19 @@
 
 
     /* [MENU SET] 등록 버튼 START */
-    document.getElementById('saveItemBtn').addEventListener('click', () => {
+
+    document.getElementById('saveItemBtn').addEventListener('click', async () => {
+        const fileInput = document.getElementById('fileInput');
+
         // 메인 메뉴 데이터 수집
         const menuData = {
-            no: 1, // 순번 (임시, 나중에 동적으로 변경 가능)
+            no: 0, // 순번 (임시, 나중에 동적으로 변경 가능)
             name: document.getElementById('name').value || '',
             category: document.getElementById('category').value || '',
             price: document.getElementById('price').value || '0',
             cup: document.querySelector('input[name="cup"]:checked')?.value || '',
             iceYn: document.querySelector('input[name="iceYn"]:checked')?.value || '',
+            hotAndIce: document.querySelector('input[name="hotAndIce"]:checked')?.value || 'None',
             iceTime: document.getElementById('iceTime').value || '0',
             waterTime: document.getElementById('waterTime').value || '0',
             state: {
@@ -618,9 +461,30 @@
             menuData.items.push(itemData); // items 배열에 추가
         });
 
-        // 결과 JSON 확인
-        console.log('Generated Menu JSON:', JSON.stringify(menuData, null, 2));
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('menuData', JSON.stringify(menuData));
+            console.log(menuData);
+            try {
+                const response = await fetch(`http://${url}:3000/set-admin-menu-info`, {
+                    method: 'POST',
+                    body: formData,
+                });
 
+                const result = await response.json();
+                if (result.success) {
+                    console.log('업로드 성공:', result.data);
+                } else {
+                    console.error('업로드 실패:', result.message);
+                }
+            } catch (error) {
+                console.error('업로드 중 오류:', error);
+            }
+        } else {
+            alert('이미지를 선택해주세요.');
+        }
     });
     /* [MENU SET] 등록 버튼 END */
     /* [MENU SET] 등록 END */
@@ -654,6 +518,8 @@
 <script type="module" src="/renderer/api/menuApi.browser.js"></script>
 <script type="module">
     import { getMenuInfoAll } from '/renderer/api/menuApi.browser.js';
+    const url = window.location.hostname;
+    const userUrlPort = `http://${url}:3000`
 
     document.addEventListener('DOMContentLoaded', async () => {
         try {
@@ -689,13 +555,20 @@
             return text.includes('https');
         }
 
+        const convertToImageUrl = (localPath) => {
+            const fileName = localPath.split('\\').pop(); // 파일 이름 추출
+            return `${userUrlPort}/assets/images/${fileName}`;
+        };
+
+        const imageUrl = convertToImageUrl(menuData.image); // 이미지 경로 변환
+
         return `
     <div class="menu-new-item-wrapper overflow-x-auto">
         <div class="menu-new-item flex flex-col gap-6 p-4 sm:p-6 bg-gray-100 border border-gray-300 rounded-lg shadow-sm">
             <div class="menu-details flex flex-col gap-6 flex-1">
                 <div class="fixed-row grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
                     <div class="menu-image relative w-40 h-40 item flex flex-col bg-gray-200 border border-gray-300 rounded-md">
-                        <img src="${containsHttps(menuData.image) ? escapeHTML(menuData.image): ""+menuData.image}" alt="이미지" class="w-full h-full object-cover rounded-lg hover:cursor-pointer">
+                        <img src="${escapeHTML(imageUrl)}" alt="이미지" class="w-full h-full object-cover rounded-lg hover:cursor-pointer">
                     </div>
                     <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
                         <label for="no" class="text-sm text-gray-600">순번</label>
@@ -709,20 +582,147 @@
                         <label for="price" class="text-sm text-gray-600">금액</label>
                         <input id="price" type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${escapeHTML(menuData.price?.toString() || '')}" disabled>
                     </div>
+                     <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                        <label class="text-sm text-gray-600">컵</label>
+                        <fieldset class="flex items-center gap-2">
+                            <label for="cupPlastic" class="flex items-center gap-2">
+                                <input type="radio" id="cupPlastic" name="cup-${menuData.menuId}" value="plastic" ${menuData.cup === 'plastic' ? 'checked' : ''} disabled>
+                                <span>플라스틱</span>
+                            </label>
+                            <label for="cupPaper" class="flex items-center gap-2">
+                                <input type="radio" id="cupPaper" name="cup-${menuData.menuId}" value="paper" ${menuData.cup === 'paper' ? 'checked' : ''} disabled>
+                                <span>종이컵</span>
+                            </label>
+                        </fieldset>
+                        <label class="text-sm text-gray-600">얼음</label>
+                        <fieldset class="flex items-center gap-2">
+                            <label for="iceYes" class="flex items-center gap-2">
+                                <input type="radio" id="iceYes" name="iceYn-${menuData.menuId}" value="yes" ${menuData.iceYn === 'yes' ? 'checked' : ''} disabled>
+                                <span>Yes</span>
+                            </label>
+                            <label for="iceNo" class="flex items-center gap-2">
+                                <input type="radio" id="iceNo" name="iceYn-${menuData.menuId}" value="no" ${menuData.iceYn === 'no' ? 'checked' : ''} disabled>
+                                <span>No</span>
+                            </label>
+                        </fieldset>
+                    </div>
+                    <!-- 얼음 시간 및 물 시간 -->
+                    <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                        <label for="iceTime-${menuData.menuId}" class="text-sm text-gray-600">얼음 시간</label>
+                        <input type="number" id="iceTime-${menuData.menuId}" name="iceTime" min="0" step="0.5" max="10" value="${menuData.iceTime || ''}" class="w-full border border-gray-400 rounded-md px-2 py-1" disabled>
+                        <label for="waterTime-${menuData.menuId}" class="text-sm text-gray-600">물 시간</label>
+                        <input type="number" id="waterTime-${menuData.menuId}" name="waterTime" min="0" step="0.5" max="10" value="${menuData.waterTime || ''}" class="w-full border border-gray-400 rounded-md px-2 py-1" disabled>
+                    </div>
+                    <!-- 상태 -->
+                    <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                        <label class="text-sm text-gray-600">상태</label>
+                        <fieldset class="flex flex-col gap-2">
+                            <div class="flex items-center gap-2">
+                                <label for="new-${menuData.menuId}" class="text-sm">New</label>
+                                <select id="new-${menuData.menuId}" name="new" class="w-full border border-gray-400 rounded-md px-2 py-1" disabled>
+                                    <option value="" ${!menuData.state?.new ? 'selected' : ''}>선택</option>
+                                    <option value="new1" ${menuData.state?.new === 'new1' ? 'selected' : ''}>New1</option>
+                                    <option value="new2" ${menuData.state?.new === 'new2' ? 'selected' : ''}>New2</option>
+                                    <option value="new3" ${menuData.state?.new === 'new3' ? 'selected' : ''}>New3</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label for="event-${menuData.menuId}" class="text-sm">Event</label>
+                                <select id="event-${menuData.menuId}" name="event" class="w-full border border-gray-400 rounded-md px-2 py-1" disabled>
+                                    <option value="" ${!menuData.state?.event ? 'selected' : ''}>선택</option>
+                                    <option value="event1" ${menuData.state?.event === 'event1' ? 'selected' : ''}>Event1</option>
+                                    <option value="event2" ${menuData.state?.event === 'event2' ? 'selected' : ''}>Event2</option>
+                                    <option value="event3" ${menuData.state?.event === 'event3' ? 'selected' : ''}>Event3</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label for="best-${menuData.menuId}" class="text-sm">Best</label>
+                                <select id="best-${menuData.menuId}" name="best" class="w-full border border-gray-400 rounded-md px-2 py-1" disabled>
+                                    <option value="" ${!menuData.state?.best ? 'selected' : ''}>선택</option>
+                                    <option value="best1" ${menuData.state?.best === 'best1' ? 'selected' : ''}>Best1</option>
+                                    <option value="best2" ${menuData.state?.best === 'best2' ? 'selected' : ''}>Best2</option>
+                                    <option value="best3" ${menuData.state?.best === 'best3' ? 'selected' : ''}>Best3</option>
+                                </select>
+                            </div>
+                        </fieldset>
+                    </div>
+                    <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                        <label class="text-sm text-gray-600">HotAndIce</label>
+                        <fieldset class="flex items-center gap-2">
+                            <label for="hot" class="flex items-center gap-2">
+                                <input type="radio" id="hot" name="hotAndIce-${menuData.menuId}" value="hot" ${menuData.cup === 'hot' ? 'checked' : ''} disabled>
+                                <spanHot</span>
+                            </label>
+                            <label for="ice" class="flex items-center gap-2">
+                                <input type="radio" id="ice" name="hotAndIce-${menuData.menuId}" value="ice" ${menuData.cup === 'ice' ? 'checked' : ''} disabled>
+                                <span>Ice</span>
+                            </label>
+                        </fieldset>
+
+                        </fieldset>
+                    </div>
                 </div>
 
                 <div class="items-list grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 mt-4">
-                    ${menuData.items?.map(item => `
-                        <fieldset class="menu-item bg-gray-200 border border-gray-300 rounded-md p-2">
-                            <legend class="text-sm font-semibold mb-2">항목 ${escapeHTML(item.no?.toString() || '')}</legend>
-                            <div>타입: ${escapeHTML(item.type || '')}</div>
-                            <div>Value1: ${escapeHTML(item.value1?.toString() || '')}</div>
-                            <div>Value2: ${escapeHTML(item.value2?.toString() || '')}</div>
-                            <div>Value3: ${escapeHTML(item.value3?.toString() || '')}</div>
-                            <div>Value4: ${escapeHTML(item.value4?.toString() || '')}</div>
-                        </fieldset>
-                    `).join('') || ''}
+    ${menuData.items?.map(item => `
+        <fieldset class="menu-item bg-gray-200 border border-gray-300 rounded-md p-2">
+            <legend class="text-sm font-semibold mb-2">항목 ${escapeHTML(item.no?.toString() || '')}</legend>
+            <div>타입: ${item.type === 'coffee' ? '커피' : item.type === 'garucha' ? '가루차' : item.type === 'syrup' ? '시럽' : '알 수 없음'}</div>
+            ${item.type === 'coffee' ? `
+                <div>
+                    <label class="text-sm text-gray-600">글라인더1</label>
+                    <input type="text" value="${escapeHTML(item.value1?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
                 </div>
+                <div>
+                    <label class="text-sm text-gray-600">글라인더2</label>
+                    <input type="text" value="${escapeHTML(item.value2?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                </div>
+                <div>
+                    <label class="text-sm text-gray-600">추출량</label>
+                    <input type="text" value="${escapeHTML(item.value3?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                </div>
+                <div>
+                    <label class="text-sm text-gray-600">핫워터</label>
+                    <input type="text" value="${escapeHTML(item.value4?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                </div>
+            ` : item.type === 'garucha' ? `
+                <div>
+                    <label class="text-sm text-gray-600">차종류</label>
+                    <input type="text" value="${escapeHTML(item.value1?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                </div>
+                <div>
+                    <label class="text-sm text-gray-600">추출시간</label>
+                    <input type="text" value="${escapeHTML(item.value2?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                </div>
+                <div>
+                    <label class="text-sm text-gray-600">핫워터</label>
+                    <input type="text" value="${escapeHTML(item.value3?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                </div>
+            ` : item.type === 'syrup' ? `
+                <div>
+                    <label class="text-sm text-gray-600">시럽종류</label>
+                    <input type="text" value="${escapeHTML(item.value1?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                </div>
+                <div>
+                    <label class="text-sm text-gray-600">펌프시간</label>
+                    <input type="text" value="${escapeHTML(item.value2?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                </div>
+                <div>
+                    <label class="text-sm text-gray-600">핫워터</label>
+                    <input type="text" value="${escapeHTML(item.value3?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                </div>
+                <div>
+                    <label class="text-sm text-gray-600">탄산수</label>
+                    <input type="text" value="${escapeHTML(item.value4?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                </div>
+            ` : `
+                <div>
+                    <span class="text-sm text-gray-600">Unknown Type</span>
+                </div>
+            `}
+        </fieldset>
+    `).join('') || ''}
+</div>
             </div>
         </div>
     </div>`;
