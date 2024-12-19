@@ -90,10 +90,13 @@ const deleteProduct = async (userId, menuId) => {
 
     try {
         // DynamoDB에서 항목 삭제
-        await dynamoDB.delete(params).promise();
-        console.log('[DB] 삭제 성공:', menuId);
+        const result = await dynamoDB.delete(params).promise();
+        console.log('[DB] 삭제 성공:', result);
+        return {state: true , data: result}
     } catch (error) {
+
         console.error('[DB] 삭제 실패:', error.message); // 오류 메시지 출력
+        return {state: false , messase: error.message}
     }
 };
 

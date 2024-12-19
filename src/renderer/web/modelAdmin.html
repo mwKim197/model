@@ -193,7 +193,47 @@
 <script>
     const url = window.location.hostname;
     /* [MENU SET] 등록 메뉴 조회 START */
+    /* [MENU SET] 등록 메뉴 삭제 버튼 START */
+    document.addEventListener('click', async (event) => {
+        // 클릭한 요소가 삭제 버튼인지 확인
+        if (event.target.matches('button[id^="deleteItemBtn"]')) {
+            const userId = event.target.getAttribute('data-user-id');
+            const menuId = event.target.getAttribute('data-menu-id');
 
+            if (userId && menuId) {
+                try {
+
+                    // API 요청
+                    const response = await fetch(`http://${url}:3000/delete-menu`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json', // JSON 데이터임을 명시
+                        },
+                        body: JSON.stringify({
+                            userId: userId,
+                            menuId: menuId,
+                        })
+                    });
+
+                    const result = await response.json();
+                    console.log(result);
+                    if (result.success) {
+                        console.log('삭제 성공:', result.data);
+                        alert('삭제 성공');
+                        location.reload();
+                        // 삭제 완료 후 UI 업데이트 로직 추가
+                    } else {
+                        console.error('삭제 실패:', result.message);
+                        alert('삭제 실패: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('삭제 중 오류:', error);
+                    alert('삭제 중 오류 발생');
+                }
+            }
+        }
+    });
+    /* [MENU SET] 등록 메뉴 삭제 버튼 END */
     /* [MENU SET] 등록 메뉴 조회 END */
 
     /* [MENU SET] 등록 START */
@@ -476,6 +516,7 @@
                 const result = await response.json();
                 if (result.success) {
                     console.log('업로드 성공:', result.data);
+                    alert("업로드 성공");
                 } else {
                     console.error('업로드 실패:', result.message);
                 }
@@ -658,8 +699,16 @@
                                 <span>Ice</span>
                             </label>
                         </fieldset>
-
-                        </fieldset>
+                    </div>
+                    <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                        <!-- 삭제 버튼 -->
+                        <button
+                            id="deleteItemBtn-${menuData.menuId}"
+                            class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                            data-user-id="${menuData.userId}"
+                            data-menu-id="${menuData.menuId}">
+                            삭제
+                        </button>
                     </div>
                 </div>
 

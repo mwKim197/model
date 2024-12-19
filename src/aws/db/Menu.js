@@ -1,6 +1,6 @@
 const express = require('express');
 const Menu = express.Router();
-const {checkProduct, addProduct, allProduct} = require('./utils/getMenu');
+const {checkProduct, addProduct, allProduct, deleteProduct} = require('./utils/getMenu');
 const getUser = require('../../util/getUser');
 const log = require("../../logger");
 const {uploadImageToS3andLocal} = require("../s3/utils/image");
@@ -94,7 +94,8 @@ Menu.post('/set-admin-menu-info', upload.single('image'), async (req, res) => {
 
         // 3. 성공 응답 반환
         res.json({
-            message: 'Menu info and image uploaded successfully',
+            success: true,
+            message: '이미지 메뉴 등록 완료',
             data: savedData,
             image: uploadResult.s3Url
         });
@@ -109,5 +110,28 @@ Menu.post('/set-admin-menu-info', upload.single('image'), async (req, res) => {
     }
 });
 
+Menu.post('/delete-menu', async (req, res) => {
+    try {
+        const {userId, menuId} = req.body; // 클라이언트에서 전송한 JSON 데이터
+
+        // 받은 데이터를 콘솔에 출력
+        log.info('Received userId:', userId);
+        log.info('Received menuId:', menuId);
+
+        // 메뉴 id 숫자로 변환
+        const parsedMenuId = parseInt(menuId, 10);
+        const data = await deleteProduct(userId, parsedMenuId);
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        // 응답을 클라이언트로 보냄
+        res.json({
+            success: true,
+            message: '메뉴 삭제완료',
+            data: data,
+        });
+    } catch (err) {
+        log.error(err.message);
+        res.status(500).send(err.message);
+    }
+});
 
 module.exports = Menu;
