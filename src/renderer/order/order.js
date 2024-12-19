@@ -264,15 +264,37 @@ function updateItemQuantity(button, delta, orderId) {
     // 주문 요약 업데이트
     updateOrderSummary();
 }
-// 전체 아이템 삭제 함수
-function removeAllItemsFromOrder() {
-    
-    // [TODO] 추후 모달 적용
-    if (orderList.length > 0 && confirm("모든 주문을 삭제 하시겠습니까?")) {
-        // 주문 목록 초기화
-        removeAllItem();
+
+const confirmModal = document.getElementById('confirmModal');
+const cancelButton = document.getElementById('cancelButton');
+const confirmButton = document.getElementById('confirmButton');
+
+// 모달 열기
+const openModal = () => {
+    if (orderList.length > 0) {
+        confirmModal.classList.remove('hidden');
     }
-}
+
+};
+
+// 모달 닫기
+const closeModal = () => {
+    confirmModal.classList.add('hidden');
+};
+
+// 확인 버튼 클릭
+confirmButton.addEventListener('click', () => {
+    console.log('모든 주문이 삭제되었습니다.');
+    removeAllItem();
+    closeModal();
+    // 여기에서 삭제 로직 실행
+});
+
+// 취소 버튼 클릭
+cancelButton.addEventListener('click', () => {
+    console.log('취소되었습니다.');
+    closeModal();
+});
 
 function removeAllItem() {
     orderList = [];
