@@ -352,8 +352,8 @@ document.getElementById('payment').addEventListener('click', async () => {
         // 0.1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {
             setTimeout(async () => {
-                //const res = await window.electronAPI.reqVcatHttp(price);
-                const res = {success: true};
+                const res = await window.electronAPI.reqVcatHttp(price);
+                //const res = {success: true};
                 resolve(res); // 결제 결과 반환
             }, 100);
         });
@@ -376,7 +376,6 @@ document.getElementById('payment').addEventListener('click', async () => {
             }
 
             orderModal.classList.remove('hidden');
-            //ipcRenderer.send('navigate-to-page', { pageName: 'make', data: orderList }); // 'make' 페이지로 이동
             await window.electronAPI.setOrder(orderList); // 주문 처리
             removeAllItem(); // 주문 목록삭제
 
