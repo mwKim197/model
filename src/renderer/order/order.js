@@ -63,8 +63,8 @@ function displayProducts(products) {
 
         // 카드 내용 추가
         card.innerHTML = `
-        <div class="relative bg-gray-200 w-full aspect-square overflow-hidden rounded-md">
-            <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover rounded-md"/>
+        <div class="relative bg-gray-200 w-full aspect-square overflow-hidden rounded-2xl">
+            <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover rounded-2xl"/>
              <!-- 겹쳐지는 이미지 -->
             ${newBadgeImage} <!-- 뉴 배지 -->
             ${bestBadgeImage} <!-- 베스트 배지 -->
