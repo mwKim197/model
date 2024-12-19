@@ -5,11 +5,13 @@ const  CupModule = require("../serial/portProcesses/CupModule");
 const  IceModule = require("../serial/portProcesses/IceModule");
 const  OrderModule = require("../serial/portProcesses/OrderModule");
 const serialDataManager  = require('./serialDataManager');
+const eventEmitter = require('./events');
 const {convertTimeToHex} = require('../util/numberConvert');
 const Cup = new CupModule(serialCommCom4);
 const Ice = new IceModule(serialCommCom3);
 const Order = new OrderModule(serialCommCom1);
 const McData = new serialDataManager(serialCommCom1);
+
 
 // 주문 처리 로직
 const startOrder = async (data) => {
@@ -57,12 +59,16 @@ const processQueue = async (orderList, menuList) => {
 
             for (let i = 0; i < order.count; i++) {
                 log.info(`주문 처리 시작 (${i + 1}/${order.count}): ${recipe.name} - [메뉴 ID: ${recipe.menuId}, 주문 ID: ${order.orderId}]`);
+                // 주문 데이터 처리 시작
+                eventEmitter.emit('order-update', { status: 'processing', message: '주문 시작되었습니다.' });
 
                 try {
                     await processOrder(recipe); // 레시피 처리
                     log.info(`주문 처리 완료 (${i + 1}/${order.count}): ${recipe.name} - [메뉴 ID: ${recipe.menuId}, 주문 ID: ${order.orderId}]`);
+                    eventEmitter.emit('order-update', { status: 'completed', message: '주문 완료되었습니다.' });
                 } catch (error) {
                     log.error(`주문 처리 중 오류 발생 (count ${i + 1}/${order.count}): 메뉴 ID ${recipe.menuId}, 오류: ${error.message}`);
+                    eventEmitter.emit('order-update', { status: 'error', message: error.message });
                     throw error;// 전체 주문 중단
                 }
             }
@@ -81,6 +87,8 @@ const processOrder = async (recipe) => {
 
         if (recipe.iceYn === 'yes') await dispenseIce(recipe);
 
+        // 화면에 전달하는 메세지
+        eventEmitter.emit('order-update', { status: 'drink', message: '음료을 받아주세요.' });
         const sortedItems = [...recipe.items].sort((a, b) => a.no - b.no);
         for (const [index, item] of sortedItems.entries()) {
             try {
@@ -94,7 +102,8 @@ const processOrder = async (recipe) => {
                         log.error(`[에러] 컵 센서 상태가 유효하지 않음: menuId ${recipe.menuId}`);
                         throw new Error(`Invalid cup sensor state for menuId ${recipe.menuId}`);
                     }
-
+                    // 화면에 전달하는 메세지
+                    eventEmitter.emit('order-update', { status: 'drink', message: '음료가 나옵니다.' });
                     log.info(`컵 센서 상태 확인 완료: menuId ${recipe.menuId}`);
                 }
 
@@ -206,8 +215,16 @@ const dispenseIce = (recipe) => {
             log.info('출빙 요청이 완료되었습니다. 상태를 감시합니다.');
             log.info('얼음을 받아주세요'); // [TODO] 음성 메시지 호출
 
+            // 화면 노출 메세지
+            eventEmitter.emit('order-update', { status: 'ice', message: '얼음을 받아주세요.' });
+
             for (let counter = 0; counter < 120; counter++) {
                 const result = await Ice.getKaiserInfo();
+                if (counter >= 90) {
+                    eventEmitter.emit('order-update', { status: 'iceCount', message: '30 초뒤에 초기화됩니다.', time: counter });
+                } else {
+                    eventEmitter.emit('order-update', { status: 'iceCount', message: '얼음을 받아주세요.', time: counter });
+                }
 
                 log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(result)} ${counter}/120`);
                 const hexArray = result.match(/.{1,2}/g);
@@ -342,12 +359,18 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
 
 const checkCupSensor = async (expectedState, threshold) => {
     let stateCount = 0; // 상태 카운터
-
     for (let counter = 0; counter < 120; counter++) {
         const startTime = Date.now(); // 루프 시작 시간 기록
         await McData.updateSerialData('RD1', 'RD1');
         const data = McData.getSerialData('RD1');
         log.info(`컵 센서 time out 여부 ${expectedState} :  ${counter}/ 120`);
+
+        if (counter >= 90) {
+            eventEmitter.emit('order-update', { status: 'drinkCount', message: '30 초뒤에 초기화됩니다.', time: counter });
+        } else {
+            eventEmitter.emit('order-update', { status: 'drinkCount', message: '컵을 음료 투출구에 놓아주세요.', time: counter });
+        }
+
         if (data.cupSensor === expectedState) {
             stateCount++;
             log.info(`Sensor state is '${expectedState}', count: ${stateCount}`);

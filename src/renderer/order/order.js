@@ -1,4 +1,3 @@
-
 function sendLogToMain (level, message) {
     window.electronAPI.logToMain(level, message);
 }
@@ -59,7 +58,7 @@ function displayProducts(products) {
         // 품절 배지 이미지 렌더링
         const emptyBadgeImage = isEmpty
             ? `<img src="../../assets/basicImage/품절.png" alt="Sold Out Badge" 
-                class="absolute top-0 left-0 w-full h-full object-cover opacity-70 z-50"/>`
+                class="absolute top-0 left-0 w-full h-full object-cover opacity-70 z-10"/>`
             : '';
 
         // 카드 내용 추가
@@ -101,12 +100,22 @@ function displayProducts(products) {
 }
 
 
+
+// 상품 장바구니 추가
 async function addItemToOrder(menuId) {
     // 상품 검색
     const product = allProducts.find(p => p.menuId === menuId);
     if (!product) {
         console.error(`Product not found for menuId: ${menuId}`);
         return;
+    }
+    const audio = new Audio('../../assets/audio/음료를 선택하셨습니다.mp3');
+
+    // 음성 재생
+    if (audio) {
+        audio.play().catch((err) => {
+            console.error('Audio play error:', err);
+        });
     }
 
     // 기존 항목 검색
@@ -303,11 +312,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// 결제
 document.getElementById('payment').addEventListener('click', async () => {
 
     if (orderList.length === 0) {
         return alert("상품을 선택해 주세요");
     }
+
+    const audio = new Audio('../../assets/audio/카드결제를 선택하셨습니다 카드를 단말기에 넣어주세요.mp3');
+
+    // 음성 재생
+    if (audio) {
+        audio.play().catch((err) => {
+            console.error('Audio play error:', err);
+        });
+    }
+
 
     console.log(orderList);
     let price = 0;
@@ -332,8 +352,8 @@ document.getElementById('payment').addEventListener('click', async () => {
         // 0.1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {
             setTimeout(async () => {
-                const res = await window.electronAPI.reqVcatHttp(price);
-                //const res = {success: true};
+                //const res = await window.electronAPI.reqVcatHttp(price);
+                const res = {success: true};
                 resolve(res); // 결제 결과 반환
             }, 100);
         });
@@ -345,9 +365,21 @@ document.getElementById('payment').addEventListener('click', async () => {
             sendLogToMain('info', `주문 목록 ${JSON.stringify(orderList)}`);
             // 모달 닫기
             modal.classList.add('hidden');
+
+            const audio = new Audio('../../assets/audio/결제가 완료되었습니다 카드를 꺼내주세요.mp3');
+
+            // 음성 재생
+            if (audio) {
+                audio.play().catch((err) => {
+                    console.error('Audio play error:', err);
+                });
+            }
+
+            orderModal.classList.remove('hidden');
             //ipcRenderer.send('navigate-to-page', { pageName: 'make', data: orderList }); // 'make' 페이지로 이동
             await window.electronAPI.setOrder(orderList); // 주문 처리
             removeAllItem(); // 주문 목록삭제
+
         } else {
             // 결제 실패 처리
             modal.classList.add('hidden');
@@ -365,8 +397,6 @@ document.getElementById('payment').addEventListener('click', async () => {
     }
 });
 
-// polling 으로 받아온 RD1상태를 노출한다.
-window.electronAPI.updateSerialData();
 
 
 /* 버튼 비동기 처리 0.2 초대기*/
@@ -424,6 +454,13 @@ function getCurrentFormattedTime() {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
+function getPollingData(data) {
+    rd1Info = data;
+}
+
+// polling 으로 받아온 RD1상태를 노출한다.
+window.electronAPI.updateSerialData(getPollingData);
+
 // 시간, 보일러 온도 업데이트
 function updateTime() {
     const currentTimeElement = document.getElementById('current-time');
@@ -433,7 +470,7 @@ function updateTime() {
 }
 
 // 1초마다 시간 업데이트
-setInterval(updateTime, 1000);
+setInterval(updateTime, 3000);
 
 // 매장명, 비상연락쳐 업데이트
 function updateStoreInfo() {
@@ -441,7 +478,6 @@ function updateStoreInfo() {
     const currentTelElement = document.getElementById('tel');
     currentStoreNameElement.textContent = userInfo.storeName;
     currentTelElement.textContent = userInfo.tel;
-    console.log(userInfo);
 }
 
 // 동적으로 메뉴 생성 함수
@@ -487,3 +523,4 @@ async function fetchData() {
 }
 
 fetchData().then();  // 함수 호출
+

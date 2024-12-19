@@ -48,8 +48,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
     downloadAllFromS3WithCache: async (bucketName, prefix) => await image.downloadAllFromS3WithCache(bucketName, prefix),
 
     // polling 으로 받아온 RD1상태를 노출한다.
-    updateSerialData: async () => ipcRenderer.on('update-serial-data', (event, data) => {
-        rd1Info = data;
+    updateSerialData: async (callback) => ipcRenderer.on('update-serial-data', (event, data) => {
+        if (typeof callback === 'function') {
+            callback(data); // 전달된 callback 함수 호출
+        } else {
+            console.warn('Callback is not a function');
+        }
+    }),
+
+    // order 플로우를 전달한다
+    updateOrderFlow: async (callback) => ipcRenderer.on('order-update', (event, data) => {
+        if (typeof callback === 'function') {
+            callback(data); // 전달된 callback 함수 호출
+        } else {
+            console.warn('Callback is not a function');
+        }
     }),
 
     // 페이지 이동 (Main Process에 이벤트 전송)

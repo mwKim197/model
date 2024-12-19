@@ -78,7 +78,7 @@
         </div>
     </div>
 
-    <div id="modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div id="modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999] hidden">
         <div class="bg-white p-5 rounded-lg shadow-lg w-[600px] h-[600px] relative">
             <div class="m-5 text-3xl fixed justify-center">
                 <span class="text-red-600">신용카드</span>
@@ -93,6 +93,92 @@
         </div>
     </div>
 
+    <div id="orderModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999] hidden">
+        <div class="bg-white p-5 rounded-lg shadow-lg w-[600px] h-[600px] relative">
+            <div class="m-5 text-3xl fixed justify-center">
+                <span id="modalText"></span>
+            </div>
+            <img id="modalImage" src="../../assets/basicImage/iceMaker.gif" alt="얼음을 받아주세요." />
+            <div class="absolute bottom-10 right-5 text-gray-800">
+                <span id="modalCount" class="text-2xl font-bold"></span> <!-- 카운트를 표시할 영역 -->
+            </div>
+        </div>
+    </div>
     <script src="order.js"></script>
+    <script>
+        let orderFlow = {};
+
+        const handlerModal = () => {
+            // order 진행상태를 저장하고 모달을 업데이트
+            const getOrderFlowData = (data) => {
+                if (data) {
+                    orderFlow = data; // orderFlow 업데이트
+                    console.log("랜더러 orderFlow ", orderFlow);
+
+                    const orderModal = document.getElementById('orderModal');
+                    const modalText = document.getElementById('modalText');
+                    const modalImage = document.getElementById('modalImage'); // 이미지 요소
+                    const modalCount = document.getElementById('modalCount'); // 카운트를 표시할 요소
+                    let audio;
+
+                    // status가 completed일 경우 모달 닫기
+                    if (orderFlow.status === 'completed') {
+                        orderModal.classList.add('hidden');
+                        return; // 종료
+                    }
+
+                    if (orderFlow.message) {
+                        orderModal.classList.remove('hidden'); // 모달 표시
+                        modalText.innerText = orderFlow.message;
+
+                        // status에 따라 이미지 변경
+                        switch (orderFlow.status) {
+                            case 'iceMaker':
+                                modalImage.src = '../../assets/basicImage/iceMaker.gif';
+                                audio = new Audio('../../assets/audio/제빙기에서 얼음을 받아주세요.mp3');
+                                break;
+                            case 'drinkMaker':
+                                modalImage.src = '../../assets/basicImage/drinkMaker.gif';
+                                audio = new Audio('../../assets/audio/컵을 음료투출구에 놓아주세요.mp3');
+                                break;
+                            case 'drink':
+                                audio = new Audio('../../assets/audio/맛있는 음료를 만들고 있습니다 잠시만 기다려주세요.mp3');
+                            default:
+                                modalImage.src = '../../assets/basicImage/iceMaker.gif';
+                                break;
+                        }
+                    } else {
+                        orderModal.classList.add('hidden'); // 메시지가 없으면 모달 숨김
+                    }
+
+                    // 음성 재생
+                    if (audio) {
+                        audio.play().catch((err) => {
+                            console.error('Audio play error:', err);
+                        });
+                    }
+
+                    // count 데이터 처리
+                    if (modalCount) {
+                        if (orderFlow.count !== undefined) {
+                            modalCount.innerText = `남은 시간: ${orderFlow.count}s`;
+                            modalCount.style.display = 'block'; // count 표시
+                        } else {
+                            modalCount.innerText = ''; // count 메시지 초기화
+                            modalCount.style.display = 'none'; // count 숨김
+                        }
+                    }
+                }
+            };
+
+            // window.electronAPI.updateOrderFlow에 콜백 함수 전달
+            window.electronAPI.updateOrderFlow(getOrderFlowData);
+        };
+
+        // 초기화 시 모달 핸들러 실행
+        handlerModal();
+
+    </script>
+
 </body>
 </html>

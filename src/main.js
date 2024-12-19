@@ -1,5 +1,6 @@
 const { app, BrowserWindow} = require('electron');
 const { autoUpdater } = require("electron-updater");
+const eventEmitter = require('./services/events');
 const path = require('path');
 const express = require('express');
 const log = require('./logger');
@@ -45,19 +46,6 @@ appServer.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type'],
 }));
-
-/*
-appServer.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Private-Network', 'true'); // PNA 허용
-    next();
-});
-
-appServer.use((req, res, next) => {
-    res.set('Content-Type', 'text/html');
-    next();
-});
-*/
-
 
 // 요청 값 콘솔에 찍기.
 appServer.use((req, res, next) => {
@@ -129,13 +117,20 @@ async function createWindow() {
 
     win.loadFile(path.join(__dirname, 'renderer', 'index', 'index.html'));
 
-    // 주기적으로 렌더러에 데이터 전송 [TODO]
-   /* setInterval(() => {
-        const serialData = polling.getSerialData('RD1'); // RD1 데이터 가져오기
-        console.log('Sending serialData to renderer:', serialData);
-        win.webContents.send('update-serial-data', serialData);
-    }, 3000); // 3초마다 데이터 전송*/
 
+    /* 렌더러랑 데이터 주고 받는 부분 START */
+    // 주기적으로 렌더러에 데이터 전송
+    setInterval(() => {
+        const serialData = polling.getSerialData('RD1'); // RD1 데이터 가져오기
+        win.webContents.send('update-serial-data', serialData);
+    }, 3000); // 3초마다 데이터 전송
+
+    // IPC 리스너 설정 - 렌더러로 데이터 전송
+    eventEmitter.on('order-update', (data) => {
+        if (win && win.webContents) {
+            win.webContents.send('order-update', data);
+        }
+    });
 
     // Renderer Process에 데이터 전달
     ipcMain.handle('get-user-data', () => {
@@ -173,6 +168,8 @@ async function createWindow() {
                 break;
         }
     });
+
+    /* 렌더러랑 데이터 주고 받는 부분 END */
 
 }
 
