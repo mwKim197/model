@@ -52,7 +52,7 @@ const downloadImageFromS3 = async (bucketName, key) => {
         log.info(`S3에서 다운로드: ${localFilePath}`);
         return localFilePath;
     } catch (err) {
-        console.error(`S3에서 이미지 다운로드 실패: ${err.message}`);
+        log.error(`S3에서 이미지 다운로드 실패: ${err.message}`);
         throw err;
     }
 };
@@ -105,36 +105,43 @@ const downloadAllFromS3WithCache = async (bucketName, prefix) => {
             log.info(`S3에서 다운로드: ${localFilePath}`);
         }
     } catch (err) {
-        console.error(`S3에서 객체 다운로드 실패: ${err.message}`);
+        log.error(`S3에서 객체 다운로드 실패: ${err.message}`);
     }
 };
 
 // 로컬 업로드 및 S3 저장
 const uploadImageToS3andLocal = async (bucketName, buffer, originalFileName, menuId) => {
-    // 파일명: menuId + 원본 이미지 파일명
-    const userInfo = await getUser();
-    const fileName = `${menuId}_${originalFileName}`;
-    const s3Key = `model/${userInfo.userId}/${fileName}`;
-
-    const localFilePath = path.join(cacheDir, fileName);
+    const userInfo = await getUser(); // 사용자 정보 가져오기
+    const fileName = `${menuId}_${originalFileName}`; // 파일명: menuId + 원본 파일명
+    const s3Key = `model/${userInfo.userId}/${fileName}`; // S3 키
+    const localFilePath = path.join(__dirname, "uploads", fileName); // 로컬 파일 경로 설정
 
     try {
-        // 1. 로컬 저장
-        fs.writeFileSync(localFilePath, buffer);
+        // 1. 디렉토리 생성
+        const directory = path.dirname(localFilePath);
+        if (!fs.existsSync(directory)) {
+            fs.mkdirSync(directory, { recursive: true });
+            log.info("디렉토리 생성 완료:", directory);
+        }
 
-        // 2. S3 업로드
+        // 2. 로컬 저장
+        fs.writeFileSync(localFilePath, buffer);
+        log.info("로컬 저장 완료:", localFilePath);
+
+        // 3. S3 업로드
         const params = {
             Bucket: bucketName,
             Key: s3Key,
             Body: buffer,
-            ContentType: 'image/jpeg',
+            ContentType: "image/jpeg", // 적절한 ContentType 지정
         };
         const uploadResult = await s3.upload(params).promise();
+        log.info("S3 업로드 완료:", uploadResult.Location);
 
-        console.log(`Image uploaded: ${uploadResult.Location}`);
+        // 결과 반환
         return { s3Url: uploadResult.Location, localPath: localFilePath, fileName };
     } catch (error) {
-        console.error('Image upload failed:', error.message);
+        log.error("이미지 업로드 실패:", error.message);
         throw error;
     }
 };
@@ -160,7 +167,7 @@ const uploadImageToS3 = async (bucketName, localFilePath, s3Key) => {
         log.info(`파일 업로드 성공: ${result.Location}`);
         return result.Location; // 업로드된 파일의 URL 반환
     } catch (err) {
-        console.error(`S3 업로드 실패: ${err.message}`);
+        log.error(`S3 업로드 실패: ${err.message}`);
         throw err;
     }
 };
