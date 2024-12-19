@@ -58,18 +58,18 @@
             <!-- 하단 버튼 -->
             <div class="flex justify-between items-end pt-2 relative h-56">
                 <!-- 왼쪽: 금액 및 개수와 전체취소 버튼 묶음 -->
-                <div class="flex flex-col justify-between w-1/2 ml-4">
+                <div class="flex flex-col justify-between w-1/2">
                     <div class="text-right pr-1 mr-4">
                         <span id="totalCount" class="text-xl text-gray-600">0개</span>
                         <span id="totalAmt" class="block font-bold text-2xl">₩ 0</span>
                     </div>
-                    <button class="prevent-double-click bg-red-500 text-3xl text-white w-full py-4 rounded-tl-3xl mt-4" onclick="openModal()">전체취소</button>
+                    <button class="prevent-double-click bg-red-500 text-2xl text-white w-full py-4 rounded-tl-3xl mt-4" onclick="openModal()">전체취소</button>
                 </div>
 
                 <!-- 오른쪽: 결제하기 버튼 -->
                 <div class="flex flex-col w-1/2 h-44">
                     <button id="payment"
-                            class="prevent-double-click bg-blue-400 text-3xl text-white w-full h-full py-4 rounded-tl-[60px] flex flex-col items-center justify-center space-y-2">
+                            class="prevent-double-click bg-blue-400 text-[1.6rem] text-white w-full h-full py-4 rounded-tl-[60px] flex flex-col items-center justify-center space-y-2">
                         <img class="w-20" src="../../assets/basicImage/wallet.png" alt="wallet" />
                         <span>결제하기</span>
                     </button>
