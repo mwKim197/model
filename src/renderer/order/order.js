@@ -100,8 +100,6 @@ function displayProducts(products) {
     });
 }
 
-
-
 // 상품 장바구니 추가
 async function addItemToOrder(menuId) {
     // 상품 검색
@@ -266,6 +264,30 @@ function updateItemQuantity(button, delta, orderId) {
     updateOrderSummary();
 }
 
+const alertModal = document.getElementById('alertModal');
+const alertModalText = document.getElementById('alertModalText');
+const okButton = document.getElementById('okButton');
+
+// 모달 열기 함수
+const openAlertModal = (text) => {
+    alertModalText.innerText = text; // 텍스트 설정
+    alertModal.classList.remove('hidden'); // 모달 열기
+};
+
+// 모달 닫기
+const closeAlertModal = () => {
+    alertModal.classList.add('hidden');
+};
+
+// 확인 버튼 클릭 이벤트
+okButton.addEventListener('click', () => {
+    console.log('Alert 확인 버튼 클릭');
+    closeAlertModal();
+    // 필요한 추가 로직 실행
+});
+
+
+
 const confirmModal = document.getElementById('confirmModal');
 const cancelButton = document.getElementById('cancelButton');
 const confirmButton = document.getElementById('confirmButton');
@@ -405,14 +427,14 @@ document.getElementById('payment').addEventListener('click', async () => {
         } else {
             // 결제 실패 처리
             modal.classList.add('hidden');
-            alert("결제에 실패하였습니다. 다시 시도해주세요.");
+            openAlertModal("결제에 실패하였습니다. 다시 시도해주세요.");
             console.error("결제 실패: ", result.message);
             sendLogToMain('error', `결제 실패: ${result.message}`);
         }
     } catch (error) {
         // 오류 처리
         modal.classList.add('hidden');
-        alert("결제 처리 중 오류가 발생했습니다.");
+        openAlertModal("결제 처리 중 오류가 발생했습니다.");
         sendLogToMain('error', `결제 오류: ${error.message}`);
         console.error("결제 오류: ", error.message);
         removeAllItem(); // 주문 목록삭제
