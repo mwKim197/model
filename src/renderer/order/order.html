@@ -96,9 +96,11 @@
     <div id="orderModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999] hidden">
         <div class="bg-white p-5 rounded-lg shadow-lg w-[1100px] h-[700px] relative flex flex-col">
             <!-- modalMenu와 modalCount를 묶는 flex 컨테이너 -->
-            <div class="relative flex items-center text-3xl font-bold underline-offset-2 mt-4 mb-4">
-                <!-- 메뉴 텍스트: 가운데 고정 -->
-                <span id="modalMenu" class="absolute left-1/2 transform -translate-x-1/2 underline">Menu Text</span>
+            <div class="relative flex items-center text-3xl font-bold mt-4 mb-4">
+                <!-- 메뉴 텍스트: 상단 가운데 고정 -->
+                <span id="modalMenu" class="absolute left-1/2 top-4 transform -translate-x-1/2 underline">
+                Menu Text
+            </span>
                 <!-- Count 텍스트: 오른쪽으로 이동 -->
                 <span id="modalCount" class="ml-auto text-[1rem] text-gray-800">Count</span>
             </div>
@@ -109,7 +111,6 @@
 
             <!-- modalText: 이미지 아래에 위치 -->
             <div id="modalText" class="text-3xl mt-4 text-center overflow-hidden">
-                This is a text that might overflow. Now the layout will adjust properly.
             </div>
         </div>
     </div>
@@ -192,7 +193,7 @@
 
                     if (orderFlow.message) {
                         orderModal.classList.remove('hidden'); // 모달 표시
-                        modalMenu.innerText = orderFlow.menu;
+                        modalMenu.innerText = `[ ${orderFlow.menu} ]`;
                         modalCount.innerText = orderFlow.time;
                         modalText.innerText = orderFlow.message;
 
