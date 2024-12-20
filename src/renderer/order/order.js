@@ -31,7 +31,6 @@ function displayProducts(products) {
         const rightBadge = product.state?.hotAndIce; // 오른쪽 배지
         const isEmpty = product.state?.empty; // 품절 여부
 
-
         // 뉴 배지 이미지 렌더링
         const newBadgeImage = newBadge
             ? `<img src="../../assets/basicImage/${newBadge}.png" alt="Left Badge" 
@@ -421,6 +420,7 @@ document.getElementById('payment').addEventListener('click', async () => {
             }
 
             orderModal.classList.remove('hidden');
+
             await window.electronAPI.setOrder(orderList); // 주문 처리
             removeAllItem(); // 주문 목록삭제
 

@@ -159,19 +159,17 @@
 
                         // status에 따라 이미지 변경
                         switch (orderFlow.status) {
-                            case 'iceMaker':
+                            case 'ice':
                                 modalImage.src = '../../assets/basicImage/iceMaker.gif';
                                 audio = new Audio('../../assets/audio/제빙기에서 얼음을 받아주세요.mp3');
                                 break;
-                            case 'drinkMaker':
+                            /*case 'drinkCount':
                                 modalImage.src = '../../assets/basicImage/drinkMaker.gif';
                                 audio = new Audio('../../assets/audio/컵을 음료투출구에 놓아주세요.mp3');
-                                break;
+                                break;*/
                             case 'drink':
                                 audio = new Audio('../../assets/audio/맛있는 음료를 만들고 있습니다 잠시만 기다려주세요.mp3');
-                            default:
-                                modalImage.src = '../../assets/basicImage/iceMaker.gif';
-                                break;
+                                modalImage.src = '../../assets/basicImage/drinkMaker.gif';
                         }
                     } else {
                         orderModal.classList.add('hidden'); // 메시지가 없으면 모달 숨김
