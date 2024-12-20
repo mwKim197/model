@@ -199,8 +199,17 @@
                         if (orderFlow.status === "iceCount" && orderFlow.time === 0) {
                             time = 0;
                         }
+
                         if (orderFlow.status === "drinkCount" && orderFlow.time === 0) {
                             time = 0;
+                        }
+
+                        if (orderFlow.status === "error") {
+
+                            setTimeout(() => {
+                                orderModal.classList.add('hidden'); // 메시지가 없으면 모달 숨김
+                            } , 3000)
+
                         }
 
                         // status에 따라 이미지 변경

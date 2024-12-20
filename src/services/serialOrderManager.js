@@ -102,7 +102,7 @@ const processOrder = async (recipe) => {
                     const isStartValid = await checkCupSensor("있음", 3);
                     if (!isStartValid) {
                         log.error(`[에러] 컵 센서 상태가 유효하지 않음: menuId ${recipe.menuId}`);
-                        throw new Error(`Invalid cup sensor state for menuId ${recipe.menuId}`);
+                        throw new Error(`120초 경과로 기계가 초기화되었습니다. ${recipe.menuId}`);
                     } else {
                         // 화면에 전달하는 메세지
                         eventEmitter.emit('order-update', { menu: menuName, status: 'drink', message: '맛있는 음료를 만들고 있습니다. 잠시만 기다려주세요.' });
