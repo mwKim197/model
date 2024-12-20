@@ -94,13 +94,16 @@
     </div>
 
     <div id="orderModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999] hidden">
-        <div class="bg-white p-5 rounded-lg shadow-lg w-[600px] h-[600px] relative">
-            <div class="m-5 text-3xl fixed justify-center">
+        <div class="bg-white p-5 rounded-lg shadow-lg w-[1100px] h-[700px] relative">
+            <div class="m-5 text-3xl text-center">
+                <span id="modalMenu" class="font-bold underline-offset-2"></span>
+            </div>
+            <div class="flex items-center justify-center h-[100%]">
+                <img id="modalImage" src="../../assets/basicImage/iceMaker.gif" alt="얼음을 받아주세요." class="w-[600px] h-[600px] object-cover" />
                 <span id="modalText"></span>
             </div>
-            <img id="modalImage" src="../../assets/basicImage/iceMaker.gif" alt="얼음을 받아주세요." />
             <div class="absolute bottom-10 right-5 text-gray-800">
-                <span id="modalCount" class="text-2xl font-bold"></span> <!-- 카운트를 표시할 영역 -->
+                <span id="modalCount" class="text-2xl font-bold"></span>
             </div>
         </div>
     </div>
@@ -162,6 +165,7 @@
                     console.log("랜더러 orderFlow ", orderFlow);
 
                     const orderModal = document.getElementById('orderModal');
+                    const modalMenu = document.getElementById('modalMenu');
                     const modalText = document.getElementById('modalText');
                     const modalImage = document.getElementById('modalImage'); // 이미지 요소
                     const modalCount = document.getElementById('modalCount'); // 카운트를 표시할 요소
@@ -181,6 +185,7 @@
                     if (orderFlow.message) {
                         orderModal.classList.remove('hidden'); // 모달 표시
                         modalText.innerText = orderFlow.message;
+                        modalText.innerText = orderFlow.menu;
                         if (orderFlow.status === "iceCount" && orderFlow.time === 0) {
                             time = 0;
                         }
