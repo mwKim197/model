@@ -94,7 +94,7 @@
     </div>
 
     <div id="orderModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999] hidden">
-        <div class="bg-white p-5 rounded-lg shadow-lg w-[1100px] h-[700px] relative flex flex-col items-center">
+        <div class="bg-white p-5 rounded-lg shadow-lg w-[1100px] h-[700px] relative flex flex-col">
             <!-- modalMenu와 modalCount를 묶는 flex 컨테이너 -->
             <div class="flex items-center justify-center text-3xl font-bold underline-offset-2 mb-4">
                 <!-- 메뉴 텍스트 -->
@@ -109,11 +109,12 @@
             </div>
 
             <!-- modalText: 이미지 아래에 위치 -->
-            <div id="modalText" class="text-3xl mt-4 text-center">
-                Text below the image
+            <div id="modalText" class="text-3xl mt-4 text-center overflow-hidden">
+                This is a text that might overflow. Now the layout will adjust properly.
             </div>
         </div>
     </div>
+
 
 
     <div id="confirmModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 hidden">
@@ -247,7 +248,7 @@
 
                     // count 데이터 처리
                     if (modalCount) {
-                        if (orderFlow.count !== undefined) {
+                        if (orderFlow.time !== undefined) {
                             modalCount.innerText = `남은 시간: ${orderFlow.count}s`;
                             modalCount.style.display = 'block'; // count 표시
                         } else {
