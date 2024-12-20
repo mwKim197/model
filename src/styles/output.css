@@ -824,6 +824,10 @@ video {
   height: 100vh;
 }
 
+.h-\[50px\] {
+  height: 50px;
+}
+
 .min-h-24 {
   min-height: 6rem;
 }
@@ -894,6 +898,26 @@ video {
 
 .w-full {
   width: 100%;
+}
+
+.w-\[200px\] {
+  width: 200px;
+}
+
+.w-\[185px\] {
+  width: 185px;
+}
+
+.w-\[150px\] {
+  width: 150px;
+}
+
+.w-\[140px\] {
+  width: 140px;
+}
+
+.w-\[135px\] {
+  width: 135px;
 }
 
 .flex-1 {
