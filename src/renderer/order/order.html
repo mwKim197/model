@@ -105,7 +105,7 @@
 
             <!-- 이미지 -->
             <div class="flex items-center justify-center flex-grow">
-                <img id="modalImage" src="../../assets/basicImage/iceMaker.gif" alt="얼음을 받아주세요." class="w-[600px] h-[600px] object-cover" />
+                <img id="modalImage" src="../../assets/basicImage/iceMaker.gif" alt="얼음을 받아주세요." class="w-[600px] h-[500px] object-cover" />
             </div>
 
             <!-- modalText: 이미지 아래에 위치 -->
@@ -249,7 +249,7 @@
                     // count 데이터 처리
                     if (modalCount) {
                         if (orderFlow.time !== undefined) {
-                            modalCount.innerText = `남은 시간: ${orderFlow.count}s`;
+                            modalCount.innerText = `남은 시간: ${orderFlow.time}s`;
                             modalCount.style.display = 'block'; // count 표시
                         } else {
                             modalCount.innerText = ''; // count 메시지 초기화
