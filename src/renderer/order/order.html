@@ -98,7 +98,7 @@
             <!-- modalMenu와 modalCount를 묶는 flex 컨테이너 -->
             <div class="relative flex items-center text-3xl font-bold mt-4 mb-4">
                 <!-- 메뉴 텍스트: 상단 가운데 고정 -->
-                <span id="modalMenu" class="absolute left-1/2 top-4 transform -translate-x-1/2 underline">
+                <span id="modalMenu" class="absolute left-1/2 top-4 transform -translate-x-1/2">
                 Menu Text
             </span>
                 <!-- Count 텍스트: 오른쪽으로 이동 -->
@@ -193,7 +193,7 @@
 
                     if (orderFlow.message) {
                         orderModal.classList.remove('hidden'); // 모달 표시
-                        modalMenu.innerText = `[ ${orderFlow.menu} ]`;
+                        modalMenu.innerText = `< ${orderFlow.menu} >`;
                         modalCount.innerText = orderFlow.time;
                         modalText.innerText = orderFlow.message;
 
