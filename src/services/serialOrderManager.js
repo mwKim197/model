@@ -223,11 +223,7 @@ const dispenseIce = (recipe) => {
 
             for (let counter = 0; counter < 120; counter++) {
                 const result = await Ice.getKaiserInfo();
-                if (counter >= 90) {
-                    eventEmitter.emit('order-update', { menu: menuName, status: 'iceCount', message: '30 초뒤에 초기화됩니다.', time: counter });
-                } else {
-                    eventEmitter.emit('order-update', { menu: menuName, status: 'iceCount', message: '얼음을 받아주세요.', time: counter });
-                }
+                eventEmitter.emit('order-update', { menu: menuName, status: 'iceCount', message: '제빙기에서 얼음을 받아주세요.', time: counter });
 
                 log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(result)} ${counter}/120`);
                 const hexArray = result.match(/.{1,2}/g);
@@ -493,6 +489,7 @@ const useWash = async (data) => {
         log.warn("[세척] 메뉴 데이터가 없거나, 오더 데이터가 없습니다.");
     }
     log.info("전체 세척 작업 완료");
+    eventEmitter.emit('order-update', { menu: menuName, status: 'completed', message: '전체 세척 작업 완료.' });
 };
 
 // 주문 처리 시작

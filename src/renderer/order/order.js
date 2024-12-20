@@ -99,8 +99,41 @@ function displayProducts(products) {
     });
 }
 
+// 가이드 이미지 추가
+function checkAndShowEmptyImage() {
+    const orderGrid = document.getElementById('orderGrid');
+
+    // 빈 상태인지 확인
+    if (orderGrid.children.length === 0) {
+        orderGrid.innerHTML = `
+            <div class="empty-image flex items-center justify-center h-full">
+                <img src="../../assets/basicImage/가이드.png" alt="No items available" class="w-64 h-auto" />
+            </div>
+        `;
+    }
+}
+
+// 아이템 등록
+function addOrderItem(orderItem) {
+    const orderGrid = document.getElementById('orderGrid');
+
+    // orderGrid에 이미지가 표시 중이면 제거
+    const emptyImage = orderGrid.querySelector('.empty-image');
+    if (emptyImage) {
+        emptyImage.remove();
+    }
+
+    // 주문 항목 추가
+    orderGrid.appendChild(orderItem);
+}
+
+
+// 초기 실행
+checkAndShowEmptyImage();
+
 // 상품 장바구니 추가
 async function addItemToOrder(menuId) {
+
     // 상품 검색
     const product = allProducts.find(p => p.menuId === menuId);
     if (!product) {
@@ -188,7 +221,8 @@ async function addItemToOrder(menuId) {
         </div>
 
     `;
-    orderGrid.appendChild(orderItem);
+    addOrderItem(orderItem);
+    //orderGrid.appendChild(orderItem);
 
     // 주문 요약 업데이트
     updateOrderSummary();
@@ -228,6 +262,8 @@ function removeItemFromOrder(button, orderId) {
 
     // 주문 요약 업데이트
     updateOrderSummary();
+
+    checkAndShowEmptyImage();
 }
 
 // 수량추가

@@ -828,6 +828,10 @@ video {
   height: 50px;
 }
 
+.h-auto {
+  height: auto;
+}
+
 .min-h-24 {
   min-height: 6rem;
 }
@@ -918,6 +922,10 @@ video {
 
 .w-\[135px\] {
   width: 135px;
+}
+
+.w-64 {
+  width: 16rem;
 }
 
 .flex-1 {
