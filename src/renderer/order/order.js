@@ -63,7 +63,7 @@ function displayProducts(products) {
 
         // 카드 내용 추가
         card.innerHTML = `
-        <div class="relative bg-gray-200 w-full aspect-square overflow-hidden rounded-2xl">
+        <div class="relative bg-black bg-opacity-10 w-full aspect-square overflow-hidden rounded-2xl">
             <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover rounded-2xl"/>
              <!-- 겹쳐지는 이미지 -->
             ${newBadgeImage} <!-- 뉴 배지 -->
@@ -154,7 +154,7 @@ async function addItemToOrder(menuId) {
 
     // UI 업데이트
     const orderItem = document.createElement('div');
-    orderItem.className = 'order-item bg-gray-100 p-2 rounded-lg flex justify-between items-center w-full min-h-24';
+    orderItem.className = 'order-item bg-black bg-opacity-10 p-2 rounded-lg flex justify-between items-center w-full min-h-24';
     orderItem.setAttribute('data-order-id', orderId); // 고유 ID 설정
     orderItem.innerHTML = `
         <div class="w-full flex space-x-4">
