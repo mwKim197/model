@@ -96,9 +96,9 @@
     <div id="orderModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999] hidden">
         <div class="bg-white p-5 rounded-lg shadow-lg w-[1100px] h-[700px] relative flex flex-col">
             <!-- modalMenu와 modalCount를 묶는 flex 컨테이너 -->
-            <div class="relative flex items-center text-3xl font-bold underline-offset-2 mt-2 mb-4">
+            <div class="relative flex items-center text-3xl font-bold underline-offset-2 mt-4 mb-4">
                 <!-- 메뉴 텍스트: 가운데 고정 -->
-                <span id="modalMenu" class="absolute left-1/2 transform -translate-x-1/2">Menu Text</span>
+                <span id="modalMenu" class="absolute left-1/2 transform -translate-x-1/2 underline">Menu Text</span>
                 <!-- Count 텍스트: 오른쪽으로 이동 -->
                 <span id="modalCount" class="ml-auto text-[1rem] text-gray-800">Count</span>
             </div>
@@ -218,12 +218,12 @@
                                 audio = new Audio('../../assets/audio/컵을 음료투출구에 놓아주세요.mp3');
                                 break;
                             case 'drink':
+                                modalImage.src = '../../assets/basicImage/제조중.gif';
                                 audio = new Audio('../../assets/audio/맛있는 음료를 만들고 있습니다 잠시만 기다려주세요.mp3');
-                                modalImage.src = '../../assets/basicImage/drinkMaker.gif';
                                 break;
                             case 'completedCount':
-                                audio = new Audio('../../assets/audio/음료가 완성되었습니다.mp3');
                                 modalImage.src = '../../assets/basicImage/완료.gif';
+                                audio = new Audio('../../assets/audio/음료가 완성되었습니다.mp3');
                                 break;
                         }
                     } else {

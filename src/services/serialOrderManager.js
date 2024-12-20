@@ -219,7 +219,7 @@ const dispenseIce = (recipe) => {
             log.info('얼음을 받아주세요'); // [TODO] 음성 메시지 호출
 
             // 화면 노출 메세지
-            eventEmitter.emit('order-update', { menu: menuName, status: 'ice', message: '얼음을 받아주세요.' });
+            eventEmitter.emit('order-update', { menu: menuName, status: 'ice', message: '제빙기에서 얼음을 받아주세요.' });
 
             for (let counter = 0; counter < 120; counter++) {
                 const result = await Ice.getKaiserInfo();
