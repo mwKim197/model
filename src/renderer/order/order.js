@@ -107,7 +107,7 @@ function checkAndShowEmptyImage() {
     if (orderGrid.children.length === 0) {
         orderGrid.innerHTML = `
             <div class="empty-image flex items-center justify-center h-full">
-                <img src="../../assets/basicImage/가이드.png" alt="No items available" class="w-72 h-auto" />
+                <img src="../../assets/basicImage/가이드.png" alt="No items available" class="w-96 h-auto" />
             </div>
         `;
     }

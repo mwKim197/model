@@ -928,6 +928,10 @@ video {
   width: 16rem;
 }
 
+.w-72 {
+  width: 18rem;
+}
+
 .flex-1 {
   flex: 1 1 0%;
 }
@@ -1235,6 +1239,10 @@ video {
 
 .p-8 {
   padding: 2rem;
+}
+
+.p-1 {
+  padding: 0.25rem;
 }
 
 .px-10 {
