@@ -98,7 +98,7 @@
             <!-- modalMenu와 modalCount를 묶는 flex 컨테이너 -->
             <div class="flex items-center justify-center text-3xl font-bold underline-offset-2 mb-4">
                 <!-- 메뉴 텍스트 -->
-                <span id="modalMenu" class="mr-5">Menu Text</span>
+                <span id="modalMenu" class="mr-96">Menu Text</span>
                 <!-- Count 텍스트 -->
                 <span id="modalCount" class="text-2xl font-bold text-gray-800">Count</span>
             </div>
@@ -246,10 +246,14 @@
                         }
                     }
 
-                    // count 데이터 처리
+                    // 모달 상태 처리
                     if (modalCount) {
+                        // 총 시간을 정의 (예: 120초)
+                        const totalTime = 120;
+
                         if (orderFlow.time !== undefined) {
-                            modalCount.innerText = `남은 시간: ${orderFlow.time}s`;
+                            // 현재 시간과 총 시간을 표시
+                            modalCount.innerText = `남은 시간: ${totalTime - orderFlow.time}/${totalTime}s`;
                             modalCount.style.display = 'block'; // count 표시
                         } else {
                             modalCount.innerText = ''; // count 메시지 초기화
