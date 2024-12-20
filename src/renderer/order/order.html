@@ -145,7 +145,7 @@
         }
 
         function drinkCallAudio(time, audio) {
-            if (time % 10 === 0) {
+            if (time % 10 === 0 || time === 1) {
                 if (audio) {
                     audio.play().catch((err) => {
                         console.error('Audio play error:', err);
