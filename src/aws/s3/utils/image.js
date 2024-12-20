@@ -114,9 +114,10 @@ const uploadImageToS3andLocal = async (bucketName, buffer, originalFileName, men
     const userInfo = await getUser(); // 사용자 정보 가져오기
     const fileName = `${menuId}_${originalFileName}`; // 파일명: menuId + 원본 파일명
     const s3Key = `model/${userInfo.userId}/${fileName}`; // S3 키
-    const localFilePath = path.join(__dirname, "uploads", fileName); // 로컬 파일 경로 설정
+    const localFilePath = path.join(__dirname, "../../../assets/images", fileName);
 
     try {
+        log.info("localFilePath: ", localFilePath);
         // 1. 디렉토리 생성
         const directory = path.dirname(localFilePath);
         if (!fs.existsSync(directory)) {
