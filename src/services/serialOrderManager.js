@@ -87,8 +87,6 @@ const processOrder = async (recipe) => {
 
         if (recipe.iceYn === 'yes') await dispenseIce(recipe);
 
-        // 화면에 전달하는 메세지
-        eventEmitter.emit('order-update', { status: 'drink', message: '음료을 받아주세요.' });
         const sortedItems = [...recipe.items].sort((a, b) => a.no - b.no);
         for (const [index, item] of sortedItems.entries()) {
             try {
