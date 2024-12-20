@@ -205,6 +205,11 @@
                             case 'drink':
                                 audio = new Audio('../../assets/audio/맛있는 음료를 만들고 있습니다 잠시만 기다려주세요.mp3');
                                 modalImage.src = '../../assets/basicImage/drinkMaker.gif';
+                                break;
+                            case 'completedCount':
+                                audio = new Audio('../../assets/audio/음료가 완성되었습니다.mp3');
+                                modalImage.src = '../../assets/basicImage/완료.gif';
+                                break;
                         }
                     } else {
                         orderModal.classList.add('hidden'); // 메시지가 없으면 모달 숨김
@@ -213,6 +218,8 @@
                     if (time > 0 && orderFlow.status === "iceCount") {
                         iceCallAudio(time, audio);
                     } else if (time > 0 && orderFlow.status === "drinkCount") {
+                        drinkCallAudio(time, audio);
+                    } else if (time > 0 && orderFlow.status === "completedCount") {
                         drinkCallAudio(time, audio);
                     } else {
                         // 음성 재생

@@ -101,7 +101,7 @@ const processOrder = async (recipe) => {
                         throw new Error(`Invalid cup sensor state for menuId ${recipe.menuId}`);
                     } else {
                         // 화면에 전달하는 메세지
-                        eventEmitter.emit('order-update', { status: 'drink', message: '음료가 나옵니다.' });
+                        eventEmitter.emit('order-update', { status: 'drink', message: '맛있는 음료를 만들고 있습니다. 잠시만 기다려주세요.' });
                     }
                     log.info(`컵 센서 상태 확인 완료: menuId ${recipe.menuId}`);
                 }
@@ -366,11 +366,12 @@ const checkCupSensor = async (expectedState, threshold) => {
 
         // 모달 동작
         if (expectedState === "있음" ) {
-            if (counter >= 90) {
-                eventEmitter.emit('order-update', { status: 'drinkCount', message: '30 초뒤에 초기화됩니다.', time: counter });
-            } else {
-                eventEmitter.emit('order-update', { status: 'drinkCount', message: '컵을 음료 투출구에 놓아주세요.', time: counter });
-            }
+            eventEmitter.emit('order-update', { status: 'drinkCount', message: '컵을 음료 투출구에 놓아주세요.', time: counter });
+        }
+
+        if (expectedState === "없음" ) {
+            eventEmitter.emit('order-update', { status: 'completedCount', message: '음료가 완성되었습니다. 컵을꺼내주세요.', time: counter });
+
         }
 
         if (data.cupSensor === expectedState) {
