@@ -200,13 +200,15 @@
                         orderModal.classList.add('hidden'); // 메시지가 없으면 모달 숨김
                     }
 
-                    callAudio(time, audio);
-
-                    // 음성 재생
-                    if (orderFlow.status === "drink" || orderFlow.status === "ice" && audio) {
-                        audio.play().catch((err) => {
-                            console.error('Audio play error:', err);
-                        });
+                    if (time > 0) {
+                        callAudio(time, audio);
+                    } else {
+                        // 음성 재생
+                        if (orderFlow.status === "drink" || orderFlow.status === "ice" && audio) {
+                            audio.play().catch((err) => {
+                                console.error('Audio play error:', err);
+                            });
+                        }
                     }
 
                     // count 데이터 처리
