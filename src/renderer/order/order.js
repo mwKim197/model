@@ -566,7 +566,7 @@ function generateMenu(categories) {
 
     categories.forEach((category, index) => {
         const menuTab = document.createElement('div');
-        menuTab.className = `menu-tab flex-1 text-center py-2 hover:bg-gray-200 transition-colors text-[15px] whitespace-nowrap duration-200  ${index === 0 ? 'active' : ''}`;
+        menuTab.className = `menu-tab flex-1 text-center py-2 hover:bg-gray-200 transition-colors whitespace-nowrap duration-200  ${index === 0 ? 'active' : ''}`;
         menuTab.setAttribute('data-category', category.item || category.item4); // item 또는 item4 사용
         menuTab.textContent = category.name; // 메뉴 이름 설정
         nav.appendChild(menuTab);
