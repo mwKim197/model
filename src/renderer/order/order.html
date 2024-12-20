@@ -96,16 +96,15 @@
     <div id="orderModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999] hidden">
         <div class="bg-white p-5 rounded-lg shadow-lg w-[1100px] h-[700px] relative flex flex-col">
             <!-- modalMenu와 modalCount를 묶는 flex 컨테이너 -->
-            <div class="flex items-center justify-center text-3xl font-bold underline-offset-2 mb-4">
-                <!-- 메뉴 텍스트 -->
-                <span id="modalMenu" class="mr-96">Menu Text</span>
-                <!-- Count 텍스트 -->
-                <span id="modalCount" class="text-2xl font-bold text-gray-800">Count</span>
+            <div class="relative flex items-center text-3xl font-bold underline-offset-2 mt-2 mb-4">
+                <!-- 메뉴 텍스트: 가운데 고정 -->
+                <span id="modalMenu" class="absolute left-1/2 transform -translate-x-1/2">Menu Text</span>
+                <!-- Count 텍스트: 오른쪽으로 이동 -->
+                <span id="modalCount" class="ml-auto text-[1rem] text-gray-800">Count</span>
             </div>
-
             <!-- 이미지 -->
             <div class="flex items-center justify-center flex-grow">
-                <img id="modalImage" src="../../assets/basicImage/iceMaker.gif" alt="얼음을 받아주세요." class="w-[600px] h-[500px] object-cover" />
+                <img id="modalImage" src="../../assets/basicImage/iceMaker.gif" alt="얼음을 받아주세요." class="w-[600px] h-[400px] object-cover" />
             </div>
 
             <!-- modalText: 이미지 아래에 위치 -->
