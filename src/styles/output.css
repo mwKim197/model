@@ -1071,6 +1071,10 @@ video {
   border-top-left-radius: 60px;
 }
 
+.rounded-tl-\[2\.2rem\] {
+  border-top-left-radius: 2.2rem;
+}
+
 .border {
   border-width: 1px;
 }
