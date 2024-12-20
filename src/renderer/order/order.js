@@ -22,7 +22,7 @@ function displayProducts(products) {
     productGrid.innerHTML = '';
     products.forEach(product => {
         const card = document.createElement('div');
-        card.className = 'product-card rounded-lg p-2 text-center cursor-pointer';
+        card.className = 'product-card rounded-lg text-center cursor-pointer';
 
         // 뉴, 베스트, 이벤트, 오른쪽 배지 데이터
         const newBadge = product.state?.new; // new 배지
@@ -72,9 +72,9 @@ function displayProducts(products) {
             ${rightBadgeImage} <!-- 오른쪽 배지 -->
             ${emptyBadgeImage} <!-- 품절 배지 -->
         </div>
-        <div class="mt-2">
+        <div class="mt-1">
             <span class="block text-xl ">${product.name}</span>
-            <span class="block text-gray-600 text-xl  text-right pr-4">${`₩ ` + product.price.toLocaleString()}</span>
+            <span class="block text-gray-600 text-[1rem] text-right pr-4">${`₩ ` + product.price.toLocaleString()}</span>
         </div>
         <!-- 주문 버튼 -->
         <button 
