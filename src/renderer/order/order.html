@@ -134,6 +134,16 @@
     <script>
         let orderFlow = {};
 
+        function callAudio(time, audio) {
+            if (time % 5 === 0) {
+                if (audio) {
+                    audio.play().catch((err) => {
+                        console.error('Audio play error:', err);
+                    });
+                }
+            }
+        }
+
         const handlerModal = () => {
             // order 진행상태를 저장하고 모달을 업데이트
             const getOrderFlowData = (data) => {
@@ -146,11 +156,16 @@
                     const modalImage = document.getElementById('modalImage'); // 이미지 요소
                     const modalCount = document.getElementById('modalCount'); // 카운트를 표시할 요소
                     let audio;
+                    let time;
 
                     // status가 completed일 경우 모달 닫기
                     if (orderFlow.status === 'completed') {
                         orderModal.classList.add('hidden');
                         return; // 종료
+                    }
+
+                    if (orderFlow.time) {
+                        time = orderFlow.time;
                     }
 
                     if (orderFlow.message) {
@@ -163,10 +178,14 @@
                                 modalImage.src = '../../assets/basicImage/iceMaker.gif';
                                 audio = new Audio('../../assets/audio/제빙기에서 얼음을 받아주세요.mp3');
                                 break;
-                            /*case 'drinkCount':
+                            case 'iceCount':
+                                modalImage.src = '../../assets/basicImage/iceMaker.gif';
+                                audio = new Audio('../../assets/audio/제빙기에서 얼음을 받아주세요.mp3');
+                                break;
+                            case 'drinkCount':
                                 modalImage.src = '../../assets/basicImage/drinkMaker.gif';
                                 audio = new Audio('../../assets/audio/컵을 음료투출구에 놓아주세요.mp3');
-                                break;*/
+                                break;
                             case 'drink':
                                 audio = new Audio('../../assets/audio/맛있는 음료를 만들고 있습니다 잠시만 기다려주세요.mp3');
                                 modalImage.src = '../../assets/basicImage/drinkMaker.gif';
@@ -175,6 +194,7 @@
                         orderModal.classList.add('hidden'); // 메시지가 없으면 모달 숨김
                     }
 
+                    callAudio(time, audio);
                     // 음성 재생
                     if (audio) {
                         audio.play().catch((err) => {
