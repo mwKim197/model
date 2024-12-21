@@ -1051,6 +1051,10 @@ video {
   border-radius: 1rem;
 }
 
+.rounded-3xl {
+  border-radius: 1.5rem;
+}
+
 .rounded-lg {
   border-radius: 0.5rem;
 }
@@ -1059,16 +1063,8 @@ video {
   border-radius: 0.375rem;
 }
 
-.rounded-3xl {
-  border-radius: 1.5rem;
-}
-
 .rounded-tl-3xl {
   border-top-left-radius: 1.5rem;
-}
-
-.rounded-tl-\[60px\] {
-  border-top-left-radius: 60px;
 }
 
 .rounded-tl-\[2\.2rem\] {
@@ -1303,10 +1299,6 @@ video {
   font-size: 1.6rem;
 }
 
-.text-\[15px\] {
-  font-size: 15px;
-}
-
 .text-\[1rem\] {
   font-size: 1rem;
 }
@@ -1324,10 +1316,6 @@ video {
 .text-xl {
   font-size: 1.25rem;
   line-height: 1.75rem;
-}
-
-.text-\[2\.2rem\] {
-  font-size: 2.2rem;
 }
 
 .font-bold {

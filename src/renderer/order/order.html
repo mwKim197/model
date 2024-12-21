@@ -209,6 +209,9 @@
 
                         // status에 따라 이미지 변경
                         switch (orderFlow.status) {
+                            case 'processing':
+                                modalImage.src = '../../assets/basicImage/음료를 준비중입니다.gif';
+                                break;
                             case 'ice':
                                 modalImage.src = '../../assets/basicImage/iceMaker.gif';
                                 audio = new Audio('../../assets/audio/제빙기에서 얼음을 받아주세요.mp3');
@@ -227,7 +230,11 @@
                                 break;
                             case 'completedCount':
                                 modalImage.src = '../../assets/basicImage/완료.gif';
-                                audio = new Audio('../../assets/audio/음료가 완성되었습니다.mp3');
+                                audio = new Audio('../../assets/audio/음료가 완성되었습니다 컵을꺼내주세요.mp3');
+                                break;
+                            case 'washStart':
+                                modalImage.src = '../../assets/basicImage/세척.gif';
+                                audio = new Audio('../../assets/audio/커피머신 세척중입니다 잠시만 기다려주세요.mp3');
                                 break;
                         }
                     } else {
