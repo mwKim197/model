@@ -64,7 +64,6 @@ Menu.post('/set-menu-info', async (req, res) => {
 });
 
 Menu.post('/set-admin-menu-info', upload.single('image'), async (req, res) => {
-    let localFilePath = ''; // 이미지 저장 경로
     try {
         let { menuData } = req.body;
         const data = await getUser();
@@ -80,7 +79,6 @@ Menu.post('/set-admin-menu-info', upload.single('image'), async (req, res) => {
             return res.status(400).json({ success: false, message: '파일과 메뉴 ID가 필요합니다.' });
         }
         // 1. 이미지 저장 (로컬 + S3)
-        log.info('Uploading image...');
         const uploadResult = await uploadImageToS3andLocal(bucketName,file.buffer, file.originalname, getMenuId);
         // 로컬이미지 경로
         menuData.image = uploadResult.localPath;
