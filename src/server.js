@@ -10,7 +10,7 @@ const Menu = require('./aws/db/Menu');
 const fs = require('fs');
 const { createServer } = require('http');
 const { serialCommCom1, serialCommCom3, serialCommCom4 } = require('./serial/serialCommManager');
-
+const { getBasePath } = require('./aws/s3/utils/cacheDirManager');
 const app = express();
 const server = createServer(app);
 
@@ -33,6 +33,7 @@ app.use((req, res, next) => {
 // Static 파일 제공
 app.use('/assets', express.static(path.resolve(__dirname, 'assets')));
 app.use('/renderer', express.static(path.join(__dirname, 'renderer')));
+app.use('/images', express.static(getBasePath()));
 
 // 라우트
 app.use(Connect);

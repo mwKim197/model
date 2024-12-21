@@ -598,7 +598,7 @@
 
         const convertToImageUrl = (localPath) => {
             const fileName = localPath.split('\\').pop(); // 파일 이름 추출
-            return `${userUrlPort}/assets/images/${fileName}`;
+            return `${userUrlPort}/images/${fileName}`;
         };
 
         const imageUrl = convertToImageUrl(menuData.image); // 이미지 경로 변환
