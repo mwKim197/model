@@ -5,8 +5,18 @@ const { createMainWindow } = require('./windows/mainWindow');
 const { setupEventHandlers } = require('./events/eventHandlers');
 const server = require('./server');
 const serialPolling = require('./services/serialPolling');
-const { setBasePath, getBasePath } = require(path.resolve(__dirname, './aws/s3/utils/cacheDirManager'));
+const { getBasePath } = require(path.resolve(__dirname, './aws/s3/utils/cacheDirManager'));
 const log = require('./logger');
+const fs = require('fs');
+
+// 디렉토리 확인 및 생성
+const basePath = getBasePath(); // getBasePath 함수 호출
+if (!fs.existsSync(basePath)) {
+    fs.mkdirSync(basePath, { recursive: true });
+    console.log(`[DEBUG] Created directory: ${basePath}`);
+} else {
+    console.log(`[DEBUG] Directory already exists: ${basePath}`);
+}
 
 async function initializeApp() {
     try {
