@@ -3,7 +3,7 @@ const path = require('path');
 const log = require('../../../logger'); // 로그 모듈 사용
 
 // 절대 경로 설정
-const absoluteCacheDir = path.resolve('C:/Users/USER/AppData/Roaming/model/images');
+const absoluteCacheDir = path.resolve('C:/model/images');
 
 // 디렉토리 확인 및 생성 함수
 const ensureDirectoryExists = (dir) => {
