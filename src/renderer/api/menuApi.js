@@ -1,5 +1,5 @@
 const log = require("../../logger");
-const { ipcRenderer } = require('electron');
+const { ipcRenderer, ipcMain} = require('electron');
 const {initializeCounter} = require("../../aws/db/utils/getCount");
 
 // 전역 변수 선언
@@ -19,6 +19,7 @@ const initializeUserData = async () => {
         throw error; // 초기화 실패 시 에러 던지기
     }
 };
+
 
 // 초기화 완료 후 호출 가능하도록 보장
 const ensureUserDataInitialized = async () => {

@@ -3,29 +3,14 @@ const fs = require('fs');
 const path = require('path');
 const log = require('../../../logger');
 const getUser = require('../../../util/getUser');
-
-// 현재 파일(__dirname)을 기준으로 assets/images 경로 계산
-const cacheDir = path.resolve(__dirname, '../../../assets/images');
-
-// 캐싱 디렉토리가 없으면 생성
-if (!fs.existsSync(cacheDir)) {
-    fs.mkdirSync(cacheDir, { recursive: true }); // 디렉토리 생성
-    log.info(`디렉토리 생성됨: ${cacheDir}`);
-} else {
-    log.info(`이미 존재하는 디렉토리: ${cacheDir}`);
-}
-
-// 디렉토리 생성 함수
-const ensureDirectoryExists = (cacheDir) => {
-    if (!fs.existsSync(cacheDir)) {
-        fs.mkdirSync(cacheDir, { recursive: true });
-        log.info(`디렉토리 생성됨: ${cacheDir}`);
-    }
-};
-
+const { getBasePath, ensureDirectoryExists } = require('./cacheDirManager');
 
 // 이미지 다운로드 함수
 const downloadImageFromS3 = async (bucketName, key) => {
+    const cacheDir = getBasePath(); // 안전하게 경로 가져오기
+    if (!cacheDir) {
+        throw new Error('cacheDir - image 저장경로를 찾을수 없습니다.');
+    }
     const fileName = path.basename(key);
     // S3 키를 기반으로 로컬 경로 생성
     const localFilePath = path.join(cacheDir, fileName);
@@ -60,6 +45,11 @@ const downloadImageFromS3 = async (bucketName, key) => {
 // 경로키의 전체 이미지다운로드
 const downloadAllFromS3WithCache = async (bucketName, prefix) => {
     try {
+        const cacheDir = getBasePath(); // 안전하게 경로 가져오기
+        if (!cacheDir) {
+            throw new Error('cacheDir - image 저장경로를 찾을수 없습니다.');
+        }
+
         // S3에서 prefix로 시작하는 모든 객체 조회
         const params = {
             Bucket: bucketName,
@@ -114,15 +104,20 @@ const uploadImageToS3andLocal = async (bucketName, buffer, originalFileName, men
     const userInfo = await getUser(); // 사용자 정보 가져오기
     const fileName = `${menuId}_${originalFileName}`; // 파일명: menuId + 원본 파일명
     const s3Key = `model/${userInfo.userId}/${fileName}`; // S3 키
-    const localFilePath = path.join(__dirname, "../../../assets/images", fileName);
+    const cacheDir = getBasePath(); // 안전하게 경로 가져오기
 
     try {
+        if (!cacheDir) {
+            throw new Error('cacheDir - image 저장경로를 찾을수 없습니다.');
+        }
+        // 1. 파일 경로 생성 (cacheDir 디렉토리에 파일 저장)
+        const localFilePath = path.join(cacheDir, fileName);
+
         log.info("localFilePath: ", localFilePath);
-        // 1. 디렉토리 생성
-        const directory = path.dirname(localFilePath);
-        if (!fs.existsSync(directory)) {
-            fs.mkdirSync(directory, { recursive: true });
-            log.info("디렉토리 생성 완료:", directory);
+
+        if (!fs.existsSync(cacheDir)) {
+            fs.mkdirSync(cacheDir, { recursive: true });
+            log.info("디렉토리 생성 완료:", cacheDir);
         }
 
         // 2. 로컬 저장
@@ -149,10 +144,15 @@ const uploadImageToS3andLocal = async (bucketName, buffer, originalFileName, men
 
 
 // S3 업로드 함수
-const uploadImageToS3 = async (bucketName, localFilePath, s3Key) => {
+const uploadImageToS3 = async (bucketName, s3Key) => {
     try {
+        const cacheDir = getBasePath(); // 안전하게 경로 가져오기
+        if (!cacheDir) {
+            throw new Error('cacheDir - image 저장경로를 찾을수 없습니다.');
+        }
+
         // 파일 읽기
-        const fileContent = fs.readFileSync(localFilePath);
+        const fileContent = fs.readFileSync(cacheDir);
 
         // S3 업로드 매개변수
         const params = {

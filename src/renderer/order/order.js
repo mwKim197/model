@@ -575,6 +575,8 @@ function generateMenu(categories) {
 
 async function fetchData() {
     try {
+        const basePath = await window.electronAPI.getBasePath();
+        console.log('Cache Directory Path:', basePath);
         const allData = await window.electronAPI.getMenuInfoAll();
         userInfo = await window.electronAPI.getUserInfo();
 

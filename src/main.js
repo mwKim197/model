@@ -1,60 +1,65 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const { initializeUpdater } = require('./updater');
 const { createMainWindow } = require('./windows/mainWindow');
 const { setupEventHandlers } = require('./events/eventHandlers');
-const server = require('./server'); // Express 서버 모듈
+const server = require('./server');
 const serialPolling = require('./services/serialPolling');
+const { setBasePath, getBasePath } = require(path.resolve(__dirname, './aws/s3/utils/cacheDirManager'));
+const log = require('./logger');
 
 async function initializeApp() {
-    // 1. 페이지 변경 핸들러
-    ipcMain.on('navigate-to-page', (event, { pageName, data }) => {
-        const win = BrowserWindow.getFocusedWindow(); // 현재 활성 창 가져오기
-        const filePath = path.join(__dirname, 'renderer', pageName, `${pageName}.html`);
+    try {
+        // 3. Express 서버 시작
+        await server.start();
+        log.info('[DEBUG] Express server started.');
 
-        win.loadFile(filePath)
-            .then(() => {
-                win.webContents.send('page-data', data); // 페이지 로드 후 데이터 전달
-            })
-            .catch((err) => {
-                console.error('Failed to load page:', err.message);
-            });
-    });
+        // 4. Electron 메인 창 생성
+        const mainWindow = await createMainWindow();
+        log.info('[DEBUG] Main window created.');
 
-    // 2. 로그 핸들러 (렌더러에서 전달받은 로그 처리)
-    ipcMain.on('log-to-main', (event, { level, message }) => {
-        const timestamp = new Date().toISOString();
-        console.log(`[${level}] ${timestamp} - ${message}`);
-    });
+        // 5. Serial Polling 시작
+        serialPolling.start();
+        log.info('[DEBUG] Serial polling started.');
 
-    // 3. Express 서버 시작
-    await server.start();
+        // 6. Electron 업데이트 설정
+        initializeUpdater();
+        log.info('[DEBUG] Updater initialized.');
 
-    // 4. Electron 메인 창 생성
-    const mainWindow = await createMainWindow();
+        // 7. IPC 이벤트 핸들러 설정
+        setupEventHandlers(mainWindow);
+        log.info('[DEBUG] IPC event handlers set.');
 
-    // 5. Serial Polling 시작
-    serialPolling.start();
-
-    // 6. Electron 업데이트 설정
-    initializeUpdater();
-
-    // 7. IPC 이벤트 핸들러 설정
-    setupEventHandlers(mainWindow);
-
-    setInterval(() => {
-        const serialData = serialPolling.getSerialData('RD1'); // RD1 데이터 가져오기
-        mainWindow.webContents.send('update-serial-data', serialData);
-    }, 3000); // 3초마다 데이터 전송
+        // 8. Serial Data 주기적 전송
+        setInterval(() => {
+            if (!mainWindow || mainWindow.isDestroyed()) {
+                log.info('[DEBUG] Main window is closed or destroyed. Stopping serial data transmission.');
+                return;
+            }
+            const serialData = serialPolling.getSerialData('RD1');
+            mainWindow.webContents.send('update-serial-data', serialData);
+        }, 3000);
+        log.info('[DEBUG] Serial data transmission interval set.');
+    } catch (error) {
+        log.error('[DEBUG] Error in initializeApp:', error.message);
+        throw error; // 상위로 에러 전달
+    }
 }
 
-app.whenReady().then(initializeApp);
+app.whenReady().then(() => {
+    initializeApp().catch((err) => log.info('App initialization failed:', err));
+});
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
 });
 
 app.on('before-quit', () => {
-    // 앱 종료 시 Serial Polling 중지
     serialPolling.stop();
+});
+
+app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+        createMainWindow();
+    }
 });

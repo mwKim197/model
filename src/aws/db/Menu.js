@@ -79,7 +79,7 @@ Menu.post('/set-admin-menu-info', upload.single('image'), async (req, res) => {
             return res.status(400).json({ success: false, message: '파일과 메뉴 ID가 필요합니다.' });
         }
         // 1. 이미지 저장 (로컬 + S3)
-        const uploadResult = await uploadImageToS3andLocal(bucketName,file.buffer, file.originalname, getMenuId);
+        const uploadResult = await uploadImageToS3andLocal(bucketName, file.buffer, file.originalname, getMenuId);
         // 로컬이미지 경로
         menuData.image = uploadResult.localPath;
         log.info(menuData);

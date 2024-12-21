@@ -3,9 +3,7 @@ let userInfo= {};
 window.onload = async () => {
     try {
         const userData = await window.electronAPI.getUserData(); // 데이터 요청
-        console.log('User Data from Main Process:', userData);
         if (userData.userId) {
-            console.log("???ZX????");
             await window.electronAPI.navigateToPage( 'order');
         }
     } catch (error) {

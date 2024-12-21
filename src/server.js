@@ -7,7 +7,6 @@ const Order = require('./serial/portProcesses/Order');
 const Ice = require('./serial/portProcesses/Ice');
 const Cup = require('./serial/portProcesses/Cup');
 const Menu = require('./aws/db/Menu');
-const Image = require('./aws/s3/Image');
 const fs = require('fs');
 const { createServer } = require('http');
 const { serialCommCom1, serialCommCom3, serialCommCom4 } = require('./serial/serialCommManager');
@@ -41,7 +40,6 @@ app.use(Order);
 app.use(Ice);
 app.use(Cup);
 app.use(Menu);
-app.use(Image);
 
 app.get('/version', (req, res) => {
     const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8'));
