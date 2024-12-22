@@ -28,8 +28,8 @@ function displayProducts(products) {
         const newBadge = product.state?.new; // new 배지
         const bestBadge = product.state?.best; // best 배지
         const eventBadge = product.state?.event; // event 배지
-        const rightBadge = product.state?.hotAndIce; // 오른쪽 배지
-        const isEmpty = product.state?.empty; // 품절 여부
+        const rightBadge = product.iceYn === "yes" ? "ice":"hot" ; // 오른쪽 배지
+        const isEmpty = product.empty === "yes"; // 품절 여부
 
         // 뉴 배지 이미지 렌더링
         const newBadgeImage = newBadge
