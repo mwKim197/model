@@ -60,7 +60,7 @@
 
                                 <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
                                     <label for="no" class="text-sm text-gray-600">순번</label>
-                                    <input id="no" type="text" class="w-full border border-gray-400 rounded-md px-2 py-1">
+                                    <input id="no" type="number" class="w-full border border-gray-400 rounded-md px-2 py-1">
                                     <label for="name" class="text-sm text-gray-600">메뉴명</label>
                                     <input id="name" type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" maxlength="20">
                                 </div>
@@ -460,7 +460,7 @@
 
         // 메인 메뉴 데이터 수집
         const menuData = {
-            no: 0, // 순번 (임시, 나중에 동적으로 변경 가능)
+            no: Number(document.getElementById('no').value) || 0,
             name: document.getElementById('name').value || '',
             category: document.getElementById('category').value || '',
             price: document.getElementById('price').value || '0',
@@ -613,7 +613,7 @@
                     </div>
                     <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
                         <label for="no" class="text-sm text-gray-600">순번</label>
-                        <input id="no" type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${escapeHTML(menuData.menuId?.toString() || '')}" disabled>
+                        <input id="no" type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${Number(escapeHTML(menuData.no?.toString() || 0))}" disabled>
                         <label for="name" class="text-sm text-gray-600">메뉴명</label>
                         <input id="name" type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${escapeHTML(menuData.name || '')}" disabled>
                     </div>

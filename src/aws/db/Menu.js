@@ -1,6 +1,6 @@
 const express = require('express');
 const Menu = express.Router();
-const {checkProduct, addProduct, allProduct, deleteProduct} = require('./utils/getMenu');
+const {checkProduct, addProduct, allProduct, deleteProduct, swapNoAndAddProduct} = require('./utils/getMenu');
 const getUser = require('../../util/getUser');
 const log = require("../../logger");
 const {uploadImageToS3andLocal} = require("../s3/utils/image");
@@ -82,12 +82,9 @@ Menu.post('/set-admin-menu-info', upload.single('image'), async (req, res) => {
         const uploadResult = await uploadImageToS3andLocal(bucketName, file.buffer, file.originalname, getMenuId);
         // 로컬이미지 경로
         menuData.image = uploadResult.localPath;
-        log.info(menuData);
-        // 순번
-        menuData.no = getMenuId;
         // 2. 데이터 저장
         log.info('Saving menu data...');
-        const savedData = await addProduct(menuData); // 데이터 저장
+        const savedData = await swapNoAndAddProduct(menuData); // 데이터 저장
         log.info('Menu data saved successfully.');
 
         // 3. 성공 응답 반환

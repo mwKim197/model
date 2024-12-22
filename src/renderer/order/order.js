@@ -591,8 +591,8 @@ async function fetchData() {
             throw new Error('유저정보조회에 실패했습니다.');
         }
 
-        allProducts = allData.Items; // 데이터를 Items 배열로 설정
-
+        // 데이터를 `no` 순서대로 정렬
+        allProducts = allData.Items.sort((a, b) => a.no - b.no);
         // 매장명, 비상연락처
         updateStoreInfo();
         // 메뉴 생성 실행
