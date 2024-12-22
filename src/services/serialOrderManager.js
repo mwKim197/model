@@ -206,7 +206,7 @@ const dispenseCup = (recipe) => {
 const dispenseIce = (recipe) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let totalTime = "";
+            let totalTime = 0;
             log.info(`얼음 세팅 중: ${recipe.iceTime}초, 물 세팅 중: ${recipe.waterTime}초`);
             await Ice.sendIceTimePacket(recipe.iceTime);
             await Ice.sendWaterTimePacket(recipe.waterTime);
@@ -216,44 +216,54 @@ const dispenseIce = (recipe) => {
             log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(totalTime)}`);
             log.info('출빙 요청이 완료되었습니다. 상태를 감시합니다.');
             log.info('얼음을 받아주세요'); // [TODO] 음성 메시지 호출
-            let initialDetected = false; // 최초 13 감지 여부
-            let changedToNon13 = false; // 13 이외의 값으로 변경 여부
+            let initialValue = null; // 최초 상태값 저장
+            let changedToNonInitialValue = false; // 상태 변경 플래그
 
+            let waterTime = Number(recipe.waterTime);
+
+            if (Number(recipe.waterTime) >= 3) {
+                waterTime = waterTime - 2;
+            }
+            totalTime = Number(recipe.iceTime) + waterTime
             // 화면 노출 메세지
             eventEmitter.emit('order-update', { menu: menuName, status: 'ice', message: '제빙기에서 얼음을 받아주세요.' });
 
-            for (let counter = 0; counter < 120; counter++) {
+            for (let counter = 0; counter < totalTime; counter++) {
                 const result = await Ice.getKaiserInfo();
-                const hexArray = result.match(/.{1,2}/g); // 2자리씩 끊어서 배열 생성
+                const currentHexArray = result.match(/.{1,2}/g); // 2자리씩 끊어서 배열 생성
+                const currentValue = parseInt(currentHexArray[7], 16); // 16진수 → 10진수 변환
 
-                log.info(`Converted hexArray: ${JSON.stringify(hexArray)}`);
-                eventEmitter.emit('order-update', { menu: menuName, status: 'iceCount', message: '제빙기에서 얼음을 받아주세요.', time: counter });
-                log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(result)} ${counter}/120`);
-                log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(hexArray)}`);
-
-                // 7번째 데이터 추출
-                const currentValue = parseInt(hexArray[7]); // 16진수 → 10진수 변환
                 log.info(`Current Value (hexArray[7]): ${currentValue}`);
 
-                if (!initialDetected && currentValue === 13) {
-                    // 최초로 13이 감지되었음을 확인
-                    initialDetected = true;
-                    log.info('초기 상태: 값이 13임을 확인');
+                if (initialValue === null) {
+                    // 최초로 값을 설정
+                    initialValue = currentValue;
+                    log.info(`Initial Value Detected: ${initialValue}`);
                 }
 
-                if (initialDetected && currentValue !== 13) {
-                    // 13에서 다른 값으로 변경됨을 확인
-                    if (!changedToNon13) {
-                        changedToNon13 = true; // 상태 변화 플래그 설정
-                        log.info('상태 변화: 값이 13이 아님');
+                if (initialValue !== null && currentValue !== initialValue) {
+                    // 값이 최초 값과 다른 경우
+                    if (!changedToNonInitialValue) {
+                        changedToNonInitialValue = true; // 상태 변경 플래그 설정
+                        log.info(`상태 변화: 초기값(${initialValue})에서 다른 값(${currentValue})으로 변경`);
+
+                        // `totalTime` 만큼 반복 작업 수행
+                        for (let timeCounter = 0; timeCounter < totalTime; timeCounter++) {
+                            log.info(`반복 중: ${timeCounter + 1}/${totalTime}초`);
+                            eventEmitter.emit('order-update', {
+                                menu: menuName,
+                                status: 'iceCount',
+                                message: '작업 진행 중입니다.',
+                                time: timeCounter,
+                            });
+                            await new Promise((r) => setTimeout(r, 1000)); // 1초 대기
+                        }
+
+                        // 다음 동작으로 진행
+                        log.info('다음 동작으로 진행 중...');
+                        resolve(); // 작업 완료로 처리
+                        return;
                     }
-                }
-
-                if (changedToNon13 && currentValue === 13) {
-                    // 상태가 다시 13으로 돌아오는 시점을 감지
-                    log.info(`원복 감지! 값이 다시 13으로 돌아옴 (counter: ${counter})`);
-                    resolve(); // 작업 완료로 처리
-                    return;
                 }
 
                 if (counter >= 119) {
