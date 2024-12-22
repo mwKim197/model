@@ -232,7 +232,7 @@ const dispenseIce = (recipe) => {
                 log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(hexArray)}`);
 
                 // 7번째 데이터 추출
-                const currentValue = parseInt(hexArray[7], 16); // 16진수 → 10진수 변환
+                const currentValue = parseInt(hexArray[7]); // 16진수 → 10진수 변환
                 log.info(`Current Value (hexArray[7]): ${currentValue}`);
 
                 if (!initialDetected && currentValue === 13) {
