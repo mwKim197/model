@@ -592,6 +592,7 @@
     window.callApi = async function (apiFunction, menuId, data) {
         try {
             const response = await apiFunction(menuId);
+            console.log(response);
             if (response.ok) {
                 const result = await response.json();
                 console.log(`API 호출 성공:`, result);
