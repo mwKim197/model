@@ -559,7 +559,7 @@
 
 <script type="module" src="/renderer/api/menuApi.browser.js"></script>
 <script type="module">
-    import { getMenuInfoAll, fetchCupPlUse, fetchCupPaUse, fetchIceRun, fetchIceTime, fetchWaterTime, callSerialAdminDrinkOrder } from '/renderer/api/menuApi.browser.js';
+    import { getMenuInfoAll, fetchCupPlUse, fetchCupPaUse, callSerialAdminIceOrder, callSerialAdminDrinkOrder } from '/renderer/api/menuApi.browser.js';
     const url = window.location.hostname;
     const userUrlPort = `http://${url}:3000`
     let data;
@@ -609,17 +609,9 @@
         try {
             // 얼음 투출 (iceYn이 "yes"일 경우)
             if (targetItem.iceYn === "yes") {
-                console.log(`얼음 시간: ${targetItem.iceTime}`);
-                await fetchIceTime(targetItem.iceTime); // 얼음 시간 설정
+                console.log(`레시피: ${targetItem}`);
+                await callSerialAdminIceOrder(targetItem); // 얼음 투출
             }
-
-            // 물 투출 (waterTime 설정)
-            console.log(`물 시간: ${targetItem.waterTime}`);
-            await fetchWaterTime(targetItem.waterTime); // 물 시간 설정
-
-            // 최종 실행
-            console.log("얼음/물 투출 실행");
-            await fetchIceRun(); // 최종 실행
 
             alert(`[${targetItem.name}] 얼음 및 물 투출이 완료되었습니다.`);
         } catch (error) {

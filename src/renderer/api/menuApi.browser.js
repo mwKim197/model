@@ -43,6 +43,33 @@ const callSerialAdminDrinkOrder = async (recipe) => {
     }
 };
 
+
+const callSerialAdminIceOrder = async (recipe) => {
+    try {
+        const response = await fetch(`http://${url}:3000/serial-admin-ice-order`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ recipe })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            console.log('Success:', result.message);
+            console.log('Menu ID:', result.data.menuId);
+        } else {
+            console.error('Error:', result.message);
+            if (result.error) {
+                console.error('Details:', result.error.message);
+            }
+        }
+    } catch (error) {
+        console.error('Fetch error:', error.message);
+    }
+};
+
 const fetchCoffeeInfo = async (grinder1, grinder2, extraction, hotwater) => {
     try {
         const response = await fetch(`http://${url}:3000/serial-order-coffee-setting/${grinder1}/${grinder2}/${extraction}/${hotwater}`);
@@ -301,6 +328,7 @@ const fetchIceInfo = async () => {
 export {
     getMenuInfoAll,
     callSerialAdminDrinkOrder,
+    callSerialAdminIceOrder,
     fetchCoffeeInfo,
     fetchCoffeeUse,
     fetchCoffeeUse1,
