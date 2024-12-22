@@ -212,7 +212,7 @@ const dispenseIce = (recipe) => {
             await Ice.sendWaterTimePacket(recipe.waterTime);
             await Ice.sendIceRunPacket();
             const initialStatus = await Ice.getKaiserInfo();
-            totalTime = initialStatus.match(/.{1,2}/g)[6];
+            totalTime = initialStatus.match(/.{1,2}/g)[7];
             log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(totalTime)}`);
             log.info('출빙 요청이 완료되었습니다. 상태를 감시합니다.');
             log.info('얼음을 받아주세요'); // [TODO] 음성 메시지 호출
@@ -224,15 +224,20 @@ const dispenseIce = (recipe) => {
                 const result = await Ice.getKaiserInfo();
                 eventEmitter.emit('order-update', { menu: menuName, status: 'iceCount', message: '제빙기에서 얼음을 받아주세요.', time: counter });
 
-                log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(result)} ${counter}/120`);
+                //log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(result)} ${counter}/120`);
                 const hexArray = result.match(/.{1,2}/g);
-                log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(hexArray)}`);
-                if (hexArray[6] !== totalTime) {
+                //log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(hexArray)}`);
+                if (counter >= 30) {
+                    log.info(JSON.stringify(hexArray));
+                }
+
+                /*if (hexArray[7] !== totalTime) {
+
                     log.info('2단계 완료: 얼음 배출 완료 및 다음 플로우로 진행');
                     //await Ice.sendIceStopPacket();
                     resolve();
                     return;
-                }
+                }*/
                 if(counter >= 119) {
                     await Ice.sendIceStopPacket();
                     reject(new Error('작업 시간이 초과되었습니다.'));

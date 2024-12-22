@@ -35,7 +35,7 @@ class IceModule {
             const packet = Buffer.from([stx, id, len, cmd, data, etx]);
             // 시리얼 응답 받기
             const response = await this.serialCommCom3.writeCommand(packet);
-            console.log("response __ : ", response);
+            log.info("response __ : ", response);
             return response;
         } catch (err) {
             log.error(err.message);
