@@ -19,7 +19,7 @@ const getMenuInfoAll = async () => {
 
 const callSerialAdminDrinkOrder = async (recipe) => {
     try {
-        const response = await fetch('http://localhost:3000/serial-admin-drink-order', {
+        const response = await fetch(`http://${url}:3000/serial-admin-drink-order`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
