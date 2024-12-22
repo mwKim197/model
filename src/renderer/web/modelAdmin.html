@@ -453,7 +453,6 @@
 
 
     /* [MENU SET] 등록 버튼 START */
-
     document.getElementById('saveItemBtn').addEventListener('click', async () => {
         const fileInput = document.getElementById('fileInput');
 
@@ -560,13 +559,58 @@
 
 <script type="module" src="/renderer/api/menuApi.browser.js"></script>
 <script type="module">
-    import { getMenuInfoAll } from '/renderer/api/menuApi.browser.js';
+    import { getMenuInfoAll, fetchCupPlUse, fetchCupPaUse } from '/renderer/api/menuApi.browser.js';
     const url = window.location.hostname;
     const userUrlPort = `http://${url}:3000`
+    let data;
+    // 메뉴 요청 START
 
+    // 컵 클릭 처리
+    window.handleCupClick = async function (menuId) {
+        console.log(menuId);
+        // 전체 데이터에서 해당 menuId의 데이터 추출
+        const targetItem = data.Items.find((item) => item.menuId === parseInt(menuId));
+
+        if (!targetItem) {
+            console.error(`Item with menuId ${menuId} not found`);
+            return;
+        }
+
+        // 컵 데이터 확인 및 API 호출
+        if (targetItem.cup === "plastic") {
+            console.log(`플라스틱 컵 선택: ${JSON.stringify(targetItem)}`);
+            await callApi(fetchCupPlUse, menuId, targetItem);
+        } else if (targetItem.cup === "paper") {
+            console.log(`종이컵 선택: ${JSON.stringify(targetItem)}`);
+            await callApi(fetchCupPaUse, menuId, targetItem);
+        } else {
+            console.error("Unknown cup type:", targetItem.cup);
+        }
+    };
+
+    // API 호출 함수
+    window.callApi = async function (apiFunction, menuId, data) {
+        try {
+            const response = await apiFunction(menuId);
+            if (response.ok) {
+                const result = await response.json();
+                console.log(`API 호출 성공:`, result);
+                alert(`API 호출 성공! 데이터: ${JSON.stringify(result)}`);
+            } else {
+                console.error(`API 호출 실패: ${response.statusText}`);
+                alert("API 호출 실패!");
+            }
+        } catch (error) {
+            console.error("API 호출 중 오류 발생:", error);
+            alert("API 호출 중 오류 발생!");
+        }
+    }
+
+    // 메뉴 요청 END
+    // 메뉴그리기 START
     document.addEventListener('DOMContentLoaded', async () => {
         try {
-            const data = await getMenuInfoAll();
+            data = await getMenuInfoAll();
             const menuListContainer = document.getElementById("menu-list");
 
             if (Array.isArray(data?.Items)) {
@@ -593,10 +637,6 @@
                 "'": '&#39;',
             }[match]));
         };
-        function containsHttps(text) {
-            if (typeof text !== 'string') return false; // 문자열인지 확인
-            return text.includes('https');
-        }
 
         const convertToImageUrl = (localPath) => {
             const fileName = localPath.split('\\').pop(); // 파일 이름 추출
@@ -625,7 +665,8 @@
                         <label for="price" class="text-sm text-gray-600">금액</label>
                         <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${escapeHTML(menuData.price?.toString() || '')}" disabled>
                     </div>
-                     <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                     <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2 cup-item" data-menu-id="${menuData.menuId}"
+     onclick="handleCupClick(${menuData.menuId})">
                         <label class="text-sm text-gray-600">컵</label>
                         <fieldset class="flex items-center gap-2">
                             <label for="cupPlastic" class="flex items-center gap-2">
@@ -765,7 +806,7 @@
         </div>
     </div>`;
     };
-
+// 메뉴그리기 END
 </script>
 <!-- menuApi.js를 먼저 로드 -->
 <script src="/renderer/web/modelAdmin.js"></script>

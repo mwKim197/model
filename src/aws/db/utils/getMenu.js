@@ -16,6 +16,7 @@ const processUserAndProduct = async () => {
     }
 }
 processUserAndProduct().then();
+// 순번 적용 등록
 const swapNoAndAddProduct = async (data) => {
 
     try {
