@@ -549,6 +549,7 @@ function updateTime() {
     const currentTemperatureElement = document.getElementById('current-temperature');
     currentTimeElement.textContent = getCurrentFormattedTime();
     currentTemperatureElement.textContent = rd1Info.boilerTemperature;
+    console.log(rd1Info.boilerTemperature);
 }
 
 // 1초마다 시간 업데이트
