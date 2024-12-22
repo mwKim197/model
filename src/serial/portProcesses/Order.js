@@ -1,8 +1,10 @@
 const log = require('../../logger')
 const express = require('express');
 const {dispenseCoffee, adminDrinkOrder} = require("../../services/serialOrderManager");
+const serialDataManager = require("../../services/serialDataManager");
+const {serialCommCom1} = require("../serialCommManager");
 const Order = express.Router();
-
+const polling = new serialDataManager(serialCommCom1);
 
 Order.use((req, res, next) => {
     if (!req.serialCommCom1) {
@@ -64,7 +66,13 @@ Order.post('/serial-admin-drink-order', async (req, res) => {
             });
         }
 
-        await adminDrinkOrder(recipe);
+        log.info('Polling is being stopped for admin order.');
+        await polling.stopPolling(); // 주문 작업을 시작하기 전에 조회 정지
+
+        await adminDrinkOrder(recipe); // 주문 작업 수행
+
+        log.info('Polling is being restarted after admin order.');
+        await polling.startPolling(); // 주문 작업 이후 폴링 재개
 
         res.status(200).json({
             status: 200,
@@ -86,8 +94,19 @@ Order.post('/serial-admin-drink-order', async (req, res) => {
                 stack: process.env.NODE_ENV === 'development' ? err.stack : undefined // 개발 환경에서만 스택 표시
             }
         });
+    } finally {
+        // 예외 발생 시에도 폴링 재개 보장
+        if (!polling.isPollingActive) {
+            try {
+                log.info('Polling is being restarted in finally block.');
+                await polling.startPolling();
+            } catch (error) {
+                log.error('Failed to restart polling in finally block:', error.message);
+            }
+        }
     }
 });
+
 
 Order.get('/serial-order-tea-setting/:motor/:extraction/:hotwater', async (req, res) => {
     try {

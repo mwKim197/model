@@ -478,7 +478,6 @@ document.getElementById('payment').addEventListener('click', async () => {
 });
 
 
-
 /* 버튼 비동기 처리 0.2 초대기*/
 // 플래그 객체로 버튼 ID별 상태 관리
 const buttonFlags = {};
