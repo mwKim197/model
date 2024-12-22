@@ -218,7 +218,7 @@ const dispenseIce = (recipe) => {
             log.info('얼음을 받아주세요'); // [TODO] 음성 메시지 호출
             let initialValue = null; // 최초 상태값 저장
             let stableTime = 0; // 변경 후 유지 시간
-            let changedValueDetected = false; // 값 변경 감지 여부
+            let valueChanged = false; // 값 변경 여부 플래그
 
             let waterTime = Number(recipe.waterTime);
 
@@ -238,27 +238,25 @@ const dispenseIce = (recipe) => {
 
                 log.info(`Current Value (hexArray[7]): ${currentValue}`);
 
-                if (initialValue === null) {
-                    // 최초로 값을 설정
-                    initialValue = currentValue;
-                    log.info(`Initial Value Detected: ${initialValue}`);
-                }
-
-                if (!changedValueDetected && currentValue === initialValue) {
-                    // 초기값이 계속 유지되는 경우
-                    log.info(`Initial Value 유지 중: ${initialValue}`);
-                    stableTime = 0; // 변경 이후 유지 시간 초기화
-                } else if (currentValue !== initialValue) {
-                    // 값이 변경된 경우
-                    if (!changedValueDetected) {
-                        changedValueDetected = true; // 값 변경 감지 플래그 설정
+                if (!valueChanged) {
+                    // 값 변경 전 (처음 값 유지)
+                    if (initialValue === null) {
+                        // 최초로 값을 설정
+                        initialValue = currentValue;
+                        log.info(`Initial Value Detected: ${initialValue}`);
+                    } else if (currentValue === initialValue) {
+                        // 같은 값이 유지되는 경우
+                        log.info(`Initial Value 유지 중: ${initialValue}`);
+                    } else {
+                        // 값이 변경된 경우
+                        valueChanged = true; // 변경 플래그 설정
+                        stableTime = 0; // 변경 후 유지 시간 초기화
                         initialValue = currentValue; // 새로운 값으로 업데이트
-                        log.info(`값 변경 감지: 새로운 값(${currentValue})으로 전환`);
+                        log.info(`값 변경 감지: 새로운 값(${currentValue})으로 전환. 시간 체크 시작.`);
                     }
-
-                    // 변경된 상태 유지 시간 계산
+                } else {
                     stableTime++;
-                    log.info(`변경된 값 유지 중: ${stableTime}/${totalTime}초`);
+                    log.info(`변경된 값 : ${stableTime}/${totalTime}초`);
 
                     // 변경된 값이 totalTime만큼 유지된 경우
                     if (stableTime >= totalTime) {
@@ -267,6 +265,7 @@ const dispenseIce = (recipe) => {
                         return;
                     }
                 }
+
 
                 if (counter >= 119) {
                     await Ice.sendIceStopPacket();
