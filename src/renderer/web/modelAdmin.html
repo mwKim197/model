@@ -560,6 +560,7 @@
 <script type="module" src="/renderer/api/menuApi.browser.js"></script>
 <script type="module">
     import { getMenuInfoAll, fetchCupPlUse, fetchCupPaUse, fetchIceRun, fetchIceTime, fetchWaterTime } from '/renderer/api/menuApi.browser.js';
+    import {callSerialAdminDrinkOrder} from "../api/menuApi.browser";
     const url = window.location.hostname;
     const userUrlPort = `http://${url}:3000`
     let data;
@@ -625,6 +626,30 @@
         } catch (error) {
             console.error(`얼음 및 물 투출 중 오류 발생:`, error);
             alert(`[${targetItem.name}] 얼음 및 물 투출 중 오류가 발생했습니다.`);
+        }
+    };
+
+    // 음료 투출 처리
+    window.handleDrinkClick = async function (menuId) {
+        // 전체 데이터에서 해당 menuId의 데이터 추출
+        const targetItem = data.Items.find((item) => item.menuId === parseInt(menuId));
+
+        if (!targetItem) {
+            console.error(`Item with menuId ${menuId} not found`);
+            return;
+        }
+
+        if (!confirm(`[${targetItem.name}] 음료를 투출합니다.`)) {
+            return;
+        }
+
+        try {
+            await callSerialAdminDrinkOrder(targetItem);
+
+            alert(`[${targetItem.name}] 음료 투출이 완료되었습니다.`);
+        } catch (error) {
+            console.error(`음료 투출 중 오류 발생:`, error);
+            alert(`[${targetItem.name}] 음료 투출 중 오류가 발생했습니다.`);
         }
     };
 

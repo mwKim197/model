@@ -148,6 +148,59 @@ const processOrder = async (recipe) => {
     }
 };
 
+const adminDrinkOrder = async (recipe) => {
+    const sortedItems = [...recipe.items].sort((a, b) => a.no - b.no);
+    for (const [index, item] of sortedItems.entries()) {
+        try {
+            // 첫 번째 항목에만 컵 센서 체크 로직 추가
+            if (index === 0) {
+                const isStartValid = await checkCupSensor("있음", 3);
+                if (!isStartValid) {
+                    log.error(`[에러] 컵 센서 상태가 유효하지 않음: menuId ${recipe.menuId}`);
+                    throw new Error(`120초 경과로 기계가 초기화되었습니다.`);
+                } else {
+                    eventEmitter.emit('order-update', {
+                        menu: recipe.name, // 수정: menuName 변수 대신 recipe.menuName 사용
+                        status: 'drink',
+                        message: '맛있는 음료를 만들고 있습니다. 잠시만 기다려주세요.'
+                    });
+                }
+                log.info(`컵 센서 상태 확인 완료: menuId ${recipe.menuId}`);
+            }
+
+            // 각 타입별 작업 처리
+            switch (item.type) {
+                case 'coffee':
+                    await dispenseCoffee(item.value1, item.value2, item.value3, item.value4);
+                    break;
+                case 'garucha':
+                    await dispenseGarucha(item.value1, item.value2, item.value3);
+                    break;
+                case 'syrup':
+                    await dispenseSyrup(item.value1, item.value2, item.value3, item.value4);
+                    break;
+                default:
+                    log.warn(`아이템 타입을 찾을 수 없습니다.: ${item.type}`);
+                    break;
+            }
+
+            // 마지막 항목 처리
+            if (index === sortedItems.length - 1) {
+                const isEndValid = await checkCupSensor("없음", 3);
+                if (!isEndValid) {
+                    log.error(`[에러] 컵 센서 상태가 유효하지 않음 (회수 실패): menuId ${recipe.menuId}`);
+                    throw new Error(`Invalid cup sensor state after manufacturing for menuId ${recipe.menuId}`);
+                }
+                log.info(`컵 센서 상태 확인 완료 (회수 성공): menuId ${recipe.menuId}`);
+            }
+        } catch (error) {
+            log.error(`[에러] 제조 item No ${item.no} in menu ${recipe.menuId}: ${error.message}`);
+            throw error; // 에러를 상위로 전파
+        }
+    }
+}
+
+
 
 // 제조 단계 함수
 const dispenseCup = (recipe) => {
@@ -498,5 +551,8 @@ processQueue().then();
 
 module.exports = {
     startOrder,
-    useWash
+    dispenseCup,
+    dispenseCoffee,
+    useWash,
+    adminDrinkOrder,
 };
