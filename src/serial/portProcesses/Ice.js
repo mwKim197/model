@@ -24,8 +24,12 @@ Ice.get('/serial-water-time', async (req, res) => {
         const response = await  IceCall.sendWaterTimePacket(data);
         log.info('water-time command response:', response); // 시리얼 응답 로그
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.json(data);
-
+        res.json({
+            status: 200,
+            result: "success",
+            message: "Command executed successfully",
+            data: data
+        });
     } catch (err) {
         log.error(err.message);
         res.status(500).send(err.message);
@@ -43,8 +47,12 @@ Ice.get('/serial-ice-time', async (req, res) => {
         const response = await  IceCall.sendIceTimePacket(data);
         log.info('ice-time command response:', response); // 시리얼 응답 로그
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.json(data);
-
+        res.json({
+            status: 200,
+            result: "success",
+            message: "Command executed successfully",
+            data: data
+        });
     } catch (err) {
         log.error(err.message);
         res.status(500).send(err.message);
@@ -57,7 +65,12 @@ Ice.get('/serial-ice-run', async (req, res) => {
         const response = await  IceCall.sendIceRunPacket();
         log.info('run command response:', response); // 시리얼 응답 로그
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.json(data);
+        res.json({
+            status: 200,
+            result: "success",
+            message: "Command executed successfully",
+            data: data
+        });
 
     } catch (err) {
         log.error(err.message);
@@ -71,7 +84,12 @@ Ice.get('/serial-ice-stop', async (req, res) => {
         const response = await  IceCall.sendIceStopPacket(data);
         log.info('run command response:', response); // 시리얼 응답 로그
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.json(data);
+        res.json({
+            status: 200,
+            result: "success",
+            message: "Command executed successfully",
+            data: data
+        });
 
     } catch (err) {
         log.error(err.message);
@@ -85,7 +103,12 @@ Ice.get('/serial-ice-info', async (req, res) => {
         const response = await  IceCall.getKaiserInfo();
         log.info('run command response:', response); // 시리얼 응답 로그
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.json(data);
+        res.json({
+            status: 200,
+            result: "success",
+            message: "Command executed successfully",
+            data: data
+        });
 
     } catch (err) {
         log.error(err.message);
