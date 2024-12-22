@@ -467,7 +467,6 @@ const useWash = async (data) => {
     // 메뉴와 주문 데이터가 정상적으로 로드되었으면 세척 시작
     if (menuData.length > 0) {
         log.info("세척 시작...!");
-        eventEmitter.emit('order-update', { menu: menuName, status: 'washStart', message: '커피머신 세척중입니다 잠시만 기다려주세요.' });
         const recipe = menuData.filter(menu => orderData.some(ord => ord.menuId === menu.menuId));
         const combinedList = recipe
             .flatMap(entry =>
@@ -494,7 +493,7 @@ const useWash = async (data) => {
                 }
             }
             const listData = combinedList[i];
-
+            eventEmitter.emit('order-update', { menu: menuName, status: 'washStart', message: '커피머신 세척중입니다 잠시만 기다려주세요.' });
             log.info(`전체 세척 실행: ${JSON.stringify(listData)}`);
 
             if (listData.type === "garucha") {
