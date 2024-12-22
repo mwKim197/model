@@ -644,7 +644,6 @@
 
         try {
             await callSerialAdminDrinkOrder(targetItem);
-
             alert(`[${targetItem.name}] 음료 투출이 완료되었습니다.`);
         } catch (error) {
             console.error(`음료 투출 중 오류 발생:`, error);

@@ -192,6 +192,7 @@ const adminDrinkOrder = async (recipe) => {
                     throw new Error(`Invalid cup sensor state after manufacturing for menuId ${recipe.menuId}`);
                 }
                 log.info(`컵 센서 상태 확인 완료 (회수 성공): menuId ${recipe.menuId}`);
+                await useWash(recipe);
             }
         } catch (error) {
             log.error(`[에러] 제조 item No ${item.no} in menu ${recipe.menuId}: ${error.message}`);
