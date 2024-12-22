@@ -217,7 +217,8 @@ const dispenseIce = (recipe) => {
             log.info('출빙 요청이 완료되었습니다. 상태를 감시합니다.');
             log.info('얼음을 받아주세요'); // [TODO] 음성 메시지 호출
             let initialValue = null; // 최초 상태값 저장
-            let changedToNonInitialValue = false; // 상태 변경 플래그
+            let stableTime = 0; // 변경 후 유지 시간
+            let changedValueDetected = false; // 값 변경 감지 여부
 
             let waterTime = Number(recipe.waterTime);
 
@@ -225,13 +226,15 @@ const dispenseIce = (recipe) => {
                 waterTime = waterTime - 2;
             }
             totalTime = Number(recipe.iceTime) + waterTime
+            log.info('[totalTime] : ', totalTime);
+
             // 화면 노출 메세지
             eventEmitter.emit('order-update', { menu: menuName, status: 'ice', message: '제빙기에서 얼음을 받아주세요.' });
 
             for (let counter = 0; counter < totalTime; counter++) {
                 const result = await Ice.getKaiserInfo();
                 const currentHexArray = result.match(/.{1,2}/g); // 2자리씩 끊어서 배열 생성
-                const currentValue = parseInt(currentHexArray[7], 16); // 16진수 → 10진수 변환
+                const currentValue = parseInt(currentHexArray[7]); // 16진수 → 10진수 변환
 
                 log.info(`Current Value (hexArray[7]): ${currentValue}`);
 
@@ -241,21 +244,25 @@ const dispenseIce = (recipe) => {
                     log.info(`Initial Value Detected: ${initialValue}`);
                 }
 
-                if (initialValue !== null && currentValue !== initialValue) {
-                    // 값이 최초 값과 다른 경우
-                    if (!changedToNonInitialValue) {
-                        changedToNonInitialValue = true; // 상태 변경 플래그 설정
-                        log.info(`상태 변화: 초기값(${initialValue})에서 다른 값(${currentValue})으로 변경`);
+                if (!changedValueDetected && currentValue === initialValue) {
+                    // 초기값이 계속 유지되는 경우
+                    log.info(`Initial Value 유지 중: ${initialValue}`);
+                    stableTime = 0; // 변경 이후 유지 시간 초기화
+                } else if (currentValue !== initialValue) {
+                    // 값이 변경된 경우
+                    if (!changedValueDetected) {
+                        changedValueDetected = true; // 값 변경 감지 플래그 설정
+                        initialValue = currentValue; // 새로운 값으로 업데이트
+                        log.info(`값 변경 감지: 새로운 값(${currentValue})으로 전환`);
+                    }
 
-                        // `totalTime` 만큼 반복 작업 수행
-                        for (let timeCounter = 0; timeCounter < totalTime; timeCounter++) {
-                            log.info(`반복 중: ${timeCounter + 1}/${totalTime}초`);
-                            eventEmitter.emit('order-update', { menu: menuName, status: 'iceCount', message: '제빙기에서 얼음을 받아주세요.', time: counter });
-                            await new Promise((r) => setTimeout(r, 1000)); // 1초 대기
-                        }
+                    // 변경된 상태 유지 시간 계산
+                    stableTime++;
+                    log.info(`변경된 값 유지 중: ${stableTime}/${totalTime}초`);
 
-                        // 다음 동작으로 진행
-                        log.info('다음 동작으로 진행 중...');
+                    // 변경된 값이 totalTime만큼 유지된 경우
+                    if (stableTime >= totalTime) {
+                        log.info('변경된 값이 일정 시간 동안 유지됨. 다음 루틴으로 진행합니다...');
                         resolve(); // 작업 완료로 처리
                         return;
                     }
