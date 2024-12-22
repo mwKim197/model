@@ -567,12 +567,16 @@
 
     // 컵 클릭 처리
     window.handleCupClick = async function (menuId) {
-        console.log(menuId);
+
         // 전체 데이터에서 해당 menuId의 데이터 추출
         const targetItem = data.Items.find((item) => item.menuId === parseInt(menuId));
 
         if (!targetItem) {
             console.error(`Item with menuId ${menuId} not found`);
+            return;
+        }
+
+        if (!confirm(`[${targetItem.name}] 컵을 투출합니다`)) {
             return;
         }
 
@@ -593,7 +597,7 @@
         try {
             const response = await apiFunction(menuId);
             console.log(response);
-            if (response.ok) {
+            if (response.status === 200) {
                 const result = await response.json();
                 console.log(`API 호출 성공:`, result);
                 alert(`API 호출 성공! 데이터: ${JSON.stringify(result)}`);
