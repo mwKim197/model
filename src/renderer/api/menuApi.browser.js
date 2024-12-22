@@ -19,7 +19,7 @@ const getMenuInfoAll = async () => {
 
 const fetchCoffeeInfo = async (grinder1, grinder2, extraction, hotwater) => {
     try {
-        const response = await fetch(`http://${url}/serial-order-coffee-setting/${grinder1}/${grinder2}/${extraction}/${hotwater}`);
+        const response = await fetch(`http://${url}:3000/serial-order-coffee-setting/${grinder1}/${grinder2}/${extraction}/${hotwater}`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -69,7 +69,7 @@ const fetchCoffeeUse1 = async () => {
 
 const fetchTeaInfo = async (motor, extraction, hotwater) => {
     try {
-        const response = await fetch(`http://${url}/serial-order-tea-setting/${motor}/${extraction}/${hotwater}`);
+        const response = await fetch(`http://${url}:3000/serial-order-tea-setting/${motor}/${extraction}/${hotwater}`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -103,7 +103,7 @@ const fetchTeaUse = async () => {
 
 const fetchSyrupInfo = async (syrup, pump, hotwater, sparkling) => {
     try {
-        const response = await fetch(`http://${url}/serial-order-syrup-setting/${syrup}/${pump}/${hotwater}/${sparkling}`);
+        const response = await fetch(`http://${url}:3000/serial-order-syrup-setting/${syrup}/${pump}/${hotwater}/${sparkling}`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -137,7 +137,7 @@ const fetchSyrupUse = async () => {
 
 const fetchWaterTime = async (waterTime) => {
     try {
-        const response = await fetch(`http://${url}/serial-water-time?data=${waterTime}`);
+        const response = await fetch(`http://${url}:3000/serial-water-time?data=${waterTime}`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -154,7 +154,7 @@ const fetchWaterTime = async (waterTime) => {
 
 const fetchIceTime = async (iceTime) => {
     try {
-        const response = await fetch(`http://${url}/serial-ice-time?data=${iceTime}`);
+        const response = await fetch(`http://${url}:3000/serial-ice-time?data=${iceTime}`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
