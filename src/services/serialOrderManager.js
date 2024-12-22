@@ -221,7 +221,6 @@ const dispenseIce = (recipe) => {
             let valueChanged = false; // 값 변경 여부 플래그
 
             let waterTime = Number(recipe.waterTime);
-
             if (Number(recipe.waterTime) >= 3) {
                 waterTime = waterTime - 2;
             }
@@ -231,7 +230,7 @@ const dispenseIce = (recipe) => {
             // 화면 노출 메세지
             eventEmitter.emit('order-update', { menu: menuName, status: 'ice', message: '제빙기에서 얼음을 받아주세요.' });
 
-            for (let counter = 0; counter < totalTime; counter++) {
+            for (let counter = 0; counter < 120; counter++) {
                 const result = await Ice.getKaiserInfo();
                 const currentHexArray = result.match(/.{1,2}/g); // 2자리씩 끊어서 배열 생성
                 const currentValue = parseInt(currentHexArray[7]); // 16진수 → 10진수 변환
@@ -265,7 +264,6 @@ const dispenseIce = (recipe) => {
                         return;
                     }
                 }
-
 
                 if (counter >= 119) {
                     await Ice.sendIceStopPacket();
