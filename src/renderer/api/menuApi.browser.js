@@ -27,6 +27,7 @@ const fetchCoffeeInfo = async (grinder1, grinder2, extraction, hotwater) => {
 
         const data = await response.json();
         console.log(data);
+        return data;
     } catch (error) {
         console.error(error);
     }
@@ -43,6 +44,7 @@ const fetchCoffeeUse = async () => {
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
         console.log(data);
+        return data;
     } catch (error) {
         console.error(error);
     }
@@ -59,6 +61,7 @@ const fetchCoffeeUse1 = async () => {
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
         console.log(data);
+        return data;
     } catch (error) {
         console.error(error);
     }
@@ -75,6 +78,7 @@ const fetchTeaInfo = async (motor, extraction, hotwater) => {
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
         console.log(data);
+        return data;
     } catch (error) {
         console.error(error);
     }
@@ -91,6 +95,7 @@ const fetchTeaUse = async () => {
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
         console.log(data);
+        return data;
     } catch (error) {
         console.error(error);
     }
@@ -107,6 +112,7 @@ const fetchSyrupInfo = async (syrup, pump, hotwater, sparkling) => {
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
         console.log(data);
+        return data;
     } catch (error) {
         console.error(error);
     }
@@ -123,6 +129,7 @@ const fetchSyrupUse = async () => {
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
         console.log(data);
+        return data;
     } catch (error) {
         console.error(error);
     }
@@ -139,6 +146,7 @@ const fetchWaterTime = async (waterTime) => {
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
         console.log(data);
+        return data;
     } catch (error) {
         console.error(error);
     }
@@ -155,6 +163,7 @@ const fetchIceTime = async (iceTime) => {
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
         console.log(data);
+        return data;
     } catch (error) {
         console.error(error);
     }
@@ -171,6 +180,7 @@ const fetchIceRun = async () => {
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
         console.log(data);
+        return data;
     } catch (error) {
         console.error(error);
     }
@@ -187,6 +197,7 @@ const fetchIceStop = async () => {
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
         console.log(data);
+        return data;
     } catch (error) {
         console.error(error);
     }
@@ -203,6 +214,7 @@ const fetchCupInfo = async () => {
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
         console.log(data);
+        return data;
     } catch (error) {
         console.error(error);
     }
@@ -219,6 +231,7 @@ const fetchCupPlUse = async () => {
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
         console.log(data);
+        return data;
     } catch (error) {
         console.error(error);
     }
@@ -235,6 +248,7 @@ const fetchCupPaUse = async () => {
         const data = await response.json();
         console.log('Response Data:', data);  // 디버깅용 콘솔
         console.log(data);
+        return data;
     } catch (error) {
 
         console.error(error);
