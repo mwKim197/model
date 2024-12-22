@@ -250,12 +250,7 @@ const dispenseIce = (recipe) => {
                         // `totalTime` 만큼 반복 작업 수행
                         for (let timeCounter = 0; timeCounter < totalTime; timeCounter++) {
                             log.info(`반복 중: ${timeCounter + 1}/${totalTime}초`);
-                            eventEmitter.emit('order-update', {
-                                menu: menuName,
-                                status: 'iceCount',
-                                message: '작업 진행 중입니다.',
-                                time: timeCounter,
-                            });
+                            eventEmitter.emit('order-update', { menu: menuName, status: 'iceCount', message: '제빙기에서 얼음을 받아주세요.', time: counter });
                             await new Promise((r) => setTimeout(r, 1000)); // 1초 대기
                         }
 
