@@ -534,11 +534,13 @@ function getCurrentFormattedTime() {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
+// RD1 데이터를 업데이트하는 콜백 함수
 function getPollingData(data) {
-    rd1Info = data;
+    console.log('Polling Data Received:', data); // RD1 상태 확인용 로그
+    rd1Info = data; // RD1 데이터를 전역 변수 또는 상태에 저장
 }
 
-// polling 으로 받아온 RD1상태를 노출한다.
+// Electron의 API를 통해 메인 프로세스에서 RD1 데이터를 수신
 window.electronAPI.updateSerialData(getPollingData);
 
 // 시간, 보일러 온도 업데이트
