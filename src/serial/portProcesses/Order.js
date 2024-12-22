@@ -1,6 +1,6 @@
 const log = require('../../logger')
 const express = require('express');
-const {dispenseCup, dispenseCoffee, adminDrinkOrder} = require("../../services/serialOrderManager");
+const {dispenseCoffee, adminDrinkOrder} = require("../../services/serialOrderManager");
 const Order = express.Router();
 
 
