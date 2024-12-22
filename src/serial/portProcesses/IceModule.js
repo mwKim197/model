@@ -1,4 +1,5 @@
 const log = require('../../logger');
+const {convertTimeToHex} = require("../../util/numberConvert");
 
 class IceModule {
     constructor(serialCommCom3) {
@@ -79,7 +80,7 @@ class IceModule {
                 log.error("no parameter " + data);
                 throw new Error('Data parameter is required');
             }
-
+            data = convertTimeToHex(data);
             // SCF 명령어에 URL 파라미터 값을 포함시켜 시리얼 통신
             // 데이터 패킷 생성
             const stx = 0x02;         // Start Byte
@@ -113,7 +114,7 @@ class IceModule {
                 log.error("no parameter " + data);
                 throw new Error('Data parameter is required');
             }
-
+            data = convertTimeToHex(data);
             // SCF 명령어에 URL 파라미터 값을 포함시켜 시리얼 통신
             // 데이터 패킷 생성
             const stx = 0x02;         // Start Byte

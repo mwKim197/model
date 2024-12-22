@@ -209,8 +209,8 @@ const dispenseIce = (recipe) => {
         try {
             let totalTime = "";
             log.info(`얼음 세팅 중: ${recipe.iceTime}초, 물 세팅 중: ${recipe.waterTime}초`);
-            await Ice.sendIceTimePacket(convertTimeToHex(recipe.iceTime));
-            await Ice.sendWaterTimePacket(convertTimeToHex(recipe.waterTime));
+            await Ice.sendIceTimePacket(recipe.iceTime);
+            await Ice.sendWaterTimePacket(recipe.waterTime);
             await Ice.sendIceRunPacket();
             const initialStatus = await Ice.getKaiserInfo();
             totalTime = initialStatus.match(/.{1,2}/g)[6];
