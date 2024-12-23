@@ -705,7 +705,7 @@
     <div class="menu-new-item-wrapper overflow-x-auto">
         <div class="menu-new-item flex flex-col gap-6 p-4 sm:p-6 bg-gray-100 border border-gray-300 rounded-lg shadow-sm">
             <div class="menu-details flex flex-col gap-6 flex-1">
-                <div class="fixed-row grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                <div class="fixed-row grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
                     <div class="menu-image relative w-40 h-40 item flex flex-col bg-gray-200 border border-gray-300 rounded-md">
                         <img src="${escapeHTML(imageUrl)}" alt="이미지" class="w-full h-full object-cover rounded-lg hover:cursor-pointer">
                     </div>
@@ -799,6 +799,20 @@
                                     <option value="best3" ${menuData.state?.best === 'best3' ? 'selected' : ''}>Best3</option>
                                 </select>
                             </div>
+                        </fieldset>
+                    </div>
+                    <!-- 품절 -->
+                    <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                        <label class="text-sm text-gray-600">empty</label>
+                        <fieldset class="flex items-center gap-2">
+                            <label for="emptyYes" class="flex items-center gap-2">
+                                <input type="radio" id="emptyYes" name="empty-${menuData.menuId}" value="yes" ${menuData.empty === 'yes' ? 'checked' : ''} disabled>
+                                <span>Yes</span>
+                            </label>
+                            <label for="emptyNo" class="flex items-center gap-2">
+                                <input type="radio" id="emptyNo" name="empty-${menuData.menuId}" value="no" ${menuData.empty === 'no' ? 'checked' : ''} disabled>
+                                <span>No</span>
+                            </label>
                         </fieldset>
                     </div>
                     <div class="item flex flex-col grid-cols-2 gap-2 bg-gray-200 border border-gray-300 rounded-md p-2">
