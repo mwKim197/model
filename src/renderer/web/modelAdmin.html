@@ -709,49 +709,64 @@
                     <div class="menu-image relative w-40 h-40 item flex flex-col bg-gray-200 border border-gray-300 rounded-md">
                         <img src="${escapeHTML(imageUrl)}" alt="이미지" class="w-full h-full object-cover rounded-lg hover:cursor-pointer">
                     </div>
-                    <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
-                        <label for="no" class="text-sm text-gray-600">순번</label>
-                        <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${Number(escapeHTML(menuData.no?.toString() || 0))}" disabled>
-                        <label for="name" class="text-sm text-gray-600">메뉴명</label>
-                        <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${escapeHTML(menuData.name || '')}" disabled>
+                    <div class="item flex flex-col grid-cols-2 gap-2 bg-gray-200 border border-gray-300 rounded-md p-2">
+                        <div>
+                            <label for="no" class="text-sm text-gray-600">순번</label>
+                            <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${Number(escapeHTML(menuData.no?.toString() || 0))}" disabled />
+                        </div>
+                        <div>
+                            <label for="name" class="text-sm text-gray-600">메뉴명</label>
+                            <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${escapeHTML(menuData.name || '')}" disabled>
+                        </div>
                     </div>
-                    <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
-                        <label for="category" class="text-sm text-gray-600">카테고리</label>
-                        <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${escapeHTML(menuData.category || '')}" disabled>
-                        <label for="price" class="text-sm text-gray-600">금액</label>
-                        <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${escapeHTML(menuData.price?.toString() || '')}" disabled>
+                    <div class="item flex flex-col grid-cols-2 gap-2 bg-gray-200 border border-gray-300 rounded-md p-2">
+                        <div>
+                            <label for="category" class="text-sm text-gray-600">카테고리</label>
+                            <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${escapeHTML(menuData.category || '')}" disabled>
+                        </div>
+                        <div>
+                            <label for="price" class="text-sm text-gray-600">금액</label>
+                            <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${escapeHTML(menuData.price?.toString() || '')}" disabled>
+                        </div>
                     </div>
-                     <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2 cup-item" data-menu-id="${menuData.menuId}"
-     onclick="handleCupClick(${menuData.menuId})">
-                        <label class="text-sm text-gray-600">컵</label>
-                        <fieldset class="flex items-center gap-2">
-                            <label for="cupPlastic" class="flex items-center gap-2">
-                                <input type="radio" name="cup-${menuData.menuId}" value="plastic" ${menuData.cup === 'plastic' ? 'checked' : ''} disabled>
-                                <span>플라스틱</span>
-                            </label>
-                            <label for="cupPaper" class="flex items-center gap-2">
-                                <input type="radio" name="cup-${menuData.menuId}" value="paper" ${menuData.cup === 'paper' ? 'checked' : ''} disabled>
-                                <span>종이컵</span>
-                            </label>
-                        </fieldset>
-                        <label class="text-sm text-gray-600">얼음</label>
-                        <fieldset class="flex items-center gap-2">
-                            <label for="iceYes" class="flex items-center gap-2">
-                                <input type="radio" name="iceYn-${menuData.menuId}" value="yes" ${menuData.iceYn === 'yes' ? 'checked' : ''} disabled>
-                                <span>Yes</span>
-                            </label>
-                            <label for="iceNo" class="flex items-center gap-2">
-                                <input type="radio" name="iceYn-${menuData.menuId}" value="no" ${menuData.iceYn === 'no' ? 'checked' : ''} disabled>
-                                <span>No</span>
-                            </label>
-                        </fieldset>
+                     <div class="item flex flex-col grid-cols-2 gap-2 bg-gray-200 border border-gray-300 rounded-md p-2 cup-item" data-menu-id="${menuData.menuId}" onclick="handleCupClick(${menuData.menuId})">
+                        <div>
+                            <label class="text-sm text-gray-600">컵</label>
+                            <fieldset class="flex items-center gap-2">
+                                <label for="cupPlastic" class="flex items-center gap-2">
+                                    <input type="radio" name="cup-${menuData.menuId}" value="plastic" ${menuData.cup === 'plastic' ? 'checked' : ''} disabled>
+                                    <span>플라스틱</span>
+                                </label>
+                                <label for="cupPaper" class="flex items-center gap-2">
+                                    <input type="radio" name="cup-${menuData.menuId}" value="paper" ${menuData.cup === 'paper' ? 'checked' : ''} disabled>
+                                    <span>종이컵</span>
+                                </label>
+                            </fieldset>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-600">얼음</label>
+                            <fieldset class="flex items-center gap-2">
+                                <label for="iceYes" class="flex items-center gap-2">
+                                    <input type="radio" name="iceYn-${menuData.menuId}" value="yes" ${menuData.iceYn === 'yes' ? 'checked' : ''} disabled>
+                                    <span>Yes</span>
+                                </label>
+                                <label for="iceNo" class="flex items-center gap-2">
+                                    <input type="radio" name="iceYn-${menuData.menuId}" value="no" ${menuData.iceYn === 'no' ? 'checked' : ''} disabled>
+                                    <span>No</span>
+                                </label>
+                            </fieldset>
+                        </div>
                     </div>
                     <!-- 얼음 시간 및 물 시간 -->
-                    <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2" data-menu-id="${menuData.menuId}" onclick="handleIceWaterClick(${menuData.menuId})">
-                        <label for="iceTime-${menuData.menuId}" class="text-sm text-gray-600">얼음 시간</label>
-                        <input type="number" name="iceTime" min="0" step="0.5" max="10" value="${menuData.iceTime || ''}" class="w-full border border-gray-400 rounded-md px-2 py-1" disabled>
-                        <label for="waterTime-${menuData.menuId}" class="text-sm text-gray-600">물 시간</label>
-                        <input type="number" name="waterTime" min="0" step="0.5" max="10" value="${menuData.waterTime || ''}" class="w-full border border-gray-400 rounded-md px-2 py-1" disabled>
+                    <div class="item flex flex-col grid-cols-2 gap-2 bg-gray-200 border border-gray-300 rounded-md p-2" data-menu-id="${menuData.menuId}" onclick="handleIceWaterClick(${menuData.menuId})">
+                        <div>
+                            <label for="iceTime-${menuData.menuId}" class="text-sm text-gray-600">얼음 시간</label>
+                            <input type="number" name="iceTime" min="0" step="0.5" max="10" value="${menuData.iceTime || ''}" class="w-full border border-gray-400 rounded-md px-2 py-1" disabled>
+                        </div>
+                        <div>
+                            <label for="waterTime-${menuData.menuId}" class="text-sm text-gray-600">물 시간</label>
+                            <input type="number" name="waterTime" min="0" step="0.5" max="10" value="${menuData.waterTime || ''}" class="w-full border border-gray-400 rounded-md px-2 py-1" disabled>
+                        </div>
                     </div>
                     <!-- 상태 -->
                     <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
@@ -786,7 +801,7 @@
                             </div>
                         </fieldset>
                     </div>
-                    <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
+                    <div class="item flex flex-col grid-cols-2 gap-2 bg-gray-200 border border-gray-300 rounded-md p-2">
                         <!-- 삭제 버튼 -->
                         <button
                             id="deleteItemBtn-${menuData.menuId}"
@@ -794,6 +809,12 @@
                             data-user-id="${menuData.userId}"
                             data-menu-id="${menuData.menuId}">
                             삭제
+                        </button>
+                        <button
+                            id="itemBtn-${menuData.menuId}"
+                            class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                            onclick="handleDrinkClick(${menuData.menuId})">
+                            수정
                         </button>
                         <button
                             id="itemBtn-${menuData.menuId}"
@@ -805,65 +826,65 @@
                 </div>
 
                 <div class="items-list grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 mt-4">
-    ${menuData.items?.map(item => `
-        <fieldset class="menu-item bg-gray-200 border border-gray-300 rounded-md p-2">
-            <legend class="text-sm font-semibold mb-2">항목 ${escapeHTML(item.no?.toString() || '')}</legend>
-            <div>타입: ${item.type === 'coffee' ? '커피' : item.type === 'garucha' ? '가루차' : item.type === 'syrup' ? '시럽' : '알 수 없음'}</div>
-            ${item.type === 'coffee' ? `
-                <div>
-                    <label class="text-sm text-gray-600">글라인더1</label>
-                    <input type="text" value="${escapeHTML(item.value1?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                    ${menuData.items?.map(item => `
+                        <fieldset class="menu-item bg-gray-200 border border-gray-300 rounded-md p-2">
+                            <legend class="text-sm font-semibold mb-2">항목 ${escapeHTML(item.no?.toString() || '')}</legend>
+                            <div>타입: ${item.type === 'coffee' ? '커피' : item.type === 'garucha' ? '가루차' : item.type === 'syrup' ? '시럽' : '알 수 없음'}</div>
+                            ${item.type === 'coffee' ? `
+                                <div>
+                                    <label class="text-sm text-gray-600">글라인더1</label>
+                                    <input type="text" value="${escapeHTML(item.value1?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                                </div>
+                                <div>
+                                    <label class="text-sm text-gray-600">글라인더2</label>
+                                    <input type="text" value="${escapeHTML(item.value2?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                                </div>
+                                <div>
+                                    <label class="text-sm text-gray-600">추출량</label>
+                                    <input type="text" value="${escapeHTML(item.value3?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                                </div>
+                                <div>
+                                    <label class="text-sm text-gray-600">핫워터</label>
+                                    <input type="text" value="${escapeHTML(item.value4?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                                </div>
+                            ` : item.type === 'garucha' ? `
+                                <div>
+                                    <label class="text-sm text-gray-600">차종류</label>
+                                    <input type="text" value="${escapeHTML(item.value1?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                                </div>
+                                <div>
+                                    <label class="text-sm text-gray-600">추출시간</label>
+                                    <input type="text" value="${escapeHTML(item.value2?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                                </div>
+                                <div>
+                                    <label class="text-sm text-gray-600">핫워터</label>
+                                    <input type="text" value="${escapeHTML(item.value3?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                                </div>
+                            ` : item.type === 'syrup' ? `
+                                <div>
+                                    <label class="text-sm text-gray-600">시럽종류</label>
+                                    <input type="text" value="${escapeHTML(item.value1?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                                </div>
+                                <div>
+                                    <label class="text-sm text-gray-600">펌프시간</label>
+                                    <input type="text" value="${escapeHTML(item.value2?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                                </div>
+                                <div>
+                                    <label class="text-sm text-gray-600">핫워터</label>
+                                    <input type="text" value="${escapeHTML(item.value3?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                                </div>
+                                <div>
+                                    <label class="text-sm text-gray-600">탄산수</label>
+                                    <input type="text" value="${escapeHTML(item.value4?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
+                                </div>
+                            ` : `
+                                <div>
+                                    <span class="text-sm text-gray-600">Unknown Type</span>
+                                </div>
+                            `}
+                        </fieldset>
+                    `).join('') || ''}
                 </div>
-                <div>
-                    <label class="text-sm text-gray-600">글라인더2</label>
-                    <input type="text" value="${escapeHTML(item.value2?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                </div>
-                <div>
-                    <label class="text-sm text-gray-600">추출량</label>
-                    <input type="text" value="${escapeHTML(item.value3?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                </div>
-                <div>
-                    <label class="text-sm text-gray-600">핫워터</label>
-                    <input type="text" value="${escapeHTML(item.value4?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                </div>
-            ` : item.type === 'garucha' ? `
-                <div>
-                    <label class="text-sm text-gray-600">차종류</label>
-                    <input type="text" value="${escapeHTML(item.value1?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                </div>
-                <div>
-                    <label class="text-sm text-gray-600">추출시간</label>
-                    <input type="text" value="${escapeHTML(item.value2?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                </div>
-                <div>
-                    <label class="text-sm text-gray-600">핫워터</label>
-                    <input type="text" value="${escapeHTML(item.value3?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                </div>
-            ` : item.type === 'syrup' ? `
-                <div>
-                    <label class="text-sm text-gray-600">시럽종류</label>
-                    <input type="text" value="${escapeHTML(item.value1?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                </div>
-                <div>
-                    <label class="text-sm text-gray-600">펌프시간</label>
-                    <input type="text" value="${escapeHTML(item.value2?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                </div>
-                <div>
-                    <label class="text-sm text-gray-600">핫워터</label>
-                    <input type="text" value="${escapeHTML(item.value3?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                </div>
-                <div>
-                    <label class="text-sm text-gray-600">탄산수</label>
-                    <input type="text" value="${escapeHTML(item.value4?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                </div>
-            ` : `
-                <div>
-                    <span class="text-sm text-gray-600">Unknown Type</span>
-                </div>
-            `}
-        </fieldset>
-    `).join('') || ''}
-</div>
             </div>
         </div>
     </div>`;
