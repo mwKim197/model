@@ -215,10 +215,12 @@ const dispenseIce = (recipe) => {
             totalTime = initialStatus.match(/.{1,2}/g)[7];
             log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(totalTime)}`);
             log.info('출빙 요청이 완료되었습니다. 상태를 감시합니다.');
-            log.info('얼음을 받아주세요'); // [TODO] 음성 메시지 호출
+            log.info('얼음을 받아주세요');
             let initialValue = null; // 최초 상태값 저장
             let stableTime = 0; // 변경 후 유지 시간
             let valueChanged = false; // 값 변경 여부 플래그
+            let minWaitTime = 7; // 최소 대기 시간 설정
+            let minWaitCounter = 0; // 최소 대기 시간 카운터
 
             let waterTime = Number(recipe.waterTime);
             if (Number(recipe.waterTime) >= 3) {
@@ -256,13 +258,17 @@ const dispenseIce = (recipe) => {
                 } else {
                     stableTime++;
                     log.info(`변경된 값 : ${stableTime}/${totalTime}초`);
+                }
 
-                    // 변경된 값이 totalTime만큼 유지된 경우
-                    if (stableTime >= totalTime) {
-                        log.info('변경된 값이 일정 시간 동안 유지됨. 다음 루틴으로 진행합니다...');
-                        resolve(); // 작업 완료로 처리
-                        return;
-                    }
+                // 최소 대기 시간 체크
+                if (minWaitCounter < minWaitTime) {
+                    minWaitCounter++;
+                    log.info(`최소 대기 시간 유지 중: ${minWaitCounter}/${minWaitTime}초`);
+                } else if (valueChanged && stableTime >= totalTime) {
+                    // 최소 대기 시간 충족 후 변경된 값이 totalTime만큼 유지된 경우
+                    log.info('변경된 값이 일정 시간 동안 유지됨. 다음 루틴으로 진행합니다...');
+                    resolve(); // 작업 완료로 처리
+                    return;
                 }
 
                 if (counter >= 119) {
