@@ -18,85 +18,90 @@ const processUserAndProduct = async () => {
 processUserAndProduct().then();
 // 순번 적용 등록
 const swapNoAndAddProduct = async (data) => {
-
     try {
-        // 1. 테이블 스캔하여 동일한 `no` 값이 있는 아이템 찾기
+        // 1. 테이블 전체 스캔하여 현재 순번 배열 가져오기
         const scanParams = {
             TableName: 'model_menu',
-            FilterExpression: '#no = :desiredNo AND userId = :userId',
-            ExpressionAttributeNames: {
-                '#no': 'no',
-            },
+            FilterExpression: 'userId = :userId',
             ExpressionAttributeValues: {
-                ':desiredNo': data.no,
                 ':userId': user.userId,
             },
         };
 
-        const existingItemResult = await dynamoDB.scan(scanParams).promise();
-        const existingItem = existingItemResult.Items && existingItemResult.Items.length > 0
-            ? existingItemResult.Items[0]
-            : null;
+        const existingItemsResult = await dynamoDB.scan(scanParams).promise();
+        const existingItems = existingItemsResult.Items || [];
 
-        if (existingItem) {
-            log.info(`[DEBUG] Found existing item:`, existingItem);
+        // 현재 순번 배열 정렬
+        const currentNos = existingItems.map(item => item.no).sort((a, b) => a - b);
+        log.info(`[DEBUG] Current nos: ${currentNos}`);
 
-            // 2. 기존 아이템의 순번을 임시 값(-1)으로 변경
-            const tempNo = -1;
-            const updateOldItemParams = {
-                TableName: 'model_menu',
-                Key: {
-                    userId: existingItem.userId,
-                    menuId: existingItem.menuId,
-                },
-                UpdateExpression: 'SET #no = :tempNo',
-                ExpressionAttributeNames: {
-                    '#no': 'no',
-                },
-                ExpressionAttributeValues: {
-                    ':tempNo': tempNo,
-                },
-            };
-            await dynamoDB.update(updateOldItemParams).promise();
-            log.info(`[DEBUG] Old item's no updated to temporary value: ${tempNo}`);
-        } else {
-            log.info('[DEBUG] No item found with the specified no.');
+        // 2. 신규 아이템 삽입 위치 이후의 순번 증가 처리
+        const insertNo = data.no;
+
+        for (let item of existingItems) {
+            if (item.no >= insertNo) {
+                const updateParams = {
+                    TableName: 'model_menu',
+                    Key: {
+                        userId: item.userId,
+                        menuId: item.menuId,
+                    },
+                    UpdateExpression: 'SET #no = :newNo',
+                    ExpressionAttributeNames: {
+                        '#no': 'no',
+                    },
+                    ExpressionAttributeValues: {
+                        ':newNo': item.no + 1, // 순번 1 증가
+                    },
+                };
+                await dynamoDB.update(updateParams).promise();
+                log.info(`[DEBUG] Updated item no from ${item.no} to ${item.no + 1}`);
+            }
         }
 
-        // 3. 새 아이템 등록
-        const newNo = data.no;
+        // 3. 신규 아이템 추가
+        const newMenuId = await getCounterValue(user.userId); // 새 menuId 생성
         const addParams = {
             TableName: 'model_menu',
             Item: {
                 userId: user.userId,
-                menuId: await getCounterValue(user.userId),
-                no: newNo,
-                ...data, // 나머지 데이터
+                menuId: newMenuId,
+                no: insertNo, // 삽입 위치
+                ...data, // 추가 데이터
             },
         };
         await dynamoDB.put(addParams).promise();
-        log.info(`[DEBUG] New item added with no: ${newNo}`);
+        log.info(`[DEBUG] New item added with no: ${insertNo}`);
 
-        // 4. 기존 아이템의 순번을 새 값으로 업데이트
-        if (existingItem) {
-            const newOldNo = await getMaxNo(user.userId) + 1; // 마지막 번호 뒤로 이동
-            const updateOldItemParams = {
-                TableName: 'model_menu',
-                Key: {
-                    userId: existingItem.userId,
-                    menuId: existingItem.menuId, // 기존 아이템의 menuId를 사용
-                },
-                UpdateExpression: 'SET #no = :newOldNo',
-                ExpressionAttributeNames: {
-                    '#no': 'no',
-                },
-                ExpressionAttributeValues: {
-                    ':newOldNo': newOldNo,
-                },
-            };
-            await dynamoDB.update(updateOldItemParams).promise();
-            log.info(`[DEBUG] Old item's no updated to: ${newOldNo}`);
+        // 4. 최종 순번 확인 및 정렬 (정상적인 1,2,3,... 순번 유지)
+        const updatedItemsResult = await dynamoDB.scan(scanParams).promise();
+        const updatedItems = updatedItemsResult.Items || [];
+        const sortedItems = updatedItems.sort((a, b) => a.no - b.no);
+
+        for (let index = 0; index < sortedItems.length; index++) {
+            const item = sortedItems[index];
+            const correctNo = index + 1; // 1부터 시작하는 순번
+            if (item.no !== correctNo) {
+                const updateParams = {
+                    TableName: 'model_menu',
+                    Key: {
+                        userId: item.userId,
+                        menuId: item.menuId,
+                    },
+                    UpdateExpression: 'SET #no = :correctNo',
+                    ExpressionAttributeNames: {
+                        '#no': 'no',
+                    },
+                    ExpressionAttributeValues: {
+                        ':correctNo': correctNo,
+                    },
+                };
+                await dynamoDB.update(updateParams).promise();
+                log.info(`[DEBUG] Corrected item no from ${item.no} to ${correctNo}`);
+            }
         }
+
+        log.info('[DEBUG] Final sequence update completed.');
     } catch (error) {
         log.error(`[ERROR] Swap and add product failed: ${error.message}`);
         throw error;

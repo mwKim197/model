@@ -747,8 +747,7 @@
                         </fieldset>
                     </div>
                     <!-- 얼음 시간 및 물 시간 -->
-                    <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2" data-menu-id="${menuData.menuId}"
-     onclick="handleIceWaterClick(${menuData.menuId})">
+                    <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2" data-menu-id="${menuData.menuId}" onclick="handleIceWaterClick(${menuData.menuId})">
                         <label for="iceTime-${menuData.menuId}" class="text-sm text-gray-600">얼음 시간</label>
                         <input type="number" name="iceTime" min="0" step="0.5" max="10" value="${menuData.iceTime || ''}" class="w-full border border-gray-400 rounded-md px-2 py-1" disabled>
                         <label for="waterTime-${menuData.menuId}" class="text-sm text-gray-600">물 시간</label>
