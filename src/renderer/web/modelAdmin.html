@@ -609,7 +609,6 @@
         try {
             // 얼음 투출 (iceYn이 "yes"일 경우)
             if (targetItem.iceYn === "yes") {
-                console.log(`레시피: ${targetItem}`);
                 await callSerialAdminIceOrder(targetItem); // 얼음 투출
             }
 
@@ -729,7 +728,7 @@
                             <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${escapeHTML(menuData.price?.toString() || '')}" disabled>
                         </div>
                     </div>
-                     <div class="item flex flex-col grid-cols-2 gap-2 bg-gray-200 border border-gray-300 rounded-md p-2 cup-item" data-menu-id="${menuData.menuId}" onclick="handleCupClick(${menuData.menuId})">
+                     <div class="item flex flex-col grid-cols-2 gap-2 bg-gray-200 border border-gray-300 rounded-md p-2 cup-item" data-menu-id="${menuData.menuId}">
                         <div>
                             <label class="text-sm text-gray-600">컵</label>
                             <fieldset class="flex items-center gap-2">
@@ -758,7 +757,7 @@
                         </div>
                     </div>
                     <!-- 얼음 시간 및 물 시간 -->
-                    <div class="item flex flex-col grid-cols-2 gap-2 bg-gray-200 border border-gray-300 rounded-md p-2" data-menu-id="${menuData.menuId}" onclick="handleIceWaterClick(${menuData.menuId})">
+                    <div class="item flex flex-col grid-cols-2 gap-2 bg-gray-200 border border-gray-300 rounded-md p-2" data-menu-id="${menuData.menuId}">
                         <div>
                             <label for="iceTime-${menuData.menuId}" class="text-sm text-gray-600">얼음 시간</label>
                             <input type="number" name="iceTime" min="0" step="0.5" max="10" value="${menuData.iceTime || ''}" class="w-full border border-gray-400 rounded-md px-2 py-1" disabled>
@@ -830,11 +829,26 @@
                             onclick="handleDrinkClick(${menuData.menuId})">
                             수정
                         </button>
+                    </div>
+                    <div class="item flex flex-col grid-cols-2 gap-2 bg-gray-200 border border-gray-300 rounded-md p-2">
+                        <!-- 삭제 버튼 -->
                         <button
-                            id="itemBtn-${menuData.menuId}"
+                            id="itemCupBtn-${menuData.menuId}"
+                            class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                            onclick="handleCupClick(${menuData.menuId})">
+                            컵 투출
+                        </button>
+                        <button
+                            id="itemIceAndWaterBtn-${menuData.menuId}"
+                            class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                            onclick="handleIceWaterClick(${menuData.menuId})">
+                            얼음 투출
+                        </button>
+                        <button
+                            id="itemDrinkBtn-${menuData.menuId}"
                             class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
                             onclick="handleDrinkClick(${menuData.menuId})">
-                            음료투출
+                            음료 투출
                         </button>
                     </div>
                 </div>
