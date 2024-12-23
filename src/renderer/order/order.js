@@ -211,7 +211,7 @@ async function addItemToOrder(menuId) {
                 <!-- 상품명 및 가격 -->
                 <div class="flex justify-between items-center">
                     <h3 class=" text-xl">${product.name}</h3>
-                    <p class="text-gray-600 text-xl ">₩<span class="item-total ">${product.price.toLocaleString()}</span></p>
+                    <p class="text-gray-600 text-xl ">₩<span class="item-total" data-order-id="${orderId}">${product.price.toLocaleString()}</span></p>
                 </div>
             </div>
             <!-- 삭제 버튼 -->
@@ -283,16 +283,18 @@ function updateItemQuantity(button, delta, orderId) {
         console.warn("Quantity cannot be less than 1");
     }
 
-    // UI 업데이트 - 수량
-    const quantitySpan = button.parentElement.querySelector('.quantity');
-    if (quantitySpan) {
-        quantitySpan.textContent = order.count;
-    }
+    // UI 업데이트
+    const orderItem = button.closest('.order-item');
+    if (orderItem) {
+        const quantitySpan = orderItem.querySelector('.quantity');
+        const itemTotalElement = orderItem.querySelector(`.item-total[data-order-id="${orderId}"]`);
 
-    // UI 업데이트 - 금액
-    const itemTotalElement = button.closest('.flex-1').querySelector('.item-total');
-    if (itemTotalElement) {
-        itemTotalElement.textContent = (order.count * order.price).toLocaleString();
+        if (quantitySpan) {
+            quantitySpan.textContent = order.count; // 수량 업데이트
+        }
+        if (itemTotalElement) {
+            itemTotalElement.textContent = (order.count * order.price).toLocaleString(); // 금액 업데이트
+        }
     }
 
     // 주문 요약 업데이트
