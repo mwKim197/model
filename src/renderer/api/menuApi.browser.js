@@ -1,5 +1,22 @@
 const url = window.location.hostname;
 
+const getUserData = async () => {
+    try {
+        const response = await fetch(`http://${url}:3000/get-user-info`);
+
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log(data);
+        return data;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+
 // 메뉴정보 전체 조회
 const getMenuInfoAll = async () => {
     try {
@@ -326,6 +343,7 @@ const fetchIceInfo = async () => {
 
 
 export {
+    getUserData,
     getMenuInfoAll,
     callSerialAdminDrinkOrder,
     callSerialAdminIceOrder,

@@ -86,13 +86,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // polling 으로 받아온 RD1 상태를 노출
     updateSerialData: (callback) => registerIpcListener('update-serial-data', callback),
-
-
+    
     // order 플로우를 전달
     updateOrderFlow: (callback) => registerIpcListener('order-update', callback),
-
-    // order 플로우를 전달
-    updateAdminFlow: (callback) => registerIpcListener('admin-update', callback),
 
     // 페이지 이동
     navigateToPage: (pageName) => ipcRenderer.send('navigate-to-page', { pageName }),
