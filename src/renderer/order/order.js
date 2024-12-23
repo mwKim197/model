@@ -52,7 +52,7 @@ function displayProducts(products) {
         // 오른쪽 배지 이미지 렌더링
         const rightBadgeImage = rightBadge
             ? `<img src="../../assets/basicImage/${rightBadge}.png" alt="Right Badge" 
-                class="absolute top-0 right-0 w-12 h-12 object-cover"/>`
+                class="absolute top-0 right-0 w-8 h-8 object-cover"/>`
             : '';
 
         // 품절 배지 이미지 렌더링
@@ -346,6 +346,7 @@ const closeModal = () => {
 confirmButton.addEventListener('click', () => {
     console.log('모든 주문이 삭제되었습니다.');
     removeAllItem();
+    checkAndShowEmptyImage();
     closeModal();
     // 여기에서 삭제 로직 실행
 });
@@ -398,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
 document.getElementById('payment').addEventListener('click', async () => {
 
     if (orderList.length === 0) {
-        return alert("상품을 선택해 주세요");
+        return openAlertModal("상품을 선택해 주세요");
     }
 
     const audio = new Audio('../../assets/audio/카드결제를 선택하셨습니다 카드를 단말기에 넣어주세요.mp3');

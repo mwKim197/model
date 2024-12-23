@@ -104,7 +104,7 @@
             </div>
             <!-- 이미지 -->
             <div class="flex items-center justify-center flex-grow">
-                <img id="modalImage" src="../../assets/basicImage/iceMaker.gif" alt="얼음을 받아주세요." class="w-[600px] h-[400px] object-cover" />
+                <img id="modalImage" src="" alt="음료를 준비중입니다." class="w-[600px] h-[400px] object-cover" />
             </div>
 
             <!-- modalText: 이미지 아래에 위치 -->
@@ -115,7 +115,7 @@
 
     <div id="confirmModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 hidden">
         <div class="bg-white rounded-lg shadow-lg w-[500px] h-[200px] p-1 relative">
-            <h2 class="text-3xl font-bold mb-6 text-center">모든 주문을 삭제하시겠습니까?</h2>
+            <h2 class="text-3xl font-bold mt-6 mb-6 text-center">모든 주문을 삭제하시겠습니까?</h2>
             <div class="absolute bottom-4 left-0 right-0 flex justify-center space-x-4">
                 <button id="cancelButton" class="text-xl px-10 py-6 bg-gray-200 rounded hover:bg-gray-300">
                     취소
@@ -128,9 +128,9 @@
     </div>
 
     <div id="alertModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 hidden">
-        <div class="bg-white rounded-lg shadow-lg w-[500px] h-[200px] p-1 relative">
+        <div class="bg-white rounded-lg shadow-lg w-[600px] h-[200px] p-1 relative">
             <!-- 동적으로 텍스트를 변경할 요소 -->
-            <h2 id="alertModalText" class="text-3xl font-bold mb-6 text-center">모든 주문이 삭제되었습니다.</h2>
+            <h2 id="alertModalText" class="text-3xl font-bold mt-6 mb-6 text-center">모든 주문이 삭제되었습니다.</h2>
             <div class="absolute bottom-4 left-0 right-0 flex justify-center">
                 <button id="okButton" class="text-xl px-10 py-4 bg-blue-500 text-white rounded hover:bg-blue-600">
                     확인
