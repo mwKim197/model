@@ -14,6 +14,10 @@ const { getBasePath } = require('./aws/s3/utils/cacheDirManager');
 const app = express();
 const server = createServer(app);
 
+// 실행 모드에 따른 경로 설정
+const isDevelopment = process.env.NODE_ENV === 'development' || !process.resourcesPath || process.resourcesPath === process.cwd();
+const appPath = isDevelopment ? path.resolve(process.cwd()) : process.resourcesPath;
+
 // CORS 설정
 app.use(cors({
     origin: ['http://localhost:3000', /^http:\/\/.*\.narrowroad-model\.com:3000$/],
@@ -31,9 +35,31 @@ app.use((req, res, next) => {
 });
 
 // Static 파일 제공
-app.use('/assets', express.static(path.resolve(__dirname, 'assets')));
-app.use('/renderer', express.static(path.join(__dirname, 'renderer')));
+console.log(appPath);
+app.use('/assets', express.static(path.join(appPath, 'app', 'src', 'assets')));
+app.use('/renderer', express.static(path.join(appPath, 'app', 'src', 'renderer')));
 app.use('/images', express.static(getBasePath()));
+
+log.info('getBasePath()', getBasePath())
+log.info('App Path:', appPath);
+
+// Static 파일 제공
+const rendererPath = path.join(appPath, 'src', 'renderer');
+const assetsPath = path.join(appPath, 'assets');
+
+if (fs.existsSync(rendererPath)) {
+    console.log('Renderer Path Exists:', rendererPath);
+    app.use('/renderer', express.static(rendererPath));
+} else {
+    console.error('Renderer Path Missing:', rendererPath);
+}
+
+if (fs.existsSync(assetsPath)) {
+    console.log('Assets Path Exists:', assetsPath);
+    app.use('/assets', express.static(assetsPath));
+} else {
+    console.error('Assets Path Missing:', assetsPath);
+}
 
 // 라우트
 app.use(Connect);
@@ -45,6 +71,10 @@ app.use(Menu);
 app.get('/version', (req, res) => {
     const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8'));
     res.json({ version: packageJson.version });
+});
+
+app.get('/status', (req, res) => {
+    res.status(200).json({ status: 'OK', uptime: process.uptime() });
 });
 
 // 서버 시작 함수

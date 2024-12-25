@@ -1,3 +1,4 @@
+const express = require('express');
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const { initializeUpdater } = require('./updater');
@@ -5,6 +6,7 @@ const { createMainWindow } = require('./windows/mainWindow');
 const { setupEventHandlers } = require('./events/eventHandlers');
 const server = require('./server');
 const serialPolling = require('./services/serialPolling');
+const { setupPortForwarding } = require('./services/portForwarding');
 const { getBasePath } = require(path.resolve(__dirname, './aws/s3/utils/cacheDirManager'));
 const log = require('./logger');
 const fs = require('fs');
@@ -20,6 +22,11 @@ if (!fs.existsSync(basePath)) {
 
 async function initializeApp() {
     try {
+
+        // 1. 포트 포워딩 설정
+        await setupPortForwarding(3000, 3000);
+        log.info('Port forwarding succeeded on port 3000');
+
         // 3. Express 서버 시작
         await server.start();
         log.info('[DEBUG] Express server started.');
