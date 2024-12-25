@@ -86,13 +86,14 @@ const callSerialAdminIceOrder = async (recipe) => {
     }
 };
 
-const callSerialAdminCupOrder = async () => {
+const callSerialAdminCupOrder = async (recipe) => {
     try {
         const response = await fetch(`http://${url}:3000/serial-admin-cup-order`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
+            body: JSON.stringify({ recipe })
         });
 
         if (!response.ok) {
