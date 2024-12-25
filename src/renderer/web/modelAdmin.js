@@ -40,7 +40,6 @@ window.handleCupClick = async function (menuId) {
     if (!targetItem) {
         console.error(`Item with menuId ${menuId} not found`);
         return;
-
     }
 
     if (!confirm(`[${targetItem.name}] 컵을 투출합니다`)) {
@@ -203,11 +202,11 @@ const createMenuHTML = (menuData, categories) => {
                     <div class="item flex flex-col grid-cols-2 gap-2 bg-gray-200 border border-gray-300 rounded-md p-2">
                         <div>
                             <label for="no" class="text-sm text-gray-600">순번</label>
-                            <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${Number(escapeHTML(menuData.no?.toString() || 0))}" disabled />
+                            <input type="text" name="no" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${Number(escapeHTML(menuData.no?.toString() || 0))}" disabled />
                         </div>
                         <div>
                             <label for="name" class="text-sm text-gray-600">메뉴명</label>
-                            <input type="text" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${escapeHTML(menuData.name || '')}" disabled>
+                            <input type="text" name="name" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${escapeHTML(menuData.name || '')}" disabled>
                         </div>
                     </div>
                     <div class="item flex flex-col grid-cols-2 gap-2 bg-gray-200 border border-gray-300 rounded-md p-2">
@@ -413,7 +412,7 @@ const createMenuHTML = (menuData, categories) => {
 };
 // 메뉴그리기 END
 // 수정 START
-window.handleUpdateClick = function(menuId) {
+window.handleUpdateClick = function (menuId) {
     const menuItem = document.querySelector(`[data-menu-id="${menuId}"]`);
 
     if (!menuItem) {
@@ -424,6 +423,7 @@ window.handleUpdateClick = function(menuId) {
     const editButton = menuItem.querySelector(`#itemUpdateBtn-${menuId}`);
 
     if (editButton.textContent.trim() === "수정") {
+        // 수정 가능 상태로 전환
         const fields = menuItem.querySelectorAll("input, select, textarea");
         fields.forEach((field) => {
             field.removeAttribute("disabled");
@@ -439,15 +439,15 @@ window.handleUpdateClick = function(menuId) {
         // 데이터 수집
         const menuData = {
             menuId: Number(menuId),
-            no: Number(menuItem.querySelector('input[type="text"]').value),
-            name: menuItem.querySelector('input[type="text"]').value.trim(),
-            category: menuItem.querySelector('input[value]').value.trim(),
-            price: Number(menuItem.querySelector('input[name="price"]').value),
-            cup: menuItem.querySelector('input[name^="cup"]:checked')?.value || "",
-            iceYn: menuItem.querySelector('input[name^="iceYn"]:checked')?.value || "",
-            empty: menuItem.querySelector('input[name^="empty"]:checked')?.value || "",
-            iceTime: Number(menuItem.querySelector('input[name="iceTime"]').value),
-            waterTime: Number(menuItem.querySelector('input[name="waterTime"]').value),
+            no: Number(menuItem.querySelector('input[name="no"]').value || 0),
+            name: menuItem.querySelector('input[name="name"]').value.trim(),
+            category: menuItem.querySelector('select[name="category"]').value || "",
+            price: Number(menuItem.querySelector('input[name="price"]').value || 0),
+            cup: menuItem.querySelector(`input[name="cup-${menuId}"]:checked`)?.value || "",
+            iceYn: menuItem.querySelector(`input[name="iceYn-${menuId}"]:checked`)?.value || "",
+            empty: menuItem.querySelector(`input[name="empty-${menuId}"]:checked`)?.value || "",
+            iceTime: Number(menuItem.querySelector('input[name="iceTime"]').value || 0),
+            waterTime: Number(menuItem.querySelector('input[name="waterTime"]').value || 0),
             state: {
                 new: menuItem.querySelector('select[name="new"]').value || "",
                 event: menuItem.querySelector('select[name="event"]').value || "",
@@ -459,24 +459,23 @@ window.handleUpdateClick = function(menuId) {
         // 내부 아이템 데이터 수집
         menuItem.querySelectorAll(".items-list fieldset").forEach((fieldset, index) => {
             const type = fieldset.querySelector("div").textContent.split(": ")[1].trim();
-            const value1 = fieldset.querySelector('input[name*="value1"]')?.value || "";
-            const value2 = fieldset.querySelector('input[name*="value2"]')?.value || "";
-            const value3 = fieldset.querySelector('input[name*="value3"]')?.value || "";
-            const value4 = fieldset.querySelector('input[name*="value4"]')?.value || "";
+            const fields = fieldset.querySelectorAll('input');
+            const itemData = { type, index: index + 1 };
 
-            menuData.items.push({
-                no: index + 1,
-                type,
-                value1,
-                value2,
-                value3,
-                value4,
+            fields.forEach((input) => {
+                const label = input.previousElementSibling?.textContent.trim();
+                if (label) {
+                    itemData[label] = input.value;
+                }
             });
+
+            menuData.items.push(itemData);
         });
 
         console.log("수집된 데이터:", menuData);
 
-        /*fetch("http://example.com/api/update-menu", {
+        /*// 서버로 전송
+        fetch("http://example.com/api/update-menu", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -487,12 +486,15 @@ window.handleUpdateClick = function(menuId) {
             .then((result) => {
                 if (result.success) {
                     alert("저장이 성공적으로 완료되었습니다!");
+
+                    // 필드를 다시 읽기 전용으로 설정
                     const fields = menuItem.querySelectorAll("input, select, textarea");
                     fields.forEach((field) => {
                         field.setAttribute("disabled", true);
                         field.setAttribute("readonly", true);
                     });
 
+                    // 버튼을 다시 "수정"으로 변경
                     editButton.textContent = "수정";
                     editButton.classList.remove("bg-blue-500");
                     editButton.classList.add("bg-green-500");
@@ -506,5 +508,6 @@ window.handleUpdateClick = function(menuId) {
             });*/
     }
 };
+
 
 // 수정 END

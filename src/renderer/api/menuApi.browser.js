@@ -145,6 +145,7 @@ export {
     getMenuInfoAll,
     callSerialAdminDrinkOrder,
     callSerialAdminIceOrder,
+    callSerialAdminCupOrder,
     fetchCupPlUse,
     fetchCupPaUse,
 };
