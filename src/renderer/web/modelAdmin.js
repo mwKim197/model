@@ -45,9 +45,6 @@ window.handleCupClick = async function (menuId) {
     if (!confirm(`[${targetItem.name}] 컵을 투출합니다`)) {
         return;
     }
-
-    // 컵
-    //
     // 투출 처리
     try {
         await callSerialAdminCupOrder(targetItem);
@@ -57,17 +54,6 @@ window.handleCupClick = async function (menuId) {
 
     }
 
-
-   /* // 컵 데이터 확인 및 API 호출
-    if (targetItem.cup === "plastic") {
-        console.log(`플라스틱 컵 선택: ${JSON.stringify(targetItem)}`);
-        await callApi(fetchCupPlUse, menuId, targetItem);
-    } else if (targetItem.cup === "paper") {
-        console.log(`종이컵 선택: ${JSON.stringify(targetItem)}`);
-        await callApi(fetchCupPaUse, menuId, targetItem);
-    } else {
-        console.error("Unknown cup type:", targetItem.cup);
-    }*/
 };
 
 // 얼음 및 물 투출 처리
