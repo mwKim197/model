@@ -88,7 +88,12 @@ const callSerialAdminIceOrder = async (recipe) => {
 
 const callSerialAdminCupOrder = async () => {
     try {
-        const response = await fetch(`http://${url}:3000/serial-admin-cup-order`);
+        const response = await fetch(`http://${url}:3000/serial-admin-cup-order`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
