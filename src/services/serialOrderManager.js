@@ -631,7 +631,7 @@ const adminDrinkOrder = async (recipe) => {
         // 종료 이벤트 전송 (성공 또는 실패 모두 포함)
         eventEmitter.emit('order-update', {
             menu: recipe.name, // 수정: menuName 변수 대신 recipe.name 사용
-            status: 'complete',
+            status: 'completed',
             message: '관리자 조작이 완료되었습니다.'
         });
     }
@@ -729,7 +729,7 @@ const adminIceOrder = async (recipe) => {
         // 종료 이벤트 전송 (성공 또는 실패 모두 포함)
         eventEmitter.emit('order-update', {
             menu: recipe.name, // 수정: menuName 변수 대신 recipe.name 사용
-            status: 'complete',
+            status: 'completed',
             message: '관리자 조작이 완료되었습니다.'
         });
     }
