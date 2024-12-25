@@ -49,7 +49,15 @@ window.handleCupClick = async function (menuId) {
     // 컵
     //
     // 투출 처리
-    await callSerialAdminCupOrder(targetItem);
+    try {
+        await callSerialAdminCupOrder(targetItem);
+    } catch (e) {
+        alert(`[${targetItem.name}] 컵 투출에 실패했습니다.`);
+    } finally {
+
+    }
+
+
    /* // 컵 데이터 확인 및 API 호출
     if (targetItem.cup === "plastic") {
         console.log(`플라스틱 컵 선택: ${JSON.stringify(targetItem)}`);

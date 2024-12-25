@@ -233,6 +233,7 @@ const dispenseIce = (recipe) => {
             eventEmitter.emit('order-update', { menu: menuName, status: 'ice', message: '제빙기에서 얼음을 받아주세요.' });
 
             for (let counter = 0; counter < 120; counter++) {
+                eventEmitter.emit('order-update', { menu: menuName, status: 'iceCount', message: '얼음을 받아주세요.', time: counter });
                 const result = await Ice.getKaiserInfo();
                 const currentHexArray = result.match(/.{1,2}/g); // 2자리씩 끊어서 배열 생성
                 const currentValue = parseInt(currentHexArray[7]); // 16진수 → 10진수 변환
@@ -634,7 +635,104 @@ const adminDrinkOrder = async (recipe) => {
             message: '관리자 조작이 완료되었습니다.'
         });
     }
+}
 
+const adminIceOrder = async (recipe) => {
+    try {
+        // 시작 이벤트 전송
+        eventEmitter.emit('order-update', { menu: recipe.name, status: 'processing', message: '관리자가 조작중입니다. 얼음이 준비중입니다.' });
+        return new Promise(async (resolve, reject) => {
+            try {
+                let totalTime = 0;
+                log.info(`얼음 세팅 중: ${recipe.iceTime}초, 물 세팅 중: ${recipe.waterTime}초`);
+                await Ice.sendIceTimePacket(recipe.iceTime);
+                await Ice.sendWaterTimePacket(recipe.waterTime);
+                await Ice.sendIceRunPacket();
+                const initialStatus = await Ice.getKaiserInfo();
+                totalTime = initialStatus.match(/.{1,2}/g)[7];
+                log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(totalTime)}`);
+                log.info('출빙 요청이 완료되었습니다. 상태를 감시합니다.');
+                log.info('얼음을 받아주세요');
+                let initialValue = null; // 최초 상태값 저장
+                let stableTime = 0; // 변경 후 유지 시간
+                let valueChanged = false; // 값 변경 여부 플래그
+                let minWaitTime = 7; // 최소 대기 시간 설정
+                let minWaitCounter = 0; // 최소 대기 시간 카운터
+
+                let waterTime = Number(recipe.waterTime);
+                if (Number(recipe.waterTime) >= 3) {
+                    waterTime = waterTime - 2;
+                }
+                totalTime = Number(recipe.iceTime) + waterTime
+                log.info('[totalTime] : ', totalTime);
+
+                // 화면 노출 메세지
+                eventEmitter.emit('order-update', { menu: menuName, status: 'ice', message: '제빙기에서 얼음을 받아주세요.' });
+
+                for (let counter = 0; counter < 120; counter++) {
+                    eventEmitter.emit('order-update', { menu: menuName, status: 'iceCount', message: '얼음을 받아주세요.', time: counter });
+                    const result = await Ice.getKaiserInfo();
+                    const currentHexArray = result.match(/.{1,2}/g); // 2자리씩 끊어서 배열 생성
+                    const currentValue = parseInt(currentHexArray[7]); // 16진수 → 10진수 변환
+
+                    log.info(`Current Value (hexArray[7]): ${currentValue}`);
+
+                    if (!valueChanged) {
+                        // 값 변경 전 (처음 값 유지)
+                        if (initialValue === null) {
+                            // 최초로 값을 설정
+                            initialValue = currentValue;
+                            log.info(`Initial Value Detected: ${initialValue}`);
+                        } else if (currentValue === initialValue) {
+                            // 같은 값이 유지되는 경우
+                            log.info(`Initial Value 유지 중: ${initialValue}`);
+                        } else {
+                            // 값이 변경된 경우
+                            valueChanged = true; // 변경 플래그 설정
+                            stableTime = 0; // 변경 후 유지 시간 초기화
+                            initialValue = currentValue; // 새로운 값으로 업데이트
+                            log.info(`값 변경 감지: 새로운 값(${currentValue})으로 전환. 시간 체크 시작.`);
+                        }
+                    } else {
+                        stableTime++;
+                        log.info(`변경된 값 : ${stableTime}/${totalTime}초`);
+                    }
+
+                    // 최소 대기 시간 체크
+                    if (minWaitCounter < minWaitTime) {
+                        minWaitCounter++;
+                        log.info(`최소 대기 시간 유지 중: ${minWaitCounter}/${minWaitTime}초`);
+                    } else if (valueChanged && stableTime >= totalTime) {
+                        // 최소 대기 시간 충족 후 변경된 값이 totalTime만큼 유지된 경우
+                        log.info('변경된 값이 일정 시간 동안 유지됨. 다음 루틴으로 진행합니다...');
+                        resolve(); // 작업 완료로 처리
+                        return;
+                    }
+
+                    if (counter >= 119) {
+                        await Ice.sendIceStopPacket();
+                        reject(new Error('작업 시간이 초과되었습니다.'));
+                        return;
+                    }
+
+                    await new Promise(r => setTimeout(r, 1000)); // 1초 대기
+                }
+
+            } catch (error) {
+                log.error('dispenseIce 오류:', error.message);
+                reject(error);
+            }
+        });
+    } catch (error) {
+        throw error; // 에러를 상위로 전파
+    } finally {
+        // 종료 이벤트 전송 (성공 또는 실패 모두 포함)
+        eventEmitter.emit('order-update', {
+            menu: recipe.name, // 수정: menuName 변수 대신 recipe.name 사용
+            status: 'complete',
+            message: '관리자 조작이 완료되었습니다.'
+        });
+    }
 }
 
 // 주문 처리 시작
@@ -647,4 +745,5 @@ module.exports = {
     dispenseCoffee,
     useWash,
     adminDrinkOrder,
+    adminIceOrder
 };
