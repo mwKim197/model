@@ -50,10 +50,7 @@ window.handleCupClick = async function (menuId) {
         await callSerialAdminCupOrder(targetItem);
     } catch (e) {
         alert(`[${targetItem.name}] 컵 투출에 실패했습니다.`);
-    } finally {
-
     }
-
 };
 
 // 얼음 및 물 투출 처리
@@ -138,8 +135,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (Array.isArray(data?.Items)) {
+            // `no` 순번으로 정렬
+            const sortedData = data.Items.sort((a, b) => a.no - b.no);
+            console.log(sortedData);
             // HTML 생성 및 삽입
-            const menuHTML = data.Items.map(item =>
+            const menuHTML = sortedData.map(item =>
                 createMenuHTML(item, userInfo.category)
             ).join('');
             menuListContainer.innerHTML = menuHTML;
@@ -342,166 +342,78 @@ const createMenuHTML = (menuData, categories) => {
 
                 <div class="items-list grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 mt-4">
                     ${menuData.items?.map(item => `
-                        <fieldset class="menu-item bg-gray-200 border border-gray-300 rounded-md p-2">
-                            <legend class="text-sm font-semibold mb-2">항목 ${escapeHTML(item.no?.toString() || '')}</legend>
-                            <div>타입: ${item.type === 'coffee' ? '커피' : item.type === 'garucha' ? '가루차' : item.type === 'syrup' ? '시럽' : '알 수 없음'}</div>
-                            ${item.type === 'coffee' ? `
-                                <div>
-                                    <label class="text-sm text-gray-600">글라인더1</label>
-                                    <input type="text" value="${escapeHTML(item.value1?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                                </div>
-                                <div>
-                                    <label class="text-sm text-gray-600">글라인더2</label>
-                                    <input type="text" value="${escapeHTML(item.value2?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                                </div>
-                                <div>
-                                    <label class="text-sm text-gray-600">추출량</label>
-                                    <input type="text" value="${escapeHTML(item.value3?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                                </div>
-                                <div>
-                                    <label class="text-sm text-gray-600">핫워터</label>
-                                    <input type="text" value="${escapeHTML(item.value4?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                                </div>
-                            ` : item.type === 'garucha' ? `
-                                <div>
-                                    <label class="text-sm text-gray-600">차종류</label>
-                                    <input type="text" value="${escapeHTML(item.value1?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                                </div>
-                                <div>
-                                    <label class="text-sm text-gray-600">추출시간</label>
-                                    <input type="text" value="${escapeHTML(item.value2?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                                </div>
-                                <div>
-                                    <label class="text-sm text-gray-600">핫워터</label>
-                                    <input type="text" value="${escapeHTML(item.value3?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                                </div>
-                            ` : item.type === 'syrup' ? `
-                                <div>
-                                    <label class="text-sm text-gray-600">시럽종류</label>
-                                    <input type="text" value="${escapeHTML(item.value1?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                                </div>
-                                <div>
-                                    <label class="text-sm text-gray-600">펌프시간</label>
-                                    <input type="text" value="${escapeHTML(item.value2?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                                </div>
-                                <div>
-                                    <label class="text-sm text-gray-600">핫워터</label>
-                                    <input type="text" value="${escapeHTML(item.value3?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                                </div>
-                                <div>
-                                    <label class="text-sm text-gray-600">탄산수</label>
-                                    <input type="text" value="${escapeHTML(item.value4?.toString() || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" readonly>
-                                </div>
-                            ` : `
-                                <div>
-                                    <span class="text-sm text-gray-600">Unknown Type</span>
-                                </div>
-                            `}
-                        </fieldset>
-                    `).join('') || ''}
+                    <fieldset class="menu-item bg-gray-200 border border-gray-300 rounded-md p-2">
+                        <legend class="text-sm font-semibold mb-2">항목 ${escapeHTML(item.index?.toString() || '')}</legend>
+                        
+                        <!-- 타입 선택 -->
+                        <div>
+                            <label for="itemType-${item.index}" class="text-sm text-gray-600">타입</label>
+                            <select id="itemType-${item.index}" name="itemType-${item.index}" class="w-full border border-gray-400 rounded-md px-2 py-1 itemTypeSelector" disabled>
+                                <option value="" ${item.type === "" ? "selected" : ""} hidden>선택</option>
+                                <option value="coffee" ${item.type === "coffee" ? "selected" : ""}>커피</option>
+                                <option value="garucha" ${item.type === "garucha" ? "selected" : ""}>가루차</option>
+                                <option value="syrup" ${item.type === "syrup" ? "selected" : ""}>시럽</option>
+                            </select>
+                        </div>
+                
+                        <!-- 타입에 따른 입력 필드 -->
+                        ${item.type === "coffee" ? `
+                            <div>
+                                <label class="text-sm text-gray-600">글라인더1</label>
+                                <input type="text" value="${escapeHTML(item.value1 || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" data-key="value1" readonly>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-600">글라인더2</label>
+                                <input type="text" value="${escapeHTML(item.value2 || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" data-key="value2" readonly>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-600">추출량</label>
+                                <input type="text" value="${escapeHTML(item.value3 || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" data-key="value3" readonly>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-600">핫워터</label>
+                                <input type="text" value="${escapeHTML(item.value4 || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" data-key="value4" readonly>
+                            </div>
+                        ` : item.type === "garucha" ? `
+                            <div>
+                                <label class="text-sm text-gray-600">차종류</label>
+                                <input type="text" value="${escapeHTML(item.value1 || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" data-key="value1" readonly>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-600">추출시간</label>
+                                <input type="text" value="${escapeHTML(item.value2 || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" data-key="value2" readonly>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-600">핫워터</label>
+                                <input type="text" value="${escapeHTML(item.value3 || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" data-key="value3" readonly>
+                            </div>
+                        ` : item.type === "syrup" ? `
+                            <div>
+                                <label class="text-sm text-gray-600">시럽종류</label>
+                                <input type="text" value="${escapeHTML(item.value1 || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" data-key="value1" readonly>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-600">펌프시간</label>
+                                <input type="text" value="${escapeHTML(item.value2 || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" data-key="value2" readonly>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-600">핫워터</label>
+                                <input type="text" value="${escapeHTML(item.value3 || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" data-key="value3" readonly>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-600">탄산수</label>
+                                <input type="text" value="${escapeHTML(item.value4 || '')}" class="w-full border border-gray-400 rounded-md px-2 py-1" data-key="value4" readonly>
+                            </div>
+                        ` : `
+                            <div>
+                                <span class="text-sm text-gray-600">Unknown Type</span>
+                            </div>
+                        `}
+                    </fieldset>
+                `).join('')}
                 </div>
             </div>
         </div>
     </div>`;
 };
 // 메뉴그리기 END
-// 수정 START
-window.handleUpdateClick = function (menuId) {
-    const menuItem = document.querySelector(`[data-menu-id="${menuId}"]`);
-
-    if (!menuItem) {
-        console.error(`Menu item with menuId ${menuId} not found.`);
-        return;
-    }
-
-    const editButton = menuItem.querySelector(`#itemUpdateBtn-${menuId}`);
-
-    if (editButton.textContent.trim() === "수정") {
-        // 수정 가능 상태로 전환
-        const fields = menuItem.querySelectorAll("input, select, textarea");
-        fields.forEach((field) => {
-            field.removeAttribute("disabled");
-            field.removeAttribute("readonly");
-        });
-
-        editButton.textContent = "저장";
-        editButton.classList.remove("bg-green-500");
-        editButton.classList.add("bg-blue-500");
-
-        alert("수정 가능 상태로 전환되었습니다.");
-    } else if (editButton.textContent.trim() === "저장") {
-        // 데이터 수집
-        const menuData = {
-            menuId: Number(menuId),
-            no: Number(menuItem.querySelector('input[name="no"]').value || 0),
-            name: menuItem.querySelector('input[name="name"]').value.trim(),
-            category: menuItem.querySelector('select[name="category"]').value || "",
-            price: Number(menuItem.querySelector('input[name="price"]').value || 0),
-            cup: menuItem.querySelector(`input[name="cup-${menuId}"]:checked`)?.value || "",
-            iceYn: menuItem.querySelector(`input[name="iceYn-${menuId}"]:checked`)?.value || "",
-            empty: menuItem.querySelector(`input[name="empty-${menuId}"]:checked`)?.value || "",
-            iceTime: Number(menuItem.querySelector('input[name="iceTime"]').value || 0),
-            waterTime: Number(menuItem.querySelector('input[name="waterTime"]').value || 0),
-            state: {
-                new: menuItem.querySelector('select[name="new"]').value || "",
-                event: menuItem.querySelector('select[name="event"]').value || "",
-                best: menuItem.querySelector('select[name="best"]').value || "",
-            },
-            items: [],
-        };
-
-        // 내부 아이템 데이터 수집
-        menuItem.querySelectorAll(".items-list fieldset").forEach((fieldset, index) => {
-            const type = fieldset.querySelector("div").textContent.split(": ")[1].trim();
-            const fields = fieldset.querySelectorAll('input');
-            const itemData = { type, index: index + 1 };
-
-            fields.forEach((input) => {
-                const label = input.previousElementSibling?.textContent.trim();
-                if (label) {
-                    itemData[label] = input.value;
-                }
-            });
-
-            menuData.items.push(itemData);
-        });
-
-        console.log("수집된 데이터:", menuData);
-
-        /*// 서버로 전송
-        fetch("http://example.com/api/update-menu", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(menuData),
-        })
-            .then((response) => response.json())
-            .then((result) => {
-                if (result.success) {
-                    alert("저장이 성공적으로 완료되었습니다!");
-
-                    // 필드를 다시 읽기 전용으로 설정
-                    const fields = menuItem.querySelectorAll("input, select, textarea");
-                    fields.forEach((field) => {
-                        field.setAttribute("disabled", true);
-                        field.setAttribute("readonly", true);
-                    });
-
-                    // 버튼을 다시 "수정"으로 변경
-                    editButton.textContent = "수정";
-                    editButton.classList.remove("bg-blue-500");
-                    editButton.classList.add("bg-green-500");
-                } else {
-                    alert("저장 실패: " + result.message);
-                }
-            })
-            .catch((error) => {
-                console.error("저장 중 오류:", error);
-                alert("저장 중 오류가 발생했습니다.");
-            });*/
-    }
-};
-
-
-// 수정 END

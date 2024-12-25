@@ -526,7 +526,105 @@
         }
     });
     /* [MENU SET] 등록 버튼 END */
+    /* [MENU UPDATE] 수정 버튼 START */
+    window.handleUpdateClick = async function (menuId) {
+        const menuItem = document.querySelector(`[data-menu-id="${menuId}"]`);
+
+        if (!menuItem) {
+            console.error(`Menu item with menuId ${menuId} not found.`);
+            return;
+        }
+
+        const editButton = menuItem.querySelector(`#itemUpdateBtn-${menuId}`);
+
+        if (editButton.textContent.trim() === "수정") {
+            // 수정 가능 상태로 전환
+            const fields = menuItem.querySelectorAll("input, select, textarea");
+            fields.forEach((field) => {
+                field.removeAttribute("disabled");
+                field.removeAttribute("readonly");
+            });
+
+            editButton.textContent = "저장";
+            editButton.classList.remove("bg-green-500");
+            editButton.classList.add("bg-blue-500");
+
+            alert("수정 가능 상태로 전환되었습니다.");
+        } else if (editButton.textContent.trim() === "저장") {
+            // 데이터 수집
+            const menuData = {
+                menuId: Number(menuId),
+                no: Number(menuItem.querySelector('input[name="no"]').value || 0),
+                name: menuItem.querySelector('input[name="name"]').value.trim(),
+                category: menuItem.querySelector('select[name="category"]').value || "",
+                price: Number(menuItem.querySelector('input[name="price"]').value || 0),
+                cup: menuItem.querySelector(`input[name="cup-${menuId}"]:checked`)?.value || "",
+                iceYn: menuItem.querySelector(`input[name="iceYn-${menuId}"]:checked`)?.value || "",
+                empty: menuItem.querySelector(`input[name="empty-${menuId}"]:checked`)?.value || "",
+                iceTime: Number(menuItem.querySelector('input[name="iceTime"]').value || 0),
+                waterTime: Number(menuItem.querySelector('input[name="waterTime"]').value || 0),
+                state: {
+                    new: menuItem.querySelector('select[name="new"]').value || "",
+                    event: menuItem.querySelector('select[name="event"]').value || "",
+                    best: menuItem.querySelector('select[name="best"]').value || "",
+                },
+                items: [],
+            };
+
+            // 내부 아이템 데이터 수집
+            menuItem.querySelectorAll(".items-list fieldset").forEach((fieldset, index) => {
+                // type 값을 select에서 가져오기
+                const type = fieldset.querySelector(".itemTypeSelector")?.value || "";
+
+                // item 데이터를 value1, value2, value3, value4로 매핑
+                const itemData = {
+                    type, // select에서 가져온 type
+                    index: index + 1, // 인덱스 1부터 시작
+                };
+
+                // 나머지 입력 필드 수집
+                const inputs = fieldset.querySelectorAll("input");
+                inputs.forEach((input) => {
+                    const key = input.getAttribute("data-key"); // data-key 속성 값 가져오기
+                    if (key) {
+                        itemData[key] = input.value || ""; // key에 맞는 값 추가
+                    }
+                });
+
+                // 수집된 itemData를 items 배열에 추가
+                menuData.items.push(itemData);
+            });
+
+            console.log("수집된 데이터:", menuData);
+
+            // 서버로 전송
+            await fetch(`http://${url}:3000/set-menu-update-info`,  {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(menuData),
+            })
+                .then((response) => response.json())
+                .then((result) => {
+                    if (result.success) {
+                        alert("저장이 성공적으로 완료되었습니다!");
+
+
+                       // location.reload();
+                    } else {
+                        alert("저장 실패: " + result.message);
+                    }
+                })
+                .catch((error) => {
+                    console.error("저장 중 오류:", error);
+                    alert("저장 중 오류가 발생했습니다.");
+                });
+        }
+    };
+    /* [MENU UPDATE] 수정 버튼 END */
     /* [MENU SET] 등록 END */
+
     /* [MENU] 카테고리 START*/
     // 카테고리 옵션 추가 함수
     function populateCategoryOptions(categories) {

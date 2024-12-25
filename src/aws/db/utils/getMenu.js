@@ -108,6 +108,195 @@ const swapNoAndAddProduct = async (data) => {
     }
 };
 
+// 순번 적용 업데이트
+const updateMenuAndAdjustNo = async (updatedData) => {
+    const { menuId, no: newNo } = updatedData;
+    const userId = user.userId;
+    try {
+        // 1. 테이블 전체에서 현재 `userId`의 데이터 스캔
+        const scanParams = {
+            TableName: "model_menu",
+            FilterExpression: "userId = :userId",
+            ExpressionAttributeValues: {
+                ":userId": userId,
+            },
+        };
+
+        const existingItemsResult = await dynamoDB.scan(scanParams).promise();
+        const existingItems = existingItemsResult.Items || [];
+
+        // 2. 기존 아이템에서 변경 전 `menuId`의 현재 `no` 값 찾기
+        const currentItem = existingItems.find((item) => item.menuId === menuId);
+
+        if (!currentItem) {
+            throw new Error(`Menu item with menuId ${menuId} not found`);
+        }
+
+        const currentNo = currentItem.no; // 기존 순번
+        if (currentNo === newNo) {
+            // 순번 변경이 없는 경우, 단순 업데이트 처리
+            const updateParams = {
+                TableName: "model_menu",
+                Key: {
+                    userId,
+                    menuId,
+                },
+                UpdateExpression: `
+                    SET #name = :name, 
+                        #category = :category, 
+                        #price = :price, 
+                        #cup = :cup, 
+                        #iceYn = :iceYn, 
+                        #empty = :empty, 
+                        #iceTime = :iceTime, 
+                        #waterTime = :waterTime, 
+                        #state = :state, 
+                        #items = :items
+                `,
+                ExpressionAttributeNames: {
+                    "#name": "name",
+                    "#category": "category",
+                    "#price": "price",
+                    "#cup": "cup",
+                    "#iceYn": "iceYn",
+                    "#empty": "empty",
+                    "#iceTime": "iceTime",
+                    "#waterTime": "waterTime",
+                    "#state": "state",
+                    "#items": "items",
+                },
+                ExpressionAttributeValues: {
+                    ":name": updatedData.name,
+                    ":category": updatedData.category,
+                    ":price": updatedData.price.toString(),
+                    ":cup": updatedData.cup,
+                    ":iceYn": updatedData.iceYn,
+                    ":empty": updatedData.empty,
+                    ":iceTime": updatedData.iceTime.toString(),
+                    ":waterTime": updatedData.waterTime.toString(),
+                    ":state": updatedData.state,
+                    ":items": updatedData.items,
+                },
+            };
+            console.log("updatedData", updatedData);
+            console.log("updatedData.items", updatedData.items);
+            await dynamoDB.update(updateParams).promise();
+            console.log("Item updated successfully without changing order.");
+            return;
+        }
+
+        // 3. 순번 조정 로직
+        const updatePromises = [];
+
+        if (currentNo > newNo) {
+            // 기존 순번이 더 큰 경우, 다른 아이템의 순번을 1씩 증가
+            existingItems.forEach((item) => {
+                if (item.no >= newNo && item.no < currentNo) {
+                    updatePromises.push(
+                        dynamoDB
+                            .update({
+                                TableName: "model_menu",
+                                Key: {
+                                    userId: item.userId,
+                                    menuId: item.menuId,
+                                },
+                                UpdateExpression: "SET #no = :newNo",
+                                ExpressionAttributeNames: {
+                                    "#no": "no",
+                                },
+                                ExpressionAttributeValues: {
+                                    ":newNo": item.no + 1,
+                                },
+                            })
+                            .promise()
+                    );
+                }
+            });
+        } else {
+            // 기존 순번이 더 작은 경우, 다른 아이템의 순번을 1씩 감소
+            existingItems.forEach((item) => {
+                if (item.no > currentNo && item.no <= newNo) {
+                    updatePromises.push(
+                        dynamoDB
+                            .update({
+                                TableName: "model_menu",
+                                Key: {
+                                    userId: item.userId,
+                                    menuId: item.menuId,
+                                },
+                                UpdateExpression: "SET #no = :newNo",
+                                ExpressionAttributeNames: {
+                                    "#no": "no",
+                                },
+                                ExpressionAttributeValues: {
+                                    ":newNo": item.no - 1,
+                                },
+                            })
+                            .promise()
+                    );
+                }
+            });
+        }
+
+        // 4. 현재 아이템 업데이트 (새 순번으로 변경)
+        const currentItemUpdateParams = {
+            TableName: "model_menu",
+            Key: {
+                userId,
+                menuId,
+            },
+            UpdateExpression: `
+                SET #no = :no, 
+                    #name = :name, 
+                    #category = :category, 
+                    #price = :price, 
+                    #cup = :cup, 
+                    #iceYn = :iceYn, 
+                    #empty = :empty, 
+                    #iceTime = :iceTime, 
+                    #waterTime = :waterTime, 
+                    #state = :state, 
+                    #items = :items
+            `,
+            ExpressionAttributeNames: {
+                "#no": "no",
+                "#name": "name",
+                "#category": "category",
+                "#price": "price",
+                "#cup": "cup",
+                "#iceYn": "iceYn",
+                "#empty": "empty",
+                "#iceTime": "iceTime",
+                "#waterTime": "waterTime",
+                "#state": "state",
+                "#items": "items",
+            },
+            ExpressionAttributeValues: {
+                ":no": newNo,
+                ":name": updatedData.name,
+                ":category": updatedData.category,
+                ":price": updatedData.price.toString(),
+                ":cup": updatedData.cup,
+                ":iceYn": updatedData.iceYn,
+                ":empty": updatedData.empty,
+                ":iceTime": updatedData.iceTime.toString(),
+                ":waterTime": updatedData.waterTime.toString(),
+                ":state": updatedData.state,
+                ":items": updatedData.items,
+            },
+        };
+
+        updatePromises.push(dynamoDB.update(currentItemUpdateParams).promise());
+
+        // 모든 업데이트 실행
+        await Promise.all(updatePromises);
+        console.log("Menu updated and order adjusted successfully.");
+    } catch (error) {
+        console.error("Error updating menu or adjusting order:", error);
+        throw error;
+    }
+};
+
 
 const addProduct = async (data) => {
     try {
@@ -247,6 +436,7 @@ const replaceProduct = async (userId, menuId, newData) => {
 
 module.exports = {
     swapNoAndAddProduct,
+    updateMenuAndAdjustNo,
     addProduct,
     allProduct,
     checkProduct,

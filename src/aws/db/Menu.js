@@ -1,6 +1,6 @@
 const express = require('express');
 const Menu = express.Router();
-const {checkProduct, addProduct, allProduct, deleteProduct, swapNoAndAddProduct} = require('./utils/getMenu');
+const {checkProduct, addProduct, allProduct, deleteProduct, swapNoAndAddProduct, updateMenuAndAdjustNo} = require('./utils/getMenu');
 const getUser = require('../../util/getUser');
 const log = require("../../logger");
 const {uploadImageToS3andLocal} = require("../s3/utils/image");
@@ -66,6 +66,28 @@ Menu.post('/set-menu-info', async (req, res) => {
         res.status(500).send(err.message);
     }
 });
+
+Menu.post('/set-menu-update-info', async (req, res) => {
+    try {
+        const selectedOptions = req.body; // 클라이언트에서 전송한 JSON 데이터
+
+        // 받은 데이터를 콘솔에 출력
+        log.info('Received menu info:', selectedOptions);
+
+        const data = await updateMenuAndAdjustNo(selectedOptions);
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        // 응답을 클라이언트로 보냄
+        res.json({
+            success: true,
+            message: '메뉴수정 완료',
+            data: data,
+        });
+    } catch (err) {
+        log.error(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
 
 Menu.post('/set-admin-menu-info', upload.single('image'), async (req, res) => {
     try {
