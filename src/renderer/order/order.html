@@ -189,7 +189,10 @@
 
                     if (orderFlow.message) {
                         orderModal.classList.remove('hidden'); // 모달 표시
-                        modalMenu.innerText = `< ${orderFlow.menu} >`;
+
+                        if(orderFlow.status === 'drink') {
+                            modalMenu.innerText = `< ${orderFlow.menu} >`;
+                        }
                         modalCount.innerText = orderFlow.time;
                         modalText.innerText = orderFlow.message;
 
