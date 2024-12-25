@@ -7,7 +7,11 @@ const {uploadImageToS3andLocal} = require("../s3/utils/image");
 const {incrementCounter} = require("./utils/getCount");
 const multer = require("multer");
 const {memoryStorage} = require("multer");
+const {dispenseIce, dispenseCup} = require("../../services/serialOrderManager");
+const serialDataManager = require("../../services/serialDataManager");
+const {serialCommCom1} = require("../../serial/serialCommManager");
 const upload = multer({ storage: memoryStorage() }); // 메모리 저장소 사용
+const polling = new serialDataManager(serialCommCom1);
 
 Menu.get('/get-user-info', async (req, res) => {
     try {
@@ -126,6 +130,112 @@ Menu.post('/delete-menu', async (req, res) => {
     } catch (err) {
         log.error(err.message);
         res.status(500).send(err.message);
+    }
+});
+
+Menu.post('/serial-admin-ice-order', async (req, res) => {
+    try {
+        const { recipe } = req.body; // req.body에서 recipe를 가져옵니다.
+
+        if (!recipe) {
+            return res.status(400).json({
+                status: 400,
+                result: "error",
+                message: "Recipe is required."
+            });
+        }
+
+        log.info('Polling is being stopped for admin order.');
+        await polling.stopPolling(); // 주문 작업을 시작하기 전에 조회 정지
+
+        await dispenseIce(recipe); // 주문 작업 수행
+
+        log.info('Polling is being restarted after admin order.');
+        await polling.startPolling(); // 주문 작업 이후 폴링 재개
+
+        res.status(200).json({
+            status: 200,
+            result: "success",
+            message: "Command executed successfully",
+            data: {
+                menuId: recipe.menuId
+            }
+        });
+
+    } catch (err) {
+        log.error(err.message);
+        res.status(500).json({
+            status: 500,
+            result: "error",
+            message: "An error occurred during drink order processing.",
+            error: {
+                message: err.message,
+                stack: process.env.NODE_ENV === 'development' ? err.stack : undefined // 개발 환경에서만 스택 표시
+            }
+        });
+    } finally {
+        // 예외 발생 시에도 폴링 재개 보장
+        if (!polling.isPollingActive) {
+            try {
+                log.info('Polling is being restarted in finally block.');
+                await polling.startPolling();
+            } catch (error) {
+                log.error('Failed to restart polling in finally block:', error.message);
+            }
+        }
+    }
+});
+
+Menu.post('/serial-admin-cup-order', async (req, res) => {
+    try {
+        const { recipe } = req.body; // req.body에서 recipe를 가져옵니다.
+
+        if (!recipe) {
+            return res.status(400).json({
+                status: 400,
+                result: "error",
+                message: "Recipe is required."
+            });
+        }
+
+        log.info('Polling is being stopped for admin order.');
+        await polling.stopPolling(); // 주문 작업을 시작하기 전에 조회 정지
+
+        await dispenseCup(recipe); // 주문 작업 수행
+
+        log.info('Polling is being restarted after admin order.');
+        await polling.startPolling(); // 주문 작업 이후 폴링 재개
+
+        res.status(200).json({
+            status: 200,
+            result: "success",
+            message: "Command executed successfully",
+            data: {
+                menuId: recipe.menuId
+            }
+        });
+
+    } catch (err) {
+        log.error(err.message);
+        res.status(500).json({
+            status: 500,
+            result: "error",
+            message: "An error occurred during drink order processing.",
+            error: {
+                message: err.message,
+                stack: process.env.NODE_ENV === 'development' ? err.stack : undefined // 개발 환경에서만 스택 표시
+            }
+        });
+    } finally {
+        // 예외 발생 시에도 폴링 재개 보장
+        if (!polling.isPollingActive) {
+            try {
+                log.info('Polling is being restarted in finally block.');
+                await polling.startPolling();
+            } catch (error) {
+                log.error('Failed to restart polling in finally block:', error.message);
+            }
+        }
     }
 });
 

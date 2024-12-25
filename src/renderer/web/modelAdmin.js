@@ -4,6 +4,7 @@ import {
     fetchCupPlUse,
     fetchCupPaUse,
     callSerialAdminIceOrder,
+    callSerialAdminCupOrder,
     callSerialAdminDrinkOrder
 } from '/renderer/api/menuApi.browser.js';
 
@@ -39,13 +40,18 @@ window.handleCupClick = async function (menuId) {
     if (!targetItem) {
         console.error(`Item with menuId ${menuId} not found`);
         return;
+
     }
 
     if (!confirm(`[${targetItem.name}] 컵을 투출합니다`)) {
         return;
     }
 
-    // 컵 데이터 확인 및 API 호출
+    // 컵
+    //
+    // 투출 처리
+    await callSerialAdminCupOrder(targetItem);
+   /* // 컵 데이터 확인 및 API 호출
     if (targetItem.cup === "plastic") {
         console.log(`플라스틱 컵 선택: ${JSON.stringify(targetItem)}`);
         await callApi(fetchCupPlUse, menuId, targetItem);
@@ -54,7 +60,7 @@ window.handleCupClick = async function (menuId) {
         await callApi(fetchCupPaUse, menuId, targetItem);
     } else {
         console.error("Unknown cup type:", targetItem.cup);
-    }
+    }*/
 };
 
 // 얼음 및 물 투출 처리
@@ -111,7 +117,6 @@ window.handleDrinkClick = async function (menuId) {
 window.callApi = async function (apiFunction, menuId, data) {
     try {
         const response = await apiFunction(menuId);
-        console.log(response);
         if (response.status === 200) {
             const result = await response.json();
             console.log(`API 호출 성공:`, result);
@@ -130,8 +135,8 @@ window.callApi = async function (apiFunction, menuId, data) {
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         // 유저 정보 및 메뉴 데이터 가져오기
-        const userInfo = await getUserData(); // 유저 정보 가져오기
-        const data = await getMenuInfoAll(); // 메뉴 정보 가져오기
+        userInfo = await getUserData(); // 유저 정보 가져오기
+        data = await getMenuInfoAll(); // 메뉴 정보 가져오기
         const menuListContainer = document.getElementById("menu-list");
 
         if (!userInfo?.category) {
@@ -415,9 +420,9 @@ window.handleUpdateClick = function(menuId) {
         console.error(`Menu item with menuId ${menuId} not found.`);
         return;
     }
-    console.log(menuItem);
+
     const editButton = menuItem.querySelector(`#itemUpdateBtn-${menuId}`);
-console.log(editButton);
+
     if (editButton.textContent.trim() === "수정") {
         const fields = menuItem.querySelectorAll("input, select, textarea");
         fields.forEach((field) => {
