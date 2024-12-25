@@ -251,7 +251,7 @@ Menu.post('/serial-admin-drink-order', async (req, res) => {
             });
         }
 
-        log.info('Polling is being stopped for admin order.');
+        log.info('serial-admin-drink-order.');
         await polling.stopPolling(); // 주문 작업을 시작하기 전에 조회 정지
 
         await adminDrinkOrder(recipe); // 주문 작업 수행
