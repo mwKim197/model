@@ -192,6 +192,8 @@
 
                         if(orderFlow.status === 'drink') {
                             modalMenu.innerText = `< ${orderFlow.menu} >`;
+                        } else {
+                            modalMenu.innerText = '';
                         }
                         modalCount.innerText = orderFlow.time;
                         modalText.innerText = orderFlow.message;
