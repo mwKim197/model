@@ -179,6 +179,7 @@
 
                     // status가 completed일 경우 모달 닫기
                     if (orderFlow.status === 'completed') {
+                        modalImage.src = '';
                         orderModal.classList.add('hidden');
                         return; // 종료
                     }
