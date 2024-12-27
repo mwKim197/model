@@ -229,6 +229,7 @@ const dispenseIce = (recipe) => {
             log.info('[totalTime] : ', totalTime);
 
             // 화면 노출 메세지
+            eventEmitter.emit('order-update', { menu: menuName, status: 'ice', message: '제빙기에서 얼음을 받아주세요.' });
 
             for (let counter = 0; counter < 120; counter++) {
                 eventEmitter.emit('order-update', { menu: menuName, status: 'iceCount', message: '제빙기에서 얼음을 받아주세요.', time: counter });
@@ -661,6 +662,9 @@ const adminIceOrder = async (recipe) => {
                 }
                 totalTime = Number(recipe.iceTime) + waterTime
                 log.info('[totalTime] : ', totalTime);
+
+                // 화면 노출 메세지
+                eventEmitter.emit('order-update', { menu: menuName, status: 'ice', message: '제빙기에서 얼음을 받아주세요.' });
 
                 for (let counter = 0; counter < 120; counter++) {
                     eventEmitter.emit('order-update', { menu: menuName, status: 'iceCount', message: '얼음을 받아주세요.', time: counter });
