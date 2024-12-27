@@ -74,7 +74,7 @@ Menu.post('/set-menu-update-info', async (req, res) => {
         // 받은 데이터를 콘솔에 출력
         log.info('Received menu info:', selectedOptions);
 
-        const data = await updateMenuAndAdjustNo(selectedOptions);
+        const data = await updateMenuAndAdjustNo(selectedOptions, false);
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         // 응답을 클라이언트로 보냄
         res.json({

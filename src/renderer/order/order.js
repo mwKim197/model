@@ -549,13 +549,13 @@ window.electronAPI.updateSerialData(getPollingData);
 function updateTime() {
     const currentTimeElement = document.getElementById('current-time');
     const currentTemperatureElement = document.getElementById('current-temperature');
-    currentTimeElement.textContent = getCurrentFormattedTime();
-    currentTemperatureElement.textContent = rd1Info.boilerTemperature;
+    //currentTimeElement.textContent = getCurrentFormattedTime();
+    //currentTemperatureElement.textContent = rd1Info.boilerTemperature;
     console.log(rd1Info.boilerTemperature);
 }
 
 // 1초마다 시간 업데이트
-setInterval(updateTime, 1000);
+setInterval(updateTime, 3000);
 
 // 매장명, 비상연락쳐 업데이트
 function updateStoreInfo() {

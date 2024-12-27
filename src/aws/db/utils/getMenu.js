@@ -109,9 +109,10 @@ const swapNoAndAddProduct = async (data) => {
 };
 
 // 순번 적용 업데이트
-const updateMenuAndAdjustNo = async (updatedData) => {
+const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
     const { menuId, no: newNo } = updatedData;
     const userId = user.userId;
+
     try {
         // 1. 테이블 전체에서 현재 `userId`의 데이터 스캔
         const scanParams = {
@@ -125,7 +126,51 @@ const updateMenuAndAdjustNo = async (updatedData) => {
         const existingItemsResult = await dynamoDB.scan(scanParams).promise();
         const existingItems = existingItemsResult.Items || [];
 
-        // 2. 기존 아이템에서 변경 전 `menuId`의 현재 `no` 값 찾기
+        if (isNew) {
+            // 신규 항목 처리
+            const updatePromises = [];
+
+            // 2. 순번 조정 로직 (신규 항목 추가 위치에 따라)
+            existingItems.forEach((item) => {
+                if (item.no >= newNo) {
+                    updatePromises.push(
+                        dynamoDB
+                            .update({
+                                TableName: "model_menu",
+                                Key: {
+                                    userId: item.userId,
+                                    menuId: item.menuId,
+                                },
+                                UpdateExpression: "SET #no = :newNo",
+                                ExpressionAttributeNames: {
+                                    "#no": "no",
+                                },
+                                ExpressionAttributeValues: {
+                                    ":newNo": item.no + 1,
+                                },
+                            })
+                            .promise()
+                    );
+                }
+            });
+
+            // 3. 신규 항목 추가
+            const newItemParams = {
+                TableName: "model_menu",
+                Item: {
+                    ...updatedData,
+                    userId,
+                },
+            };
+            updatePromises.push(dynamoDB.put(newItemParams).promise());
+
+            // 모든 업데이트 실행
+            await Promise.all(updatePromises);
+            console.log("New menu item added and order adjusted successfully.");
+            return;
+        }
+
+        // 4. 기존 아이템에서 변경 전 `menuId`의 현재 `no` 값 찾기
         const currentItem = existingItems.find((item) => item.menuId === menuId);
 
         if (!currentItem) {
@@ -178,18 +223,15 @@ const updateMenuAndAdjustNo = async (updatedData) => {
                     ":items": updatedData.items,
                 },
             };
-            console.log("updatedData", updatedData);
-            console.log("updatedData.items", updatedData.items);
             await dynamoDB.update(updateParams).promise();
             console.log("Item updated successfully without changing order.");
             return;
         }
 
-        // 3. 순번 조정 로직
+        // 5. 순번 조정 로직 (기존 항목 업데이트와 동일)
         const updatePromises = [];
 
         if (currentNo > newNo) {
-            // 기존 순번이 더 큰 경우, 다른 아이템의 순번을 1씩 증가
             existingItems.forEach((item) => {
                 if (item.no >= newNo && item.no < currentNo) {
                     updatePromises.push(
@@ -213,7 +255,6 @@ const updateMenuAndAdjustNo = async (updatedData) => {
                 }
             });
         } else {
-            // 기존 순번이 더 작은 경우, 다른 아이템의 순번을 1씩 감소
             existingItems.forEach((item) => {
                 if (item.no > currentNo && item.no <= newNo) {
                     updatePromises.push(
@@ -238,7 +279,7 @@ const updateMenuAndAdjustNo = async (updatedData) => {
             });
         }
 
-        // 4. 현재 아이템 업데이트 (새 순번으로 변경)
+        // 6. 현재 아이템 업데이트 (새 순번으로 변경)
         const currentItemUpdateParams = {
             TableName: "model_menu",
             Key: {
@@ -296,6 +337,7 @@ const updateMenuAndAdjustNo = async (updatedData) => {
         throw error;
     }
 };
+
 
 
 const addProduct = async (data) => {
