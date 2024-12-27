@@ -179,7 +179,7 @@
 
                     // status가 completed일 경우 모달 닫기
                     if (orderFlow.status === 'completed') {
-                        modalImage.src = '';
+                        modalImage.src = '../../assets/basicImage/white.png';
                         orderModal.classList.add('hidden');
                         return; // 종료
                     }
@@ -189,6 +189,7 @@
                     }
 
                     if (orderFlow.message) {
+                        modalImage.src = '../../assets/basicImage/white.png';
                         orderModal.classList.remove('hidden'); // 모달 표시
 
                         if(orderFlow.status === 'drink' || orderFlow.status === 'ice' ||
@@ -212,6 +213,7 @@
 
                         if (orderFlow.status === "error") {
                             setTimeout(() => {
+                                modalImage.src = '../../assets/basicImage/white.png';
                                 orderModal.classList.add('hidden'); // 메시지가 없으면 모달 숨김
                             } , 3000)
                         }
@@ -247,6 +249,7 @@
                                 break;
                         }
                     } else {
+                        modalImage.src = '../../assets/basicImage/white.png';
                         orderModal.classList.add('hidden'); // 메시지가 없으면 모달 숨김
                     }
 
