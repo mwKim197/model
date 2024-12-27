@@ -629,8 +629,7 @@
     // 카테고리 옵션 추가 함수
     function populateCategoryOptions(categories) {
         // 모든 select 요소를 가져옴
-        const selectElements = document.querySelectorAll('select[name="category"]');
-
+        const selectElements = document.querySelectorAll('select[name="Category"]');
         // 각 select 요소에 옵션 추가
         selectElements.forEach(selectElement => {
             // 기존 옵션 삭제
@@ -654,15 +653,15 @@
     }
 
     // 메뉴 데이터를 기반으로 카테고리 <select>를 초기화
-    function initializeCategorySelect(menuData, userInfo) {
+   /* function initializeCategorySelect(menuData, userInfo) {
         if (!userInfo?.category || !Array.isArray(userInfo.category)) {
             console.warn("Category data is not available in user info.");
             return;
         }
 
         // 선택된 카테고리를 동적으로 설정
-        populateCategoryOptions(menuData.menuId, userInfo.category, menuData.category);
-    }
+        populateCategoryOptions(userInfo.category);
+    }*/
     /* [MENU] 카테고리 END*/
     /* 텝 컨트롤 START */
     document.addEventListener('DOMContentLoaded', () => {

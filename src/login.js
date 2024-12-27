@@ -40,7 +40,7 @@ const signupUser = async (userId, password, ipAddress, storeName, tel) => {
                     item: "season"
                 },
                 {
-                    item4: "ade",
+                    item: "ade",
                     name: "주스/에이드(JUICE/ADE)",
                     no: "3"
                 },
