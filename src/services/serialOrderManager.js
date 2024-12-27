@@ -596,14 +596,6 @@ const adminDrinkOrder = async (recipe) => {
 
                         for (let i = 0; i < combinedList.length; i++) {
 
-                            if (i === 0) {
-                                // 컵 센서 체크
-                                const isStopValid = await checkCupSensor("없음", 3);
-                                if (!isStopValid) {
-                                    log.error("컵 센서 상태가 '없음'이 아니어서 세척 작업을 중단합니다.");
-                                    return; // 작업 중단
-                                }
-                            }
                             const listData = combinedList[i];
 
                             log.info(`전체 세척 실행: ${JSON.stringify(listData)}`);
