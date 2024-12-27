@@ -99,7 +99,7 @@ const processOrder = async (recipe) => {
                 if (index === 0) {
 
                     // 타임아웃 체크
-                    const isStartValid = await checkCupSensor("있음", 3);
+                    const isStartValid = await checkCupSensor("있음", 3, true);
                     if (!isStartValid) {
                         log.error(`[에러] 컵 센서 상태가 유효하지 않음: menuId ${recipe.menuId}`);
                         throw new Error(`"120초 경과로 기계가 초기화되었습니다."`);
@@ -127,7 +127,7 @@ const processOrder = async (recipe) => {
                 }
 
                 if (index === sortedItems.length - 1) {
-                    const isEndValid = await checkCupSensor("없음", 3);
+                    const isEndValid = await checkCupSensor("없음", 3, true);
                     if (!isEndValid) {
                         log.error(`[에러] 컵 센서 상태가 유효하지 않음 (회수 실패): menuId ${recipe.menuId}`);
                         throw new Error(`"120초 경과로 기계가 초기화되었습니다."`);
@@ -394,7 +394,10 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
     });
 };
 
-const checkCupSensor = async (expectedState, threshold) => {
+/*
+*  washChk : true 메세지 노출
+* */
+const checkCupSensor = async (expectedState, threshold, washChk) => {
     let stateCount = 0; // 상태 카운터
     for (let counter = 0; counter < 120; counter++) {
         const startTime = Date.now(); // 루프 시작 시간 기록
@@ -403,11 +406,11 @@ const checkCupSensor = async (expectedState, threshold) => {
         log.info(`컵 센서 time out 여부 ${expectedState} :  ${counter}/ 120`);
 
         // 모달 동작
-        if (expectedState === "있음" ) {
+        if (expectedState === "있음" && washChk ) {
             eventEmitter.emit('order-update', { menu: menuName, status: 'drinkCount', message: '컵을 음료 투출구에 놓아주세요.', time: counter });
         }
 
-        if (expectedState === "없음" ) {
+        if (expectedState === "없음" && washChk ) {
             eventEmitter.emit('order-update', { menu: menuName, status: 'completedCount', message: '음료가 완성되었습니다. 컵을꺼내주세요.', time: counter });
 
         }
@@ -502,7 +505,7 @@ const useWash = async (data) => {
 
             if (i === 0) {
                 // 컵 센서 체크
-                const isStopValid = await checkCupSensor("없음", 3);
+                const isStopValid = await checkCupSensor("없음", 3, false);
                 if (!isStopValid) {
                     log.error("컵 센서 상태가 '없음'이 아니어서 세척 작업을 중단합니다.");
                     return; // 작업 중단
@@ -540,7 +543,7 @@ const adminDrinkOrder = async (recipe) => {
             try {
                 // 첫 번째 항목에만 컵 센서 체크 로직 추가
                 if (index === 0) {
-                    const isStartValid = await checkCupSensor("있음", 3);
+                    const isStartValid = await checkCupSensor("있음", 3, true);
                     if (!isStartValid) {
                         log.error(`[에러] 컵 센서 상태가 유효하지 않음: menuId ${recipe.menuId}`);
                         throw new Error(`120초 경과로 기계가 초기화되었습니다.`);
@@ -572,7 +575,7 @@ const adminDrinkOrder = async (recipe) => {
 
                 // 마지막 항목 처리
                 if (index === sortedItems.length - 1) {
-                    const isEndValid = await checkCupSensor("없음", 3);
+                    const isEndValid = await checkCupSensor("없음", 3,false);
                     if (!isEndValid) {
                         log.error(`[에러] 컵 센서 상태가 유효하지 않음 (회수 실패): menuId ${recipe.menuId}`);
                         throw new Error(`120초 경과로 기계가 초기화되었습니다.`);
