@@ -582,12 +582,11 @@ const adminDrinkOrder = async (recipe) => {
                     log.info("세척 시작...!");
                     eventEmitter.emit('order-update', { status: 'washStart', message: '커피머신 세척중입니다 잠시만 기다려주세요.' });
                     log.info(`recipe ${recipe}`);
-                    const combinedList = recipe
-                        .flatMap(entry =>
-                            entry.items.filter(item => item.type === "garucha" || item.type === "syrup") // 조건 필터링
-                        )
+                    // 필터링 및 중복 제거
+                    const combinedList = recipe.items
+                        .filter(item => item.type === "garucha" || item.type === "syrup") // 조건 필터링
                         .reduce((unique, item) => {
-                            // 중복 여부 확인 (type과 no 기준)
+                            // 중복 여부 확인 (type과 value1 기준)
                             if (!unique.some(existing => existing.type === item.type && existing.value1 === item.value1)) {
                                 unique.push(item); // 중복되지 않은 항목만 추가
                             }
