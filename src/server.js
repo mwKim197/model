@@ -14,9 +14,12 @@ const { getBasePath } = require('./aws/s3/utils/cacheDirManager');
 const app = express();
 const server = createServer(app);
 
-// 실행 모드에 따른 경로 설정
-const isDevelopment = process.env.NODE_ENV === 'development' || !process.resourcesPath || process.resourcesPath === process.cwd();
+const isDevelopment = (process.env.NODE_ENV || '').trim().toLowerCase() === 'development';
 const appPath = isDevelopment ? path.resolve(process.cwd()) : process.resourcesPath;
+log.info(`NODE_ENV: "${process.env.NODE_ENV}"`); // 값 출력
+log.info(`App Path: ${appPath}`);
+
+
 
 // CORS 설정
 app.use(cors({
@@ -35,7 +38,6 @@ app.use((req, res, next) => {
 });
 
 // Static 파일 제공
-console.log(appPath);
 app.use('/assets', express.static(path.join(appPath, 'app', 'src', 'assets')));
 app.use('/renderer', express.static(path.join(appPath, 'app', 'src', 'renderer')));
 app.use('/images', express.static(getBasePath()));
@@ -45,7 +47,7 @@ log.info('App Path:', appPath);
 
 // Static 파일 제공
 const rendererPath = path.join(appPath, 'src', 'renderer');
-const assetsPath = path.join(appPath, 'assets');
+const assetsPath = path.join(appPath, 'src', 'assets');
 
 if (fs.existsSync(rendererPath)) {
     console.log('Renderer Path Exists:', rendererPath);
