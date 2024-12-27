@@ -581,7 +581,6 @@ const adminDrinkOrder = async (recipe) => {
 
                     log.info("세척 시작...!");
                     eventEmitter.emit('order-update', { status: 'washStart', message: '커피머신 세척중입니다 잠시만 기다려주세요.' });
-                    log.info(`recipe ${recipe}`);
                     // 필터링 및 중복 제거
                     const combinedList = recipe.items
                         .filter(item => item.type === "garucha" || item.type === "syrup") // 조건 필터링
@@ -620,6 +619,7 @@ const adminDrinkOrder = async (recipe) => {
                         await new Promise((r) => setTimeout(r, 1000));
                     }
                     eventEmitter.emit('order-update', { menu: menuName, status: 'completed', message: '전체 세척 작업 완료.' });
+                    menuName = "";
                 }
             } catch (error) {
                 log.error(`[에러] 제조 item No ${item.no} in menu ${recipe.menuId}: ${error.message}`);
