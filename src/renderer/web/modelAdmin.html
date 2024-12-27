@@ -527,10 +527,10 @@
     });
     /* [MENU SET] 등록 버튼 END */
     /* [MENU UPDATE] 수정 버튼 START */
-    window.handleUpdateClick = async function (menuId) {
-        switchTab('tab2');
-    }
     /*window.handleUpdateClick = async function (menuId) {
+        switchTab('tab2');
+    }*/
+    window.handleUpdateClick = async function (menuId) {
         const menuItem = document.querySelector(`[data-menu-id="${menuId}"]`);
 
         if (!menuItem) {
@@ -624,7 +624,7 @@
                     alert("저장 중 오류가 발생했습니다.");
                 });
         }
-    };*/
+    };
     /* [MENU UPDATE] 수정 버튼 END */
     /* [MENU SET] 등록 END */
 
