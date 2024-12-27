@@ -533,7 +533,8 @@ const useWash = async (data) => {
 const adminDrinkOrder = async (recipe) => {
     try {
         // 시작 이벤트 전송
-        eventEmitter.emit('order-update', { menu: recipe.name, status: 'processing', message: '관리자가 조작중입니다. 음료가 준비중입니다.' });
+        menuName = recipe.name;
+        eventEmitter.emit('order-update', { menu: menuName, status: 'processing', message: '관리자가 조작중입니다. 음료가 준비중입니다.' });
         const sortedItems = [...recipe.items].sort((a, b) => a.no - b.no);
         for (const [index, item] of sortedItems.entries()) {
             try {
@@ -545,7 +546,7 @@ const adminDrinkOrder = async (recipe) => {
                         throw new Error(`120초 경과로 기계가 초기화되었습니다.`);
                     } else {
                         eventEmitter.emit('order-update', {
-                            menu: recipe.name, // 수정: menuName 변수 대신 recipe.menuName 사용
+                            menu: menuName, // 수정: menuName 변수 대신 recipe.menuName 사용
                             status: 'drink',
                             message: '관리자가 조작중입니다. 음료가 투출 됩니다.'
                         });
@@ -579,7 +580,7 @@ const adminDrinkOrder = async (recipe) => {
                     log.info(`컵 센서 상태 확인 완료 (회수 성공): menuId ${recipe.menuId}`);
 
                     log.info("세척 시작...!");
-                    eventEmitter.emit('order-update', { menu: menuName, status: 'washStart', message: '커피머신 세척중입니다 잠시만 기다려주세요.' });
+                    eventEmitter.emit('order-update', { status: 'washStart', message: '커피머신 세척중입니다 잠시만 기다려주세요.' });
                     const combinedList = recipe
                         .flatMap(entry =>
                             entry.items.filter(item => item.type === "garucha" || item.type === "syrup") // 조건 필터링
@@ -628,6 +629,7 @@ const adminDrinkOrder = async (recipe) => {
     } catch (error) {
         throw error; // 에러를 상위로 전파
     } finally {
+        menuName = "";
         // 종료 이벤트 전송 (성공 또는 실패 모두 포함)
         eventEmitter.emit('order-update', {
             menu: recipe.name, // 수정: menuName 변수 대신 recipe.name 사용
@@ -658,7 +660,7 @@ const adminIceOrder = async (recipe) => {
                 let valueChanged = false; // 값 변경 여부 플래그
                 let minWaitTime = 7; // 최소 대기 시간 설정
                 let minWaitCounter = 0; // 최소 대기 시간 카운터
-
+                menuName = recipe.name;
                 let waterTime = Number(recipe.waterTime);
                 if (Number(recipe.waterTime) >= 3) {
                     waterTime = waterTime - 2;
@@ -726,6 +728,7 @@ const adminIceOrder = async (recipe) => {
     } catch (error) {
         throw error; // 에러를 상위로 전파
     } finally {
+        menuName = "";
         // 종료 이벤트 전송 (성공 또는 실패 모두 포함)
         eventEmitter.emit('order-update', {
             menu: recipe.name, // 수정: menuName 변수 대신 recipe.name 사용
