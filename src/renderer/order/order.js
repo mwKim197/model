@@ -52,7 +52,7 @@ function displayProducts(products) {
         // 오른쪽 배지 이미지 렌더링
         const rightBadgeImage = rightBadge
             ? `<img src="../../assets/basicImage/${rightBadge}.png" alt="Right Badge" 
-                class="absolute top-0 right-0 w-8 h-8 object-cover"/>`
+                class="absolute top-0 right-0 w-8 h-8 object-cover mt-1.5 mr-1.5"/>`
             : '';
 
         // 품절 배지 이미지 렌더링
