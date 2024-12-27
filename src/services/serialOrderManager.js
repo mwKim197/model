@@ -581,6 +581,7 @@ const adminDrinkOrder = async (recipe) => {
 
                     log.info("세척 시작...!");
                     eventEmitter.emit('order-update', { status: 'washStart', message: '커피머신 세척중입니다 잠시만 기다려주세요.' });
+                    log.info(`recipe ${recipe}`);
                     const combinedList = recipe
                         .flatMap(entry =>
                             entry.items.filter(item => item.type === "garucha" || item.type === "syrup") // 조건 필터링
