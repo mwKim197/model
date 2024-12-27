@@ -192,7 +192,7 @@
                         modalImage.src = '../../assets/basicImage/white.png';
                         orderModal.classList.remove('hidden'); // 모달 표시
 
-                        if(orderFlow.status === 'drink' || orderFlow.status === 'ice' ||
+                        if(orderFlow.status === 'drink' ||
                             orderFlow.status === 'iceCount' || orderFlow.status === 'drinkCount' ||
                             orderFlow.status === 'completedCount' || orderFlow.status === 'processing'
                         ) {
@@ -222,10 +222,6 @@
                         switch (orderFlow.status) {
                             case 'processing':
                                 modalImage.src = '../../assets/basicImage/processing.gif';
-                                break;
-                            case 'ice':
-                                modalImage.src = '../../assets/basicImage/iceMaker.gif';
-                                audio = new Audio('../../assets/audio/제빙기에서 얼음을 받아주세요.mp3');
                                 break;
                             case 'iceCount':
                                 modalImage.src = '../../assets/basicImage/iceMaker.gif';
@@ -261,7 +257,7 @@
                         drinkCallAudio(time, audio);
                     } else {
                         // 음성 재생
-                        if (orderFlow.status === "drink" || orderFlow.status === "ice" && audio) {
+                        if (orderFlow.status === "drink" && audio) {
                             audio.play().catch((err) => {
                                 console.error('Audio play error:', err);
                             });

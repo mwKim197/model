@@ -229,10 +229,9 @@ const dispenseIce = (recipe) => {
             log.info('[totalTime] : ', totalTime);
 
             // 화면 노출 메세지
-            eventEmitter.emit('order-update', { menu: menuName, status: 'ice', message: '제빙기에서 얼음을 받아주세요.' });
 
             for (let counter = 0; counter < 120; counter++) {
-                eventEmitter.emit('order-update', { menu: menuName, status: 'iceCount', message: '얼음을 받아주세요.', time: counter });
+                eventEmitter.emit('order-update', { menu: menuName, status: 'iceCount', message: '제빙기에서 얼음을 받아주세요.', time: counter });
                 const result = await Ice.getKaiserInfo();
                 const currentHexArray = result.match(/.{1,2}/g); // 2자리씩 끊어서 배열 생성
                 const currentValue = parseInt(currentHexArray[7]); // 16진수 → 10진수 변환
@@ -662,9 +661,6 @@ const adminIceOrder = async (recipe) => {
                 }
                 totalTime = Number(recipe.iceTime) + waterTime
                 log.info('[totalTime] : ', totalTime);
-
-                // 화면 노출 메세지
-                eventEmitter.emit('order-update', { menu: menuName, status: 'ice', message: '제빙기에서 얼음을 받아주세요.' });
 
                 for (let counter = 0; counter < 120; counter++) {
                     eventEmitter.emit('order-update', { menu: menuName, status: 'iceCount', message: '얼음을 받아주세요.', time: counter });
