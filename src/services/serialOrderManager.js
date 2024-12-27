@@ -576,50 +576,51 @@ const adminDrinkOrder = async (recipe) => {
                     if (!isEndValid) {
                         log.error(`[에러] 컵 센서 상태가 유효하지 않음 (회수 실패): menuId ${recipe.menuId}`);
                         throw new Error(`Invalid cup sensor state after manufacturing for menuId ${recipe.menuId}`);
-                    }
-                    log.info(`컵 센서 상태 확인 완료 (회수 성공): menuId ${recipe.menuId}`);
+                    } else {
+                        log.info(`컵 센서 상태 확인 완료 (회수 성공): menuId ${recipe.menuId}`);
+                        log.info("세척 시작...!");
+                        eventEmitter.emit('order-update', { status: 'washStart', message: '커피머신 세척중입니다 잠시만 기다려주세요.' });
 
-                    log.info("세척 시작...!");
-                    eventEmitter.emit('order-update', { status: 'washStart', message: '커피머신 세척중입니다 잠시만 기다려주세요.' });
-                    // 필터링 및 중복 제거
-                    const combinedList = recipe.items
-                        .filter(item => item.type === "garucha" || item.type === "syrup") // 조건 필터링
-                        .reduce((unique, item) => {
-                            // 중복 여부 확인 (type과 value1 기준)
-                            if (!unique.some(existing => existing.type === item.type && existing.value1 === item.value1)) {
-                                unique.push(item); // 중복되지 않은 항목만 추가
+                        // 필터링 및 중복 제거
+                        const combinedList = recipe.items
+                            .filter(item => item.type === "garucha" || item.type === "syrup") // 조건 필터링
+                            .reduce((unique, item) => {
+                                // 중복 여부 확인 (type과 value1 기준)
+                                if (!unique.some(existing => existing.type === item.type && existing.value1 === item.value1)) {
+                                    unique.push(item); // 중복되지 않은 항목만 추가
+                                }
+                                return unique;
+                            }, []);
+
+                        log.info(`전체 세척 레시피 리스트: ${JSON.stringify(combinedList)}`);
+
+                        for (let i = 0; i < combinedList.length; i++) {
+
+                            if (i === 0) {
+                                // 컵 센서 체크
+                                const isStopValid = await checkCupSensor("없음", 3);
+                                if (!isStopValid) {
+                                    log.error("컵 센서 상태가 '없음'이 아니어서 세척 작업을 중단합니다.");
+                                    return; // 작업 중단
+                                }
                             }
-                            return unique;
-                        }, []);
+                            const listData = combinedList[i];
 
-                    log.info(`전체 세척 레시피 리스트: ${JSON.stringify(combinedList)}`);
+                            log.info(`전체 세척 실행: ${JSON.stringify(listData)}`);
 
-                    for (let i = 0; i < combinedList.length; i++) {
-
-                        if (i === 0) {
-                            // 컵 센서 체크
-                            const isStopValid = await checkCupSensor("없음", 3);
-                            if (!isStopValid) {
-                                log.error("컵 센서 상태가 '없음'이 아니어서 세척 작업을 중단합니다.");
-                                return; // 작업 중단
+                            if (listData.type === "garucha") {
+                                await Order.purifyingTae(listData.value1);
+                                await checkAutoOperationState("정지", 3);
                             }
+                            if (listData.type === "syrup") {
+                                await Order.purifyingSyrup(listData.value1);
+                                await checkAutoOperationState("정지", 3);
+                            }
+                            await new Promise((r) => setTimeout(r, 1000));
                         }
-                        const listData = combinedList[i];
-
-                        log.info(`전체 세척 실행: ${JSON.stringify(listData)}`);
-
-                        if (listData.type === "garucha") {
-                            await Order.purifyingTae(listData.value1);
-                            await checkAutoOperationState("정지", 3);
-                        }
-                        if (listData.type === "syrup") {
-                            await Order.purifyingSyrup(listData.value1);
-                            await checkAutoOperationState("정지", 3);
-                        }
-                        await new Promise((r) => setTimeout(r, 1000));
+                        eventEmitter.emit('order-update', { menu: menuName, status: 'completed', message: '전체 세척 작업 완료.' });
+                        menuName = "";
                     }
-                    eventEmitter.emit('order-update', { menu: menuName, status: 'completed', message: '전체 세척 작업 완료.' });
-                    menuName = "";
                 }
             } catch (error) {
                 log.error(`[에러] 제조 item No ${item.no} in menu ${recipe.menuId}: ${error.message}`);
