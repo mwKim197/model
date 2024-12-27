@@ -190,7 +190,10 @@
                     if (orderFlow.message) {
                         orderModal.classList.remove('hidden'); // 모달 표시
 
-                        if(orderFlow.status === 'drink') {
+                        if(orderFlow.status === 'drink' || orderFlow.status === 'ice' ||
+                            orderFlow.status === 'iceCount' || orderFlow.status === 'drinkCount' ||
+                            orderFlow.status === 'completedCount'
+                        ) {
                             modalMenu.innerText = `< ${orderFlow.menu} >`;
                         } else {
                             modalMenu.innerText = '';
