@@ -19,8 +19,6 @@ const appPath = isDevelopment ? path.resolve(process.cwd()) : process.resourcesP
 log.info(`NODE_ENV: "${process.env.NODE_ENV}"`); // 값 출력
 log.info(`App Path: ${appPath}`);
 
-
-
 // CORS 설정
 app.use(cors({
     origin: ['http://localhost:3000', /^http:\/\/.*\.narrowroad-model\.com:3000$/],
