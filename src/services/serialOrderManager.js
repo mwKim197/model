@@ -705,6 +705,13 @@ const adminIceOrder = async (recipe) => {
                         minWaitCounter++;
                         log.info(`최소 대기 시간 유지 중: ${minWaitCounter}/${minWaitTime}초`);
                     } else if (valueChanged && stableTime >= totalTime) {
+                        menuName = "";
+                        // 종료 이벤트 전송 (성공 또는 실패 모두 포함)
+                        eventEmitter.emit('order-update', {
+                            menu: recipe.name, // 수정: menuName 변수 대신 recipe.name 사용
+                            status: 'completed',
+                            message: '관리자 조작이 완료되었습니다.'
+                        });
                         // 최소 대기 시간 충족 후 변경된 값이 totalTime만큼 유지된 경우
                         log.info('변경된 값이 일정 시간 동안 유지됨. 다음 루틴으로 진행합니다...');
                         resolve(); // 작업 완료로 처리
