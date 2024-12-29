@@ -117,7 +117,27 @@ const loginUser = async (userId, password) => {
     }
 };
 
+const getAllUserIds = async () => {
+    const params = {
+        TableName: "model_user", // 테이블 이름
+        ProjectionExpression: "userId", // userId만 가져옴
+    };
+
+    try {
+        const result = await dynamoDB.scan(params).promise();
+        const userIds = result.Items.map(item => item.userId); // userId 배열 생성
+        console.log("[INFO] Fetched userIds:", userIds);
+        return userIds;
+    } catch (error) {
+        console.error("[ERROR] Failed to fetch userIds:", error.message);
+        throw error;
+    }
+};
+
+
+
 module.exports = {
     signupUser,
-    loginUser
+    loginUser,
+    getAllUserIds
 };

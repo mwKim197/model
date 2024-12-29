@@ -1,6 +1,6 @@
-const { dynamoDB } = require('../../aws');
+const { dynamoDB, s3} = require('../../aws');
 const log = require('../../../logger');
-const { getCounterValue } = require('./getCount');
+const { getCounterValue, incrementCounter} = require('./getCount');
 const getUser = require('../../../util/getUser');  // 유틸 함수 가져오기
 let user;
 
@@ -296,8 +296,6 @@ const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
     }
 };
 
-
-
 const addProduct = async (data) => {
     try {
         // 1. 현재 테이블에서 `no`의 최대 값 가져오기
@@ -349,6 +347,106 @@ const getMaxNo = async (userId) => {
     }
 };
 
+// 계정으로 전체 아이템 조회
+const getAllProductsByUserId = async (userId) => {
+    let params = {
+        TableName: 'model_menu',
+        KeyConditionExpression: '#pk = :pk',
+        ExpressionAttributeNames: {
+            '#pk': 'userId',
+        },
+        ExpressionAttributeValues: {
+            ':pk': userId,
+        },
+        ScanIndexForward: true,
+    };
+    try {
+        const result = await dynamoDB.query(params).promise();
+        return result.Items || [];
+    } catch (error) {
+        log.error(`[DB] ${userId}의 메뉴 조회 실패: `, error);
+        throw error;
+    }
+};
+
+// 조회된 아이템 신규 계정에 등록
+const duplicateMenuData = async (sourceUserId, targetUserId) => {
+    try {
+        const bucketName = 'model-narrow-road'; // S3 버킷 이름
+        const sourcePrefix = `model/${sourceUserId}/`; // 원본 사용자 경로
+        const targetPrefix = `model/${targetUserId}/`; // 대상 사용자 경로
+
+        // 1. 원본 `userId`로 데이터 조회
+        const sourceData = await getAllProductsByUserId(sourceUserId);
+
+        if (!sourceData || sourceData.length === 0) {
+            log.warn(`[DB] ${sourceUserId}의 데이터가 없습니다.`);
+            throw new Error(`${sourceUserId}의 데이터가 없습니다.`);
+        }
+
+        // 2. 데이터 복제 (menuId 생성 포함)
+        const duplicatedData = await Promise.all(
+            sourceData.map(async (item) => {
+                const newMenuId = await incrementCounter(targetUserId); // 비동기 menuId 생성
+                return {
+                    ...item,
+                    userId: targetUserId, // 새 사용자 ID로 변경
+                    menuId: newMenuId,   // 새로운 menuId 설정
+                };
+            })
+        );
+
+        // 3. S3 이미지 복제
+        const listParams = {
+            Bucket: bucketName,
+            Prefix: sourcePrefix,
+        };
+
+        const list = await s3.listObjectsV2(listParams).promise();
+        if (list.Contents.length === 0) {
+            log.warn(`[S3] ${sourceUserId}의 복사할 이미지가 없습니다.`);
+        } else {
+            const copyPromises = list.Contents.map(async (item) => {
+                const sourceKey = item.Key; // 원본 파일 Key
+                const targetKey = sourceKey.replace(sourcePrefix, targetPrefix); // 대상 Key
+
+                const copyParams = {
+                    Bucket: bucketName, // 대상 버킷
+                    CopySource: encodeURIComponent(`/${bucketName}/${sourceKey}`), // 반드시 인코딩
+                    Key: targetKey, // 새 파일 Key
+                };
+
+                try {
+                    await s3.copyObject(copyParams).promise();
+                    log.info(`[S3] 이미지 복사 완료: ${sourceKey} -> ${targetKey}`);
+                } catch (error) {
+                    log.error(`[S3] 이미지 복사 실패: ${sourceKey} -> ${targetKey}. Error: ${error.message}`);
+                    throw error; // 필요하면 여기서 에러를 처리하거나 다시 throw
+                }
+            });
+
+            await Promise.all(copyPromises);
+        }
+
+
+        // 4. DynamoDB에 저장
+        const putPromises = duplicatedData.map((item) => {
+            const params = {
+                TableName: 'model_menu',
+                Item: item,
+            };
+            return dynamoDB.put(params).promise();
+        });
+
+        await Promise.all(putPromises);
+
+        log.info(`[DB & S3] ${sourceUserId}의 데이터를 ${targetUserId}로 복사 완료.`);
+        return { success: true, message: `${sourceUserId}의 데이터 및 이미지를 ${targetUserId}로 복사했습니다.` };
+    } catch (error) {
+        log.error(`[DB] 데이터 복제 실패: `, error);
+        throw error; // 에러를 throw해서 호출한 곳에서 처리할 수 있도록 함
+    }
+};
 
 // 전체 아이템 조회
 const allProduct = async () => {
@@ -438,6 +536,7 @@ module.exports = {
     swapNoAndAddProduct,
     updateMenuAndAdjustNo,
     addProduct,
+    duplicateMenuData,
     allProduct,
     checkProduct,
     deleteProduct,

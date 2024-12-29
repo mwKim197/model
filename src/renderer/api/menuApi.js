@@ -81,6 +81,33 @@ const getMenuInfo = async () => {
     }
 }
 
+// 선택한 유저정보로 유저 menu 전체 조회
+const getUserMenuInfoAll = async (userId) => {
+    try {
+
+        await ensureUserDataInitialized(); // userData 초기화 보장
+
+        // userData 초기화가 끝난 후에 실행되도록 보장
+        if (!userData) {
+            throw new Error('User data is not initialized');
+        }
+
+        const response = await fetch(`http://localhost:3000/get-menu-info-all/${userId}`);
+
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+        console.log("getMenuInfoAll ", userData);
+        const data = await response.json();
+        log.info(data);
+        sendLogToMain('info','MENU-ALL: ', data);  // 디버깅용 콘솔
+        return data;
+    } catch (error) {
+        sendLogToMain('error','Error fetching menu info:', error);
+        log.error(error);
+    }
+}
+
 // 메뉴정보 전체 조회
 const getMenuInfoAll = async () => {
     try {
@@ -550,6 +577,7 @@ const fetchIceInfo = async () => {
 module.exports = {
     getUserInfo,
     getMenuInfo,
+    getUserMenuInfoAll,
     getMenuInfoAll,
     setMenuInfo,
     fetchCoffeeInfo,

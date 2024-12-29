@@ -95,4 +95,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // 로그 기록
     logToMain: (level, message) => ipcRenderer.send('log-to-main', { level, message }),
+
+    // 데이터 가져올 계정 조회
+    getAllUserIds: async () => await userApi.getAllUserIds(),
+
+    // 해당 계정의 카테고리 + 메뉴 데이터 복제
+    setMenuAllUpdate: async (sourceUserId, targetUserId) => await userApi.setMenuAllUpdate(sourceUserId, targetUserId),
+
 });

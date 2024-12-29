@@ -1,6 +1,6 @@
 const express = require('express');
 const Menu = express.Router();
-const {checkProduct, addProduct, allProduct, deleteProduct, swapNoAndAddProduct, updateMenuAndAdjustNo} = require('./utils/getMenu');
+const {checkProduct, addProduct, allProduct, deleteProduct, swapNoAndAddProduct, updateMenuAndAdjustNo, duplicateMenuData } = require('./utils/getMenu');
 const getUser = require('../../util/getUser');
 const log = require("../../logger");
 const {uploadImageToS3andLocal} = require("../s3/utils/image");

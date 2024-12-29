@@ -29,9 +29,10 @@ const incrementCounter = async (userId) => {
     const params = {
         TableName: 'model_counter',
         Key: { counterId: userId },  // userId로 카운터 조회
-        UpdateExpression: 'SET counterValue = counterValue + :inc',  // counterValue 1 증가
+        UpdateExpression: 'SET counterValue = if_not_exists(counterValue, :start) + :inc',  // 초기값 처리 및 증가
         ExpressionAttributeValues: {
-            ':inc': 1,
+            ':start': 0, // 초기값
+            ':inc': 1,   // 증가값
         },
         ReturnValues: 'UPDATED_NEW',  // 업데이트된 값을 반환
     };

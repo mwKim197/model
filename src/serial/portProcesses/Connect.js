@@ -4,7 +4,9 @@ const Connect = express.Router();
 const log = require('../../logger');
 let { startOrder, useWash }= require('../../services/serialOrderManager.js');
 const {serialCommCom1} = require("../../serial/serialCommManager")
-const {signupUser, loginUser} = require("../../login");
+const {signupUser, loginUser, getAllUserIds} = require("../../login");
+const {duplicateMenuData} = require("../../aws/db/utils/getMenu");
+const {getSerialData} = require("../../services/serialPolling");
 // MC 머신 Data - SerialPolling 인스턴스 생성
 const polling = new serialDataManager(serialCommCom1);
 
@@ -51,6 +53,45 @@ Connect.post('/set-user-login', async(req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+
+// 전체 회원 조회
+Connect.post('/get-all-users-ids', async(req, res) => {
+    try {
+        const result = await getAllUserIds().then();
+        res.json({ success: true, message: '유저정보 조회완료.', data: result});
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 조회된 회원 메뉴 데이터 받아서 신규 업데이트
+Connect.post('/set-menu-all-update', async (req, res) => {
+    try {
+        const { sourceUserId, targetUserId } = req.body
+        console.log('Menu.post(set-menu-all-update', sourceUserId + " : " + targetUserId);
+        // 입력값 유효성 검사
+        if (!sourceUserId || !targetUserId) {
+            return res.status(400).json({
+                success: false,
+                message: 'sourceUserId와 targetUserId를 모두 제공해야 합니다.',
+            });
+        }
+
+        await duplicateMenuData(sourceUserId, targetUserId);
+
+        res.json({
+            success: true,
+            message: `${sourceUserId}의 데이터를 ${targetUserId}로 복사했습니다.`,
+        });
+    } catch (err) {
+        log.error(err.message);
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
+});
+
 
 // 폴링데이터 받아오기
 Connect.post('/get-data', (req, res) => {
