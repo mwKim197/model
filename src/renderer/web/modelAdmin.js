@@ -547,7 +547,7 @@ document.getElementById('addItemBtn').addEventListener('click', () => {
     // 새로운 항목 생성
     const newFieldset = document.createElement('fieldset');
     newFieldset.id = `item${itemCounter}`;
-    newFieldset.className = 'menu-new-item flex flex-wrap gap-0.5 p-2 bg-gray-200 border border-gray-300 rounded-md shadow-sm w-52';
+    newFieldset.className = 'new-item flex flex-wrap gap-0.5 p-2 bg-gray-200 border border-gray-300 rounded-md shadow-sm w-52';
 
     // 새 항목의 HTML 템플릿
     newFieldset.innerHTML = `

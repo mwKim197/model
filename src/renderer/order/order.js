@@ -596,8 +596,11 @@ async function fetchData() {
             throw new Error('유저정보조회에 실패했습니다.');
         }
 
-        // 데이터를 `no` 순서대로 정렬
-        allProducts = allData.Items.sort((a, b) => a.no - b.no);
+        // `empty` 값이 "no"인 항목만 필터링 후 정렬
+        allProducts = allData.Items
+            .filter(item => item.empty === "no") // empty가 "no"인 항목만 남김
+            .sort((a, b) => a.no - b.no); // no 기준으로 정렬
+
         // 매장명, 비상연락처
         updateStoreInfo();
         // 메뉴 생성 실행
