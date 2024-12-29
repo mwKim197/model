@@ -63,6 +63,8 @@ if (fs.existsSync(assetsPath)) {
 
 // 라우트
 app.use(Connect);
+
+
 app.use(Order);
 app.use(Ice);
 app.use(Cup);
@@ -72,6 +74,8 @@ app.get('/version', (req, res) => {
     const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8'));
     res.json({ version: packageJson.version });
 });
+
+
 
 app.get('/status', (req, res) => {
     res.status(200).json({ status: 'OK', uptime: process.uptime() });

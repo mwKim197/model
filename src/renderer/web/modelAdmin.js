@@ -166,18 +166,7 @@ const convertToImageUrl = (localPath) => {
 
 // 반복적으로 메뉴 아이템 HTML 생성
 const createMenuHTML = (menuData, categories) => {
-    /*const escapeHTML = (str) => {
-        if (typeof str !== 'string') {
-            return ''; // undefined나 null일 경우 빈 문자열 반환
-        }
-        return str.replace(/[&<>"']/g, (match) => ({
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#39;',
-        }[match]));
-    };*/
+
     const imageUrl = convertToImageUrl(menuData.image); // 이미지 경로 변환
 
     // 카테고리 옵션 생성
@@ -462,17 +451,23 @@ document.addEventListener('click', async (event) => {
 /* [MENU SET] 등록 메뉴 삭제 버튼 END */
 /* [MENU SET] 등록 메뉴 조회 END */
 
+
+
 /* [MENU SET] 등록 START */
 /* [MENU SET] 등록 IMAGE START */
+
+// tab2 DOM 요소 기준
+const tab2 = document.getElementById('tab2');
+console.log(tab2);
 // 이미지 클릭 시 input 트리거
-const imagePreview = document.getElementById('imagePreview');
-const fileInput = document.getElementById('fileInput');
+const imagePreview = tab2.querySelector('#imagePreview');
+const fileInput = tab2.querySelector('#fileInput');
 
 imagePreview.addEventListener('click', () => {
     fileInput.click();
 });
 
-document.getElementById('fileInput').addEventListener('change', (event) => {
+fileInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
     const img = document.getElementById('uploadedImage');
     const maxFileSize = 2 * 1024 * 1024; // 파일 크기 제한: 2MB
@@ -505,10 +500,10 @@ document.getElementById('fileInput').addEventListener('change', (event) => {
     }
 });
 
-const selectElements = document.querySelectorAll('select');
-const newImage = document.getElementById('newImage');
-const eventImage = document.getElementById('eventImage');
-const bestImage = document.getElementById('bestImage');
+const selectElements = tab2.querySelectorAll('select');
+const newImage = tab2.querySelector('#newImage');
+const eventImage = tab2.querySelector('#eventImage');
+const bestImage = tab2.querySelector('#bestImage');
 
 // 이미지 매핑
 const imageMap = {
@@ -678,24 +673,24 @@ function updateItemFields(itemId, selectedType, values = {}) {
 
 /* [MENU SET] 등록 ITEM 동적 등록 END */
 /* [MENU SET] 등록 버튼 START */
-document.getElementById('saveItemBtn').addEventListener('click', async () => {
-    const fileInput = document.getElementById('fileInput');
+tab2.querySelector('#saveItemBtn').addEventListener('click', async () => {
+    const fileInput = tab2.querySelector('#fileInput');
 
     // 메인 메뉴 데이터 수집
     const menuData = {
-        no: Number(document.getElementById('no').value) || 0,
-        name: document.getElementById('name').value || '',
-        category: document.getElementById('category').value || '',
-        price: document.getElementById('price').value || '0',
-        cup: document.querySelector('input[name="cup"]:checked')?.value || '',
-        iceYn: document.querySelector('input[name="iceYn"]:checked')?.value || '',
-        empty: document.querySelector('input[name="empty"]:checked')?.value || 'no',
-        iceTime: document.getElementById('iceTime').value || '0',
-        waterTime: document.getElementById('waterTime').value || '0',
+        no: Number(tab2.querySelector('#no').value) || 0,
+        name: tab2.querySelector('#name').value || '',
+        category: tab2.querySelector('#category').value || '',
+        price: tab2.querySelector('#price').value || '0',
+        cup: tab2.querySelector('input[name="cup"]:checked')?.value || '',
+        iceYn: tab2.querySelector('input[name="iceYn"]:checked')?.value || '',
+        empty: tab2.querySelector('input[name="empty"]:checked')?.value || 'no',
+        iceTime: tab2.querySelector('#iceTime').value || '0',
+        waterTime: tab2.querySelector('#waterTime').value || '0',
         state: {
-            new: document.getElementById('new').value || '',
-            best: document.getElementById('best').value || '',
-            event: document.getElementById('event').value || ''
+            new: tab2.querySelector('#new').value || '',
+            best: tab2.querySelector('#best').value || '',
+            event: tab2.querySelector('#event').value || ''
         },
         items: [],
         image: "" // 임시 이미지 URL
@@ -703,7 +698,7 @@ document.getElementById('saveItemBtn').addEventListener('click', async () => {
 
     // items 데이터 수집
     let itemCounter = 0; // 항목 번호를 위한 카운터
-    document.querySelectorAll('#itemContainer fieldset').forEach((fieldset) => {
+    tab2.querySelectorAll('#itemContainer fieldset').forEach((fieldset) => {
         itemCounter++;
 
         const itemType = fieldset.querySelector('select')?.value || '';
@@ -759,6 +754,10 @@ window.handleUpdateClick = function (menuId) {
     // 탭 전환
     switchTab('tab2');
 
+    // 기존 등록 버튼 숨기기
+    const saveButton = tab2.querySelector('#saveItemBtn');
+    saveButton.classList.add('hidden');
+
     // menuId로 전역 데이터에서 해당 메뉴 찾기
     const menuItem = data.Items.find(item => item.menuId === menuId);
     if (!menuItem) {
@@ -792,14 +791,40 @@ window.handleUpdateClick = function (menuId) {
     // 동적으로 생성된 items 데이터 채우기
     populateDynamicItems(menuItem.items);
 
-    // 저장 버튼을 수정 버튼으로 변경
-    const saveButton = document.getElementById('saveItemBtn');
-    saveButton.textContent = '수정'; // 버튼 텍스트 변경
-    saveButton.classList.replace('bg-blue-500', 'bg-green-500'); // 버튼 색상 변경
-    saveButton.onclick = function () {
-        const updatedData = collectFormData(menuId); // 폼에서 데이터 수집
-        updateMenuAndAdjustNo(updatedData, false); // 업데이트 호출
-    };
+    // 수정 버튼 생성
+    let updateButton = tab2.querySelector('#updateItemBtn');
+    if (!updateButton) {
+        updateButton = document.createElement('button');
+        updateButton.id = 'updateItemBtn';
+        updateButton.textContent = '수정';
+        updateButton.className = 'bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 mt-4';
+        saveButton.parentElement.appendChild(updateButton);
+    }
+
+    // 수정 버튼 클릭 이벤트
+    updateButton.addEventListener('click', async () => {
+        const menuData = collectFormData(menuId); // 데이터 수집
+        console.log(menuData);
+        try {
+            const response = await fetch(`http://${url}:3000/set-menu-update-info`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(menuData)
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert("수정 성공");
+                location.reload();
+            } else {
+                alert('수정 실패: ' + result.message);
+            }
+        } catch (error) {
+            alert('수정 중 오류: ' + error);
+        }
+    });
     console.log("탭으로 데이터 전송 완료: ", menuItem);
 };
 
@@ -825,7 +850,7 @@ function populateDynamicItems(items) {
         // 새로운 항목 생성
         const newFieldset = document.createElement('fieldset');
         newFieldset.id = `item${itemCounter}`;
-        newFieldset.className = 'menu-new-item flex flex-wrap gap-0.5 p-2 bg-gray-200 border border-gray-300 rounded-md shadow-sm w-52';
+        newFieldset.className = 'new-item flex flex-wrap gap-0.5 p-2 bg-gray-200 border border-gray-300 rounded-md shadow-sm w-52';
 
         newFieldset.innerHTML = `
             <legend class="text-sm font-semibold mb-2">${itemCounter}항목</legend>
@@ -873,6 +898,7 @@ function collectFormData(menuId) {
         price: parseFloat(document.getElementById('price').value),
         iceTime: parseFloat(document.getElementById('iceTime').value),
         waterTime: parseFloat(document.getElementById('waterTime').value),
+        empty: document.querySelector('input[name="empty"]:checked')?.value || 'no',
         cup: document.querySelector('input[name="cup"]:checked').value,
         iceYn: document.querySelector('input[name="iceYn"]:checked').value,
         state: {
@@ -886,116 +912,22 @@ function collectFormData(menuId) {
 
 function collectDynamicItems() {
     const items = [];
-    document.querySelectorAll('.menu-new-item').forEach(fieldset => {
+    tab2.querySelectorAll('.new-item').forEach(fieldset => {
+        console.log(fieldset);
         const itemType = fieldset.querySelector('.itemTypeSelector').value;
         if (itemType) {
             const item = {
                 type: itemType,
-                value1: fieldset.querySelector('[name^="value1"]').value || null,
-                value2: fieldset.querySelector('[name^="value2"]').value || null,
-                value3: fieldset.querySelector('[name^="value3"]').value || null,
-                value4: fieldset.querySelector('[name^="value4"]').value || null,
+                value1: fieldset.querySelector('[name^="value1"]').value || 0,
+                value2: fieldset.querySelector('[name^="value2"]').value || 0,
+                value3: fieldset.querySelector('[name^="value3"]').value || 0,
+                value4: fieldset.querySelector('[name^="value4"]')?.value || 0, // value4가 없는 경우도 처리
             };
             items.push(item);
         }
     });
     return items;
 }
-/*window.handleUpdateClick = async function (menuId) {
-    const menuItem = document.querySelector(`[data-menu-id="${menuId}"]`);
-
-    if (!menuItem) {
-        console.error(`Menu item with menuId ${menuId} not found.`);
-        return;
-    }
-
-    const editButton = menuItem.querySelector(`#itemUpdateBtn-${menuId}`);
-
-    if (editButton.textContent.trim() === "수정") {
-        // 수정 가능 상태로 전환
-        const fields = menuItem.querySelectorAll("input, select, textarea");
-        fields.forEach((field) => {
-            field.removeAttribute("disabled");
-            field.removeAttribute("readonly");
-        });
-
-        editButton.textContent = "저장";
-        editButton.classList.remove("bg-green-500");
-        editButton.classList.add("bg-blue-500");
-
-        alert("수정 가능 상태로 전환되었습니다.");
-    } else if (editButton.textContent.trim() === "저장") {
-        // 데이터 수집
-        const menuData = {
-            menuId: Number(menuId),
-            no: Number(menuItem.querySelector('input[name="no"]').value || 0),
-            name: menuItem.querySelector('input[name="name"]').value.trim(),
-            category: menuItem.querySelector('select[name="category"]').value || "",
-            price: Number(menuItem.querySelector('input[name="price"]').value || 0),
-            cup: menuItem.querySelector(`input[name="cup-${menuId}"]:checked`)?.value || "",
-            iceYn: menuItem.querySelector(`input[name="iceYn-${menuId}"]:checked`)?.value || "",
-            empty: menuItem.querySelector(`input[name="empty-${menuId}"]:checked`)?.value || "",
-            iceTime: Number(menuItem.querySelector('input[name="iceTime"]').value || 0),
-            waterTime: Number(menuItem.querySelector('input[name="waterTime"]').value || 0),
-            state: {
-                new: menuItem.querySelector('select[name="new"]').value || "",
-                event: menuItem.querySelector('select[name="event"]').value || "",
-                best: menuItem.querySelector('select[name="best"]').value || "",
-            },
-            items: [],
-        };
-
-        // 내부 아이템 데이터 수집
-        menuItem.querySelectorAll(".items-list fieldset").forEach((fieldset, index) => {
-            // type 값을 select에서 가져오기
-            const type = fieldset.querySelector(".itemTypeSelector")?.value || "";
-
-            // item 데이터를 value1, value2, value3, value4로 매핑
-            const itemData = {
-                type, // select에서 가져온 type
-                index: index + 1, // 인덱스 1부터 시작
-            };
-
-            // 나머지 입력 필드 수집
-            const inputs = fieldset.querySelectorAll("input");
-            inputs.forEach((input) => {
-                const key = input.getAttribute("data-key"); // data-key 속성 값 가져오기
-                if (key) {
-                    itemData[key] = input.value || ""; // key에 맞는 값 추가
-                }
-            });
-
-            // 수집된 itemData를 items 배열에 추가
-            menuData.items.push(itemData);
-        });
-
-        console.log("수집된 데이터:", menuData);
-
-        // 서버로 전송
-        await fetch(`http://${url}:3000/set-menu-update-info`,  {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(menuData),
-        })
-            .then((response) => response.json())
-            .then((result) => {
-                if (result.success) {
-                    alert("저장이 성공적으로 완료되었습니다!");
-
-
-                   // location.reload();
-                } else {
-                    alert("저장 실패: " + result.message);
-                }
-            })
-            .catch((error) => {
-                console.error("저장 중 오류:", error);
-                alert("저장 중 오류가 발생했습니다.");
-            });
-    }
-};*/
 /* [MENU UPDATE] 수정 버튼 END */
 /* [MENU SET] 등록 END */
 
@@ -1019,6 +951,8 @@ function populateCategoryOptions(categories) {
 
         // 기본 선택값 설정
         const menuId = selectElement.id.split('-')[1]; // select ID에서 menuId 추출
+        console.log(selectElement);
+        console.log(data.Items);
         const menuItem = data.Items.find(item => item.menuId === parseInt(menuId));
         if (menuItem && menuItem.category) {
             selectElement.value = menuItem.category;

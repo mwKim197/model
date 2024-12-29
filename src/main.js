@@ -24,8 +24,8 @@ async function initializeApp() {
     try {
 
         // 1. 포트 포워딩 설정
-        await setupPortForwarding(3000, 3000);
-        log.info('Port forwarding succeeded on port 3000');
+        /*await setupPortForwarding(3000, 3000);
+        log.info('Port forwarding succeeded on port 3000');*/
 
         // 3. Express 서버 시작
         await server.start();

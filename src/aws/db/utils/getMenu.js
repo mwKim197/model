@@ -126,51 +126,7 @@ const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
         const existingItemsResult = await dynamoDB.scan(scanParams).promise();
         const existingItems = existingItemsResult.Items || [];
 
-        if (isNew) {
-            // 신규 항목 처리
-            const updatePromises = [];
-
-            // 2. 순번 조정 로직 (신규 항목 추가 위치에 따라)
-            existingItems.forEach((item) => {
-                if (item.no >= newNo) {
-                    updatePromises.push(
-                        dynamoDB
-                            .update({
-                                TableName: "model_menu",
-                                Key: {
-                                    userId: item.userId,
-                                    menuId: item.menuId,
-                                },
-                                UpdateExpression: "SET #no = :newNo",
-                                ExpressionAttributeNames: {
-                                    "#no": "no",
-                                },
-                                ExpressionAttributeValues: {
-                                    ":newNo": item.no + 1,
-                                },
-                            })
-                            .promise()
-                    );
-                }
-            });
-
-            // 3. 신규 항목 추가
-            const newItemParams = {
-                TableName: "model_menu",
-                Item: {
-                    ...updatedData,
-                    userId,
-                },
-            };
-            updatePromises.push(dynamoDB.put(newItemParams).promise());
-
-            // 모든 업데이트 실행
-            await Promise.all(updatePromises);
-            console.log("New menu item added and order adjusted successfully.");
-            return;
-        }
-
-        // 4. 기존 아이템에서 변경 전 `menuId`의 현재 `no` 값 찾기
+        // 2. 기존 아이템에서 변경 전 `menuId`의 현재 `no` 값 찾기
         const currentItem = existingItems.find((item) => item.menuId === menuId);
 
         if (!currentItem) {
@@ -223,6 +179,8 @@ const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
                     ":items": updatedData.items,
                 },
             };
+            console.log("updatedData", updatedData);
+            console.log("updatedData.items", updatedData.items);
             await dynamoDB.update(updateParams).promise();
             console.log("Item updated successfully without changing order.");
             return;

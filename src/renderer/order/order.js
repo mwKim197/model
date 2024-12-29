@@ -548,8 +548,8 @@ window.electronAPI.updateSerialData(getPollingData);
 // 시간, 보일러 온도 업데이트
 function updateTime() {
     const currentTimeElement = document.getElementById('current-time');
-    const currentTemperatureElement = document.getElementById('current-temperature');
-    //currentTimeElement.textContent = getCurrentFormattedTime();
+    //const currentTemperatureElement = document.getElementById('current-temperature');
+    currentTimeElement.textContent = getCurrentFormattedTime();
     //currentTemperatureElement.textContent = rd1Info.boilerTemperature;
     console.log(rd1Info.boilerTemperature);
 }
