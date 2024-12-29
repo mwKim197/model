@@ -100,6 +100,11 @@ const processOrder = async (recipe) => {
                     // 타임아웃 체크
                     const isStartValid = await checkCupSensor("있음", 3, true);
                     if (!isStartValid) {
+                        eventEmitter.emit('order-update', {
+                            menu: recipe.name, // 수정: menuName 변수 대신 recipe.name 사용
+                            status: 'completed',
+                            message: `"120초 경과로 기계가 초기화되었습니다."`
+                        });
                         log.error(`[에러] 컵 센서 상태가 유효하지 않음: menuId ${recipe.menuId}`);
                         throw new Error(`"120초 경과로 기계가 초기화되었습니다."`);
                     } else {
