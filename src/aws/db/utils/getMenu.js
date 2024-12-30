@@ -152,7 +152,8 @@ const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
                         #iceTime = :iceTime, 
                         #waterTime = :waterTime, 
                         #state = :state, 
-                        #items = :items
+                        #items = :items,
+                        #image = :image
                 `,
                 ExpressionAttributeNames: {
                     "#name": "name",
@@ -165,6 +166,7 @@ const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
                     "#waterTime": "waterTime",
                     "#state": "state",
                     "#items": "items",
+                    "#image": "image",
                 },
                 ExpressionAttributeValues: {
                     ":name": updatedData.name,
@@ -177,6 +179,7 @@ const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
                     ":waterTime": updatedData.waterTime.toString(),
                     ":state": updatedData.state,
                     ":items": updatedData.items,
+                    ":image": updatedData.image,
                 },
             };
             console.log("updatedData", updatedData);
@@ -255,7 +258,8 @@ const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
                     #iceTime = :iceTime, 
                     #waterTime = :waterTime, 
                     #state = :state, 
-                    #items = :items
+                    #items = :items,
+                    #image = :image
             `,
             ExpressionAttributeNames: {
                 "#no": "no",
@@ -269,6 +273,7 @@ const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
                 "#waterTime": "waterTime",
                 "#state": "state",
                 "#items": "items",
+                "#image": "image",
             },
             ExpressionAttributeValues: {
                 ":no": newNo,
@@ -282,6 +287,7 @@ const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
                 ":waterTime": updatedData.waterTime.toString(),
                 ":state": updatedData.state,
                 ":items": updatedData.items,
+                ":image": updatedData.image,
             },
         };
 
@@ -531,6 +537,23 @@ const replaceProduct = async (userId, menuId, newData) => {
     }
 };
 
+async function getMenuById(menuId) {
+    const params = {
+        TableName: 'model_menu', // DynamoDB 테이블 이름
+        Key: {
+            userId: user.userId, // 파티션 키
+            menuId: menuId, // 정렬 키
+        },
+    };
+
+    try {
+        const result = await dynamoDB.get(params).promise();
+        return result.Item; // 조회된 항목 반환
+    } catch (error) {
+        console.error('Error fetching menu by ID:', error);
+        throw new Error('Failed to fetch menu');
+    }
+}
 
 module.exports = {
     swapNoAndAddProduct,
@@ -541,4 +564,5 @@ module.exports = {
     checkProduct,
     deleteProduct,
     replaceProduct,
+    getMenuById
 };

@@ -142,6 +142,37 @@ const uploadImageToS3andLocal = async (bucketName, buffer, originalFileName, men
     }
 };
 
+// 로컬 삭제 및 DB 이미지 삭제
+const deleteImageFromS3andLocal = async (bucketName, fileName, userId) => {
+    const s3Key = `model/${userId}/${fileName}`; // S3에서의 파일 경로
+    const cacheDir = getBasePath(); // 로컬 저장 경로
+    const localFilePath = path.join(cacheDir, fileName); // 로컬에서의 파일 경로
+
+    try {
+        // 1. 로컬 파일 삭제
+        if (fs.existsSync(localFilePath)) {
+            fs.unlinkSync(localFilePath);
+            log.info("로컬 파일 삭제 완료:", localFilePath);
+        } else {
+            log.info("로컬 파일이 존재하지 않습니다:", localFilePath);
+        }
+
+        // 2. S3 파일 삭제
+        const s3Params = {
+            Bucket: bucketName,
+            Key: s3Key,
+        };
+
+        await s3.deleteObject(s3Params).promise();
+        log.info("S3 파일 삭제 완료:", s3Key);
+
+        return { success: true, message: "이미지 삭제 완료" };
+    } catch (error) {
+        log.error("이미지 삭제 실패:", error.message);
+        throw new Error("이미지 삭제 중 오류 발생");
+    }
+};
+
 
 // S3 업로드 함수
 const uploadImageToS3 = async (bucketName, s3Key) => {
@@ -177,5 +208,6 @@ module.exports = {
     downloadImageFromS3,
     downloadAllFromS3WithCache,
     uploadImageToS3andLocal,
+    deleteImageFromS3andLocal,
     uploadImageToS3
 };

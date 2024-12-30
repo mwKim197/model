@@ -467,20 +467,17 @@ imagePreview.addEventListener('click', () => {
     fileInput.click();
 });
 
-fileInput.addEventListener('change', (event) => {
-    const file = event.target.files[0];
-    const img = document.getElementById('uploadedImage');
+function handleImageUpload(fileInput, imagePreview) {
+    const file = fileInput.files[0];
     const maxFileSize = 2 * 1024 * 1024; // 파일 크기 제한: 2MB
 
     if (file) {
-        // 파일 크기 제한 확인
         if (file.size > maxFileSize) {
             alert('파일 크기는 2MB를 초과할 수 없습니다.');
-            event.target.value = ''; // 파일 선택 취소
+            fileInput.value = ''; // 파일 선택 취소
             return;
         }
 
-        // 이미지의 URL 생성
         const imgUrl = URL.createObjectURL(file);
         const imgElement = new Image();
 
@@ -489,15 +486,20 @@ fileInput.addEventListener('change', (event) => {
         imgElement.onload = () => {
             const { width, height } = imgElement;
 
-            // 이미지 픽셀 크기 제한 (예: 300x300)
             if (width > 600 || height > 600) {
                 alert('이미지 크기는 600x600 이하로 제한됩니다.');
-                event.target.value = ''; // 파일 선택 취소
+                fileInput.value = ''; // 파일 선택 취소
             } else {
                 imagePreview.src = imgUrl; // 제한 통과 시 이미지 표시
             }
         };
     }
+}
+
+fileInput.addEventListener('change', (event) => {
+    const fileInput = document.getElementById('fileInput');
+    const imagePreview = document.getElementById('imagePreview');
+    handleImageUpload(fileInput, imagePreview);
 });
 
 const selectElements = tab2.querySelectorAll('select');
@@ -784,9 +786,14 @@ window.handleUpdateClick = function (menuId) {
 
     // 이미지 설정
     const imagePreview = document.getElementById('imagePreview');
+    const fileInput = document.getElementById('fileInput');
     const defaultImage = '../../assets/basicImage/300x300.png';
+
+    // 메뉴의 이미지 설정
     imagePreview.src = menuItem.image ? convertToImageUrl(escapeHTML(menuItem.image)) : defaultImage;
 
+    // 파일 업로드 이벤트 등록 (수정 시에도 재사용)
+    fileInput.addEventListener('change', () => handleImageUpload(fileInput, imagePreview));
 
     // 동적으로 생성된 items 데이터 채우기
     populateDynamicItems(menuItem.items);
@@ -805,13 +812,21 @@ window.handleUpdateClick = function (menuId) {
     updateButton.addEventListener('click', async () => {
         const menuData = collectFormData(menuId); // 데이터 수집
         console.log(menuData);
+        const fileInput = document.getElementById('fileInput'); // 이미지 파일 input
+        const formData = new FormData();
+
+        // 메뉴 데이터를 FormData에 추가
+        formData.append('menuData', JSON.stringify(menuData));
+
+        // 이미지 파일이 선택된 경우 추가
+        if (fileInput.files.length > 0) {
+            formData.append('image', fileInput.files[0]);
+        }
+
         try {
             const response = await fetch(`http://${url}:3000/set-menu-update-info`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(menuData)
+                method: 'PUT', // POST를 사용하여 업데이트 요청
+                body: formData, // FormData로 전송
             });
 
             const result = await response.json();
@@ -889,9 +904,11 @@ function populateDynamicItems(items) {
     });
 }
 
+// 데이터 수집
 function collectFormData(menuId) {
     return {
         menuId: menuId,
+        image: document.getElementById('imagePreview').src,
         no: parseInt(document.getElementById('no').value, 10),
         name: document.getElementById('name').value,
         category: document.getElementById('category').value,
