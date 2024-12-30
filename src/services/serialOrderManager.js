@@ -44,6 +44,10 @@ const startOrder = async (data) => {
     } catch (error) {
         log.error("Error in startOrder:", error.message);
         throw error; // 명시적으로 에러를 다시 던짐
+    } finally {
+        eventEmitter.emit('order-update', {
+            status: 'completed',
+        });
     }
 };
 
