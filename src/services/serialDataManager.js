@@ -26,7 +26,7 @@ class serialDataManager {
     // 데이터 조회 시작 함수 (수정된 async/await 방식)
     async startPolling() {
         if (this.pollingTimer) {
-            log.warn('Polling is already running.');
+            log.warn('폴링이 이미 동작중입니다.');
             return;
         }
 
@@ -34,7 +34,7 @@ class serialDataManager {
         this.pollingTimer = setInterval(async () => {
             try {
                 if (!this.isPollingActive) {
-                    log.info('Polling paused.');
+                    log.info('폴링 일시 중지.');
                     return;
                 }
 
@@ -43,7 +43,7 @@ class serialDataManager {
                 await this.updateSerialData('RD3', 'RD3');
                 await this.updateSerialData('RD4', 'RD4');
             } catch (error) {
-                log.error('Error during polling execution:', error);
+                log.error('폴링 실행 중 오류 발생:', error);
                 clearInterval(this.pollingTimer); // 에러 발생 시 타이머 정지
                 this.pollingTimer = null;
                 this.isPollingActive = false;
@@ -52,7 +52,7 @@ class serialDataManager {
     }
     // 데이터 조회 정지 함수
     async stopPolling() {
-        log.info(`Stopping polling... Timer: ${this.pollingTimer}, Active: ${this.isPollingActive}`);
+        log.info(`폴링 정지... Timer: ${this.pollingTimer}, Active: ${this.isPollingActive}`);
 
         if (this.isPollingActive) {
             this.isPollingActive = false;
@@ -60,12 +60,12 @@ class serialDataManager {
                 clearInterval(this.pollingTimer);
                 this.pollingTimer = null;
             }
-            log.info('Stopped polling for serial data.');
+            log.info('폴링조회 정지완료.');
         } else {
-            log.warn('Polling is not running.');
+            log.warn('폴링조회 중이 아님.');
         }
 
-        log.info(`After stopPolling: Timer: ${this.pollingTimer}, Active: ${this.isPollingActive}`);
+        log.info(`폴링 중지 : Timer: ${this.pollingTimer}, Active: ${this.isPollingActive}`);
     }
 
     // 데이터 반환 함수
