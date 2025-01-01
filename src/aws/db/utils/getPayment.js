@@ -54,9 +54,6 @@ const saveOrdersToDynamoDB = async (orderData) => {
  * @returns {Promise<Array>} - 조회된 주문 데이터
  */
 const getOrdersByDateRange = async (startDate, endDate, ascending) =>{
-    log.info("startDate", startDate);
-    log.info("endDate", endDate);
-    log.info("ascending", ascending);
     const params = {
         TableName: 'model_payment',
         KeyConditionExpression: 'userId = :userId AND #ts BETWEEN :startDate AND :endDate',

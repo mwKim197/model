@@ -365,7 +365,6 @@ Menu.get('/get-orders-by-date-range', async (req, res) => {
     try {
         // DynamoDB 데이터 조회
         const orders = await getOrdersByDateRange( startDate, endDate, ascending);
-        log.info(orders);
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.json({ success: true, data: orders });
     } catch (error) {
