@@ -1020,9 +1020,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 오늘 날짜 계산
     const now = new Date();
-    const kstTimestamp = new Date(now.getTime() + 9 * 60 * 60 * 1000) // UTC + 9 시간 추가
-    const todayStart = new Date(kstTimestamp.setHours(0, 0, 0, 0)).toISOString().slice(0, 16); // 오늘 00:00
-    const todayEnd = new Date(kstTimestamp.setHours(23, 59, 59, 999)).toISOString().slice(0, 16); // 오늘 23:59
+
+    // 로컬 시간 기준 오늘 날짜
+    const localYear = now.getFullYear();
+    const localMonth = now.getMonth();
+    const localDate = now.getDate();
+
+    // UTC 기준 오늘 시작 시간 (00:00:00Z)
+    const todayStart = new Date(Date.UTC(localYear, localMonth, localDate, 0, 0, 0)).toISOString();
+
+    // UTC 기준 오늘 종료 시간 (23:59:59Z)
+    const todayEnd = new Date(Date.UTC(localYear, localMonth, localDate, 23, 59, 59)).toISOString();
+
     await renderGroupedOrdersToHTML(todayStart, todayEnd, true);
 });
 
