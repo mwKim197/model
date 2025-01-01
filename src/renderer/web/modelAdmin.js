@@ -1,11 +1,10 @@
 import {
     getUserData,
     getMenuInfoAll,
-    fetchCupPlUse,
-    fetchCupPaUse,
     callSerialAdminIceOrder,
     callSerialAdminCupOrder,
-    callSerialAdminDrinkOrder
+    callSerialAdminDrinkOrder,
+    getOrdersByDateRange
 } from '/renderer/api/menuApi.browser.js';
 
 const url = window.location.hostname;
@@ -968,8 +967,6 @@ function populateCategoryOptions(categories) {
 
         // 기본 선택값 설정
         const menuId = selectElement.id.split('-')[1]; // select ID에서 menuId 추출
-        console.log(selectElement);
-        console.log(data.Items);
         const menuItem = data.Items.find(item => item.menuId === parseInt(menuId));
         if (menuItem && menuItem.category) {
             selectElement.value = menuItem.category;
@@ -977,6 +974,142 @@ function populateCategoryOptions(categories) {
     });
 }
 /* [MENU] 카테고리 END*/
+/* [CONTROL] 머신 조작 START */
+// 탭 등록함수
+document.addEventListener('DOMContentLoaded', async () => {
+    // 오늘 날짜 계산
+    const now = new Date();
+    const kstTimestamp = new Date(now.getTime() + 9 * 60 * 60 * 1000) // UTC + 9 시간 추가
+    const todayStart = new Date(kstTimestamp.setHours(0, 0, 0, 0)).toISOString().slice(0, 16); // 오늘 00:00
+    const todayEnd = new Date(kstTimestamp.setHours(23, 59, 59, 999)).toISOString().slice(0, 16); // 오늘 23:59
+
+   await renderGroupedOrdersToHTML(todayStart, todayEnd, true);
+});
+
+// 날짜 지정 조회
+document.getElementById('filter-orders-btn').addEventListener('click', async () => {
+    const startDateValue = document.getElementById('start-date').value;
+    const endDateValue = document.getElementById('end-date').value;
+    const ascending = document.getElementById('sort-order').value === "true";
+
+    if (!startDateValue || !endDateValue) {
+        alert('시작 날짜와 종료 날짜를 입력해주세요.');
+        return;
+    }
+
+    // 시작일 및 종료일에 시간 추가
+    const startDateTime = `${startDateValue}T00:00:00Z`; // 시작일 00:00
+    const endDateTime = `${endDateValue}T23:59:59Z`; // 종료일 23:59
+
+    console.log(`조회 시작일: ${startDateTime}, 조회 종료일: ${endDateTime}, 정렬: ${ascending}`);
+
+    // 주문 데이터 조회 및 렌더링
+    await renderGroupedOrdersToHTML(startDateTime, endDateTime, ascending);
+});
+
+// 주문 내역 랜더링
+async function renderGroupedOrdersToHTML(startDate, endDate, ascending = true) {
+    console.log('정렬 옵션 전달:', ascending); // true 또는 false인지 확인
+    console.log('정렬 옵션 전달:', typeof ascending); // true 또는 false인지 확인
+    // DynamoDB에서 주문 데이터 조회
+    const orders = await getOrdersByDateRange(startDate, endDate, ascending);
+
+    // HTML 컨테이너 선택
+    const container = document.getElementById('orders-container');
+
+    // 이전 데이터 제거
+    container.innerHTML = '';
+
+    // 데이터가 없을 경우 메시지 표시
+    if (orders.length === 0) {
+        container.innerHTML = '<p class="text-gray-500">조회된 주문이 없습니다.</p>';
+        return;
+    }
+
+    // 주문 데이터를 그룹화
+    const groupedOrders = groupOrdersByTime(orders);
+
+    // 그룹별로 HTML 생성
+    Object.keys(groupedOrders).forEach(orderTime => {
+        const group = groupedOrders[orderTime];
+        // 날짜와 시간을 보기 좋게 포맷 (T 제거)
+        const formattedTime = orderTime.replace('T', ' '); // "YYYY-MM-DDTHH:mm" -> "YYYY-MM-DD HH:mm"
+
+
+        // 그룹 컨테이너 생성
+        const groupBlock = document.createElement('div');
+        groupBlock.className = 'group-item p-4 bg-white border border-gray-200 rounded-lg shadow mb-4';
+
+        // 그룹 제목 및 총 금액
+        const groupTitle = document.createElement('h2');
+        groupTitle.className = 'text-lg font-bold text-gray-800 mb-2';
+        groupTitle.textContent = `주문 시간: ${formattedTime} | 총 금액: ${group.totalAmount}원`;
+        groupBlock.appendChild(groupTitle);
+
+        // 테이블 생성
+        const table = document.createElement('table');
+        table.className = 'table-auto w-full border-collapse border border-gray-300';
+
+        // 테이블 헤더 생성
+        table.innerHTML = `
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="px-4 py-2 border border-gray-300 text-left text-sm font-semibold text-gray-600">메뉴</th>
+                    <th class="px-4 py-2 border border-gray-300 text-center text-sm font-semibold text-gray-600">수량</th>
+                    <th class="px-4 py-2 border border-gray-300 text-right text-sm font-semibold text-gray-600">가격</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        `;
+
+        // 테이블 바디에 주문 항목 추가
+        const tbody = table.querySelector('tbody');
+        group.orders.forEach(order => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="px-4 py-2 border border-gray-300 text-gray-600 text-sm">${order.name}</td>
+                <td class="px-4 py-2 border border-gray-300 text-center text-gray-600 text-sm">${order.count}</td>
+                <td class="px-4 py-2 border border-gray-300 text-right text-gray-600 text-sm">${order.price}원</td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        // 그룹 컨테이너에 테이블 추가
+        groupBlock.appendChild(table);
+
+        // 생성된 그룹 블록을 메인 컨테이너에 추가
+        container.appendChild(groupBlock);
+    });
+}
+
+/**
+ * 주문 데이터를 그룹화하고 그룹별 총 금액 계산
+ * @param {Array} orders - DynamoDB에서 조회된 주문 데이터
+ * @returns {Object} - 그룹화된 데이터와 그룹별 총 금액
+ */
+function groupOrdersByTime(orders) {
+    return orders.reduce((groups, order) => {
+        // 주문 시간 (분 단위)
+        const orderTime = order.timestamp.slice(0, 16); // "YYYY-MM-DDTHH:mm"
+
+        // 그룹이 존재하지 않으면 초기화
+        if (!groups[orderTime]) {
+            groups[orderTime] = { totalAmount: 0, orders: [] };
+        }
+
+        // 주문의 총 금액 계산 (price * count)
+        const orderTotal = order.price * order.count;
+
+        // 그룹에 주문 추가
+        groups[orderTime].orders.push(order);
+
+        // 그룹의 총 금액 업데이트
+        groups[orderTime].totalAmount += orderTotal;
+
+        return groups;
+    }, {});
+}
+/* [CONTROL] 머신 조작 END */
 // HTML 특수 문자 이스케이프 처리 함수
 function escapeHTML(string) {
     const entityMap = {

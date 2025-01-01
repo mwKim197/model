@@ -12,9 +12,11 @@ const {memoryStorage} = require("multer");
 const { dispenseCup, adminIceOrder, adminDrinkOrder} = require("../../services/serialOrderManager");
 const serialDataManager = require("../../services/serialDataManager");
 const {serialCommCom1} = require("../../serial/serialCommManager");
+const {getOrdersByDateRange} = require("./utils/getPayment");
 const upload = multer({ storage: memoryStorage() }); // 메모리 저장소 사용
 const polling = new serialDataManager(serialCommCom1);
 
+// 유저정보 조회
 Menu.get('/get-user-info', async (req, res) => {
     try {
         const data = await getUser();
@@ -26,7 +28,7 @@ Menu.get('/get-user-info', async (req, res) => {
     }
 });
 
-
+// 특정 메뉴 조회
 Menu.get('/get-menu-info', async (req, res) => {
     try {
         const data = await checkProduct();
@@ -38,6 +40,7 @@ Menu.get('/get-menu-info', async (req, res) => {
     }
 });
 
+// 메뉴 전체조회
 Menu.get('/get-menu-info-all', async (req, res) => {
     try {
         const data = await allProduct();
@@ -49,6 +52,7 @@ Menu.get('/get-menu-info-all', async (req, res) => {
     }
 });
 
+// 메뉴저장
 Menu.post('/set-menu-info', async (req, res) => {
     try {
         const selectedOptions = req.body; // 클라이언트에서 전송한 JSON 데이터
@@ -167,6 +171,7 @@ Menu.post('/set-admin-menu-info', upload.single('image'), async (req, res) => {
     }
 });
 
+// 메뉴 삭제
 Menu.post('/delete-menu', async (req, res) => {
     try {
         const {userId, menuId} = req.body; // 클라이언트에서 전송한 JSON 데이터
@@ -191,6 +196,7 @@ Menu.post('/delete-menu', async (req, res) => {
     }
 });
 
+// 어드민 얼음, 물 요청
 Menu.post('/serial-admin-ice-order', async (req, res) => {
     try {
         const { recipe } = req.body; // req.body에서 recipe를 가져옵니다.
@@ -244,6 +250,7 @@ Menu.post('/serial-admin-ice-order', async (req, res) => {
     }
 });
 
+// 어드민 컵 요청
 Menu.post('/serial-admin-cup-order', async (req, res) => {
     try {
         const { recipe } = req.body; // req.body에서 recipe를 가져옵니다.
@@ -297,6 +304,7 @@ Menu.post('/serial-admin-cup-order', async (req, res) => {
     }
 });
 
+// 어드민 음료 요청
 Menu.post('/serial-admin-drink-order', async (req, res) => {
     try {
         const { recipe } = req.body; // req.body에서 recipe를 가져옵니다.
@@ -347,6 +355,22 @@ Menu.post('/serial-admin-drink-order', async (req, res) => {
                 log.error('Failed to restart polling in finally block:', error.message);
             }
         }
+    }
+});
+
+// 어드민 결제 내역 조회
+Menu.get('/get-orders-by-date-range', async (req, res) => {
+    const { startDate, endDate, ascending = true } = req.query;
+
+    try {
+        // DynamoDB 데이터 조회
+        const orders = await getOrdersByDateRange( startDate, endDate, ascending);
+        log.info(orders);
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.json({ success: true, data: orders });
+    } catch (error) {
+        log.error('기간별 주문 데이터 조회 중 오류 발생:', error);
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 

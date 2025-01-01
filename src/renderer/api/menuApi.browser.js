@@ -109,38 +109,23 @@ const callSerialAdminCupOrder = async (recipe) => {
     }
 }
 
-const fetchCupPlUse = async () => {
+// 결제 내역 조회
+const getOrdersByDateRange = async (startDate, endDate, ascending = true) => {
+    const apiUrl = `http://${url}:3000/get-orders-by-date-range?startDate=${startDate}&endDate=${endDate}&ascending=${ascending}`;
     try {
-        const response = await fetch(`http://${url}:3000/serial-cup-plastic-use`);
-
-        if (!response.ok) {
-            throw new Error(`Network response was not ok: ${response.statusText}`);
-        }
-
+        console.log(apiUrl);
+        const response = await fetch(apiUrl);
         const data = await response.json();
-        console.log('Response Data:', data);  // 디버깅용 콘솔
         console.log(data);
-        return data;
-    } catch (error) {
-        console.error(error);
-    }
-}
-
-const fetchCupPaUse = async () => {
-    try {
-        const response = await fetch(`http://${url}:3000/serial-cup-paper-use`);
-
-        if (!response.ok) {
-            throw new Error(`Network response was not ok: ${response.statusText}`);
+        if (data.success) {
+            return data.data; // 성공 시 주문 데이터 반환
+        } else {
+            console.error('API 오류:', data.error);
+            return [];
         }
-
-        const data = await response.json();
-        console.log('Response Data:', data);  // 디버깅용 콘솔
-        console.log(data);
-        return data;
     } catch (error) {
-
-        console.error(error);
+        console.error('API 호출 중 오류 발생:', error);
+        return [];
     }
 }
 
@@ -152,6 +137,5 @@ export {
     callSerialAdminDrinkOrder,
     callSerialAdminIceOrder,
     callSerialAdminCupOrder,
-    fetchCupPlUse,
-    fetchCupPaUse,
+    getOrdersByDateRange,
 };

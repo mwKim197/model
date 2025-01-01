@@ -20,17 +20,20 @@ processUserAndProduct().then();
 const saveOrdersToDynamoDB = async (orderData) => {
     try {
         for (const order of orderData) {
+            const now = new Date();
+            const kstTimestamp = new Date(now.getTime() + 9 * 60 * 60 * 1000) // UTC + 9 시간 추가
+
             const params = {
                 TableName: 'model_payment', // DynamoDB 테이블 이름
                 Item: {
                     userId: user.userId, // Partition Key
-                    orderId: generateSortKey(order), // 고유 주문 ID (Sort Key로 저장 가능)
+                    orderId: generateSortKey(kstTimestamp, order), // 고유 주문 ID (Sort Key로 저장 가능)
                     menuId: order.menuId,
                     price: order.price,
                     name: order.name,
                     count: order.count,
                     items: order.item, // 상세 데이터
-                    timestamp: new Date().toISOString(), // 저장 시각
+                    timestamp: kstTimestamp.toISOString(), // 저장 시각
                 }
             };
 
@@ -45,20 +48,25 @@ const saveOrdersToDynamoDB = async (orderData) => {
 
 /**
  * 기간별 주문 데이터를 DynamoDB에서 조회하는 함수
- * @param {string} userId - 사용자 ID
  * @param {string} startDate - 조회 시작 시간 (ISO 8601 형식, 예: "2025-01-01T00:00")
  * @param {string} endDate - 조회 종료 시간 (ISO 8601 형식, 예: "2025-01-02T00:00")
  * @param {boolean} ascending - 정렬 방향 (true: 오름차순, false: 내림차순)
  * @returns {Promise<Array>} - 조회된 주문 데이터
  */
-const getOrdersByDateRange = async (userId, startDate, endDate, ascending = true) =>{
+const getOrdersByDateRange = async (startDate, endDate, ascending) =>{
+    log.info("startDate", startDate);
+    log.info("endDate", endDate);
+    log.info("ascending", ascending);
     const params = {
         TableName: 'model_payment',
-        KeyConditionExpression: 'userId = :userId AND sortKey BETWEEN :startDate AND :endDate',
+        KeyConditionExpression: 'userId = :userId AND #ts BETWEEN :startDate AND :endDate',
         ExpressionAttributeValues: {
-            ':userId': userId,
+            ':userId': user.userId,
             ':startDate': startDate,
             ':endDate': endDate
+        },
+        ExpressionAttributeNames: {
+            '#ts': 'timestamp' // 예약어 충돌 방지
         },
         ScanIndexForward: ascending // true: 오름차순, false: 내림차순
     };
@@ -72,8 +80,8 @@ const getOrdersByDateRange = async (userId, startDate, endDate, ascending = true
     }
 }
 
-const generateSortKey = (order) => {
-    const timestamp = new Date().toISOString().slice(0, 19); // 초 단위 시간
+const generateSortKey = (kstTimestamp, order) => {
+    const timestamp = kstTimestamp.toISOString().slice(0, 19); // 초 단위 시간
     return `${timestamp}-${order.orderId}`;
 }
 

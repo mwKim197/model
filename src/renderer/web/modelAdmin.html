@@ -31,7 +31,13 @@
                     class="tab-btn py-2 px-4 text-gray-600 border-b-2 border-transparent hover:text-blue-500"
                     data-tab="tab3"
             >
-                메뉴조작
+                머신제어
+            </button>
+            <button
+                    class="tab-btn py-2 px-4 text-gray-600 border-b-2 border-transparent hover:text-blue-500"
+                    data-tab="tab4"
+            >
+                결제로그
             </button>
         </div>
 
@@ -182,9 +188,54 @@
 
             <!--메뉴 조작 START-->
             <div class="tab-panel hidden" id="tab3">
-                <p class="p-4 bg-white border border-gray-200 rounded">Content for Tab 3</p>
+                <p>메뉴 조작부분</p>
             </div>
             <!--메뉴 조작 END-->
+            <!-- 결제 로그 START-->
+            <div class="tab-panel hidden" id="tab4">
+                <div class="flex flex-col gap-4 p-4 sm:p-6 bg-gray-100 border border-gray-300 rounded-lg shadow-sm">
+                    <!-- 날짜 및 정렬 설정 -->
+                    <div class="flex flex-col sm:flex-row gap-4 items-center">
+                        <!-- 시작 날짜 -->
+                        <div class="flex flex-col">
+                            <label for="start-date" class="text-sm font-semibold text-gray-600">시작 날짜</label>
+                            <input
+                                    type="date"
+                                    id="start-date"
+                                    class="w-full sm:w-auto border border-gray-300 rounded px-3 py-2 text-sm">
+                        </div>
+                        <!-- 종료 날짜 -->
+                        <div class="flex flex-col">
+                            <label for="end-date" class="text-sm font-semibold text-gray-600">종료 날짜</label>
+                            <input
+                                    type="date"
+                                    id="end-date"
+                                    class="w-full sm:w-auto border border-gray-300 rounded px-3 py-2 text-sm">
+                        </div>
+                        <!-- 정렬 옵션 -->
+                        <div class="flex flex-col">
+                            <label for="sort-order" class="text-sm font-semibold text-gray-600">정렬</label>
+                            <select
+                                    id="sort-order"
+                                    class="w-full sm:w-auto border border-gray-300 rounded px-3 py-2 text-sm">
+                                <option value="true">오름차순</option>
+                                <option value="false">내림차순</option>
+                            </select>
+                        </div>
+                        <!-- 조회 버튼 -->
+                        <button
+                                id="filter-orders-btn"
+                                class="mt-2 sm:mt-0 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                            조회
+                        </button>
+                    </div>
+                </div>
+
+                <div id="orders-container" class="menu-new-item flex flex-col gap-6 p-4 sm:p-6 bg-gray-100 border border-gray-300 rounded-lg shadow-sm max-h-[800px] overflow-y-auto">
+                    <!-- 주문 데이터가 여기에 추가됩니다 -->
+                </div>
+            </div>
+            <!-- 결제 로그 END-->
         </div>
     </main>
 </div>
