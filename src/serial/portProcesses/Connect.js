@@ -7,6 +7,7 @@ const {serialCommCom1} = require("../../serial/serialCommManager")
 const {signupUser, loginUser, getAllUserIds} = require("../../login");
 const {duplicateMenuData} = require("../../aws/db/utils/getMenu");
 const {getSerialData} = require("../../services/serialPolling");
+const {saveOrdersToDynamoDB} = require("../../aws/db/utils/getPayment");
 // MC 머신 Data - SerialPolling 인스턴스 생성
 const polling = new serialDataManager(serialCommCom1);
 
@@ -18,6 +19,8 @@ Connect.post('/start-order', async (req, res) => {
 
         await polling.stopPolling(); // 주문 작업을 시작하기 전에 조회 정지
         const reqBody = req.body;
+        log.info("주문 데이터 확인: ", JSON.stringify(reqBody));
+        await saveOrdersToDynamoDB(reqBody);
         await startOrder(reqBody);
         await polling.startPolling(serialCommCom1, 10000).then(); // 주문 작업이 끝난 후 조회 재개
         // list 받음 -> 메뉴판에 있는 데이터 불러서 조합 시작!

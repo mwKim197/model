@@ -136,6 +136,7 @@ async function addItemToOrder(menuId) {
 
     // 상품 검색
     const product = allProducts.find(p => p.menuId === menuId);
+
     if (!product) {
         console.error(`Product not found for menuId: ${menuId}`);
         return;
@@ -182,6 +183,8 @@ async function addItemToOrder(menuId) {
         userId: product.userId,
         menuId: product.menuId,
         price: Number(product.price),
+        item: product.items,
+        name: product.name,
         count: 1,
     });
 
@@ -435,8 +438,8 @@ document.getElementById('payment').addEventListener('click', async () => {
         // 0.1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {
             setTimeout(async () => {
-                const res = await window.electronAPI.reqVcatHttp(price);
-                //const res = {success: true};
+                //const res = await window.electronAPI.reqVcatHttp(price);
+                const res = {success: true};
                 resolve(res); // 결제 결과 반환
             }, 100);
         });
@@ -584,7 +587,7 @@ async function fetchData() {
         console.log('Cache Directory Path:', basePath);
         const allData = await window.electronAPI.getMenuInfoAll();
         userInfo = await window.electronAPI.getUserInfo();
-
+        console.log("allData", allData);
         // 이미지 받아오기
         await window.electronAPI.downloadAllFromS3WithCache("model-narrow-road", `model/${userInfo.userId}`);
         // 데이터가 올바르게 로드되었는지 확인
