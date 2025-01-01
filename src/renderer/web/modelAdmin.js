@@ -978,12 +978,52 @@ function populateCategoryOptions(categories) {
 // 탭 등록함수
 document.addEventListener('DOMContentLoaded', async () => {
     // 오늘 날짜 계산
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0'); // 월 (0부터 시작)
+    const dd = String(today.getDate()).padStart(2, '0'); // 일
+
+    // 기본 날짜 (오늘)
+    const todayString = `${yyyy}-${mm}-${dd}`;
+
+    // 1주일 전 날짜 계산
+    const oneWeekAgo = new Date(today);
+    oneWeekAgo.setDate(today.getDate() - 7); // 7일 전
+    const oneWeekAgoString = `${oneWeekAgo.getFullYear()}-${String(oneWeekAgo.getMonth() + 1).padStart(2, '0')}-${String(oneWeekAgo.getDate()).padStart(2, '0')}`;
+
+    // 시작 날짜와 종료 날짜 기본값 설정
+    const startDateInput = document.getElementById('start-date');
+    const endDateInput = document.getElementById('end-date');
+
+    startDateInput.value = todayString; // 시작 날짜 기본값 (오늘)
+    startDateInput.min = oneWeekAgoString; // 시작 날짜 최소값 (1주일 전)
+    startDateInput.max = todayString; // 시작 날짜 최대값 (오늘)
+
+    endDateInput.value = todayString; // 종료 날짜 기본값 (오늘)
+    endDateInput.min = oneWeekAgoString; // 종료 날짜 최소값 (1주일 전)
+    endDateInput.max = todayString; // 종료 날짜 최대값 (오늘)
+
+    // 종료 날짜가 시작 날짜보다 이전으로 설정되지 않도록 제한
+    startDateInput.addEventListener('change', () => {
+        if (new Date(startDateInput.value) > new Date(endDateInput.value)) {
+            endDateInput.value = startDateInput.value;
+        }
+        endDateInput.min = startDateInput.value; // 종료 날짜 최소값 동적으로 설정
+    });
+
+    endDateInput.addEventListener('change', () => {
+        if (new Date(endDateInput.value) < new Date(startDateInput.value)) {
+            startDateInput.value = endDateInput.value;
+        }
+        startDateInput.max = endDateInput.value; // 시작 날짜 최대값 동적으로 설정
+    });
+
+    // 오늘 날짜 계산
     const now = new Date();
     const kstTimestamp = new Date(now.getTime() + 9 * 60 * 60 * 1000) // UTC + 9 시간 추가
     const todayStart = new Date(kstTimestamp.setHours(0, 0, 0, 0)).toISOString().slice(0, 16); // 오늘 00:00
     const todayEnd = new Date(kstTimestamp.setHours(23, 59, 59, 999)).toISOString().slice(0, 16); // 오늘 23:59
-
-   await renderGroupedOrdersToHTML(todayStart, todayEnd, true);
+    await renderGroupedOrdersToHTML(todayStart, todayEnd, true);
 });
 
 // 날짜 지정 조회
