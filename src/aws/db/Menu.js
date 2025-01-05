@@ -12,7 +12,7 @@ const {memoryStorage} = require("multer");
 const { dispenseCup, adminIceOrder, adminDrinkOrder} = require("../../services/serialOrderManager");
 const serialDataManager = require("../../services/serialDataManager");
 const {serialCommCom1} = require("../../serial/serialCommManager");
-const {getOrdersByDateRange} = require("./utils/getPayment");
+const {getOrdersByDateRange, calculateSalesStatistics} = require("./utils/getPayment");
 const upload = multer({ storage: memoryStorage() }); // 메모리 저장소 사용
 const polling = new serialDataManager(serialCommCom1);
 
@@ -369,6 +369,20 @@ Menu.get('/get-orders-by-date-range', async (req, res) => {
         res.json({ success: true, data: orders });
     } catch (error) {
         log.error('기간별 주문 데이터 조회 중 오류 발생:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// 어드민 기간별 결제 통계 조회
+Menu.get('/calculate-sales-statistics', async (req, res) => {
+    try {
+        // DynamoDB 데이터 조회
+        const data = await calculateSalesStatistics();
+
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.json({ success: true, data: data });
+    } catch (error) {
+        log.error('기간별 주문 통계 데이터 조회 중 오류 발생:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });

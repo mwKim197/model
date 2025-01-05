@@ -193,9 +193,22 @@
             <!--메뉴 조작 END-->
             <!-- 결제 로그 START-->
             <div class="tab-panel hidden" id="tab4">
+                <div id="statistics-container" class="p-4 bg-gray-100 border border-gray-300 rounded-lg shadow-sm">
+                    <!-- 매출 카드들을 한 줄로 구성 -->
+                    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="sales-cards">
+                        <!-- 매출 카드들이 동적으로 추가됩니다 -->
+                    </div>
+                    <!-- 전체 매출 -->
+                    <div class="mt-4">
+                        <div class="stats-card bg-white shadow rounded-lg p-4 flex flex-col items-center" id="total-sales-card">
+                            <!-- 전체 매출 데이터가 동적으로 추가됩니다 -->
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex flex-col gap-4 p-4 sm:p-6 bg-gray-100 border border-gray-300 rounded-lg shadow-sm">
                     <!-- 날짜 및 정렬 설정 -->
-                    <div class="flex flex-col sm:flex-row gap-4 items-center">
+                    <div class="flex flex-nowrap gap-4 items-center">
                         <!-- 시작 날짜 -->
                         <div class="flex flex-col">
                             <label for="start-date" class="text-sm font-semibold text-gray-600">시작 날짜</label>
@@ -231,11 +244,24 @@
                     </div>
                 </div>
 
-                <div id="orders-container" class="menu-new-item flex flex-col gap-6 p-4 sm:p-6 bg-gray-100 border border-gray-300 rounded-lg shadow-sm max-h-[800px] overflow-y-auto">
+                <div id="orders-container" class="menu-new-item flex p-4 sm:p-6 border border-gray-300 rounded-lg shadow-sm max-h-[800px] overflow-y-auto">
                     <!-- 주문 데이터가 여기에 추가됩니다 -->
                 </div>
             </div>
             <!-- 결제 로그 END-->
+        </div>
+        <div id="order-details-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div class="bg-white w-3/4 max-w-lg rounded-lg shadow-lg p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-gray-800">주문 상세 정보</h2>
+                    <button id="close-modal" class="text-gray-500 hover:text-gray-800">
+                        <i class="fa-solid fa-xmark"></i> 닫기
+                    </button>
+                </div>
+                <div id="modal-content" class="space-y-4">
+                    <!-- 주문 상세 정보가 여기에 동적으로 추가됩니다 -->
+                </div>
+            </div>
         </div>
     </main>
 </div>

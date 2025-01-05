@@ -113,10 +113,26 @@ const callSerialAdminCupOrder = async (recipe) => {
 const getOrdersByDateRange = async (startDate, endDate, ascending = true) => {
     const apiUrl = `http://${url}:3000/get-orders-by-date-range?startDate=${startDate}&endDate=${endDate}&ascending=${ascending}`;
     try {
-        console.log(apiUrl);
         const response = await fetch(apiUrl);
         const data = await response.json();
-        console.log(data);
+        if (data.success) {
+            return data.data; // 성공 시 주문 데이터 반환
+        } else {
+            console.error('API 오류:', data.error);
+            return [];
+        }
+    } catch (error) {
+        console.error('API 호출 중 오류 발생:', error);
+        return [];
+    }
+}
+
+// 기간별 통계조회
+const calculateSalesStatistics = async () => {
+    const apiUrl = `http://${url}:3000/calculate-sales-statistics`;
+    try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
         if (data.success) {
             return data.data; // 성공 시 주문 데이터 반환
         } else {
@@ -138,4 +154,5 @@ export {
     callSerialAdminIceOrder,
     callSerialAdminCupOrder,
     getOrdersByDateRange,
+    calculateSalesStatistics
 };
