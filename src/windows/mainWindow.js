@@ -32,9 +32,9 @@ async function createMainWindow() {
             contextIsolation: true,
             sandbox: false,
         },
-       fullscreen: true,
-       alwaysOnTop: true,
-       autoHideMenuBar: true,
+       //fullscreen: true,
+       //alwaysOnTop: true,
+       //autoHideMenuBar: true,
     });
 
     await win.loadFile(path.join(__dirname, '../renderer/index/index.html'));

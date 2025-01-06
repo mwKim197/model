@@ -188,7 +188,65 @@
 
             <!--메뉴 조작 START-->
             <div class="tab-panel hidden" id="tab3">
-                <p>메뉴 조작부분</p>
+                <h2 class="text-xl font-bold text-center mb-6">기기관리</h2>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 text-center">
+                    <!-- 프로그램 제어 -->
+                    <button id="restart-app" class="bg-blue-500 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-600">프로그램 재시작</button>
+                    <button id="shutdown-app" class="bg-blue-500 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-600">프로그램 종료</button>
+
+                    <!-- 투출 -->
+                    <button id="cup-pl-use" class="bg-blue-500 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-600">플라스틱컵 투출</button>
+                    <button id="cup-pa-use" class="bg-blue-500 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-600">종이컵 투출</button>
+
+                    <!-- 세척 -->
+                    <button id="all-cleaning" class="bg-blue-500 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-600">전체 세척</button>
+                    <button id="schedule-cleaning" class="bg-blue-500 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-600">전체세척 예약</button>
+                    <!-- Input 대신 숫자 입력 -->
+                    <div class="flex items-center space-x-4">
+                        <label for="cleaning-time" class="text-gray-600 text-sm font-semibold">예약 시간</label>
+                        <input
+                                id="cleaning-time"
+                                type="number"
+                                min="0"
+                                max="23"
+                                step="1"
+                                class="bg-gray-200 text-black py-2 px-4 w-20 text-center rounded-lg shadow border"
+                                placeholder="24시"
+                        />
+                    </div>
+
+                </div>
+
+                <div class="mt-6">
+                    <h3 class="text-lg font-bold text-center mb-4">&lt;부분 세척&gt;</h3>
+                    <!-- 부분 세척 -->
+                    <div class="text-center mb-4">
+                        <button id="coffee-cleaning" class="bg-blue-500 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-600">커피 세척</button>
+                    </div>
+
+                    <div class="text-center mb-4">
+                        <p class="text-sm font-semibold mb-2">가루차</p>
+                        <div class="flex flex-wrap justify-center gap-2">
+                            <button id="garucha1-cleaning" class="bg-blue-500 text-white py-2 px-3 rounded-lg shadow hover:bg-blue-600">1번</button>
+                            <button id="garucha2-cleaning" class="bg-blue-500 text-white py-2 px-3 rounded-lg shadow hover:bg-blue-600">2번</button>
+                            <button id="garucha3-cleaning" class="bg-blue-500 text-white py-2 px-3 rounded-lg shadow hover:bg-blue-600">3번</button>
+                            <button id="garucha4-cleaning" class="bg-blue-500 text-white py-2 px-3 rounded-lg shadow hover:bg-blue-600">4번</button>
+                            <button id="garucha5-cleaning" class="bg-blue-500 text-white py-2 px-3 rounded-lg shadow hover:bg-blue-600">5번</button>
+                            <button id="garucha6-cleaning" class="bg-blue-500 text-white py-2 px-3 rounded-lg shadow hover:bg-blue-600">6번</button>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-sm font-semibold mb-2">액 상</p>
+                        <div class="flex flex-wrap justify-center gap-2">
+                            <button id="syrup1-cleaning" class="bg-blue-500 text-white py-2 px-3 rounded-lg shadow hover:bg-blue-600">1번</button>
+                            <button id="syrup2-cleaning" class="bg-blue-500 text-white py-2 px-3 rounded-lg shadow hover:bg-blue-600">2번</button>
+                            <button id="syrup3-cleaning" class="bg-blue-500 text-white py-2 px-3 rounded-lg shadow hover:bg-blue-600">3번</button>
+                            <button id="syrup5-cleaning" class="bg-blue-500 text-white py-2 px-3 rounded-lg shadow hover:bg-blue-600">5번</button>
+                            <button id="syrup6-cleaning" class="bg-blue-500 text-white py-2 px-3 rounded-lg shadow hover:bg-blue-600">6번</button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <!--메뉴 조작 END-->
             <!-- 결제 로그 START-->

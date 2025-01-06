@@ -63,6 +63,11 @@ async function initializeApp() {
     }
 }
 
+function restartApp() {
+    app.relaunch();
+    app.exit(0);
+}
+
 app.whenReady().then(() => {
     initializeApp().catch((err) => log.info('App initialization failed:', err));
 });

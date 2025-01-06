@@ -764,6 +764,56 @@ const adminIceOrder = async (recipe) => {
     }
 }
 
+/**
+ *  관리자 세척
+ *  */
+const adminUseWash = async (data) => {
+    let washData = data.data;  // 세척 데이터
+    // 세척데이터가 리스트로 들어오면 세척 시작
+    if (washData.length > 0) {
+        try {
+            log.info(`어드민 세척 레시피 리스트: ${JSON.stringify(washData)}`);
+            for (let i = 0; i < washData.length; i++) {
+
+                if (i === 0) {
+                    // 컵 센서 체크
+                    const isStopValid = await checkCupSensor("없음", 3, false);
+                    if (!isStopValid) {
+                        log.error("컵 센서 상태가 '없음'이 아니어서 세척 작업을 중단합니다.");
+                        return; // 작업 중단
+                    }
+                }
+                const listData = washData[i];
+                eventEmitter.emit('order-update', {
+                    status: 'washStart',
+                    message: '[관리자] 커피머신 세척중입니다 잠시만 기다려주세요.'
+                });
+                log.info(`전체 세척 실행: ${JSON.stringify(listData)}`);
+                if (listData.type === "coffee") {
+                    await Order.purifyingCoffee();
+                    await checkAutoOperationState("정지", 3);
+                }
+                if (listData.type === "garucha") {
+                    await Order.purifyingTae(listData.value1);
+                    await checkAutoOperationState("정지", 3);
+                }
+                if (listData.type === "syrup") {
+                    await Order.purifyingSyrup(listData.value1);
+                    await checkAutoOperationState("정지", 3);
+                }
+                await new Promise((r) => setTimeout(r, 1000));
+            }
+        } catch (e) {
+            log.error(`세척중 에러가 발생했습니다. ${e}`);
+            eventEmitter.emit('order-update', {status: 'completed', message: '전체 세척 작업 완료.' });
+        }
+    } else {
+        log.warn("[세척] 메뉴 데이터가 없습니다.");
+    }
+    log.info("전체 세척 작업 완료");
+    eventEmitter.emit('order-update', {status: 'completed', message: '전체 세척 작업 완료.' });
+};
+
 // 주문 처리 시작
 processQueue().then();
 
@@ -774,5 +824,6 @@ module.exports = {
     dispenseCoffee,
     useWash,
     adminDrinkOrder,
-    adminIceOrder
+    adminIceOrder,
+    adminUseWash
 };

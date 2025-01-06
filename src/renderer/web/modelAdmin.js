@@ -5,7 +5,12 @@ import {
     callSerialAdminCupOrder,
     callSerialAdminDrinkOrder,
     getOrdersByDateRange,
-    calculateSalesStatistics
+    calculateSalesStatistics,
+    requestAppRestart,
+    requestAppShutdown,
+    fetchCupPlUse,
+    fetchCupPaUse,
+    adminUseWash
 } from '/renderer/api/menuApi.browser.js';
 
 const url = window.location.hostname;
@@ -976,6 +981,60 @@ function populateCategoryOptions(categories) {
 }
 /* [MENU] 카테고리 END*/
 /* [CONTROL] 머신 조작 START */
+const allUserAdminWash = async (item) => {
+    const data = [
+        { "type": "coffee" },
+        { "type": "garucha", "value1": "1" },
+        { "type": "garucha", "value1": "2" },
+        { "type": "garucha", "value1": "3" },
+        { "type": "garucha", "value1": "4" },
+        { "type": "garucha", "value1": "5" },
+        { "type": "garucha", "value1": "6" },
+        { "type": "syrup", "value1": "1" },
+        { "type": "syrup", "value1": "2" },
+        { "type": "syrup", "value1": "3" },
+        { "type": "syrup", "value1": "5" },
+        { "type": "syrup", "value1": "6" },
+    ];
+
+    // item 값에 따라 해당 객체 필터링
+    const filteredData = data.filter(obj => {
+        if (item === "coffee") return obj.type === "coffee";
+        if (item.startsWith("garucha")) return obj.type === "garucha" && obj.value1 === item.replace("garucha", "");
+        if (item.startsWith("syrup")) return obj.type === "syrup" && obj.value1 === item.replace("syrup", "");
+        return false;
+    });
+
+    console.log("Filtered Data:", filteredData);
+
+    await adminUseWash(filteredData);
+};
+
+// "프로그램 재시작" 버튼 클릭 이벤트 추가
+document.getElementById('restart-app').addEventListener('click', requestAppRestart);
+// "프로그램 종료" 버튼 클릭 이벤트 추가
+document.getElementById('shutdown-app').addEventListener('click', requestAppShutdown);
+document.getElementById('cup-pl-use').addEventListener('click', fetchCupPlUse);
+document.getElementById('cup-pa-use').addEventListener('click', fetchCupPaUse);
+document.getElementById('all-cleaning').addEventListener('click',async ()=>{ await allUserAdminWash("all")});
+document.getElementById('coffee-cleaning').addEventListener('click',async ()=>{ await allUserAdminWash("coffee")});
+document.getElementById('garucha1-cleaning').addEventListener('click',async ()=>{ await allUserAdminWash("garucha1")});
+document.getElementById('garucha2-cleaning').addEventListener('click',async ()=>{ await allUserAdminWash("garucha2")});
+document.getElementById('garucha3-cleaning').addEventListener('click',async ()=>{ await allUserAdminWash("garucha3")});
+document.getElementById('garucha4-cleaning').addEventListener('click',async ()=>{ await allUserAdminWash("garucha4")});
+document.getElementById('garucha5-cleaning').addEventListener('click',async ()=>{ await allUserAdminWash("garucha5")});
+document.getElementById('garucha6-cleaning').addEventListener('click',async ()=>{ await allUserAdminWash("garucha6")});
+document.getElementById('syrup1-cleaning').addEventListener('click',async ()=>{ await allUserAdminWash("syrup1")});
+document.getElementById('syrup2-cleaning').addEventListener('click',async ()=>{ await allUserAdminWash("syrup2")});
+document.getElementById('syrup3-cleaning').addEventListener('click',async ()=>{ await allUserAdminWash("syrup3")});
+document.getElementById('syrup5-cleaning').addEventListener('click',async ()=>{ await allUserAdminWash("syrup5")});
+document.getElementById('syrup6-cleaning').addEventListener('click',async ()=>{ await allUserAdminWash("syrup6")});
+
+
+
+
+/* [CONTROL] 머신 조작 END */
+/* [CONTROL] 주문 로그조회 START */
 // 탭 등록함수
 document.addEventListener('DOMContentLoaded', async () => {
     // 오늘 날짜 계산
@@ -1204,7 +1263,7 @@ document.getElementById('close-modal').addEventListener('click', () => {
     modal.classList.add('hidden');
 });
 
-/* [CONTROL] 머신 조작 END */
+/* [CONTROL] 주문 로그 조회 END */
 // HTML 특수 문자 이스케이프 처리 함수
 function escapeHTML(string) {
     const entityMap = {

@@ -145,7 +145,103 @@ const calculateSalesStatistics = async () => {
     }
 }
 
+// 프로그램 재시작 API 호출 함수
+async function requestAppRestart() {
+    try {
+        const response = await fetch(`http://${url}:3000/restart-app`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        const result = await response.json();
+        if (result.success) {
+            alert('재부팅 요청 성공');
+            console.log('재부팅 요청 성공:', result.message);
+        } else {
+            console.error('재부팅 요청 실패:', result.message);
+        }
+    } catch (error) {
+        console.error('재부팅 요청 중 오류 발생:', error);
+    }
+}
 
+// 프로그램 종료 API 호출 함수
+async function requestAppShutdown() {
+    try {
+        const response = await fetch(`http://${url}:3000/shutdown-app`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        const result = await response.json();
+        if (result.success) {
+            alert('종료 요청 성공');
+            console.log('종료 요청 성공:', result.message);
+        } else {
+            console.error('종료 요청 실패:', result.message);
+        }
+    } catch (error) {
+        console.error('종료 요청 중 오류 발생:', error);
+    }
+}
+
+// 플라스틱 컵 투출 함수
+const fetchCupPlUse = async () => {
+    try {
+        const response = await fetch(`http://${url}:3000/serial-cup-plastic-use`);
+
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('Response Data:', data);  // 디버깅용 콘솔
+    } catch (error) {
+        sendLogToMain('error','Error fetching coffee info:', error);
+        console.error(error);
+    }
+}
+
+// 종이 컵 투출 함수
+const fetchCupPaUse = async () => {
+    try {
+
+        const response = await fetch(`http://${url}:3000/serial-cup-paper-use`);
+
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+        const data = await response.json();
+        console.log('Response Data:', data);  // 디버깅용 콘솔
+    } catch (error) {
+        sendLogToMain('error','Error fetching coffee info:', error);
+        console.error(error);
+    }
+}
+
+// 어드민 세척 함수
+const adminUseWash = async (data) => {
+    try {
+        const response = await fetch(`http://${url}:3000/admin-use-wash`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ data })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            console.log('Success:', result.message);
+        } else {
+            console.error('Error:', result.message);
+            if (result.error) {
+                console.error('Details:', result.error.message);
+            }
+        }
+    } catch (error) {
+        console.error('Fetch error:', error.message);
+    }
+};
 
 export {
     getUserData,
@@ -154,5 +250,10 @@ export {
     callSerialAdminIceOrder,
     callSerialAdminCupOrder,
     getOrdersByDateRange,
-    calculateSalesStatistics
+    calculateSalesStatistics,
+    requestAppRestart,
+    requestAppShutdown,
+    fetchCupPlUse,
+    fetchCupPaUse,
+    adminUseWash
 };

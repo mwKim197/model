@@ -1,8 +1,9 @@
 const express = require('express');
+const { app } = require('electron');
 const serialDataManager  = require('../../services/serialDataManager');
 const Connect = express.Router();
 const log = require('../../logger');
-let { startOrder, useWash }= require('../../services/serialOrderManager.js');
+let { startOrder, useWash, adminUseWash}= require('../../services/serialOrderManager.js');
 const {serialCommCom1} = require("../../serial/serialCommManager")
 const {signupUser, loginUser, getAllUserIds} = require("../../login");
 const {duplicateMenuData} = require("../../aws/db/utils/getMenu");
@@ -119,5 +120,44 @@ Connect.post('/wash',  async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+
+Connect.post('/restart-app', (req, res) => {
+    try {
+        log.info('재부팅 명령 수신');
+        app.relaunch();
+        app.exit(0);
+        res.json({ success: true, message: '앱이 재부팅됩니다.' });
+    } catch (err) {
+        log.error('재부팅 중 오류 발생:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+Connect.post('/shutdown-app', (req, res) => {
+    try {
+        log.info('프로그램 종료 명령 수신');
+        app.quit(); // Electron 앱 종료
+        res.json({ success: true, message: '앱이 종료됩니다.' });
+    } catch (err) {
+        log.error('프로그램 종료 중 오류 발생:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 어드민 세척
+Connect.post('/admin-use-wash',  async (req, res) => {
+    try {
+
+        log.info("워시 시작");
+        const reqBody = req.body;
+        log.info("reqBody", reqBody);
+        await adminUseWash(reqBody);
+        log.info("워시 끝");
+        res.json({ success: true, message: '조회 재개 완료' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 
 module.exports = Connect;
