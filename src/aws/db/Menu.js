@@ -3,7 +3,7 @@ const Menu = express.Router();
 const {checkProduct, addProduct, allProduct, deleteProduct, swapNoAndAddProduct, updateMenuAndAdjustNo, duplicateMenuData,
     getMenuById
 } = require('./utils/getMenu');
-const getUser = require('../../util/getUser');
+const { getUser } = require('../../util/store');
 const log = require("../../logger");
 const {uploadImageToS3andLocal, deleteImageFromS3andLocal} = require("../s3/utils/image");
 const {incrementCounter} = require("./utils/getCount");

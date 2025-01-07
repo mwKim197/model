@@ -2,7 +2,7 @@ const { s3 } = require('../../aws');
 const fs = require('fs');
 const path = require('path');
 const log = require('../../../logger');
-const getUser = require('../../../util/getUser');
+const { getUser } = require('../../../util/store');
 const { getBasePath, ensureDirectoryExists } = require('./cacheDirManager');
 
 // 이미지 다운로드 함수

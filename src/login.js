@@ -1,11 +1,11 @@
 const log = require('./logger');
 const bcrypt =  require('bcrypt');
 
-
 // DynamoDB 설정
 const { dynamoDB } = require('./aws/aws');
 const {addSubdomainSafely} = require("./aws/route53/route53");
 const {initializeCounter} = require("./aws/db/utils/getCount");
+const {setUser, getUser} = require("./util/store");
 
 // 비밀번호 해시화 함수
 const hashPassword = async (password) => {
@@ -95,7 +95,7 @@ const loginUser = async (userId, password) => {
                 await initializeCounter(user.userId);
 
                 // 사용자 정보를 저장 (예시: 사용자 이름과 ID)
-                store.set('user', {
+                await setUser({
                     userId: user.userId,
                     name: user.name,  // DB에 name이 있다면 저장
                     ipAddress: user.ipAddress,
@@ -104,8 +104,11 @@ const loginUser = async (userId, password) => {
                     tel: user.tel,
                     url: user.url,
                 });
+
+                const data = getUser();
+
                 // 저장된 사용자 정보 확인
-                log.info('스토어 회원 정보 확인:', store.get('user'));
+                log.info('스토어 회원 정보 확인:', data);
             } else {
                 log.info('페스워드 오류');
             }

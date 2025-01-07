@@ -1,7 +1,7 @@
 const { dynamoDB, s3} = require('../../aws');
 const log = require('../../../logger');
 const { getCounterValue, incrementCounter} = require('./getCount');
-const getUser = require('../../../util/getUser');  // 유틸 함수 가져오기
+const { getUser } = require('../../../util/store');  // 유틸 함수 가져오기
 let user;
 
 const processUserAndProduct = async () => {
