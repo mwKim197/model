@@ -185,6 +185,32 @@ const useWash = async (orderList) => {
     }
 }
 
+// 어드민 세척 함수
+const adminUseWash = async (data) => {
+    try {
+        const response = await fetch(`http://localhost:3142/admin-use-wash`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ data })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            console.log('Success:', result.message);
+        } else {
+            console.error('Error:', result.message);
+            if (result.error) {
+                console.error('Details:', result.error.message);
+            }
+        }
+    } catch (error) {
+        console.error('Fetch error:', error.message);
+    }
+};
+
 const reStartCheck = async (orderList) => {
     try {
 
@@ -265,5 +291,6 @@ const reqNCData = async (rawData) => {
 module.exports = {
     reqVCAT_HTTP,
     reqOrder,
-    useWash
+    useWash,
+    adminUseWash
 };

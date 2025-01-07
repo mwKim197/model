@@ -10,6 +10,9 @@ let rd1Info = {};
 
 // 메뉴 데이터
 let allProducts = [];
+
+// 세척여부
+let wash = false;
 let userInfo = {};
 let isDataLoaded = false;
 
@@ -554,16 +557,66 @@ function updateTime() {
     //const currentTemperatureElement = document.getElementById('current-temperature');
     currentTimeElement.textContent = getCurrentFormattedTime();
     //currentTemperatureElement.textContent = rd1Info.boilerTemperature;
-    console.log(rd1Info);
-
-    if( rd1Info.autoOperationState === "정지" ) {
-        //[TODO] 정해진 시간에 여기서 세척 돌림.
-        console.log(userInfo);
-    }
 }
 
 // 1초마다 시간 업데이트
 setInterval(updateTime, 1000);
+
+// 현재 시간 가져오기 (KST 기준)
+function getCurrentHour() {
+    const now = new Date();
+    return now.getHours(); // 24시간 형식의 현재 시각
+}
+
+// 세척 동작
+async function handlerWash() {
+    const currentHour = getCurrentHour();
+    const washTime = userInfo.washTime; // 사용자 세척 시간
+
+    if (rd1Info.autoOperationState === "정지" && !wash) {
+        // `washTime`과 현재 시간이 일치하면 세척 실행
+        if (parseInt(washTime, 10) === currentHour) {
+            console.log(`[INFO] ${washTime}시에 세척 동작 시작.`);
+
+            const data = [
+                { "type": "coffee" },
+                { "type": "garucha", "value1": "1" },
+                { "type": "garucha", "value1": "2" },
+                { "type": "garucha", "value1": "3" },
+                { "type": "garucha", "value1": "4" },
+                { "type": "garucha", "value1": "5" },
+                { "type": "garucha", "value1": "6" },
+                { "type": "syrup", "value1": "1" },
+                { "type": "syrup", "value1": "2" },
+                { "type": "syrup", "value1": "3" },
+                { "type": "syrup", "value1": "5" },
+                { "type": "syrup", "value1": "6" },
+            ];
+
+            // 전체 세척 동작 수행
+            await window.electronAPI.adminUseWash(data);
+
+            wash = true; // 세척 완료 후 반복 실행 방지 플래그 설정
+            console.log('[INFO] 세척 완료');
+        }
+    }
+}
+
+// 자정 시 `wash` 초기화
+function resetWashFlag() {
+    const now = new Date();
+    const msUntilMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0) - now;
+
+    setTimeout(() => {
+        wash = false;
+        console.log('[INFO] 세척 플래그 초기화 완료');
+        resetWashFlag(); // 다음 자정에도 플래그를 초기화하도록 스케줄링
+    }, msUntilMidnight);
+}
+
+// 세척 확인 스케줄링
+setInterval(handlerWash, 1000 * 60 * 5); // 5분 간격으로 세척 확인
+resetWashFlag(); // 자정에 플래그 초기화 스케줄링
 
 // 매장명, 비상연락쳐 업데이트
 function updateStoreInfo() {
