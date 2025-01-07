@@ -10,7 +10,9 @@ import {
     requestAppShutdown,
     fetchCupPlUse,
     fetchCupPaUse,
-    adminUseWash
+    adminUseWash,
+    updateUserInfo,
+    fetchAndSaveUserInfo
 } from '/renderer/api/menuApi.browser.js';
 
 const url = window.location.hostname;
@@ -1030,8 +1032,36 @@ document.getElementById('syrup3-cleaning').addEventListener('click',async ()=>{ 
 document.getElementById('syrup5-cleaning').addEventListener('click',async ()=>{ await allUserAdminWash("syrup5")});
 document.getElementById('syrup6-cleaning').addEventListener('click',async ()=>{ await allUserAdminWash("syrup6")});
 
+// 시간 저장 버튼 클릭
+document.getElementById('schedule-cleaning').addEventListener('click', async () => {
+    const washTime = document.getElementById('time-input').value;
+    console.log("시간 저장:", washTime);
 
+    if (washTime === "") {
+        console.error("유효하지 않은 시간 값");
+        return;
+    }
 
+    // 업데이트 데이터 생성
+    const data = {
+        washTime: washTime, // 세척 시간
+    };
+
+    await updateUserInfo(data);
+    await fetchAndSaveUserInfo();
+
+});
+document.getElementById('update-category').addEventListener('click',async ()=>{ console.log("카테고리 저장")});
+
+document.getElementById('time-input').addEventListener('input', (event) => {
+    let value = parseInt(event.target.value, 10);
+
+    if (isNaN(value) || value < 0) {
+        event.target.value = 0; // 최소값
+    } else if (value > 24) {
+        event.target.value = 24; // 최대값
+    }
+});
 
 /* [CONTROL] 머신 조작 END */
 /* [CONTROL] 주문 로그조회 START */

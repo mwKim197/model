@@ -555,9 +555,10 @@ function updateTime() {
     currentTimeElement.textContent = getCurrentFormattedTime();
     //currentTemperatureElement.textContent = rd1Info.boilerTemperature;
     console.log(rd1Info);
-    console.log(userInfo);
+
     if( rd1Info.autoOperationState === "정지" ) {
         //[TODO] 정해진 시간에 여기서 세척 돌림.
+        console.log(userInfo);
     }
 }
 

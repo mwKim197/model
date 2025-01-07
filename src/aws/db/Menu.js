@@ -3,7 +3,7 @@ const Menu = express.Router();
 const {checkProduct, addProduct, allProduct, deleteProduct, swapNoAndAddProduct, updateMenuAndAdjustNo, duplicateMenuData,
     getMenuById
 } = require('./utils/getMenu');
-const { getUser } = require('../../util/store');
+const { getUser, setUser } = require('../../util/store');
 const log = require("../../logger");
 const {uploadImageToS3andLocal, deleteImageFromS3andLocal} = require("../s3/utils/image");
 const {incrementCounter} = require("./utils/getCount");
@@ -13,6 +13,7 @@ const { dispenseCup, adminIceOrder, adminDrinkOrder} = require("../../services/s
 const serialDataManager = require("../../services/serialDataManager");
 const {serialCommCom1} = require("../../serial/serialCommManager");
 const {getOrdersByDateRange, calculateSalesStatistics} = require("./utils/getPayment");
+const {updateUserInfo, getUserById} = require("./utils/getUser");
 const upload = multer({ storage: memoryStorage() }); // 메모리 저장소 사용
 const polling = new serialDataManager(serialCommCom1);
 
@@ -384,6 +385,77 @@ Menu.get('/calculate-sales-statistics', async (req, res) => {
     } catch (error) {
         log.error('기간별 주문 통계 데이터 조회 중 오류 발생:', error);
         res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+
+// user정보 업데이트
+Menu.post('/update-user-info', async (req, res) => {
+    try {
+        const { data } = req.body;
+        // 입력 데이터 검증
+        if (!data || typeof data !== 'object') {
+            return res.status(400).json({
+                success: false,
+                message: '유효한 updatedData를 제공해야 합니다.',
+            });
+        }
+
+        log.info('[INFO] 사용자 정보 업데이트 요청:', data);
+
+        // DynamoDB 데이터 업데이트 호출
+        const result = await updateUserInfo(data);
+
+        log.info('[INFO] 사용자 정보 업데이트 성공:', result);
+
+        // 성공 응답 반환
+        res.status(200).json({
+            success: true,
+            data: result,
+        });
+    } catch (error) {
+        log.error('[ERROR] 사용자 정보 업데이트 중 오류 발생:', error);
+
+        // 실패 응답 반환
+        res.status(500).json({
+            success: false,
+            message: '사용자 정보 업데이트에 실패했습니다.',
+            error: error.message,
+        });
+    }
+});
+
+Menu.get('/fetch-and-save-user', async (req, res) => {
+    try {
+        // DynamoDB에서 사용자 정보 조회
+        log.info('사용자 정보 조회 요청');
+        const userInfo = await getUserById();
+
+        if (!userInfo) {
+            return res.status(404).json({
+                success: false,
+                message: '사용자를 찾을 수 없습니다.',
+            });
+        }
+
+        // Electron Store에 저장
+        await setUser(userInfo);
+
+        log.info('사용자 정보 저장 성공:', userInfo);
+
+        res.status(200).json({
+            success: true,
+            data: userInfo,
+            message: '사용자 정보를 성공적으로 조회하고 저장했습니다.',
+        });
+    } catch (error) {
+        log.error('[ERROR] 사용자 정보 조회 및 저장 중 오류 발생:', error);
+
+        res.status(500).json({
+            success: false,
+            message: '사용자 정보 조회 및 저장에 실패했습니다.',
+            error: error.message,
+        });
     }
 });
 

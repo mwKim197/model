@@ -243,6 +243,49 @@ const adminUseWash = async (data) => {
     }
 };
 
+// 어드민 정보 업데이트 함수
+const updateUserInfo = async (data) => {
+    try {
+        console.log("data: ", data);
+        const response = await fetch(`http://${url}:3142/update-user-info`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({data})
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            console.log('Success:', result.message);
+        } else {
+            console.error('Error:', result.message);
+            if (result.error) {
+                console.error('Details:', result.error.message);
+            }
+        }
+    } catch (error) {
+        console.error('Fetch error:', error.message);
+    }
+};
+
+const fetchAndSaveUserInfo = async () => {
+    try {
+        const response = await fetch(`http://${url}:3142/fetch-and-save-user`);
+        const result = await response.json();
+
+        if (response.ok) {
+            console.log('사용자 정보 조회 및 저장 성공:', result.data);
+        } else {
+            console.error('사용자 정보 조회 실패:', result.message);
+        }
+    } catch (error) {
+        console.error('사용자 정보 조회 및 저장 중 오류 발생:', error.message);
+    }
+};
+
+
 export {
     getUserData,
     getMenuInfoAll,
@@ -255,5 +298,7 @@ export {
     requestAppShutdown,
     fetchCupPlUse,
     fetchCupPaUse,
-    adminUseWash
+    adminUseWash,
+    updateUserInfo,
+    fetchAndSaveUserInfo
 };
