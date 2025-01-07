@@ -21,7 +21,7 @@ log.info(`App Path: ${appPath}`);
 
 // CORS 설정
 app.use(cors({
-    origin: ['http://localhost:3000', /^http:\/\/.*\.narrowroad-model\.com:3000$/],
+    origin: ['http://localhost:3000', /^http:\/\/.*\.narrowroad-model\.com:3142$/],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type'],
 }));

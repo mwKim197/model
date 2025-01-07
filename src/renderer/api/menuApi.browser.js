@@ -2,7 +2,7 @@ const url = window.location.hostname;
 
 const getUserData = async () => {
     try {
-        const response = await fetch(`http://${url}:3000/get-user-info`);
+        const response = await fetch(`http://${url}:3142/get-user-info`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -19,7 +19,7 @@ const getUserData = async () => {
 // 메뉴정보 전체 조회
 const getMenuInfoAll = async () => {
     try {
-        const response = await fetch(`http://${url}:3000/get-menu-info-all`);
+        const response = await fetch(`http://${url}:3142/get-menu-info-all`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -35,7 +35,7 @@ const getMenuInfoAll = async () => {
 
 const callSerialAdminDrinkOrder = async (recipe) => {
     try {
-        const response = await fetch(`http://${url}:3000/serial-admin-drink-order`, {
+        const response = await fetch(`http://${url}:3142/serial-admin-drink-order`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -62,7 +62,7 @@ const callSerialAdminDrinkOrder = async (recipe) => {
 
 const callSerialAdminIceOrder = async (recipe) => {
     try {
-        const response = await fetch(`http://${url}:3000/serial-admin-ice-order`, {
+        const response = await fetch(`http://${url}:3142/serial-admin-ice-order`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -88,7 +88,7 @@ const callSerialAdminIceOrder = async (recipe) => {
 
 const callSerialAdminCupOrder = async (recipe) => {
     try {
-        const response = await fetch(`http://${url}:3000/serial-admin-cup-order`, {
+        const response = await fetch(`http://${url}:3142/serial-admin-cup-order`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -111,7 +111,7 @@ const callSerialAdminCupOrder = async (recipe) => {
 
 // 결제 내역 조회
 const getOrdersByDateRange = async (startDate, endDate, ascending = true) => {
-    const apiUrl = `http://${url}:3000/get-orders-by-date-range?startDate=${startDate}&endDate=${endDate}&ascending=${ascending}`;
+    const apiUrl = `http://${url}:3142/get-orders-by-date-range?startDate=${startDate}&endDate=${endDate}&ascending=${ascending}`;
     try {
         const response = await fetch(apiUrl);
         const data = await response.json();
@@ -129,7 +129,7 @@ const getOrdersByDateRange = async (startDate, endDate, ascending = true) => {
 
 // 기간별 통계조회
 const calculateSalesStatistics = async () => {
-    const apiUrl = `http://${url}:3000/calculate-sales-statistics`;
+    const apiUrl = `http://${url}:3142/calculate-sales-statistics`;
     try {
         const response = await fetch(apiUrl);
         const data = await response.json();
@@ -148,7 +148,7 @@ const calculateSalesStatistics = async () => {
 // 프로그램 재시작 API 호출 함수
 async function requestAppRestart() {
     try {
-        const response = await fetch(`http://${url}:3000/restart-app`, {
+        const response = await fetch(`http://${url}:3142/restart-app`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         });
@@ -167,7 +167,7 @@ async function requestAppRestart() {
 // 프로그램 종료 API 호출 함수
 async function requestAppShutdown() {
     try {
-        const response = await fetch(`http://${url}:3000/shutdown-app`, {
+        const response = await fetch(`http://${url}:3142/shutdown-app`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         });
@@ -186,7 +186,7 @@ async function requestAppShutdown() {
 // 플라스틱 컵 투출 함수
 const fetchCupPlUse = async () => {
     try {
-        const response = await fetch(`http://${url}:3000/serial-cup-plastic-use`);
+        const response = await fetch(`http://${url}:3142/serial-cup-plastic-use`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -204,7 +204,7 @@ const fetchCupPlUse = async () => {
 const fetchCupPaUse = async () => {
     try {
 
-        const response = await fetch(`http://${url}:3000/serial-cup-paper-use`);
+        const response = await fetch(`http://${url}:3142/serial-cup-paper-use`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -220,7 +220,7 @@ const fetchCupPaUse = async () => {
 // 어드민 세척 함수
 const adminUseWash = async (data) => {
     try {
-        const response = await fetch(`http://${url}:3000/admin-use-wash`, {
+        const response = await fetch(`http://${url}:3142/admin-use-wash`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

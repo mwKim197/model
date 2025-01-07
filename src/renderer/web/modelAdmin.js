@@ -14,7 +14,7 @@ import {
 } from '/renderer/api/menuApi.browser.js';
 
 const url = window.location.hostname;
-const userUrlPort = `http://${url}:3000`
+const userUrlPort = `http://${url}:3142`
 let data;
 let userInfo;
 
@@ -425,7 +425,7 @@ document.addEventListener('click', async (event) => {
             try {
 
                 // API 요청
-                const response = await fetch(`http://${url}:3000/delete-menu`, {
+                const response = await fetch(`http://${url}:3142/delete-menu`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json', // JSON 데이터임을 명시
@@ -733,7 +733,7 @@ tab2.querySelector('#saveItemBtn').addEventListener('click', async () => {
         formData.append('menuData', JSON.stringify(menuData));
         console.log(JSON.stringify(menuData));
         try {
-            const response = await fetch(`http://${url}:3000/set-admin-menu-info`, {
+            const response = await fetch(`http://${url}:3142/set-admin-menu-info`, {
                 method: 'POST',
                 body: formData,
             });
@@ -829,7 +829,7 @@ window.handleUpdateClick = function (menuId) {
         }
 
         try {
-            const response = await fetch(`http://${url}:3000/set-menu-update-info`, {
+            const response = await fetch(`http://${url}:3142/set-menu-update-info`, {
                 method: 'PUT', // POST를 사용하여 업데이트 요청
                 body: formData, // FormData로 전송
             });

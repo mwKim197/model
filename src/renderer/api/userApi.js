@@ -3,7 +3,7 @@ const log = require("../../logger");
 
 const setUserInfo = async (userInfo) => {
     try {
-        const response = await fetch('http://narrowroad-model.com:3000/set-user-info',{method: 'POST',
+        const response = await fetch('http://narrowroad-model.com:3142/set-user-info',{method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
