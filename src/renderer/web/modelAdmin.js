@@ -29,6 +29,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 카테고리 데이터가 존재할 경우, select에 옵션 추가
         if (userInfo?.category && Array.isArray(userInfo.category)) {
             populateCategoryOptions(userInfo.category);
+
+            document.getElementById('time-input').value = userInfo.washTime;
+
+            // 초기 어드민 카테고리 리스트 렌더링
+            renderCategoryList(userInfo.category);
         } else {
             console.warn('Category data not found in user info.');
         }
@@ -974,11 +979,11 @@ function populateCategoryOptions(categories) {
         });
 
         // 기본 선택값 설정
-        const menuId = selectElement.id.split('-')[1]; // select ID에서 menuId 추출
+        /*const menuId = selectElement.id.split('-')[1]; // select ID에서 menuId 추출
         const menuItem = data.Items.find(item => item.menuId === parseInt(menuId));
         if (menuItem && menuItem.category) {
             selectElement.value = menuItem.category;
-        }
+        }*/
     });
 }
 /* [MENU] 카테고리 END*/
@@ -1035,7 +1040,6 @@ document.getElementById('syrup6-cleaning').addEventListener('click',async ()=>{ 
 // 시간 저장 버튼 클릭
 document.getElementById('schedule-cleaning').addEventListener('click', async () => {
     const washTime = document.getElementById('time-input').value;
-    console.log("시간 저장:", washTime);
 
     if (washTime === "") {
         console.error("유효하지 않은 시간 값");
@@ -1051,7 +1055,6 @@ document.getElementById('schedule-cleaning').addEventListener('click', async () 
     await fetchAndSaveUserInfo();
 
 });
-document.getElementById('update-category').addEventListener('click',async ()=>{ console.log("카테고리 저장")});
 
 document.getElementById('time-input').addEventListener('input', (event) => {
     let value = parseInt(event.target.value, 10);
@@ -1062,6 +1065,81 @@ document.getElementById('time-input').addEventListener('input', (event) => {
         event.target.value = 24; // 최대값
     }
 });
+
+let categoryData;
+
+// 카테고리 목록 렌더링
+function renderCategoryList(category) {
+    categoryData = category;
+    console.log(categoryData);
+    const categoryList = document.getElementById("category-list");
+    categoryList.innerHTML = ""; // 기존 항목 초기화
+
+    categoryData.forEach((category, index) => {
+        const categoryItem = document.createElement("div");
+        categoryItem.className = "flex items-center gap-4 mb-4";
+
+        categoryItem.innerHTML = `
+            <input 
+                type="text" 
+                value="${category.name}" 
+                data-index="${index}" 
+                class="category-name bg-gray-200 text-black px-4 py-2 rounded-lg border border-gray-300 w-48"
+            />
+            <input 
+                type="text" 
+                value="${category.no}" 
+                data-index="${index}" 
+                class="category-no bg-gray-200 text-black px-4 py-2 rounded-lg border border-gray-300 w-16 text-center"
+            />
+            <input 
+                type="text" 
+                value="${category.item}" 
+                data-index="${index}" 
+                class="category-item bg-gray-200 text-black px-4 py-2 rounded-lg border border-gray-300 w-32"
+            />
+        `;
+
+        categoryList.appendChild(categoryItem);
+    });
+}
+
+// 저장 버튼 클릭 핸들러
+async function saveCategoryData() {
+    const nameInputs = document.querySelectorAll(".category-name");
+    const noInputs = document.querySelectorAll(".category-no");
+    const itemInputs = document.querySelectorAll(".category-item");
+
+    // 입력된 데이터로 카테고리 업데이트
+    nameInputs.forEach((input) => {
+        const index = input.dataset.index;
+        categoryData[index].name = input.value;
+    });
+
+    noInputs.forEach((input) => {
+        const index = input.dataset.index;
+        categoryData[index].no = input.value;
+    });
+
+    itemInputs.forEach((input) => {
+        const index = input.dataset.index;
+        categoryData[index].item = input.value;
+    });
+
+    console.log("저장된 카테고리 데이터:", categoryData);
+    // 업데이트 데이터 생성
+    const data = {
+        category: categoryData, // 세척 시간
+    };
+    await updateUserInfo(data);
+    await fetchAndSaveUserInfo();
+    alert("카테고리가 저장되었습니다!");
+}
+
+
+// 초기화
+document.getElementById("update-category").addEventListener("click", async ()=>{ saveCategoryData()});
+
 
 /* [CONTROL] 머신 조작 END */
 /* [CONTROL] 주문 로그조회 START */
