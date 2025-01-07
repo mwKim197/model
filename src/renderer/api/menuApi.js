@@ -42,7 +42,7 @@ const getUserInfo = async () => {
             throw new Error('User data is not initialized');
         }
 
-        const response = await fetch(`http://localhost:3000/get-user-info`);
+        const response = await fetch(`http://localhost:3142/get-user-info`);
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
         }
@@ -66,7 +66,7 @@ const getMenuInfo = async () => {
             throw new Error('User data is not initialized');
         }
 
-        const response = await fetch(`http://localhost:3000/get-menu-info`);
+        const response = await fetch(`http://localhost:3142/get-menu-info`);
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
         }
@@ -92,7 +92,7 @@ const getUserMenuInfoAll = async (userId) => {
             throw new Error('User data is not initialized');
         }
 
-        const response = await fetch(`http://localhost:3000/get-menu-info-all/${userId}`);
+        const response = await fetch(`http://localhost:3142/get-menu-info-all/${userId}`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -119,7 +119,7 @@ const getMenuInfoAll = async () => {
             throw new Error('User data is not initialized');
         }
         
-        const response = await fetch(`http://localhost:3000/get-menu-info-all`);
+        const response = await fetch(`http://localhost:3142/get-menu-info-all`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -184,7 +184,7 @@ const setMenuInfo = async () => {
             log.info("data : " + JSON.stringify(selectedOptions));
 
             // Fetch 요청 보내기
-            const response = await fetch(`http://localhost:3000/set-menu-info`, {
+            const response = await fetch(`http://localhost:3142/set-menu-info`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -219,7 +219,7 @@ const fetchCoffeeInfo = async (grinder1, grinder2, extraction, hotwater) => {
             throw new Error('User data is not initialized');
         }
 
-        const response = await fetch(`http://localhost:3000/serial-order-coffee-setting/${grinder1}/${grinder2}/${extraction}/${hotwater}`);
+        const response = await fetch(`http://localhost:3142/serial-order-coffee-setting/${grinder1}/${grinder2}/${extraction}/${hotwater}`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -244,7 +244,7 @@ const fetchCoffeeUse = async () => {
             throw new Error('User data is not initialized');
         }
 
-        const response = await fetch(`http://localhost:3000/serial-order-coffee-use`);
+        const response = await fetch(`http://localhost:3142/serial-order-coffee-use`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -269,7 +269,7 @@ const fetchCoffeeUse1 = async () => {
             throw new Error('User data is not initialized');
         }
 
-        const response = await fetch(`http://localhost:3000/serial-order-coffee-use1`);
+        const response = await fetch(`http://localhost:3142/serial-order-coffee-use1`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -293,7 +293,7 @@ const fetchTeaInfo = async (motor, extraction, hotwater) => {
             throw new Error('User data is not initialized');
         }
 
-        const response = await fetch(`http://localhost:3000/serial-order-tea-setting/${motor}/${extraction}/${hotwater}`);
+        const response = await fetch(`http://localhost:3142/serial-order-tea-setting/${motor}/${extraction}/${hotwater}`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -318,7 +318,7 @@ const fetchTeaUse = async () => {
             throw new Error('User data is not initialized');
         }
 
-        const response = await fetch(`http://localhost:3000/serial-order-tea-use`);
+        const response = await fetch(`http://localhost:3142/serial-order-tea-use`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -343,7 +343,7 @@ const fetchSyrupInfo = async (syrup, pump, hotwater, sparkling) => {
             throw new Error('User data is not initialized');
         }
 
-        const response = await fetch(`http://localhost:3000/serial-order-syrup-setting/${syrup}/${pump}/${hotwater}/${sparkling}`);
+        const response = await fetch(`http://localhost:3142/serial-order-syrup-setting/${syrup}/${pump}/${hotwater}/${sparkling}`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -367,7 +367,7 @@ const fetchSyrupUse = async () => {
             throw new Error('User data is not initialized');
         }
 
-        const response = await fetch(`http://localhost:3000/serial-order-syrup-use`);
+        const response = await fetch(`http://localhost:3142/serial-order-syrup-use`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -391,7 +391,7 @@ const fetchWaterTime = async (waterTime) => {
             throw new Error('User data is not initialized');
         }
 
-        const response = await fetch(`http://localhost:3000/serial-water-time?data=${waterTime}`);
+        const response = await fetch(`http://localhost:3142/serial-water-time?data=${waterTime}`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -415,7 +415,7 @@ const fetchIceTime = async (iceTime) => {
             throw new Error('User data is not initialized');
         }
 
-        const response = await fetch(`http://localhost:3000/serial-ice-time?data=${iceTime}`);
+        const response = await fetch(`http://localhost:3142/serial-ice-time?data=${iceTime}`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -438,7 +438,7 @@ const fetchIceRun = async () => {
         if (!userData) {
             throw new Error('User data is not initialized');
         }
-        const response = await fetch(`http://localhost:3000/serial-ice-run`);
+        const response = await fetch(`http://localhost:3142/serial-ice-run`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -462,7 +462,7 @@ const fetchIceStop = async () => {
             throw new Error('User data is not initialized');
         }
 
-        const response = await fetch(`http://localhost:3000/serial-ice-stop`);
+        const response = await fetch(`http://localhost:3142/serial-ice-stop`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -486,7 +486,7 @@ const fetchCupInfo = async () => {
             throw new Error('User data is not initialized');
         }
 
-        const response = await fetch(`http://localhost:3000/serial-cup-info`);
+        const response = await fetch(`http://localhost:3142/serial-cup-info`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -509,7 +509,7 @@ const fetchCupPlUse = async () => {
         if (!userData) {
             throw new Error('User data is not initialized');
         }
-        const response = await fetch(`http://localhost:3000/serial-cup-plastic-use`);
+        const response = await fetch(`http://localhost:3142/serial-cup-plastic-use`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -534,7 +534,7 @@ const fetchCupPaUse = async () => {
             throw new Error('User data is not initialized');
         }
 
-        const response = await fetch(`http://localhost:3000/serial-cup-paper-use`);
+        const response = await fetch(`http://localhost:3142/serial-cup-paper-use`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -558,7 +558,7 @@ const fetchIceInfo = async () => {
             throw new Error('User data is not initialized');
         }
         
-        const response = await fetch(`http://localhost:3000/serial-ice-info`);
+        const response = await fetch(`http://localhost:3142/serial-ice-info`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);

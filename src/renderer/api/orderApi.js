@@ -147,7 +147,7 @@ const reqOrder = async (orderList) => {
         
         await ensureUserDataInitialized();
         
-        const response = await fetch(`http://localhost:3000/start-order`, {
+        const response = await fetch(`http://localhost:3142/start-order`, {
             method: 'POST', // POST 요청
             headers: {
                 'Content-Type': 'application/json', // JSON 형식으로 전송
@@ -169,7 +169,7 @@ const useWash = async (orderList) => {
 
         await ensureUserDataInitialized();
         
-        const response = await fetch(`http://localhost:3000/wash`, {
+        const response = await fetch(`http://localhost:3142/wash`, {
             method: 'POST', // POST 요청
             headers: {
                 'Content-Type': 'application/json', // JSON 형식으로 전송
@@ -190,7 +190,7 @@ const reStartCheck = async (orderList) => {
 
         await ensureUserDataInitialized();
         
-        const response = await fetch(`http://localhost:3000/start-order`, {
+        const response = await fetch(`http://localhost:3142/start-order`, {
             method: 'POST', // POST 요청
             headers: {
                 'Content-Type': 'application/json', // JSON 형식으로 전송

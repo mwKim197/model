@@ -22,7 +22,7 @@ const setUserInfo = async (userInfo) => {
 
 const setUserLogin = async (userInfo) => {
     try {
-        const response = await fetch(`http://localhost:3000/set-user-login`,{method: 'POST',
+        const response = await fetch(`http://localhost:3142/set-user-login`,{method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -41,7 +41,7 @@ const setUserLogin = async (userInfo) => {
 // 유저 id 전체조회
 const getAllUserIds = async () => {
     try {
-        const response = await fetch(`http://localhost:3000/get-all-users-ids`,{method: 'POST',
+        const response = await fetch(`http://localhost:3142/get-all-users-ids`,{method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             }
@@ -67,7 +67,7 @@ const setMenuAllUpdate = async (sourceUserId, targetUserId) => {
             targetUserId: targetUserId,
         });
         console.log("setMenuAllUpdate: ", bodyData);
-        const response = await fetch(`http://localhost:3000/set-menu-all-update`, {method: 'POST',
+        const response = await fetch(`http://localhost:3142/set-menu-all-update`, {method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },

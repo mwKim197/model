@@ -21,7 +21,7 @@ log.info(`App Path: ${appPath}`);
 
 // CORS 설정
 app.use(cors({
-    origin: ['http://localhost:3000', /^http:\/\/.*\.narrowroad-model\.com:3142$/],
+    origin: ['http://localhost:3142', /^http:\/\/.*\.narrowroad-model\.com:3142$/],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type'],
 }));
@@ -83,8 +83,8 @@ app.get('/status', (req, res) => {
 
 // 서버 시작 함수
 async function start() {
-    server.listen(3000, '0.0.0.0', () => {
-        log.info('Server running on http://localhost:3000');
+    server.listen(3142, '0.0.0.0', () => {
+        log.info('Server running on http://localhost:3142');
     });
 }
 
