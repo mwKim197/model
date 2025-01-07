@@ -998,7 +998,7 @@ const allUserAdminWash = async (item) => {
     ];
 
     // item 값에 따라 해당 객체 필터링
-    const filteredData = data.filter(obj => {
+    const filteredData = item === "all" ? data : data.filter(obj => {
         if (item === "coffee") return obj.type === "coffee";
         if (item.startsWith("garucha")) return obj.type === "garucha" && obj.value1 === item.replace("garucha", "");
         if (item.startsWith("syrup")) return obj.type === "syrup" && obj.value1 === item.replace("syrup", "");
