@@ -633,56 +633,76 @@ function updateItemFields(itemId, selectedType, values = {}) {
         newFieldsHTML = `
             <div>
                 <label for="value1-${itemId}" class="text-sm text-gray-600">글라인더1</label>
-                <input type="number" id="value1-${itemId}" name="value1-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value1 || 0}" max="10">
+                <input type="number" id="value1-${itemId}" name="value1-${itemId}" min="2.5" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value1 || 0}" max="6">
             </div>
             <div>
                 <label for="value2-${itemId}" class="text-sm text-gray-600">글라인더2</label>
-                <input type="number" id="value2-${itemId}" name="value2-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value2 || 0}" max="10">
+                <input type="number" id="value2-${itemId}" name="value2-${itemId}" min="2.5" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value2 || 0}" max="6">
             </div>
             <div>
                 <label for="value3-${itemId}" class="text-sm text-gray-600">추출량</label>
-                <input type="number" id="value3-${itemId}" name="value3-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value3 || 0}" max="100" />
+                <input type="number" id="value3-${itemId}" name="value3-${itemId}" min="30" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value3 || 0}" max="150" />
             </div>
             <div>
                 <label for="value4-${itemId}" class="text-sm text-gray-600">핫워터</label>
-                <input type="number" id="value4-${itemId}" name="value4-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value4 || 0}" max="200">
+                <input type="number" id="value4-${itemId}" name="value4-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value4 || 0}" max="300">
             </div>`;
     } else if (selectedType === 'garucha') {
         newFieldsHTML = `
             <div>
                 <label for="value1-${itemId}" class="text-sm text-gray-600">차 종류</label>
-                <input type="number" id="value1-${itemId}" name="value1-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value1 || 0}" min="1" max="6">
+                <input type="number" id="value1-${itemId}" name="value1-${itemId}" min="1" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value1 || 1}" min="1" max="6">
             </div>
             <div>
                 <label for="value2-${itemId}" class="text-sm text-gray-600">추출 시간</label>
-                <input type="number" id="value2-${itemId}" name="value2-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value2 || 0}" max="100">
+                <input type="number" id="value2-${itemId}" name="value2-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value2 || 0}" max="30">
             </div>
             <div>
                 <label for="value3-${itemId}" class="text-sm text-gray-600">핫워터</label>
-                <input type="number" id="value3-${itemId}" name="value3-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value3 || 0}" max="200">
+                <input type="number" id="value3-${itemId}" name="value3-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value3 || 0}" max="400">
             </div>`;
     } else if (selectedType === 'syrup') {
         newFieldsHTML = `
             <div>
                 <label for="value1-${itemId}" class="text-sm text-gray-600">시럽 종류</label>
-                <input type="text" id="value1-${itemId}" name="value1-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value1 || ''}" min="1" max="6">
+                <input type="text" id="value1-${itemId}" name="value1-${itemId}" min="1" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value1 || 1}" min="1" max="6">
             </div>
             <div>
                 <label for="value2-${itemId}" class="text-sm text-gray-600">펌프 시간</label>
-                <input type="number" id="value2-${itemId}" name="value2-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value2 || 0}" max="10">
+                <input type="number" id="value2-${itemId}" name="value2-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value2 || 0}" max="30">
             </div>
             <div>
                 <label for="value3-${itemId}" class="text-sm text-gray-600">핫워터</label>
-                <input type="number" id="value3-${itemId}" name="value3-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value3 || 0}" max="100">
+                <input type="number" id="value3-${itemId}" name="value3-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value3 || 0}" max="400">
             </div>
             <div>
                 <label for="value4-${itemId}" class="text-sm text-gray-600">탄산수</label>
-                <input type="number" id="value4-${itemId}" name="value4-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value4 || 0}" max="100">
+                <input type="number" id="value4-${itemId}" name="value4-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value4 || 0}" max="400">
             </div>`;
     }
 
     // 기존 필드를 새로 생성된 내용으로 대체
     dynamicFields.innerHTML = newFieldsHTML;
+
+    if (selectedType === 'garucha') {
+        const garuchaField = document.getElementById(`value1-${itemId}`);
+        restrictInput(garuchaField, [1, 2, 3, 4, 5, 6]);
+    } else if (selectedType === 'syrup') {
+        const syrupField = document.getElementById(`value1-${itemId}`);
+        restrictInput(syrupField, [1, 2, 3, 5, 6]);
+    }
+}
+
+// 허용된 숫자만 입력가능
+function restrictInput(inputElement, allowedValues) {
+    inputElement.addEventListener('input', () => {
+        const rawValue = inputElement.value;
+
+        // 소수점 또는 허용되지 않는 값이 입력되었는지 확인
+        if (!/^\d+$/.test(rawValue) || !allowedValues.includes(parseInt(rawValue, 10))) {
+            inputElement.value = ''; // 소수점이나 허용되지 않은 값이 입력되면 초기화
+        }
+    });
 }
 
 /* [MENU SET] 등록 ITEM 동적 등록 END */
@@ -942,7 +962,7 @@ function collectFormData(menuId) {
 function collectDynamicItems() {
     const items = [];
     tab2.querySelectorAll('.new-item').forEach(fieldset => {
-        console.log(fieldset);
+
         const itemType = fieldset.querySelector('.itemTypeSelector').value;
         if (itemType) {
             const item = {
