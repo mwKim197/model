@@ -1051,8 +1051,16 @@ document.getElementById('schedule-cleaning').addEventListener('click', async () 
         washTime: washTime, // 세척 시간
     };
 
-    await updateUserInfo(data);
-    await fetchAndSaveUserInfo();
+    try {
+        // 서버에 업데이트 요청
+        await updateUserInfo(data);
+        await fetchAndSaveUserInfo();
+
+        alert("자동세척 예약 시간이 저장되었습니다. 프로그램을 재시작해주세요.");
+    } catch (error) {
+        console.error("저장 중 오류:", error);
+        alert("저장에 실패했습니다. 다시 시도해주세요.");
+    }
 
 });
 
@@ -1061,17 +1069,21 @@ document.getElementById('time-input').addEventListener('input', (event) => {
 
     if (isNaN(value) || value < 0) {
         event.target.value = 0; // 최소값
-    } else if (value > 24) {
-        event.target.value = 24; // 최대값
+    } else if (value > 23) {
+        event.target.value = 23; // 최대값
     }
 });
 
-let categoryData;
-
 // 카테고리 목록 렌더링
-function renderCategoryList(category) {
-    categoryData = category;
-    console.log(categoryData);
+function renderCategoryList(category = []) {
+    const requiredCategoryCount = 6; // 고정 카테고리 수
+    const categoryData = [...category]; // 조회된 데이터를 복사
+
+    // 데이터가 부족하면 빈 항목 추가
+    while (categoryData.length < requiredCategoryCount) {
+        categoryData.push({ name: "", no: "", item: "" });
+    }
+
     const categoryList = document.getElementById("category-list");
     categoryList.innerHTML = ""; // 기존 항목 초기화
 
@@ -1081,20 +1093,26 @@ function renderCategoryList(category) {
 
         categoryItem.innerHTML = `
             <input 
+                type="checkbox" 
+                data-index="${index}" 
+                class="category-checkbox"
+                ${category.name ? "checked" : ""} 
+            />
+            <input 
                 type="text" 
-                value="${category.name}" 
+                value="${category.name || ""}" 
                 data-index="${index}" 
                 class="category-name bg-gray-200 text-black px-4 py-2 rounded-lg border border-gray-300 w-48"
             />
             <input 
                 type="text" 
-                value="${category.no}" 
+                value="${category.no || ""}" 
                 data-index="${index}" 
                 class="category-no bg-gray-200 text-black px-4 py-2 rounded-lg border border-gray-300 w-16 text-center"
             />
             <input 
                 type="text" 
-                value="${category.item}" 
+                value="${category.item || ""}" 
                 data-index="${index}" 
                 class="category-item bg-gray-200 text-black px-4 py-2 rounded-lg border border-gray-300 w-32"
             />
@@ -1106,34 +1124,38 @@ function renderCategoryList(category) {
 
 // 저장 버튼 클릭 핸들러
 async function saveCategoryData() {
+    const checkboxes = document.querySelectorAll(".category-checkbox");
     const nameInputs = document.querySelectorAll(".category-name");
     const noInputs = document.querySelectorAll(".category-no");
     const itemInputs = document.querySelectorAll(".category-item");
 
-    // 입력된 데이터로 카테고리 업데이트
-    nameInputs.forEach((input) => {
-        const index = input.dataset.index;
-        categoryData[index].name = input.value;
+    const selectedCategories = [];
+
+    checkboxes.forEach((checkbox, index) => {
+        if (checkbox.checked) {
+            selectedCategories.push({
+                name: nameInputs[index].value || "",
+                no: noInputs[index].value || "",
+                item: itemInputs[index].value || "",
+            });
+        }
     });
 
-    noInputs.forEach((input) => {
-        const index = input.dataset.index;
-        categoryData[index].no = input.value;
-    });
-
-    itemInputs.forEach((input) => {
-        const index = input.dataset.index;
-        categoryData[index].item = input.value;
-    });
-
-    console.log("저장된 카테고리 데이터:", categoryData);
-    // 업데이트 데이터 생성
     const data = {
-        category: categoryData, // 세척 시간
+        category: selectedCategories,
     };
-    await updateUserInfo(data);
-    await fetchAndSaveUserInfo();
-    alert("카테고리가 저장되었습니다!");
+
+    console.log("저장된 카테고리 데이터:", data);
+
+    try {
+        // 서버에 업데이트 요청
+        await updateUserInfo(data);
+        await fetchAndSaveUserInfo();
+        alert("카테고리가 저장되었습니다. 프로그램을 재시작해주세요.");
+    } catch (error) {
+        console.error("저장 중 오류:", error);
+        alert("저장에 실패했습니다. 다시 시도해주세요.");
+    }
 }
 
 
