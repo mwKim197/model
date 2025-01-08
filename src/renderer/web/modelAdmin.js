@@ -633,11 +633,11 @@ function updateItemFields(itemId, selectedType, values = {}) {
         newFieldsHTML = `
             <div>
                 <label for="value1-${itemId}" class="text-sm text-gray-600">글라인더1</label>
-                <input type="number" id="value1-${itemId}" name="value1-${itemId}" min="2.5" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value1 || 0}" max="6">
+                <input type="number" id="value1-${itemId}" name="value1-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value1 || 0}" max="6">
             </div>
             <div>
                 <label for="value2-${itemId}" class="text-sm text-gray-600">글라인더2</label>
-                <input type="number" id="value2-${itemId}" name="value2-${itemId}" min="2.5" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value2 || 0}" max="6">
+                <input type="number" id="value2-${itemId}" name="value2-${itemId}" min="0" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${values.value2 || 0}" max="6">
             </div>
             <div>
                 <label for="value3-${itemId}" class="text-sm text-gray-600">추출량</label>
@@ -741,6 +741,7 @@ tab2.querySelector('#saveItemBtn').addEventListener('click', async () => {
         const value3 = fieldset.querySelector('[name*="value3"]')?.value || '0';
         const value4 = fieldset.querySelector('[name*="value4"]')?.value || '0';
 
+
         const itemData = {
             no: itemCounter,
             type: itemType,
@@ -749,6 +750,54 @@ tab2.querySelector('#saveItemBtn').addEventListener('click', async () => {
             value3,
             value4
         };
+
+        // `coffee` 타입에 대한 추가 로직
+        if (itemData.type === 'coffee') {
+            const isValidValue = (value) => value >= 1 && value <= 6 && /^[0-9]+(\.[0-9]{1,2})?$/.test(value);
+
+
+            if (itemData.value1 > 0) {
+
+                // Value1이 있을 때 Value2가 0인지 확인
+                if (parseFloat(itemData.value2) !== 0) {
+                    alert(`'그라인더1' 값이 설정된 경우, '그라인더2' 값은 반드시 0이어야 합니다.`);
+                    throw new Error(`Invalid 'coffee' configuration: Value2 (${item.value2}) must be 0 when Value1 (${itemData.value1}) is set.`);
+                }
+
+                if (!isValidValue(itemData.value1)) {
+                    alert(`'그라인더1' 값은 최저 1 ~ 최대 6초까지 소수점을 포함한 값을 입력할 수 있습니다. (예: 1.5, 5.5, 6)`);
+                    throw new Error(`Invalid 'coffee' configuration: Value1 (${itemData.value1}) is out of range or incorrectly formatted.`);
+                }
+            }
+
+            if (itemData.value2 > 0) {
+                // Value2이 있을 때 Value1가 0인지 확인
+                if (parseFloat(itemData.value1) !== 0) {
+                    alert(`'그라인더2' 값이 설정된 경우, '그라인더1' 값은 반드시 0이어야 합니다.`);
+                    throw new Error(`Invalid 'coffee' configuration: Value2 (${item.value2}) must be 0 when Value1 (${itemData.value1}) is set.`);
+                } else if (!isValidValue(itemData.value2)) {
+                    alert(`'그라인더2' 값은 최저 1 ~ 최대 6초까지 소수점을 포함한 값을 입력할 수 있습니다. (예: 1.5, 5.5, 6)`);
+                    throw new Error(`Invalid 'coffee' configuration: Value2 (${itemData.value2}) is out of range or incorrectly formatted.`);
+                }
+            }
+
+        }
+
+        // `garucha` 타입에 대한 추가 로직
+        if (itemData.type === 'garucha') {
+
+            if (itemData.value2 > 0 && itemData.value3 < itemData.value2 * 10) {
+                alert(`가루차 핫 워터(${itemData.value3})는 추출시간 (${itemData.value2})의 10배 이상이어야 합니다.`);
+                throw new Error(`가루차 저장 벨리데이션 에러: 핫워터 (${itemData.value3}) < 추출시간 (${itemData.value2}) * 10`);
+            }
+        }
+        if (itemData.type === 'syrup') {
+
+            if (itemData.value3 < 30 && itemData.value4 < 30) {
+                alert('시럽 핫 워터 또는 탄산수 중 하나는 30 이상의 값이어야 합니다.');
+                throw new Error('Invalid values: Both Value3 and Value4 are less than 30.');
+            }
+        }
 
         menuData.items.push(itemData); // items 배열에 추가
     });
@@ -972,9 +1021,62 @@ function collectDynamicItems() {
                 value3: fieldset.querySelector('[name^="value3"]').value || 0,
                 value4: fieldset.querySelector('[name^="value4"]')?.value || 0, // value4가 없는 경우도 처리
             };
+
+            // `coffee` 타입에 대한 추가 로직
+            if (item.type === 'coffee') {
+                const isValidValue = (value) => value >= 1 && value <= 6 && /^[0-9]+(\.[0-9]{1,2})?$/.test(value);
+
+                if (item.value1 > 0) {
+
+                    // Value1이 있을 때 Value2가 0인지 확인
+                    if (parseFloat(item.value2) !== 0) {
+                        alert(`'그라인더1' 값이 설정된 경우, '그라인더2' 값은 반드시 0이어야 합니다.`);
+                        throw new Error(`Invalid 'coffee' configuration: Value2 (${item.value2}) must be 0 when Value1 (${item.value1}) is set.`);
+                    }
+
+                    if (!isValidValue(item.value1)) {
+                        alert(`'그라인더1' 값은 최저 1 ~ 최대 6초까지 소수점을 포함한 값을 입력할 수 있습니다. (예: 1.5, 5.5, 6)`);
+                        throw new Error(`Invalid 'coffee' configuration: Value1 (${item.value1}) is out of range or incorrectly formatted.`);
+                    }
+
+                }
+
+                if (item.value2 > 0) {
+
+                    // Value2이 있을 때 Value1가 0인지 확인
+                    if (parseFloat(item.value1) !== 0) {
+                        alert(`'그라인더2' 값이 설정된 경우, '그라인더1' 값은 반드시 0이어야 합니다.`);
+                        throw new Error(`Invalid 'coffee' configuration: Value2 (${item.value2}) must be 0 when Value1 (${item.value1}) is set.`);
+                    }
+
+                    if (!isValidValue(item.value2)) {
+                        alert(`'그라인더2' 값은 최저 1 ~ 최대 6초까지 소수점을 포함한 값을 입력할 수 있습니다. (예: 1.5, 5.5, 6)`);
+                        throw new Error(`Invalid 'coffee' configuration: Value1 (${item.value2}) is out of range or incorrectly formatted.`);
+                    }
+                }
+
+            }
+
+            // `garucha` 타입에 대한 추가 로직
+            if (item.type === 'garucha') {
+                if (item.value2 > 0 && item.value3 < item.value2 * 10) {
+                    alert(`가루차 핫 워터(${item.value3})는 추출시간 (${item.value2})의 10배 이상이어야 합니다.`);
+                    throw new Error(`가루차 저장 벨리데이션 에러: 핫워터 (${item.value3}) < 추출시간 (${item.value2}) * 10`);
+                }
+            }
+
+            if (item.type === 'syrup') {
+
+                if (item.value3 < 30 && item.value4 < 30) {
+                    alert('시럽 핫 워터 또는 탄산수 중 하나는 30 이상의 값이어야 합니다.');
+                    throw new Error('Invalid values: Both Value3 and Value4 are less than 30.');
+                }
+            }
+
             items.push(item);
         }
     });
+
     return items;
 }
 /* [MENU UPDATE] 수정 버튼 END */
