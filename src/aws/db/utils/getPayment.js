@@ -172,15 +172,22 @@ const getSalesStatistics = async (startDate, endDate) => {
 // 기간별 금액 통계
 const calculateSalesStatistics = async () => {
     // 현재 시간 (KST 기준)
-    const now = new Date();
-    const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000); // UTC + 9시간
+    const kstNow = new Date();
 
     // 전체 기간 시작과 끝 (필요에 따라 수정 가능)
     const startOfPeriod = '2024-12-01T00:00:00.000Z'; // 조회 시작 (최초 데이터 입력 시점)
-    const endOfPeriod = kstNow.toISOString(); // 현재 시간
-
     // 전체 데이터 조회
-    const salesData = await getSalesStatistics(startOfPeriod, endOfPeriod);
+    const salesData = await getSalesStatistics(startOfPeriod, kstNow.toString());
+
+    function toKstISOString(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // 1월은 0이므로 +1
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    }
 
     // 통계 초기화
     let totalSales = 0;
@@ -189,20 +196,21 @@ const calculateSalesStatistics = async () => {
     let currentMonthSales = 0;
     let previousMonthSales = 0;
 
+
     // 오늘 시작과 끝
-    const todayStart = new Date(kstNow.getFullYear(), kstNow.getMonth(), kstNow.getDate(), 0, 0, 0);
-    const todayEnd = new Date(kstNow.getFullYear(), kstNow.getMonth(), kstNow.getDate(), 23, 59, 59, 999);
+    const todayStart = toKstISOString(new Date(kstNow.getFullYear(), kstNow.getMonth(), kstNow.getDate(), 0, 0, 0));
+    const todayEnd = toKstISOString(new Date(kstNow.getFullYear(), kstNow.getMonth(), kstNow.getDate(), 23, 59, 59, 999));
 
     // 전일 시작과 끝
-    const yesterdayStart = new Date(kstNow.getFullYear(), kstNow.getMonth(), kstNow.getDate() - 1, 0, 0, 0);
-    const yesterdayEnd = new Date(kstNow.getFullYear(), kstNow.getMonth(), kstNow.getDate() - 1, 23, 59, 59, 999);
+    const yesterdayStart = toKstISOString(new Date(kstNow.getFullYear(), kstNow.getMonth(), kstNow.getDate() - 1, 0, 0, 0));
+    const yesterdayEnd = toKstISOString(new Date(kstNow.getFullYear(), kstNow.getMonth(), kstNow.getDate() - 1, 23, 59, 59, 999));
 
     // 당월 시작
-    const currentMonthStart = new Date(kstNow.getFullYear(), kstNow.getMonth(), 1, 0, 0, 0);
+    const currentMonthStart = toKstISOString(new Date(kstNow.getFullYear(), kstNow.getMonth(), 1, 0, 0, 0));
 
     // 전월 시작과 끝
-    const previousMonthStart = new Date(kstNow.getFullYear(), kstNow.getMonth() - 1, 1, 0, 0, 0);
-    const previousMonthEnd = new Date(kstNow.getFullYear(), kstNow.getMonth(), 0, 23, 59, 59);
+    const previousMonthStart = toKstISOString(new Date(kstNow.getFullYear(), kstNow.getMonth() - 1, 1, 0, 0, 0));
+    const previousMonthEnd = toKstISOString(new Date(kstNow.getFullYear(), kstNow.getMonth(), 0, 23, 59, 59));
 
     // 매출 데이터 순회
     salesData.forEach(sale => {
