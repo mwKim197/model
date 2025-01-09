@@ -212,6 +212,11 @@ const calculateSalesStatistics = async () => {
     const previousMonthStart = toKstISOString(new Date(kstNow.getFullYear(), kstNow.getMonth() - 1, 1, 0, 0, 0));
     const previousMonthEnd = toKstISOString(new Date(kstNow.getFullYear(), kstNow.getMonth(), 0, 23, 59, 59));
 
+    const kstOffset = 9 * 60 * 60 * 1000; // 9시간 (밀리초)
+
+    log.info("todayStart", new Date(new Date(todayStart).getTime() + kstOffset) );
+    log.info("todayEnd", new Date(todayEnd).getTime() + + kstOffset );
+
     // 매출 데이터 순회
     salesData.forEach(sale => {
         const saleDate = new Date(sale.timestamp); // 문자열을 Date 객체로 변환
@@ -220,22 +225,22 @@ const calculateSalesStatistics = async () => {
         totalSales += saleAmount;
 
         // 오늘 매출
-        if (saleDate >= new Date(todayStart) && saleDate <= new Date(todayEnd)) {
+        if (saleDate >= new Date(new Date(todayStart).getTime() + kstOffset) && saleDate <= new Date(new Date(todayEnd).getTime() + kstOffset)) {
             todaySales += saleAmount;
         }
 
         // 전일 매출
-        if (saleDate >= new Date(yesterdayStart) && saleDate <= new Date(yesterdayEnd)) {
+        if (saleDate >= new Date(new Date(yesterdayStart).getTime() + kstOffset) && saleDate <= new Date(new Date(yesterdayEnd).getTime() + kstOffset)) {
             yesterdaySales += saleAmount;
         }
 
         // 당월 매출
-        if (saleDate >= new Date(currentMonthStart)) {
+        if (saleDate >= new Date(new Date(currentMonthStart).getTime()+ kstOffset)) {
             currentMonthSales += saleAmount;
         }
 
         // 전월 매출
-        if (saleDate >= new Date(previousMonthStart) && saleDate <= new Date(previousMonthEnd)) {
+        if (saleDate >= new Date(new Date(previousMonthStart).getTime() + kstOffset) && saleDate <= new Date(new Date(previousMonthEnd).getTime() + kstOffset)) {
             previousMonthSales += saleAmount;
         }
     });
