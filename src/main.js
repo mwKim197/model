@@ -8,6 +8,7 @@ const server = require('./server');
 const serialPolling = require('./services/serialPolling');
 const { setupPortForwarding } = require('./services/portForwarding');
 const { getBasePath } = require(path.resolve(__dirname, './aws/s3/utils/cacheDirManager'));
+const publicIp = require('public-ip');
 const log = require('./logger');
 const fs = require('fs');
 
@@ -62,6 +63,19 @@ async function initializeApp() {
         throw error; // 상위로 에러 전달
     }
 }
+
+let previousIp = null;
+
+async function monitorIpChange() {
+    const currentIp = await publicIp.v4();
+    if (previousIp && previousIp !== currentIp) {
+        log.info(`공용 IP 변경 감지: ${previousIp} → ${currentIp}`);
+        // 필요한 동작 수행 (예: 이메일 알림, 설정 갱신 등)
+    }
+    previousIp = currentIp;
+}
+
+setInterval(monitorIpChange, 60000); // 1분마다 확인
 
 function restartApp() {
     app.relaunch();

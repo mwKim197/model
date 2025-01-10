@@ -5,20 +5,29 @@ function setupPortForwarding(publicPort, privatePort) {
     const client = upnp.createClient();
 
     function mapPort() {
-        client.portMapping(
-            {
-                public: publicPort,
-                private: privatePort,
-                ttl: 3600, // TTL 1시간
-            },
-            (err) => {
-                if (err) {
-                    log.error(`포트 포워딩 실패 (공용 포트: ${publicPort}, 사설 포트: ${privatePort}):`, err.message);
-                } else {
-                    log.info(`포트 포워딩 성공: 외부 포트 ${publicPort} → 내부 포트 ${privatePort}`);
-                }
+        log.info('포트 매핑 갱신 중...');
+        client.portUnmapping({ public: publicPort }, (err) => {
+            if (err) {
+                log.warn(`기존 포트 매핑 해제 실패 (포트: ${publicPort}): ${err.message}`);
+            } else {
+                log.info(`기존 포트 매핑 해제 성공 (포트: ${publicPort})`);
             }
-        );
+
+            client.portMapping(
+                {
+                    public: publicPort,
+                    private: privatePort,
+                    ttl: 3600, // TTL 1시간
+                },
+                (err) => {
+                    if (err) {
+                        log.error(`포트 매핑 실패 (공용 포트: ${publicPort}, 사설 포트: ${privatePort}): ${err.message}`);
+                    } else {
+                        log.info(`포트 매핑 성공: 외부 포트 ${publicPort} → 내부 포트 ${privatePort}`);
+                    }
+                }
+            );
+        });
     }
 
     // 처음 포트 매핑
