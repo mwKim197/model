@@ -8,7 +8,6 @@ const server = require('./server');
 const serialPolling = require('./services/serialPolling');
 const { setupPortForwarding } = require('./services/portForwarding');
 const { getBasePath } = require(path.resolve(__dirname, './aws/s3/utils/cacheDirManager'));
-const publicIp = require('public-ip');
 const log = require('./logger');
 const fs = require('fs');
 
@@ -64,18 +63,29 @@ async function initializeApp() {
     }
 }
 
-let previousIp = null;
+(async () => {
+    const { publicIpv4 } = await import('public-ip');
+    let previousIp = null;
 
-async function monitorIpChange() {
-    const currentIp = await publicIp.v4();
-    if (previousIp && previousIp !== currentIp) {
-        log.info(`공용 IP 변경 감지: ${previousIp} → ${currentIp}`);
-        // 필요한 동작 수행 (예: 이메일 알림, 설정 갱신 등)
+    async function checkPublicIp() {
+        try {
+            const ip = await publicIpv4();
+            log.info(`현재 공용 IP: ${ip}`); // 템플릿 문자열 사용
+            if (previousIp && previousIp !== ip) {
+                log.info(`공용 IP 변경 감지: ${previousIp} → ${ip}`);
+                // 필요한 동작 수행 (예: 이메일 알림, 설정 갱신 등)
+            }
+            previousIp = ip; // IP 업데이트
+        } catch (error) {
+            log.error(`공용 IP 확인 실패: ${error.message}`);
+        }
     }
-    previousIp = currentIp;
-}
 
-setInterval(monitorIpChange, 60000); // 1분마다 확인
+    setInterval(async () => {
+        await checkPublicIp();
+    }, 60000); // 60초마다 실행
+})();
+
 
 function restartApp() {
     app.relaunch();
