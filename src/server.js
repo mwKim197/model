@@ -81,6 +81,10 @@ app.get('/status', (req, res) => {
     res.status(200).json({ status: 'OK', uptime: process.uptime() });
 });
 
+// Keep-Alive 설정 추가
+server.keepAliveTimeout = 300000; // 5분
+server.headersTimeout = 310000;  // Keep-Alive 타임아웃보다 약간 길게 설정
+
 // 서버 시작 함수
 async function start() {
     server.listen(3142, '0.0.0.0', () => {

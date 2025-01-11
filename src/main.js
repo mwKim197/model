@@ -69,7 +69,9 @@ async function initializeApp() {
 
     async function checkPublicIp() {
         try {
-            const ip = await publicIpv4();
+            const ip = await publicIpv4({
+                fallbackUrls: ['https://ifconfig.me/ip'], // 특정 서비스로 고정
+            });
             log.info(`현재 공용 IP: ${ip}`); // 템플릿 문자열 사용
             if (previousIp && previousIp !== ip) {
                 log.info(`공용 IP 변경 감지: ${previousIp} → ${ip}`);
