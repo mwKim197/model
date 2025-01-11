@@ -644,7 +644,7 @@ async function fetchData() {
         const basePath = await window.electronAPI.getBasePath();
         console.log('Cache Directory Path:', basePath);
         const allData = await window.electronAPI.getMenuInfoAll();
-        sendLogToMain('info', `전체 메뉴:  ${allData}`);
+        sendLogToMain('info', `전체 메뉴:  ${JSON.stringify(allData)}`);
         userInfo = await window.electronAPI.getUserInfo();
         console.log("allData", allData);
         // 이미지 받아오기
