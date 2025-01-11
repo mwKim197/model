@@ -73,6 +73,7 @@ async function initializeApp() {
                 fallbackUrls: [
                     'https://ifconfig.me/ip'
                 ],
+                onlyHttps: true, // HTTPS 강제
                 headers: {
                     'User-Agent': 'curl/7.83.1' // curl과 동일한 User-Agent 설정
                 },

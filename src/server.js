@@ -75,8 +75,6 @@ app.get('/version', (req, res) => {
     res.json({ version: packageJson.version });
 });
 
-
-
 app.get('/status', (req, res) => {
     res.status(200).json({ status: 'OK', uptime: process.uptime() });
 });
