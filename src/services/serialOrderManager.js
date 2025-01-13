@@ -326,6 +326,13 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
             log.info(`coffee 추출 실행`);
             await Order.extractCoffee();
 
+            const isCoffee = await checkAutoOperationState("커피", 2);
+
+            // 가루차 동작 확인
+            if (!isCoffee) {
+                await Order.extractCoffee();
+            }
+
             const isStopped = await checkAutoOperationState("정지", 3);
 
             if (isStopped) {
@@ -360,6 +367,13 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
             log.info(`${motor} Tea 추출 실행`);
             await Order.extractTeaPowder();
 
+            const isGarucha = await checkAutoOperationState("가루차", 2);
+
+            // 가루차 동작 확인
+            if (!isGarucha) {
+                await Order.extractTeaPowder();
+            }
+
             const isStopped = await checkAutoOperationState("정지", 3);
 
             if (isStopped) {
@@ -393,6 +407,13 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
             await Order.setSyrup(motor, grinder(extraction), formatValue(hotwater), formatValue(sparkling));
             log.info(`${motor} Syrup 추출 실행`);
             await Order.extractSyrup();
+
+            const isSyrup = await checkAutoOperationState("시럽", 2);
+
+            // 가루차 동작 확인
+            if (!isSyrup) {
+                await Order.extractSyrup();
+            }
 
             const isStopped = await checkAutoOperationState("정지", 3);
 

@@ -153,7 +153,7 @@ const getAutoOperationState = (value) => {
     switch (value) {
         case '1': return '커피';
         case '2': return '가루차';
-        case '3': return '시럽 동작 중';
+        case '3': return '시럽';
         case '4': return '세척 중';
         case '0': return '정지';
         default: return '알 수 없음';
