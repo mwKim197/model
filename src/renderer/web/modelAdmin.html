@@ -205,19 +205,37 @@
 
                     <!-- 세척 -->
                     <button id="all-cleaning" class="bg-blue-500 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-600">전체 세척</button>
-                    <button id="schedule-cleaning" class="bg-blue-500 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-600">전체세척 예약</button>
-                    <!-- Input 대신 숫자 입력 -->
-                    <div class="flex items-center space-x-4">
-                        <label for="time-input" class="text-gray-600 text-sm font-semibold">예약 시간</label>
-                        <input
-                                id="time-input"
-                                type="number"
-                                min="0"
-                                max="24"
-                                step="1"
-                                class="bg-gray-200 text-black py-2 px-4 w-20 text-center rounded-lg shadow border"
-                                placeholder="00"
-                        />
+                    <div class="grid grid-cols-2">
+                        <button id="schedule-cleaning" class="bg-blue-500 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-600 mr-4">전체세척 예약</button>
+                        <!-- Input 대신 숫자 입력 -->
+                        <div class="flex items-center space-x-4">
+                            <label for="time-input" class="text-gray-600 text-sm font-semibold">예약 시간</label>
+                            <input
+                                    id="time-input"
+                                    type="number"
+                                    min="0"
+                                    max="24"
+                                    step="1"
+                                    class="bg-gray-200 text-black py-2 px-4 w-20 text-center rounded-lg shadow border"
+                                    placeholder="00"
+                            />
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2">
+                        <button id="limit-count" class="bg-blue-500 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-600 mr-4">최대개수 저장</button>
+                        <!-- Input 대신 숫자 입력 -->
+                        <div class="flex items-center space-x-4">
+                            <label for="limit-input" class="text-gray-600 text-sm font-semibold">최대개수</label>
+                            <input
+                                    id="limit-input"
+                                    type="number"
+                                    min="0"
+                                    max="20"
+                                    step="1"
+                                    class="bg-gray-200 text-black py-2 px-4 w-20 text-center rounded-lg shadow border"
+                                    placeholder="0"
+                            />
+                        </div>
                     </div>
 
                 </div>

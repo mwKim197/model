@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             populateCategoryOptions(userInfo.category);
 
             document.getElementById('time-input').value = userInfo.washTime;
-
+            document.getElementById('limit-input').value = userInfo.limitCount;
             // 초기 어드민 카테고리 리스트 렌더링
             renderCategoryList(userInfo.category);
         } else {
@@ -1195,6 +1195,43 @@ document.getElementById('time-input').addEventListener('input', (event) => {
     }
 });
 
+// 최대 개수 저장 버튼 클릭
+document.getElementById('limit-count').addEventListener('click', async () => {
+    const limitCount = document.getElementById('limit-input').value;
+
+    if (limitCount === "") {
+        console.error("유효하지 않은 최대 값");
+        return;
+    }
+
+    // 업데이트 데이터 생성
+    const data = {
+        limitCount: limitCount, // 최대 개수
+    };
+
+    try {
+        // 서버에 업데이트 요청
+        await updateUserInfo(data);
+        await fetchAndSaveUserInfo();
+
+        alert("최대 주문 개수 값이 저장되었습니다. 프로그램을 재시작해주세요.");
+    } catch (error) {
+        console.error("저장 중 오류:", error);
+        alert("저장에 실패했습니다. 다시 시도해주세요.");
+    }
+
+});
+
+document.getElementById('limit-input').addEventListener('input', (event) => {
+    let value = parseInt(event.target.value, 10);
+
+    if (isNaN(value) || value < 0) {
+        event.target.value = 0; // 최소값
+    } else if (value > 20) {
+        event.target.value = 20; // 최대값
+    }
+});
+
 // 카테고리 목록 렌더링
 function renderCategoryList(category = []) {
     const requiredCategoryCount = 6; // 고정 카테고리 수
@@ -1566,28 +1603,4 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelector(`.tab-btn[data-tab="${activeTab}"]`).classList.add('text-blue-500', 'border-blue-500');
 });
 
-
-
-/*// 탭 등록함수
-document.addEventListener('DOMContentLoaded', () => {
-    const tabs = document.querySelectorAll('.tab-btn');
-    const panels = document.querySelectorAll('.tab-panel');
-
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const target = tab.getAttribute('data-tab');
-
-            // 모든 탭과 패널 초기화
-            tabs.forEach(t => t.classList.remove('text-blue-500', 'border-blue-500'));
-            panels.forEach(panel => panel.classList.add('hidden'));
-
-            // 선택된 탭과 패널 활성화
-            tab.classList.add('text-blue-500', 'border-blue-500');
-            document.getElementById(target).classList.remove('hidden');
-        });
-    });
-
-    // 첫 번째 탭 활성화
-    tabs[0].click();
-});*/
 /* 텝 컨트롤 END */

@@ -14,6 +14,7 @@ let allProducts = [];
 // 세척여부
 let wash = false;
 let userInfo = {};
+
 let isDataLoaded = false;
 
 // Product Grid
@@ -647,7 +648,7 @@ async function fetchData() {
         sendLogToMain('info', `전체 메뉴:  ${JSON.stringify(allData)}`);
         userInfo = await window.electronAPI.getUserInfo();
         console.log("allData", allData);
-        limitCount = userInfo.userInfo ? userInfo.userInfo : 20;
+        limitCount = userInfo.limitCount ? userInfo.limitCount : 20;
         // 이미지 받아오기
         await window.electronAPI.downloadAllFromS3WithCache("model-narrow-road", `model/${userInfo.userId}`);
         // 데이터가 올바르게 로드되었는지 확인
