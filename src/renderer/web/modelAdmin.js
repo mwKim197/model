@@ -469,7 +469,6 @@ document.addEventListener('click', async (event) => {
 
 // tab2 DOM 요소 기준
 const tab2 = document.getElementById('tab2');
-console.log(tab2);
 // 이미지 클릭 시 input 트리거
 const imagePreview = tab2.querySelector('#imagePreview');
 const fileInput = tab2.querySelector('#fileInput');
@@ -833,6 +832,7 @@ tab2.querySelector('#saveItemBtn').addEventListener('click', async () => {
 /* [MENU SET] 등록 버튼 END */
 /* [MENU UPDATE] 수정 버튼 START */
 window.handleUpdateClick = function (menuId) {
+
     // 탭 전환
     switchTab('tab2');
 
@@ -1566,32 +1566,34 @@ function escapeHTML(string) {
 }
 
 /* 텝 컨트롤 START */
-// 탭 전환 함수
 function switchTab(targetTabId) {
-    // 현재 탭 정보를 URL 쿼리 파라미터에 저장
-    const url = new URL(window.location.href);
-    url.searchParams.set('tab', targetTabId); // 'tab' 파라미터에 선택한 탭 ID 저장
-    window.history.pushState({}, '', url);
+    if (targetTabId === 'tab2') {
+        // tab2일 때는 리프레시 없이 동작
+        activateTab(targetTabId);
+    } else {
+        // 다른 탭일 경우 리프레시 동작
+        // 현재 탭 정보를 URL 쿼리 파라미터에 저장
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', targetTabId); // 'tab' 파라미터에 선택한 탭 ID 저장
+        window.history.pushState({}, '', url);
 
-    // 페이지 리프레시
-    location.reload();
+        // 페이지 리프레시
+        location.reload();
+    }
 }
 
 // 전역으로 함수 연결
 window.switchTab = switchTab;
 
-// 페이지 로드 시 활성화할 탭 관리
-window.addEventListener('DOMContentLoaded', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const activeTab = urlParams.get('tab') || 'tab1'; // URL에서 'tab' 값을 가져오거나 기본값 'tab1' 설정
-
+// 탭 활성화 함수 (리프레시 없이 탭 변경 처리)
+function activateTab(targetTabId) {
     // 모든 탭 내용 숨김
     document.querySelectorAll('.tab-panel').forEach(panel => {
         panel.classList.add('hidden');
     });
 
     // 선택된 탭 내용 표시
-    document.getElementById(activeTab).classList.remove('hidden');
+    document.getElementById(targetTabId).classList.remove('hidden');
 
     // 모든 탭 버튼 초기화
     document.querySelectorAll('.tab-btn').forEach(button => {
@@ -1600,7 +1602,15 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     // 활성화된 탭 버튼 스타일 업데이트
-    document.querySelector(`.tab-btn[data-tab="${activeTab}"]`).classList.add('text-blue-500', 'border-blue-500');
+    document.querySelector(`.tab-btn[data-tab="${targetTabId}"]`).classList.add('text-blue-500', 'border-blue-500');
+}
+
+// 페이지 로드 시 활성화할 탭 관리
+window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get('tab') || 'tab1'; // URL에서 'tab' 값을 가져오거나 기본값 'tab1' 설정
+
+    activateTab(activeTab); // 활성화된 탭 설정
 });
 
 /* 텝 컨트롤 END */
