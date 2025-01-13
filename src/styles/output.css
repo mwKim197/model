@@ -606,6 +606,13 @@ video {
   color: rgb(0 0 0 / var(--tw-text-opacity, 1));
 }
 
+.auto-shrink-text {
+  font-size: clamp(0.75rem, 2vw, 1.25rem);
+  /* 글자 크기 동적 조정 */
+  text-overflow: ellipsis;
+  /* 넘칠 경우 생략 표시 */
+}
+
 .static {
   position: static;
 }

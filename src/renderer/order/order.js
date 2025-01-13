@@ -80,7 +80,7 @@ function displayProducts(products) {
             ${emptyBadgeImage} <!-- 품절 배지 -->
         </div>
         <div class="mt-1">
-            <span class="block text-xl ">${product.name}</span>
+            <span class="auto-shrink-text whitespace-nowrap block mx-auto">${product.name}</span>
             <span class="block text-gray-600 text-[1rem] text-right pr-4">${`₩ ` + product.price.toLocaleString()}</span>
         </div>
         <!-- 주문 버튼 -->
@@ -94,7 +94,8 @@ function displayProducts(products) {
 
         // 부모 컨테이너에 추가
         productGrid.appendChild(card);
-
+        // 초기 크기 조정
+        adjustTextSize();
         // 클릭 이벤트 처리 (품절 상태에서는 동작하지 않도록 추가 검증)
         if (!isEmpty) {
             card.addEventListener('click', () => {
@@ -105,6 +106,23 @@ function displayProducts(products) {
         }
     });
 }
+
+function adjustTextSize() {
+    const textElement = document.querySelector('.auto-shrink-text');
+    const parentWidth = textElement.parentElement.offsetWidth; // 부모 요소의 너비
+    const textWidth = textElement.scrollWidth; // 텍스트의 실제 너비
+
+    if (textWidth > parentWidth) {
+        const scale = parentWidth / textWidth; // 부모 너비와 텍스트 너비 비율 계산
+        textElement.style.transform = `scale(${scale})`; // 텍스트 축소
+        textElement.style.transformOrigin = 'center left'; // 축소 기준
+    } else {
+        textElement.style.transform = ''; // 기본 크기로 복원
+    }
+}
+
+// 창 크기 변경 시에도 다시 크기 조정
+window.addEventListener('resize', adjustTextSize);
 
 // 가이드 이미지 추가
 function checkAndShowEmptyImage() {
