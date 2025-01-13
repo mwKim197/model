@@ -20,6 +20,9 @@ let isDataLoaded = false;
 const productGrid = document.getElementById('productGrid');
 const orderGrid = document.getElementById('orderGrid');
 
+let totalCount = 0;
+let limitCount = 20;
+
 // 필터된 제품을 표시하는 함수
 function displayProducts(products) {
     productGrid.innerHTML = '';
@@ -136,7 +139,7 @@ checkAndShowEmptyImage();
 
 // 상품 장바구니 추가
 async function addItemToOrder(menuId) {
-
+    if(totalCount > (limitCount - 1)) return openAlertModal(`${limitCount}개 이상 주문 할 수 없습니다.`);
     // 상품 검색
     const product = allProducts.find(p => p.menuId === menuId);
 
@@ -238,7 +241,7 @@ async function addItemToOrder(menuId) {
 function updateOrderSummary() {
     // 총 금액 및 총 개수 계산
     const totalPrice = orderList.reduce((sum, order) => sum + (Number(order.price) * order.count), 0);
-    const totalCount = orderList.reduce((sum, order) => sum + order.count, 0);
+    totalCount = orderList.reduce((sum, order) => sum + order.count, 0);
 
     // 하단 버튼 영역의 요소 업데이트
     const priceElement = document.getElementById("totalAmt");
@@ -268,12 +271,12 @@ function removeItemFromOrder(button, orderId) {
 
     // 주문 요약 업데이트
     updateOrderSummary();
-
     checkAndShowEmptyImage();
 }
 
 // 수량추가
 function updateItemQuantity(button, delta, orderId) {
+    if(totalCount > (limitCount - 1) && delta > 0) return openAlertModal(`${limitCount}개 이상 주문 할 수 없습니다.`);
     const order = orderList.find(o => o.orderId === orderId);
     if (!order) {
         console.error(`Order not found for ID: ${orderId}`);
@@ -375,7 +378,6 @@ function removeAllItem() {
     console.log('모든 주문 항목이 삭제되었습니다.');
 }
 
-
 // 메뉴 탭 클릭 시 제품 필터링
 document.addEventListener('DOMContentLoaded', () => {
     const nav = document.getElementById('menu-nav'); // 부모 요소
@@ -416,9 +418,7 @@ document.getElementById('payment').addEventListener('click', async () => {
             console.error('Audio play error:', err);
         });
     }
-
-
-    console.log(orderList);
+    
     let price = 0;
     orderList.map((order) => {
         price += Number(order.price) * order.count;  // 수량만큼 가격 계산
@@ -647,6 +647,7 @@ async function fetchData() {
         sendLogToMain('info', `전체 메뉴:  ${JSON.stringify(allData)}`);
         userInfo = await window.electronAPI.getUserInfo();
         console.log("allData", allData);
+        limitCount = userInfo.userInfo ? userInfo.userInfo : 20;
         // 이미지 받아오기
         await window.electronAPI.downloadAllFromS3WithCache("model-narrow-road", `model/${userInfo.userId}`);
         // 데이터가 올바르게 로드되었는지 확인
