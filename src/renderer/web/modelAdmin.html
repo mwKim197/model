@@ -18,30 +18,34 @@
             <button
                     class="tab-btn py-2 px-4 text-gray-600 border-b-2 border-transparent hover:text-blue-500"
                     data-tab="tab1"
+                    onclick="switchTab('tab1')"
             >
                 메뉴목록
             </button>
             <button
                     class="tab-btn py-2 px-4 text-gray-600 border-b-2 border-transparent hover:text-blue-500"
                     data-tab="tab2"
+                    onclick="switchTab('tab2')"
             >
                 메뉴등록
             </button>
             <button
                     class="tab-btn py-2 px-4 text-gray-600 border-b-2 border-transparent hover:text-blue-500"
                     data-tab="tab3"
+                    onclick="switchTab('tab3')"
             >
                 머신제어
             </button>
             <button
                     class="tab-btn py-2 px-4 text-gray-600 border-b-2 border-transparent hover:text-blue-500"
                     data-tab="tab4"
+                    onclick="switchTab('tab4')"
             >
                 결제로그
             </button>
         </div>
 
-        <div id="tab-content">
+        <div id="tab-panels">
             <!--메뉴 목록 START-->
             <div class="tab-panel hidden" id="tab1">
                 <!-- 메뉴 리스트 -->
