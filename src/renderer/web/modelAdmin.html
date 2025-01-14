@@ -43,6 +43,13 @@
             >
                 결제로그
             </button>
+            <button
+                    class="tab-btn py-2 px-4 text-gray-600 border-b-2 border-transparent hover:text-blue-500"
+                    data-tab="tab5"
+                    onclick="switchTab('tab5')"
+            >
+                포인트
+            </button>
         </div>
 
         <div id="tab-panels">
@@ -335,6 +342,9 @@
                 </div>
             </div>
             <!-- 결제 로그 END-->
+            <div class="tab-panel hidden" id="tab5">
+                <p> 마일리지 </p>
+            </div>
         </div>
         <div id="order-details-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div class="bg-white w-3/4 max-w-lg rounded-lg shadow-lg p-6">
