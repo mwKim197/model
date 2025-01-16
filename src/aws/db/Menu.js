@@ -14,6 +14,9 @@ const serialDataManager = require("../../services/serialDataManager");
 const {serialCommCom1} = require("../../serial/serialCommManager");
 const {getOrdersByDateRange, calculateSalesStatistics} = require("./utils/getPayment");
 const {updateUserInfo, getUserById} = require("./utils/getUser");
+const {saveMileageToDynamoDB, getMileageFromDynamoDB, updateMileageInDynamoDB, deleteMileageFromDynamoDB,
+    getMileageHistoryFromDynamoDB
+} = require("./utils/getMileage");
 const upload = multer({ storage: memoryStorage() }); // 메모리 저장소 사용
 const polling = new serialDataManager(serialCommCom1);
 
@@ -425,6 +428,7 @@ Menu.post('/update-user-info', async (req, res) => {
     }
 });
 
+// 사용자정보 업데이트
 Menu.get('/fetch-and-save-user', async (req, res) => {
     try {
         // DynamoDB에서 사용자 정보 조회
@@ -456,6 +460,106 @@ Menu.get('/fetch-and-save-user', async (req, res) => {
             message: '사용자 정보 조회 및 저장에 실패했습니다.',
             error: error.message,
         });
+    }
+});
+
+// 마일리지 등록
+Menu.post('/mileage-add', async (req, res) => {
+    try {
+        const mileageData = req.body;
+        log.info("마일리지 등록 요청:", JSON.stringify(mileageData));
+
+        // DynamoDB 저장
+        await saveMileageToDynamoDB(mileageData);
+
+        res.json({ success: true, message: '마일리지 등록 성공' });
+    } catch (err) {
+        log.error('마일리지 등록 중 오류 발생:', err);
+        res.status(500).json({ success: false, message: '마일리지 등록 실패' });
+    }
+});
+
+// 마일리지 목록조회
+Menu.get('/mileage', async (req, res) => {
+    let { searchKey, limit = "20", lastEvaluatedKey } = req.query;
+
+    try {
+
+        // limit 타입 변환 및 기본값 처리
+        limit = parseInt(limit, 10); // 문자열을 숫자로 변환 (기본값 20)
+        if (isNaN(limit) || limit <= 0) {
+            limit = 20; // 잘못된 값일 경우 기본값으로 설정
+        }
+
+        // DynamoDB 조회
+        const result = await getMileageFromDynamoDB(
+            searchKey,
+            limit,
+            lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : null
+        );
+
+        res.json({
+            success: true,
+            items: result.items,
+            lastEvaluatedKey: result.lastEvaluatedKey,
+            total: result.total
+        });
+    } catch (error) {
+        log.error('마일리지 조회 API 오류:', error);
+        res.status(500).json({ success: false, message: '마일리지 조회 실패' });
+    }
+});
+
+
+// 마일리지 수정
+Menu.put('/mileage/:mileageNo', async (req, res) => {
+    try {
+        const { mileageNo } = req.params;
+        const { password, points, note } = req.body;
+
+        // 기존 마일리지 데이터 조회
+        const mileageData = await getMileageFromDynamoDB(mileageNo);
+        if (!mileageData) {
+            return res.status(404).json({ success: false, message: '마일리지 데이터가 존재하지 않습니다.' });
+        }
+
+        // DynamoDB 데이터 업데이트
+        const updatedMileage = await updateMileageInDynamoDB(mileageNo, { points, note, password});
+
+        res.json({ success: true, data: updatedMileage });
+    } catch (err) {
+        log.error('마일리지 수정 중 오류 발생:', err);
+        res.status(500).json({ success: false, message: '마일리지 수정 실패' });
+    }
+});
+
+
+// 마일리지 삭제
+Menu.delete('/mileage/:mileageNo', async (req, res) => {
+    try {
+        const { mileageNo } = req.params;
+
+        await deleteMileageFromDynamoDB(mileageNo);
+
+        res.json({ success: true, message: '마일리지 삭제 성공' });
+    } catch (err) {
+        log.error('마일리지 삭제 중 오류 발생:', err);
+        res.status(500).json({ success: false, message: '마일리지 삭제 실패' });
+    }
+});
+
+// 마일리지 이용내역 조회
+Menu.get('/mileage-history/:mileageNo', async (req, res) => {
+    try {
+        const { mileageNo } = req.params;
+
+        // 이용 내역 조회 함수 호출
+        const usageHistory = await getMileageHistoryFromDynamoDB(mileageNo);
+
+        res.json({ success: true, data: usageHistory });
+    } catch (error) {
+        log.error('이용 내역 조회 중 오류 발생:', error);
+        res.status(500).json({ success: false, message: '이용 내역 조회 실패' });
     }
 });
 

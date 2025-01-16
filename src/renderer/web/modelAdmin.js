@@ -1,18 +1,18 @@
 import {
-    getUserData,
-    getMenuInfoAll,
-    callSerialAdminIceOrder,
+    adminUseWash,
+    calculateSalesStatistics,
     callSerialAdminCupOrder,
     callSerialAdminDrinkOrder,
+    callSerialAdminIceOrder,
+    fetchAndSaveUserInfo,
+    fetchCupPaUse,
+    fetchCupPlUse,
+    getMenuInfoAll,
     getOrdersByDateRange,
-    calculateSalesStatistics,
+    getUserData,
     requestAppRestart,
     requestAppShutdown,
-    fetchCupPlUse,
-    fetchCupPaUse,
-    adminUseWash,
-    updateUserInfo,
-    fetchAndSaveUserInfo
+    updateUserInfo
 } from '/renderer/api/menuApi.browser.js';
 
 const url = window.location.hostname;
@@ -1519,7 +1519,357 @@ async function renderGroupedOrdersToHTML(startDate, endDate, ascending = true) {
     // 생성된 테이블을 메인 컨테이너에 추가
     container.appendChild(table);
 }
+/* [CONTROL] 주문 로그조회 END */
+/* [MILEAGE] 마일리지 조작 START */
+const baseUrl = `http://${url}:3142`;
 
+let page = 1;
+let limit = 20;
+let totalItems = 0;
+
+// 공통 API 호출 함수
+async function callApi(endpoint, method, body = null) {
+    const options = {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+    };
+
+    if (body && method !== "GET") {
+        options.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(`${baseUrl}${endpoint}`, options);
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+}
+
+// 마일리지 데이터 조회
+async function fetchMileageData() {
+    const searchKey = document.getElementById("searchKey").value.trim();
+    limit = parseInt(document.getElementById("limit").value) || 20;
+
+    try {
+        const queryString = `?page=${page}&limit=${limit}&searchKey=${encodeURIComponent(searchKey)}`;
+        const data = await callApi(`/mileage${queryString}`, "GET");
+
+        totalItems = data.total;
+        updateTable(data.items);
+        updatePagination();
+    } catch (error) {
+        console.error("Error:", error);
+        alert("데이터 조회 중 오류가 발생했습니다.");
+    }
+}
+
+async function deleteMileage(mileageNo) {
+    // 사용자 확인
+    if (!confirm(`Mileage No: ${mileageNo}을(를) 삭제하시겠습니까?`)) {
+        return;
+    }
+
+    try {
+        // 서버로 삭제 요청
+        const response = await callApi(`/mileage/${mileageNo}`, "DELETE");
+
+        if (response.success) {
+            alert("마일리지가 성공적으로 삭제되었습니다.");
+            await fetchMileageData(); // 테이블 새로고침
+        } else {
+            alert(response.message || "삭제에 실패했습니다.");
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        alert("삭제 중 오류가 발생했습니다.");
+    }
+}
+
+// 테이블 업데이트
+function updateTable(items) {
+    const tbody = document.getElementById("mileageTableBody");
+    tbody.innerHTML = ""; // 기존 내용 초기화
+
+    items.forEach(item => {
+        // 테이블 행 생성
+        const row = document.createElement("tr");
+        row.className = "hover:bg-gray-100 cursor-pointer";
+
+        // 마일리지 번호
+        const mileageNoCell = document.createElement("td");
+        mileageNoCell.className = "border border-gray-300 p-2";
+        mileageNoCell.textContent = item.mileageNo;
+
+        // 금액
+        const amountCell = document.createElement("td");
+        amountCell.className = "border border-gray-300 p-2";
+        amountCell.textContent = (item.amount || 0).toLocaleString();
+
+        // 삭제 버튼
+        const actionCell = document.createElement("td");
+        actionCell.className = "border border-gray-300 p-2";
+
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600";
+        deleteButton.textContent = "삭제";
+
+        // 이벤트 리스너 추가
+        deleteButton.addEventListener("click", (event) => {
+            event.stopPropagation(); // 클릭 이벤트가 행으로 전달되지 않도록 방지
+            deleteMileage(item.mileageNo, item.userId);
+        });
+
+        // 삭제 버튼 추가
+        actionCell.appendChild(deleteButton);
+
+        // 행에 셀 추가
+        row.appendChild(mileageNoCell);
+        row.appendChild(amountCell);
+        row.appendChild(actionCell);
+
+        // 행 클릭 이벤트 추가
+        row.addEventListener("click", () => {
+            openDetailModal(item); // 모달 열기
+        });
+
+        // 테이블에 행 추가
+        tbody.appendChild(row);
+    });
+}
+// 페이지네이션 업데이트
+function updatePagination() {
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    const pageInfo = document.getElementById("pageInfo");
+    const prevPage = document.getElementById("prevPage");
+    const nextPage = document.getElementById("nextPage");
+
+    if (!pageInfo || !prevPage || !nextPage) {
+        console.error("페이지네이션 요소를 찾을 수 없습니다.");
+        return;
+    }
+
+    pageInfo.innerText = `${page} / ${totalPages}`;
+    prevPage.disabled = page === 1;
+    nextPage.disabled = page === totalPages || totalPages === 0;
+}
+
+// 페이지 변경
+function changePage(direction) {
+    const totalPages = Math.ceil(totalItems / limit);
+
+    if (totalPages === 0 || (page === 1 && direction === -1) || (page === totalPages && direction === 1)) {
+        return;
+    }
+
+    page += direction;
+    fetchMileageData();
+}
+
+// 검색 버튼 클릭 이벤트
+document.getElementById("searchMileageBtn").addEventListener("click", fetchMileageData);
+
+// 등록 모달 START
+const registerModal = document.getElementById("registerModal");
+const openRegisterModalBtn = document.getElementById("openRegisterModalBtn");
+const closeRegisterModalBtn = document.getElementById("closeRegisterModalBtn");
+const cancelRegisterModalBtn = document.getElementById("cancelRegisterModalBtn");
+const confirmRegisterBtn = document.getElementById("confirmRegisterBtn");
+
+// 모달 관련 요소가 모두 존재하는지 확인
+if (registerModal && openRegisterModalBtn && closeRegisterModalBtn && cancelRegisterModalBtn && confirmRegisterBtn) {
+    openRegisterModalBtn.addEventListener("click", () => {
+        registerModal.classList.remove("hidden");
+    });
+
+    closeRegisterModalBtn.addEventListener("click", closeRegisterModal);
+    cancelRegisterModalBtn.addEventListener("click", closeRegisterModal);
+} else {
+    console.error("모달 관련 요소를 찾을 수 없습니다.");
+}
+
+// 모달 열기
+openRegisterModalBtn.addEventListener("click", () => {
+    registerModal.classList.remove("hidden");
+});
+
+// 모달 닫기
+function closeRegisterModal() {
+    registerModal.classList.add("hidden");
+    resetForm(["registerMileageNo", "registerPassword", "registerAmount"]);
+}
+closeRegisterModalBtn.addEventListener("click", closeRegisterModal);
+cancelRegisterModalBtn.addEventListener("click", closeRegisterModal);
+
+// 등록 처리
+confirmRegisterBtn.addEventListener("click", async () => {
+    const mileageNo = document.getElementById("registerMileageNo").value.trim();
+    const password = document.getElementById("registerPassword").value.trim();
+    const amount = parseFloat(document.getElementById("registerAmount").value);
+
+    // 입력값 검증
+    if (!/^\d{4,11}$/.test(mileageNo)) {
+        alert("번호는 4~11자리 숫자여야 합니다.");
+        return;
+    }
+    if (!password) {
+        alert("비밀번호를 입력하세요.");
+        return;
+    }
+    if (isNaN(amount) || amount <= 0) {
+        alert("마일리지 포인트는 0보다 큰 숫자여야 합니다.");
+        return;
+    }
+
+    try {
+        const data = await callApi("/mileage-add", "POST", { mileageNo, password, amount });
+
+        if (data.success) {
+            alert("마일리지가 성공적으로 등록되었습니다.");
+            closeRegisterModal();
+            await fetchMileageData(); // 테이블 새로고침
+        } else {
+            alert(data.message || "등록에 실패했습니다.");
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        alert("등록 중 오류가 발생했습니다.");
+    }
+});
+// 등록 모달 END
+
+// 수정, 비밀번호찾기, 상세 모달 START
+// 모달열기
+async function openDetailModal(item) {
+    try {
+        // 리스트 데이터를 모달 기본 필드에 설정
+        document.getElementById("modalPhone").value = item.mileageNo || "";
+        document.getElementById("modalPoints").value = item.amount || 0;
+        document.getElementById("modalCount").value = item.count || 0;
+        document.getElementById("modalNote").value = item.note || "";
+        document.getElementById("modalPassword").value = item.password || "";
+        //document.getElementById("modalTimestamp").value = new Date(item.timestamp).toLocaleString() || "";
+
+        // 이용 내역 초기화
+        updateUsageHistoryTable([]);
+
+        // 이용 내역 조회
+        const historyResponse = await callApi(`/mileage-history/${encodeURIComponent(item.mileageNo)}`, "GET");
+        const usageHistory = historyResponse.data || [];
+
+        // 이용 내역 테이블 업데이트
+        updateUsageHistoryTable(usageHistory);
+
+        // 이용 내역 테이블 업데이트
+        updateUsageHistoryTable(usageHistory);
+
+        // 모달 열기
+        const modal = document.getElementById("detailModal");
+        modal.classList.remove("hidden");
+    } catch (error) {
+        console.error("Error fetching usage history:", error);
+        alert("이용 내역 조회 중 오류가 발생했습니다.");
+    }
+}
+
+
+// 모달그리드
+function updateUsageHistoryTable(usageHistory) {
+    const tbody = document.getElementById("usageHistoryTableBody");
+    tbody.innerHTML = ""; // 기존 데이터 초기화
+
+    if (!usageHistory || usageHistory.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td class="border border-gray-300 p-2 text-center" colspan="6">이용 내역이 없습니다.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    usageHistory.forEach((entry, index) => {
+        const row = `
+            <tr>
+                <td class="border border-gray-300 p-2">${index + 1}</td>
+                <td class="border border-gray-300 p-2">${new Date(entry.timestamp).toLocaleDateString()}</td>
+                <td class="border border-gray-300 p-2">${new Date(entry.timestamp).toLocaleTimeString()}</td>
+                <td class="border border-gray-300 p-2">${(entry.payment || 0).toLocaleString()}</td>
+                <td class="border border-gray-300 p-2">${(entry.useMileage || 0).toLocaleString()}</td>
+                <td class="border border-gray-300 p-2">${(entry.amount || 0).toLocaleString()}</td>
+            </tr>
+        `;
+        tbody.insertAdjacentHTML("beforeend", row);
+    });
+}
+
+
+// 모달 닫기
+function closeDetailModal() {
+    const modal = document.getElementById("detailModal");
+    modal.classList.add("hidden");
+}
+document.getElementById("closeModalBtn").addEventListener("click", closeDetailModal);
+document.getElementById("cancelModalBtn").addEventListener("click", closeDetailModal);
+
+
+// 저장 버튼 이벤트
+document.getElementById("saveModalBtn").addEventListener("click", async () => {
+    const mileageNo = document.getElementById("modalPhone").value; // 마일리지 번호
+    const password = document.getElementById("modalPassword").value; // 패스워드
+    const points = parseInt(document.getElementById("modalPoints").value, 10); // 포인트
+    const note = document.getElementById("modalNote").value; // 메모
+
+    if (!mileageNo) {
+        alert("마일리지 번호가 유효하지 않습니다.");
+        return;
+    }
+
+    if (!password) {
+        alert("패스워드를 입력하세요.");
+        return;
+    }
+
+    try {
+        // API 호출
+        await callApi(`/mileage/${encodeURIComponent(mileageNo)}`, "PUT", { password, points, note });
+        alert("정보가 성공적으로 저장되었습니다.");
+        closeDetailModal(); // 모달 닫기
+        await fetchMileageData(); // 테이블 새로고침
+    } catch (error) {
+        console.error("Error:", error);
+        alert("정보 저장 중 오류가 발생했습니다.");
+    }
+});
+
+
+// 수정, 비밀번호찾기, 상세 모달 END
+
+// 필드 초기화 함수
+function resetForm(fieldIds) {
+    fieldIds.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.value = ""; // 필드 초기화
+        }
+    });
+}
+
+
+
+document.getElementById("searchMileageBtn").addEventListener("click", fetchMileageData);
+document.getElementById("prevPage").addEventListener("click", () => changePage(-1));
+document.getElementById("nextPage").addEventListener("click", () => changePage(1));
+
+// 초기 데이터 로드
+document.addEventListener("DOMContentLoaded", () => {
+    fetchMileageData();
+});
+
+
+/* [MILEAGE] 마일리지 조작 END */
 // 모달 열기 함수
 function showOrderDetailsModal(order) {
     // 모달 컨텐츠 생성
@@ -1564,6 +1914,8 @@ function escapeHTML(string) {
     };
     return String(string).replace(/[&<>"'/]/g, (s) => entityMap[s]);
 }
+
+
 
 /* 텝 컨트롤 START */
 function switchTab(targetTabId) {
