@@ -91,7 +91,7 @@ async function initializeApp() {
 
     setInterval(async () => {
         await checkPublicIp();
-    }, 60000); // 60초마다 실행
+    }, 1500000); // 15분마다 실행
 })();
 
 
