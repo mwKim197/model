@@ -96,10 +96,33 @@ const getMileageFromDynamoDB = async (searchKey, limit = 20, lastEvaluatedKey = 
 
         const totalResult = await dynamoDB.query(totalParams).promise();
 
+        // 전체 페이지에 대한 pageKeys 계산
+        let pageKeys = null;
+
+        if (!lastEvaluatedKey) {
+            pageKeys = [];
+            let currentLastEvaluatedKey = null;
+
+            do {
+                const pageParams = { ...params };
+                if (currentLastEvaluatedKey) {
+                    pageParams.ExclusiveStartKey = currentLastEvaluatedKey;
+                }
+
+                const pageResult = await dynamoDB.query(pageParams).promise();
+                currentLastEvaluatedKey = pageResult.LastEvaluatedKey;
+
+                if (currentLastEvaluatedKey) {
+                    pageKeys.push(currentLastEvaluatedKey);
+                }
+            } while (currentLastEvaluatedKey);
+        }
+
         return {
             items: result.Items,
             lastEvaluatedKey: result.LastEvaluatedKey || null,
             total: totalResult.Count, // 전체 데이터 개수
+            pageKeys, // 모든 페이지의 시작 키
         };
     } catch (error) {
         log.error(`DynamoDB 마일리지 조회 중 오류 발생. userId: ${user.userId}`, error);

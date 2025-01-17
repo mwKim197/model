@@ -1524,8 +1524,10 @@ async function renderGroupedOrdersToHTML(startDate, endDate, ascending = true) {
 const baseUrl = `http://${url}:3142`;
 
 let page = 1;
-let limit = 20;
+let limit = 10;
 let totalItems = 0;
+let lastEvaluatedKey = null;
+let mileagePageKeys = [];
 
 // 공통 API 호출 함수
 async function callApi(endpoint, method, body = null) {
@@ -1548,23 +1550,39 @@ async function callApi(endpoint, method, body = null) {
 }
 
 // 마일리지 데이터 조회
-async function fetchMileageData() {
+async function fetchMileageData(selectedPageKey = null) {
     const searchKey = document.getElementById("searchKey").value.trim();
-    limit = parseInt(document.getElementById("limit").value) || 20;
+    const limit = parseInt(document.getElementById("limit").value) || 10;
 
     try {
-        const queryString = `?page=${page}&limit=${limit}&searchKey=${encodeURIComponent(searchKey)}`;
-        const data = await callApi(`/mileage${queryString}`, "GET");
+        // API 요청 쿼리 생성
+        const queryString = `?limit=${limit}&searchKey=${encodeURIComponent(searchKey)}&lastEvaluatedKey=${encodeURIComponent(JSON.stringify(selectedPageKey)|| '')}`;
+        const response = await callApi(`/mileage${queryString}`, "GET");
 
-        totalItems = data.total;
-        updateTable(data.items);
-        updatePagination();
+        // 서버 응답 처리
+        const { items, total, lastEvaluatedKey: newLastEvaluatedKey, pageKeys: serverPageKeys } = response;
+
+        // 클라이언트 상태 업데이트
+        totalItems = total;
+        
+        // serverPageKeys 가 있을때만 저장
+        if (serverPageKeys) {
+            mileagePageKeys = serverPageKeys; // 서버에서 전달된 pageKeys 저장
+        }
+
+
+        updateTable(items); // 테이블 데이터 갱신
+        updatePagination(); // 페이지네이션 갱신
+
+        // 다음 페이지를 위한 키 갱신
+        lastEvaluatedKey = newLastEvaluatedKey;
     } catch (error) {
-        console.error("Error:", error);
+        console.error("Error fetching mileage data:", error);
         alert("데이터 조회 중 오류가 발생했습니다.");
     }
 }
 
+// 마일리지 삭제
 async function deleteMileage(mileageNo) {
     // 사용자 확인
     if (!confirm(`Mileage No: ${mileageNo}을(를) 삭제하시겠습니까?`)) {
@@ -1577,7 +1595,7 @@ async function deleteMileage(mileageNo) {
 
         if (response.success) {
             alert("마일리지가 성공적으로 삭제되었습니다.");
-            await fetchMileageData(); // 테이블 새로고침
+            await fetchMileageData(null); // 테이블 새로고침
         } else {
             alert(response.message || "삭제에 실패했습니다.");
         }
@@ -1592,24 +1610,29 @@ function updateTable(items) {
     const tbody = document.getElementById("mileageTableBody");
     tbody.innerHTML = ""; // 기존 내용 초기화
 
-    items.forEach(item => {
+    items.forEach((item, index) => {
         // 테이블 행 생성
         const row = document.createElement("tr");
-        row.className = "hover:bg-gray-100 cursor-pointer";
+        row.className = "hover:bg-gray-100 cursor-pointer rounded-2xl";
+
+        // 순번
+        const indexCell = document.createElement("td");
+        indexCell.className = "p-2 text-center w-16";
+        indexCell.textContent = index + 1; // 순번은 1부터 시작
 
         // 마일리지 번호
         const mileageNoCell = document.createElement("td");
-        mileageNoCell.className = "border border-gray-300 p-2";
+        mileageNoCell.className = "p-2";
         mileageNoCell.textContent = item.mileageNo;
 
         // 금액
         const amountCell = document.createElement("td");
-        amountCell.className = "border border-gray-300 p-2";
-        amountCell.textContent = (item.amount || 0).toLocaleString();
+        amountCell.className = "p-2 text-right";
+        amountCell.textContent = (item.amount || 0).toLocaleString() + "p";
 
         // 삭제 버튼
         const actionCell = document.createElement("td");
-        actionCell.className = "border border-gray-300 p-2";
+        actionCell.className = "p-2 w-20";
 
         const deleteButton = document.createElement("button");
         deleteButton.className = "bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600";
@@ -1625,6 +1648,7 @@ function updateTable(items) {
         actionCell.appendChild(deleteButton);
 
         // 행에 셀 추가
+        row.appendChild(indexCell);
         row.appendChild(mileageNoCell);
         row.appendChild(amountCell);
         row.appendChild(actionCell);
@@ -1638,39 +1662,103 @@ function updateTable(items) {
         tbody.appendChild(row);
     });
 }
+
 // 페이지네이션 업데이트
 function updatePagination() {
-
+    limit = parseInt(document.getElementById("limit").value) || 10;
     const totalPages = Math.ceil(totalItems / limit);
+    const paginationContainer = document.getElementById("paginationContainer");
+    const visiblePages = 5; // 한 번에 표시할 페이지 번호 개수
+    paginationContainer.innerHTML = ""; // 기존 버튼 초기화
 
-    const pageInfo = document.getElementById("pageInfo");
-    const prevPage = document.getElementById("prevPage");
-    const nextPage = document.getElementById("nextPage");
-
-    if (!pageInfo || !prevPage || !nextPage) {
-        console.error("페이지네이션 요소를 찾을 수 없습니다.");
-        return;
+    if (totalPages <= 1) {
+        return; // 페이지가 하나뿐이면 아무것도 표시하지 않음
     }
 
-    pageInfo.innerText = `${page} / ${totalPages}`;
-    prevPage.disabled = page === 1;
-    nextPage.disabled = page === totalPages || totalPages === 0;
+    // 이전 버튼
+    const prevButton = document.createElement("button");
+    prevButton.className = "bg-gray-300 text-gray-700 px-2 py-1 rounded hover:bg-gray-400 disabled:opacity-50";
+    prevButton.disabled = page === 1;
+    prevButton.innerText = "이전";
+    prevButton.addEventListener("click", () => changePage(page - 1));
+    paginationContainer.appendChild(prevButton);
+
+    // 페이지 번호 버튼
+    let startPage = Math.max(1, page - Math.floor(visiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + visiblePages - 1);
+
+    if (endPage - startPage + 1 < visiblePages) {
+        startPage = Math.max(1, endPage - visiblePages + 1);
+    }
+
+    if (startPage > 1) {
+        const firstPageButton = document.createElement("button");
+        firstPageButton.className = "bg-gray-300 text-gray-700 px-2 py-1 rounded hover:bg-gray-400";
+        firstPageButton.innerText = "1";
+        firstPageButton.addEventListener("click", () => changePage(1));
+        paginationContainer.appendChild(firstPageButton);
+
+        if (startPage > 2) {
+            const ellipsis = document.createElement("span");
+            ellipsis.innerText = "...";
+            ellipsis.className = "px-2";
+            paginationContainer.appendChild(ellipsis);
+        }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        const pageButton = document.createElement("button");
+        pageButton.className =
+            "px-2 py-1 rounded mx-1 " + (i === page ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-700 hover:bg-gray-400");
+        pageButton.innerText = i.toString();
+        pageButton.setAttribute("aria-current", i === page ? "page" : null);
+        // 올바른 페이지 번호를 changePage에 전달
+        pageButton.addEventListener("click", () => changePage(i));
+        paginationContainer.appendChild(pageButton);
+    }
+
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            const ellipsis = document.createElement("span");
+            ellipsis.innerText = "...";
+            ellipsis.className = "px-2";
+            paginationContainer.appendChild(ellipsis);
+        }
+
+        const lastPageButton = document.createElement("button");
+        lastPageButton.className = "bg-gray-300 text-gray-700 px-2 py-1 rounded hover:bg-gray-400";
+        lastPageButton.innerText = totalPages.toString();
+        lastPageButton.addEventListener("click", () => changePage(totalPages));
+        paginationContainer.appendChild(lastPageButton);
+    }
+
+    // 다음 버튼
+    const nextButton = document.createElement("button");
+    nextButton.className = "bg-gray-300 text-gray-700 px-2 py-1 rounded hover:bg-gray-400 disabled:opacity-50";
+    nextButton.disabled = page === totalPages;
+    nextButton.innerText = "다음";
+    nextButton.addEventListener("click", () => changePage(page + 1));
+    paginationContainer.appendChild(nextButton);
 }
 
-// 페이지 변경
-function changePage(direction) {
+// 페이지 변경 함수
+function changePage(newPage) {
     const totalPages = Math.ceil(totalItems / limit);
 
-    if (totalPages === 0 || (page === 1 && direction === -1) || (page === totalPages && direction === 1)) {
-        return;
+    if (newPage < 1 || newPage > totalPages) {
+        return; // 잘못된 페이지 요청 방지
     }
 
-    page += direction;
-    fetchMileageData();
+    page = newPage; // 페이지 번호 업데이트
+
+    // 현재 페이지에 맞는 lastEvaluatedKey 가져오기
+    const lastKey = mileagePageKeys[page-2] || null;
+    // API 호출
+    fetchMileageData(lastKey).then(); // 새 페이지 데이터 가져오기
 }
 
 // 검색 버튼 클릭 이벤트
-document.getElementById("searchMileageBtn").addEventListener("click", fetchMileageData);
+document.getElementById("searchMileageBtn").addEventListener("click", ()=>{fetchMileageData(null)});
 
 // 등록 모달 START
 const registerModal = document.getElementById("registerModal");
@@ -1730,7 +1818,7 @@ confirmRegisterBtn.addEventListener("click", async () => {
         if (data.success) {
             alert("마일리지가 성공적으로 등록되었습니다.");
             closeRegisterModal();
-            await fetchMileageData(); // 테이블 새로고침
+            await fetchMileageData(null); // 테이블 새로고침
         } else {
             alert(data.message || "등록에 실패했습니다.");
         }
@@ -1837,7 +1925,7 @@ document.getElementById("saveModalBtn").addEventListener("click", async () => {
         await callApi(`/mileage/${encodeURIComponent(mileageNo)}`, "PUT", { password, points, note });
         alert("정보가 성공적으로 저장되었습니다.");
         closeDetailModal(); // 모달 닫기
-        await fetchMileageData(); // 테이블 새로고침
+        await fetchMileageData(null); // 테이블 새로고침
     } catch (error) {
         console.error("Error:", error);
         alert("정보 저장 중 오류가 발생했습니다.");
@@ -1857,15 +1945,9 @@ function resetForm(fieldIds) {
     });
 }
 
-
-
-document.getElementById("searchMileageBtn").addEventListener("click", fetchMileageData);
-document.getElementById("prevPage").addEventListener("click", () => changePage(-1));
-document.getElementById("nextPage").addEventListener("click", () => changePage(1));
-
 // 초기 데이터 로드
 document.addEventListener("DOMContentLoaded", () => {
-    fetchMileageData();
+    fetchMileageData(null);
 });
 
 

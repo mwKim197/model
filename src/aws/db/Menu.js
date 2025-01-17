@@ -479,37 +479,27 @@ Menu.post('/mileage-add', async (req, res) => {
     }
 });
 
+
+
 // 마일리지 목록조회
 Menu.get('/mileage', async (req, res) => {
-    let { searchKey, limit = "20", lastEvaluatedKey } = req.query;
+    const { limit = "10", searchKey = '', lastEvaluatedKey } = req.query;
 
     try {
-
-        // limit 타입 변환 및 기본값 처리
-        limit = parseInt(limit, 10); // 문자열을 숫자로 변환 (기본값 20)
-        if (isNaN(limit) || limit <= 0) {
-            limit = 20; // 잘못된 값일 경우 기본값으로 설정
-        }
-
-        // DynamoDB 조회
-        const result = await getMileageFromDynamoDB(
-            searchKey,
-            limit,
-            lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : null
-        );
+        const parsedKey = lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : null;
+        const result = await getMileageFromDynamoDB(searchKey, parseInt(limit), parsedKey);
 
         res.json({
-            success: true,
             items: result.items,
-            lastEvaluatedKey: result.lastEvaluatedKey,
-            total: result.total
+            total: result.total,
+            lastEvaluatedKey: result.lastEvaluatedKey ? JSON.stringify(result.lastEvaluatedKey) : null,
+            pageKeys: result.pageKeys
         });
     } catch (error) {
-        log.error('마일리지 조회 API 오류:', error);
-        res.status(500).json({ success: false, message: '마일리지 조회 실패' });
+        console.error('마일리지 조회 중 오류 발생:', error);
+        res.status(500).json({ message: '마일리지 조회 실패' });
     }
 });
-
 
 // 마일리지 수정
 Menu.put('/mileage/:mileageNo', async (req, res) => {
