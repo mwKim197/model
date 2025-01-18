@@ -1844,6 +1844,7 @@ async function openDetailModal(item) {
         // 이용 내역 초기화
         updateUsageHistoryTable([]);
 
+
         // 이용 내역 조회
         const historyResponse = await callApi(`/mileage-history/${encodeURIComponent(item.mileageNo)}`, "GET");
         const usageHistory = historyResponse.data || [];
@@ -1872,7 +1873,7 @@ function updateUsageHistoryTable(usageHistory) {
     if (!usageHistory || usageHistory.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td class="border border-gray-300 p-2 text-center" colspan="6">이용 내역이 없습니다.</td>
+                <td class="p-2 text-center" colspan="6">이용 내역이 없습니다.</td>
             </tr>
         `;
         return;
@@ -1880,13 +1881,13 @@ function updateUsageHistoryTable(usageHistory) {
 
     usageHistory.forEach((entry, index) => {
         const row = `
-            <tr>
-                <td class="border border-gray-300 p-2">${index + 1}</td>
-                <td class="border border-gray-300 p-2">${new Date(entry.timestamp).toLocaleDateString()}</td>
-                <td class="border border-gray-300 p-2">${new Date(entry.timestamp).toLocaleTimeString()}</td>
-                <td class="border border-gray-300 p-2">${(entry.payment || 0).toLocaleString()}</td>
-                <td class="border border-gray-300 p-2">${(entry.useMileage || 0).toLocaleString()}</td>
-                <td class="border border-gray-300 p-2">${(entry.amount || 0).toLocaleString()}</td>
+            <tr class="hover:bg-gray-200">
+                <td class="p-2 text-center">${index + 1}</td>
+                <td class="p-2 text-center">${new Date(entry.timestamp).toLocaleDateString()}</td>
+                <td class="p-2 text-center">${new Date(entry.timestamp).toLocaleTimeString()}</td>
+                <td class="p-2 text-right">${(entry.payment || 0).toLocaleString() + "원"}</td>
+                <td class="p-2 text-right">${(entry.useMileage || 0).toLocaleString() + "p"}</td>
+                <td class="p-2 text-right">${(entry.amount || 0).toLocaleString() + "p"}</td>
             </tr>
         `;
         tbody.insertAdjacentHTML("beforeend", row);
@@ -1907,7 +1908,7 @@ document.getElementById("cancelModalBtn").addEventListener("click", closeDetailM
 document.getElementById("saveModalBtn").addEventListener("click", async () => {
     const mileageNo = document.getElementById("modalPhone").value; // 마일리지 번호
     const password = document.getElementById("modalPassword").value; // 패스워드
-    const points = parseInt(document.getElementById("modalPoints").value, 10); // 포인트
+    const points = parseInt(document.getElementById("modalUpdatePoints").value, 10); // 포인트
     const note = document.getElementById("modalNote").value; // 메모
 
     if (!mileageNo) {

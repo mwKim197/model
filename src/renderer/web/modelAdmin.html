@@ -6,10 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>커피 메뉴 관리</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://use.fontawesome.com/releases/v5.2.0/js/all.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-800">
 <div class="w-full mx-auto my-10 md:p-8 bg-white shadow-lg rounded-lg">
     <header class="text-center mb-10">
+
         <h1 class="text-3xl font-extrabold text-gray-700">커피 메뉴 관리</h1>
         <p class="text-gray-500 mt-2">메뉴 정보를 확인하고 재료를 관리하세요</p>
     </header>
@@ -368,14 +370,14 @@
                         <input
                                 type="text"
                                 id="searchKey"
-                                placeholder="마일리지 번호 검색"
+                                placeholder="고객 번호 검색"
                                 class="border border-gray-300 rounded p-2 flex-grow focus:outline-none focus:ring focus:ring-blue-300 min-w-[40px]"
                         />
                         <button
                                 id="searchMileageBtn"
-                                class="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 min-w-16"
+                                class="bg-black text-white px-2 py-1 rounded hover:bg-gray-600 min-w-16"
                         >
-                            검색
+                            <i class="fa fa-search"></i>
                         </button>
                     </div>
 
@@ -390,33 +392,33 @@
 
                     <!-- 페이지네이션 -->
                     <div id="paginationContainer" class="flex justify-center items-center space-x-2 mb-6"></div>
-                    <select
-                            id="limit"
-                            class="border border-gray-300 rounded p-1 focus:outline-none focus:ring focus:ring-blue-300"
-                    >
-                        <option value="10">10개</option>
-                        <option value="20">30개</option>
-                        <option value="50">50개</option>
-                    </select>
 
                     <!-- 등록 버튼 -->
-                    <div class="text-right">
+                    <div class="flex justify-between items-cente p-3">
+                        <select
+                                id="limit"
+                                class="border border-gray-300 rounded p-1 focus:outline-none focus:ring focus:ring-blue-300"
+                        >
+                            <option value="10">10개</option>
+                            <option value="20">30개</option>
+                            <option value="50">50개</option>
+                        </select>
                         <button
                                 id="openRegisterModalBtn"
-                                class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+                                class="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
                         >
-                            등록
+                            신규 등록
                         </button>
                     </div>
                 </div>
 
                 <!-- 모달 -->
-            <!-- 등록 모달 -->
-            <div
-                    id="registerModal"
-                    class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50"
-            >
-                <div class="bg-white w-[400px] max-w-full rounded-lg shadow p-6 relative">
+                <!-- 등록 모달 -->
+                <div
+                        id="registerModal"
+                        class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50"
+                >
+                    <div class="bg-white w-[400px] max-w-full rounded-lg shadow p-6 relative">
                     <!-- 닫기 버튼 -->
                     <button
                             id="closeRegisterModalBtn"
@@ -459,7 +461,7 @@
                                 id="confirmRegisterBtn"
                                 class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                         >
-                            등록
+                            신규등록
                         </button>
                         <button
                                 id="cancelRegisterModalBtn"
@@ -472,28 +474,37 @@
             </div>
             <!-- 상세,수정 -->
             <div id="detailModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                <div class="bg-white rounded-lg shadow-lg p-6 w-3/4 max-w-xl">
+                <div class="bg-white rounded-lg shadow-lg p-6 w-3/4 max-w-3xl">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-bold">고객 정보</h2>
                         <button id="closeModalBtn" class="text-gray-500 hover:text-gray-800">X</button>
                     </div>
                     <div class="space-y-4">
-                        <div>
-                            <label for="modalPhone" class="block text-sm font-semibold">연락처</label>
-                            <input id="modalPhone" type="text" class="w-full border rounded p-2" disabled />
-                        </div>
-                        <div>
-                            <label for="modalPassword" class="block text-sm font-semibold">비밀번호</label>
-                            <input id="modalPassword" type="text" class="w-full border rounded p-2" />
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label for="modalPhone" class="block text-sm font-semibold">고객번호</label>
+                                <input id="modalPhone" type="text" class="w-full border rounded p-2" disabled />
+                            </div>
+                            <div>
+                                <label for="modalPassword" class="block text-sm font-semibold">비밀번호</label>
+                                <input id="modalPassword" type="text" class="w-full border rounded p-2" />
+                            </div>
                             <div>
                                 <label for="modalCount" class="block text-sm font-semibold">누적 이용 횟수</label>
                                 <input id="modalCount" type="text" class="w-full border rounded p-2" disabled />
                             </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label for="modalPoints" class="block text-sm font-semibold">보유 포인트</label>
-                                <input id="modalPoints" type="text" class="w-full border rounded p-2" />
+                                <input id="modalPoints" type="text" class="w-full border rounded p-2" disabled />
+                            </div>
+                            <div>
+                                <label for="modalUpdatePoints" class="block text-sm font-semibold">수정 포인트</label>
+                                <input id="modalUpdatePoints" type="text" class="w-full border rounded p-2" />
+                            </div>
+                            <div>
+
                             </div>
                         </div>
                         <div>
@@ -504,15 +515,15 @@
                     <div class="mt-6">
                         <h3 class="text-lg font-bold mb-4">이용 내역</h3>
                         <div class="overflow-x-auto">
-                            <table class="table-auto w-full border-collapse border border-gray-300">
+                            <table class="table-auto w-full">
                                 <thead>
-                                <tr class="bg-gray-200">
-                                    <th class="border border-gray-300 p-2">순번</th>
-                                    <th class="border border-gray-300 p-2">날짜</th>
-                                    <th class="border border-gray-300 p-2">시간</th>
-                                    <th class="border border-gray-300 p-2">결제 금액</th>
-                                    <th class="border border-gray-300 p-2">사용 포인트</th>
-                                    <th class="border border-gray-300 p-2">잔여 포인트</th>
+                                <tr>
+                                    <th class="p-2 min-w-16">순번</th>
+                                    <th class="p-2 min-w-28">일자</th>
+                                    <th class="p-2 min-w-28">시간</th>
+                                    <th class="p-2 min-w-28">결제 금액</th>
+                                    <th class="p-2 min-w-28">사용 포인트</th>
+                                    <th class="p-2 min-w-28">잔여 포인트</th>
                                 </tr>
                                 </thead>
                                 <tbody id="usageHistoryTableBody">
@@ -521,25 +532,26 @@
                             </table>
                         </div>
                     </div>
-                    <div class="flex justify-end mt-4">
-                        <button id="cancelModalBtn" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400 mr-2">취소</button>
-                        <button id="saveModalBtn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">저장</button>
+                    <div class="flex justify-center mt-4 items-center gap-1">
+                        <button id="saveModalBtn" class="bg-black text-white px-4 py-2 rounded hover:bg-gray-600">확인</button>
+                        <button id="cancelModalBtn" class="bg-white border border-gray-800 px-4 py-2 rounded hover:bg-gray-400 mr-2">취소</button>
                     </div>
                 </div>
             </div>
 
             <!-- 마일리지 END -->
-        </div>
-        <div id="order-details-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div class="bg-white w-3/4 max-w-lg rounded-lg shadow-lg p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold text-gray-800">주문 상세 정보</h2>
-                    <button id="close-modal" class="text-gray-500 hover:text-gray-800">
-                        <i class="fa-solid fa-xmark"></i> 닫기
-                    </button>
-                </div>
-                <div id="modal-content" class="space-y-4">
-                    <!-- 주문 상세 정보가 여기에 동적으로 추가됩니다 -->
+            </div>
+            <div id="order-details-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                <div class="bg-white w-3/4 max-w-lg rounded-lg shadow-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-gray-800">주문 상세 정보</h2>
+                        <button id="close-modal" class="text-gray-500 hover:text-gray-800">
+                            <i class="fa-solid fa-xmark"></i> 닫기
+                        </button>
+                    </div>
+                    <div id="modal-content" class="space-y-4">
+                        <!-- 주문 상세 정보가 여기에 동적으로 추가됩니다 -->
+                    </div>
                 </div>
             </div>
         </div>
