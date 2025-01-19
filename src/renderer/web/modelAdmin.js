@@ -28,9 +28,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 카테고리 데이터가 존재할 경우, select에 옵션 추가
         if (userInfo?.category && Array.isArray(userInfo.category)) {
             populateCategoryOptions(userInfo.category);
-
-            document.getElementById('time-input').value = userInfo.washTime;
-            document.getElementById('limit-input').value = userInfo.limitCount;
+            document.getElementById('time-input').value = userInfo.washTime ? userInfo.washTime : 0;
+            document.getElementById('limit-input').value = userInfo.limitCount ? userInfo.limitCount: 20;
+            document.getElementById('earnMileage').value = userInfo.earnMileage ? userInfo.earnMileage : 0;
             // 초기 어드민 카테고리 리스트 렌더링
             renderCategoryList(userInfo.category);
         } else {
@@ -1549,6 +1549,35 @@ async function callApi(endpoint, method, body = null) {
     return response.json();
 }
 
+// 마일리지 적립률 업데이트
+async function putEarnMileage() {
+    const earnMileage = document.getElementById("earnMileage").value;
+    console.log("earnMileage: ", earnMileage);
+    let data;
+
+    if (earnMileage >= 0 && earnMileage < 99) {
+        data = {
+            earnMileage: earnMileage,
+        };
+        console.log("저장된 마일리지 적립률:", data);
+    } else {
+     return   alert("올바른 적립률을 설정해 주세요.");
+    }
+
+    try {
+        // 서버에 업데이트 요청
+        await updateUserInfo(data);
+        await fetchAndSaveUserInfo();
+        alert("마일리지 적립률이 저장되었습니다. 프로그램을 재시작해주세요.");
+    } catch (error) {
+        console.error("저장 중 오류:", error);
+        alert("저장에 실패했습니다. 다시 시도해주세요.");
+    }
+}
+
+// 마일리지 적립률 업데이트
+document.getElementById("earnMileageBtn").addEventListener("click", async ()=>{await putEarnMileage()});
+
 // 마일리지 데이터 조회
 async function fetchMileageData(selectedPageKey = null) {
     const searchKey = document.getElementById("searchKey").value.trim();
@@ -1839,7 +1868,6 @@ async function openDetailModal(item) {
         document.getElementById("modalCount").value = item.count || 0;
         document.getElementById("modalNote").value = item.note || "";
         document.getElementById("modalPassword").value = item.password || "";
-        //document.getElementById("modalTimestamp").value = new Date(item.timestamp).toLocaleString() || "";
 
         // 이용 내역 초기화
         updateUsageHistoryTable([]);
