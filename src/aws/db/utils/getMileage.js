@@ -31,6 +31,7 @@ const saveMileageToDynamoDB = async (mileageData) => {
                 mileageNo: mileageData.mileageNo, // Sort Key
                 amount: mileageData.amount, // 마일리지 포인트
                 password: mileageData.password, // 비밀번호
+                tel: mileageData.tel, // 연락처
                 timestamp: kstTimestamp.toISOString(), // 저장 시각
             },
         };
@@ -134,14 +135,16 @@ const getMileageFromDynamoDB = async (searchKey, limit = 20, lastEvaluatedKey = 
 const updateMileageInDynamoDB = async (mileageNo, updateData) => {
     try {
         // UpdateExpression 및 ExpressionAttributeValues 초기화
-        let updateExpression = 'SET #points = :points, #note = :note';
+        let updateExpression = 'SET #points = :points, #note = :note, #tel = :tel';
         const expressionAttributeNames = {
             '#points': 'amount', // 포인트
             '#note': 'note',    // 메모
+            '#tel' :'tel',      // 연락처
         };
         const expressionAttributeValues = {
             ':points': updateData.points,
             ':note': updateData.note || '',
+            ':tel': updateData.tel || '',
         };
 
         // 패스워드가 존재할 경우 업데이트 표현식에 추가

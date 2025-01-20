@@ -1826,23 +1826,36 @@ confirmRegisterBtn.addEventListener("click", async () => {
     const mileageNo = document.getElementById("registerMileageNo").value.trim();
     const password = document.getElementById("registerPassword").value.trim();
     const amount = parseFloat(document.getElementById("registerAmount").value);
+    const tel = document.getElementById("registerTel").value.trim();
 
     // 입력값 검증
-    if (!/^\d{4,11}$/.test(mileageNo)) {
-        alert("번호는 4~11자리 숫자여야 합니다.");
+    if (!/^\d{4,12}$/.test(mileageNo)) {
+        alert("번호는 4~12자리 숫자여야 합니다.");
+        return;
+    }
+    // 입력값 검증
+    if (!/^\d{0,12}$/.test(tel)) {
+        alert("연락처는 0~12자리 숫자여야 합니다.");
         return;
     }
     if (!password) {
         alert("비밀번호를 입력하세요.");
         return;
     }
+
+    // 입력값 검증
+    if (!/^\d{4}$/.test(password)) {
+        alert("비밀번호는 정확히 4자리 숫자여야 합니다.");
+        return;
+    }
+
     if (isNaN(amount) || amount <= 0) {
         alert("마일리지 포인트는 0보다 큰 숫자여야 합니다.");
         return;
     }
 
     try {
-        const data = await callApi("/mileage-add", "POST", { mileageNo, password, amount });
+        const data = await callApi("/mileage-add", "POST", { mileageNo, password, amount, tel });
 
         if (data.success) {
             alert("마일리지가 성공적으로 등록되었습니다.");
@@ -1863,11 +1876,13 @@ confirmRegisterBtn.addEventListener("click", async () => {
 async function openDetailModal(item) {
     try {
         // 리스트 데이터를 모달 기본 필드에 설정
-        document.getElementById("modalPhone").value = item.mileageNo || "";
-        document.getElementById("modalPoints").value = item.amount || 0;
-        document.getElementById("modalCount").value = item.count || 0;
-        document.getElementById("modalNote").value = item.note || "";
-        document.getElementById("modalPassword").value = item.password || "";
+        document.getElementById("updateMileageNo").value = item.mileageNo || "";
+        document.getElementById("updatePoints").value = item.amount || 0;
+        document.getElementById("registerUpdatePoints").value = item.amount || 0;
+        document.getElementById("updateCount").value = item.count || 0;
+        document.getElementById("updateNote").value = item.note || "";
+        document.getElementById("updatePassword").value = item.password || "";
+        document.getElementById("updateTel").value = item.tel || "";
 
         // 이용 내역 초기화
         updateUsageHistoryTable([]);
@@ -1934,10 +1949,23 @@ document.getElementById("cancelModalBtn").addEventListener("click", closeDetailM
 
 // 저장 버튼 이벤트
 document.getElementById("saveModalBtn").addEventListener("click", async () => {
-    const mileageNo = document.getElementById("modalPhone").value; // 마일리지 번호
-    const password = document.getElementById("modalPassword").value; // 패스워드
-    const points = parseInt(document.getElementById("modalUpdatePoints").value, 10); // 포인트
-    const note = document.getElementById("modalNote").value; // 메모
+    const mileageNo = document.getElementById("updateMileageNo").value; // 마일리지 번호
+    const password = document.getElementById("updatePassword").value; // 패스워드
+    const points = parseInt(document.getElementById("registerUpdatePoints").value, 10); // 포인트
+    const tel = document.getElementById("updateTel").value; // 메모
+    const note = document.getElementById("updateNote").value; // 메모
+
+    // 입력값 검증
+    if (!/^\d{4,12}$/.test(mileageNo)) {
+        alert("마일리지 번호는 4~12자리 숫자여야 합니다.");
+        return;
+    }
+
+    // 입력값 검증
+    if (!/^\d{0,12}$/.test(tel)) {
+        alert("연락처 번호는 0~12자리 숫자여야 합니다.");
+        return;
+    }
 
     if (!mileageNo) {
         alert("마일리지 번호가 유효하지 않습니다.");
@@ -1949,9 +1977,15 @@ document.getElementById("saveModalBtn").addEventListener("click", async () => {
         return;
     }
 
+    // 입력값 검증
+    if (!/^\d{4}$/.test(password)) {
+        alert("비밀번호는 정확히 4자리 숫자여야 합니다.");
+        return;
+    }
+
     try {
         // API 호출
-        await callApi(`/mileage/${encodeURIComponent(mileageNo)}`, "PUT", { password, points, note });
+        await callApi(`/mileage/${encodeURIComponent(mileageNo)}`, "PUT", { password, points, note, tel });
         alert("정보가 성공적으로 저장되었습니다.");
         closeDetailModal(); // 모달 닫기
         await fetchMileageData(null); // 테이블 새로고침

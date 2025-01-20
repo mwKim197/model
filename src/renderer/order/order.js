@@ -428,16 +428,114 @@ document.getElementById('payment').addEventListener('click', async () => {
     if (orderList.length === 0) {
         return openAlertModal("상품을 선택해 주세요");
     }
+    
+    // 통합 결제
+    await payment();
 
+    // 카드 결제
+    //await cardPayment();
+});
+
+// 통합 결제
+const payment = async () => {
+    await pointPayment();
+}
+
+// 전역 변수
+let inputCount = 11; // 입력 제한 초기 값
+let isPasswordMode = false; // 모드 상태 (false: 포인트, true: 비밀번호)
+
+// 포인트 결제 (모달 열기)
+const pointPayment = async () => {
+    const modalTitle = document.getElementById("modalTitle");
+    const inputDisplay = document.getElementById("inputDisplay"); // 입력창
+    const actionBtn = document.getElementById("actionBtn");
+    const modal = document.getElementById("pointModal");
+
+    // 초기화 상태
+    inputDisplay.textContent = ""; // 입력창 초기화
+    modalTitle.textContent = "포인트 적립 혹은 사용"; // 제목 초기화
+    inputCount = 11; // 입력 제한 초기화
+    isPasswordMode = false; // 모드 초기화
+
+    // 모달 열기
+    modal.classList.remove("hidden");
+};
+
+// 포인트 모달 닫기
+document.getElementById("closeModalBtn").addEventListener("click", () => {
+    const modal = document.getElementById("pointModal");
+    modal.classList.add("hidden"); // 모달 숨기기
+});
+
+// DOMContentLoaded 이벤트 핸들러
+document.addEventListener("DOMContentLoaded", () => {
+    const modalTitle = document.getElementById("modalTitle");
+    const inputDisplay = document.getElementById("inputDisplay"); // 입력창
+    const numberButtons = document.querySelectorAll("[data-number]"); // 숫자 버튼
+    const backspaceBtn = document.getElementById("backspaceBtn"); // 백스페이스 버튼
+    const clearAllBtn = document.getElementById("clearAllBtn"); // 전체 지움 버튼
+    const actionBtn = document.getElementById("actionBtn");
+    inputDisplay.textContent = ""; // 입력창 초기화
+
+    // 숫자 버튼 클릭 이벤트
+    numberButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            const number = button.getAttribute("data-number");
+            // 최대 inputCount자리까지만 입력
+            if (inputDisplay.textContent.length < inputCount) {
+                inputDisplay.textContent += number; // 입력창에 숫자 추가
+            } else {
+                openAlertModal(`최대 ${inputCount}자리까지만 입력 가능합니다.`); // 경고 메시지
+            }
+        });
+    });
+
+    // 백스페이스 버튼 클릭 이벤트
+    backspaceBtn.addEventListener("click", () => {
+        inputDisplay.textContent = inputDisplay.textContent.slice(0, -1); // 마지막 글자 제거
+    });
+
+    // 전체 지움 버튼 클릭 이벤트
+    clearAllBtn.addEventListener("click", () => {
+        inputDisplay.textContent = ""; // 입력창 초기화
+    });
+
+    // 적립하기 버튼 (모드 전환)
+    actionBtn.addEventListener("click", () => {
+        if (inputDisplay.textContent > 4) {
+            // DB 조회 이후 DB에 데이터 있으면 넘어가고 없으면 패스워드 입력받아서 등록
+            if (!isPasswordMode) {
+                // 포인트 -> 비밀번호 설정 모드로 전환
+                isPasswordMode = true;
+                modalTitle.textContent = "비밀번호 설정";
+                inputDisplay.textContent = ""; // 입력 초기화
+                inputCount = 4; // 비밀번호 입력 제한
+            } else {
+                // 비밀번호 설정 완료
+                openAlertModal(`설정된 비밀번호: ${inputDisplay.textContent}`);
+                isPasswordMode = false; // 초기 상태로 복구
+                modalTitle.textContent = "포인트 적립 혹은 사용";
+                inputDisplay.textContent = "";
+                inputCount = 11; // 포인트 입력 제한 복구
+            }
+        } else {
+            openAlertModal(`최소 4자리이상 입력하세요.`); // 경고 메시지
+        }
+    });
+});
+
+
+// 카드 결제
+const cardPayment = async () => {
     const audio = new Audio('../../assets/audio/카드결제를 선택하셨습니다 카드를 단말기에 넣어주세요.mp3');
-
     // 음성 재생
     if (audio) {
         audio.play().catch((err) => {
             console.error('Audio play error:', err);
         });
     }
-    
+
     let price = 0;
     orderList.map((order) => {
         price += Number(order.price) * order.count;  // 수량만큼 가격 계산
@@ -503,7 +601,7 @@ document.getElementById('payment').addEventListener('click', async () => {
         console.error("결제 오류: ", error.message);
         removeAllItem(); // 주문 목록삭제
     }
-});
+}
 
 
 /* 버튼 비동기 처리 0.2 초대기*/

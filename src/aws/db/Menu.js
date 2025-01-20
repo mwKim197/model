@@ -505,7 +505,7 @@ Menu.get('/mileage', async (req, res) => {
 Menu.put('/mileage/:mileageNo', async (req, res) => {
     try {
         const { mileageNo } = req.params;
-        const { password, points, note } = req.body;
+        const { password, points, note, tel } = req.body;
 
         // 기존 마일리지 데이터 조회
         const mileageData = await getMileageFromDynamoDB(mileageNo);
@@ -514,7 +514,7 @@ Menu.put('/mileage/:mileageNo', async (req, res) => {
         }
 
         // DynamoDB 데이터 업데이트
-        const updatedMileage = await updateMileageInDynamoDB(mileageNo, { points, note, password});
+        const updatedMileage = await updateMileageInDynamoDB(mileageNo, { points, note, password, tel});
 
         res.json({ success: true, data: updatedMileage });
     } catch (err) {

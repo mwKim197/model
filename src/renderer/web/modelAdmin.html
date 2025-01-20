@@ -433,7 +433,7 @@
                         <input
                                 id="registerMileageNo"
                                 type="text"
-                                placeholder="4~11자리 숫자"
+                                placeholder="4~12자리 숫자"
                                 class="w-full border border-gray-300 rounded p-2"
                         />
                     </div>
@@ -450,6 +450,15 @@
                         <label for="registerAmount" class="block text-sm font-semibold text-gray-600">마일리지 포인트</label>
                         <input
                                 id="registerAmount"
+                                type="number"
+                                placeholder="0보다 큰 숫자"
+                                class="w-full border border-gray-300 rounded p-2"
+                        />
+                    </div>
+                    <div class="mb-6">
+                        <label for="registerTel" class="block text-sm font-semibold text-gray-600">연락처</label>
+                        <input
+                                id="registerTel"
                                 type="number"
                                 placeholder="0보다 큰 숫자"
                                 class="w-full border border-gray-300 rounded p-2"
@@ -482,34 +491,35 @@
                     <div class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label for="modalPhone" class="block text-sm font-semibold">고객번호</label>
-                                <input id="modalPhone" type="text" class="w-full border rounded p-2" disabled />
+                                <label for="updateMileageNo" class="block text-sm font-semibold">고객번호</label>
+                                <input id="updateMileageNo" type="text" class="w-full border rounded p-2" disabled />
                             </div>
                             <div>
-                                <label for="modalPassword" class="block text-sm font-semibold">비밀번호</label>
-                                <input id="modalPassword" type="text" class="w-full border rounded p-2" />
+                                <label for="updatePassword" class="block text-sm font-semibold">비밀번호</label>
+                                <input id="updatePassword" type="text" class="w-full border rounded p-2" />
                             </div>
                             <div>
-                                <label for="modalCount" class="block text-sm font-semibold">누적 이용 횟수</label>
-                                <input id="modalCount" type="text" class="w-full border rounded p-2" disabled />
+                                <label for="updateCount" class="block text-sm font-semibold">누적 이용 횟수</label>
+                                <input id="updateCount" type="text" class="w-full border rounded p-2" disabled />
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label for="modalPoints" class="block text-sm font-semibold">보유 포인트</label>
-                                <input id="modalPoints" type="text" class="w-full border rounded p-2" disabled />
+                                <label for="updatePoints" class="block text-sm font-semibold">보유 포인트</label>
+                                <input id="updatePoints" type="text" class="w-full border rounded p-2" disabled />
                             </div>
                             <div>
-                                <label for="modalUpdatePoints" class="block text-sm font-semibold">수정 포인트</label>
-                                <input id="modalUpdatePoints" type="text" class="w-full border rounded p-2" />
+                                <label for="registerUpdatePoints" class="block text-sm font-semibold">수정 포인트</label>
+                                <input id="registerUpdatePoints" type="text" class="w-full border rounded p-2" />
                             </div>
                             <div>
-
+                                <label for="updateTel" class="block text-sm font-semibold">연락처</label>
+                                <input id="updateTel" type="text" class="w-full border rounded p-2" />
                             </div>
                         </div>
                         <div>
-                            <label for="modalNote" class="block text-sm font-semibold">메모</label>
-                            <textarea id="modalNote" class="w-full border rounded p-2"></textarea>
+                            <label for="updateNote" class="block text-sm font-semibold">메모</label>
+                            <textarea id="updateNote" class="w-full border rounded p-2"></textarea>
                         </div>
                     </div>
                     <div class="mt-6">

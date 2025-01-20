@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>커피 메뉴</title>
     <link href="../../styles/output.css" rel="stylesheet">
+    <script src="https://use.fontawesome.com/releases/v5.2.0/js/all.js"></script>
 </head>
 <body style="font-family: 'Light', sans-serif">
     <div id="buttonContainer" class="flex h-screen">
@@ -76,6 +77,63 @@
         </div>
     </div>
 
+    <div id="pointModal" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-[600px]">
+            <!-- 모달 헤더 -->
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modalTitle" class="text-lg font-bold">포인트 적립 혹은 사용</h2>
+                <button id="closeModalBtn" class="text-gray-500 hover:text-gray-800">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- 포인트번호 입력 -->
+            <div id="inputDisplay" class="text-center text-2xl font-bold mb-4 h-12 border-b-2 border-gray-300">
+                <!-- 여기에 숫자 표시 -->
+            </div>
+
+            <!-- 숫자 버튼과 나머지 버튼 영역 -->
+            <div class="flex">
+                <!-- 숫자 버튼 -->
+                <div class="grid grid-cols-3 gap-4 flex-1">
+                    <button class="bg-gray-200 rounded-lg p-4 text-xl font-bold hover:bg-gray-300" data-number="1">1</button>
+                    <button class="bg-gray-200 rounded-lg p-4 text-xl font-bold hover:bg-gray-300" data-number="2">2</button>
+                    <button class="bg-gray-200 rounded-lg p-4 text-xl font-bold hover:bg-gray-300" data-number="3">3</button>
+                    <button class="bg-gray-200 rounded-lg p-4 text-xl font-bold hover:bg-gray-300" data-number="4">4</button>
+                    <button class="bg-gray-200 rounded-lg p-4 text-xl font-bold hover:bg-gray-300" data-number="5">5</button>
+                    <button class="bg-gray-200 rounded-lg p-4 text-xl font-bold hover:bg-gray-300" data-number="6">6</button>
+                    <button class="bg-gray-200 rounded-lg p-4 text-xl font-bold hover:bg-gray-300" data-number="7">7</button>
+                    <button class="bg-gray-200 rounded-lg p-4 text-xl font-bold hover:bg-gray-300" data-number="8">8</button>
+                    <button class="bg-gray-200 rounded-lg p-4 text-xl font-bold hover:bg-gray-300" data-number="9">9</button>
+                    <button class="bg-gray-200 rounded-lg p-4 text-xl font-bold hover:bg-gray-300" data-number="010">010</button>
+                    <button class="bg-gray-200 rounded-lg p-4 text-xl font-bold hover:bg-gray-300" data-number="0">0</button>
+                </div>
+
+                <!-- 오른쪽 버튼 -->
+                <div class="flex flex-col gap-4 ml-6 w-2/5">
+                    <div class="flex flex-row gap-4">
+                        <button id="backspaceBtn" class="bg-gray-200 rounded-lg p-4 text-xl font-bold hover:bg-gray-300">
+                            <i class="fas fa-backspace"></i>
+                        </button>
+                        <button id="clearAllBtn" class="bg-gray-200 py-3 rounded-lg font-bold hover:bg-gray-300 w-3/5 ml-auto">
+                            전체 지움
+                        </button>
+                    </div>
+                    <button id="actionBtn" class="bg-blue-500 text-white py-3 rounded-lg font-bold hover:bg-blue-600 w-full">
+                        적립하기
+                    </button>
+                    <button class="bg-gray-200 py-3 rounded-lg font-bold hover:bg-gray-300 w-full">
+                        사용하기
+                    </button>
+                    <button class="bg-gray-400 text-white py-3 rounded-lg font-bold hover:bg-gray-500 w-full">
+                        건너뛰기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 카드결제모달 -->
     <div id="modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999] hidden">
         <div class="bg-white p-5 rounded-lg shadow-lg w-[600px] h-[600px] relative">
             <div class="m-5 text-3xl fixed justify-center">
