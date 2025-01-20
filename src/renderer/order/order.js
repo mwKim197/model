@@ -430,10 +430,10 @@ document.getElementById('payment').addEventListener('click', async () => {
     }
     
     // 통합 결제
-    await payment();
+    //await payment();
 
     // 카드 결제
-    //await cardPayment();
+    await cardPayment();
 });
 
 // 통합 결제
