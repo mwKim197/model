@@ -83,8 +83,6 @@ const getMileageHistory = async (mileageNo, limit, lastEvaluatedKey) => {
     return await queryWithPagination('model_mileage_history', keyCondition, expressionValues, limit, lastEvaluatedKey);
 };
 
-
-
 // 페이징 공통
 const queryWithPagination = async (tableName, keyConditionExpression, expressionAttributeValues, limit = 20, lastEvaluatedKey = null) => {
     try {

@@ -126,7 +126,7 @@ const updateMileageAndLogHistory = async (mileageNo, totalAmt, changePoints, typ
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ mileageNo: mileageNo,totalAmt: totalAmt, changePoints: changePoints, type: type, note: note })
+            body: JSON.stringify({ mileageNo: mileageNo, totalAmt: totalAmt, changePoints: changePoints, type: type, note: note })
         });
 
         if (!response.ok) {

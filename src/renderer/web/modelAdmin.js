@@ -1920,10 +1920,10 @@ function updateHistoryTable(items) {
 const row = `
             <tr class="hover:bg-gray-200">
                 <td class="p-2 text-center">${index + 1}</td>
-                <td class="p-2 text-center">${new Date(entry.timestamp).toLocaleDateString()}</td>
-                <td class="p-2 text-center">${new Date(entry.timestamp).toLocaleTimeString()}</td>
+                <td class="p-2 text-center">${entry.timestamp.replace('T', ' ').slice(0, 10)}</td>
+                <td class="p-2 text-center">${entry.timestamp.replace('T', ' ').slice(10, 19)}</td>
                 <td class="p-2 text-right">${(entry.totalAmt || 0).toLocaleString() + "원"}</td>
-                <td class="p-2 text-right">${(entry.type === "earn" ? "+" : "-")}${(entry.points || 0).toLocaleString()}p</td>
+                <td class="p-2 text-right">${(entry.points || 0).toLocaleString()}p</td>
                 <td class="p-2 text-right">${(entry.amount || 0).toLocaleString() + "p"}</td>
             </tr>
         `;
@@ -2040,7 +2040,7 @@ async function openDetailModal(item) {
         document.getElementById("updateTel").value = item.tel || "";
 
         // 이용 내역 초기화
-        updateUsageHistoryTable([]);
+        //updateUsageHistoryTable([]);
 
         const historyResponse = await fetchMileageHistoryData(item.mileageNo);
         console.log("historyResponse: ",historyResponse);
@@ -2055,6 +2055,7 @@ async function openDetailModal(item) {
 }
 
 
+/*
 // 모달그리드
 function updateUsageHistoryTable(usageHistory) {
     const tbody = document.getElementById("usageHistoryTableBody");
@@ -2073,8 +2074,8 @@ function updateUsageHistoryTable(usageHistory) {
         const row = `
             <tr class="hover:bg-gray-200">
                 <td class="p-2 text-center">${index + 1}</td>
-                <td class="p-2 text-center">${new Date(entry.timestamp).toLocaleDateString()}</td>
-                <td class="p-2 text-center">${new Date(entry.timestamp).toLocaleTimeString()}</td>
+                <td class="p-2 text-center">${entry.timestamp.replace('T', ' ').slice(0, 19)}</td>
+                <td class="p-2 text-center">${entry.timestamp.replace('T', ' ').slice(0, 19)}</td>
                 <td class="p-2 text-right">${(entry.payment || 0).toLocaleString() + "원"}</td>
                 <td class="p-2 text-right">${(entry.useMileage || 0).toLocaleString() + "p"}</td>
                 <td class="p-2 text-right">${(entry.amount || 0).toLocaleString() + "p"}</td>
@@ -2083,6 +2084,7 @@ function updateUsageHistoryTable(usageHistory) {
         tbody.insertAdjacentHTML("beforeend", row);
     });
 }
+*/
 
 
 // 모달 닫기

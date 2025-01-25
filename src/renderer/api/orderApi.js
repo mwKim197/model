@@ -144,9 +144,9 @@ const NCpad = (n, width) => {
 }
 const reqOrder = async (orderList) => {
     try {
-        
+
         await ensureUserDataInitialized();
-        
+
         const response = await fetch(`http://localhost:3142/start-order`, {
             method: 'POST', // POST 요청
             headers: {
@@ -161,6 +161,8 @@ const reqOrder = async (orderList) => {
 
     } catch (error) {
         sendLogToMain('error','ORDER :', error);
+        // 에러를 호출한 함수로 전달
+        throw error;
     }
 }
 
