@@ -29,6 +29,17 @@ const saveOrdersToDynamoDB = async (orderData) => {
         // orderId 생성 (YYYYMMDDHHmm 형태)
         const orderId = `${kstTimestamp.toISOString().slice(0, 16).replace(/[-T:]/g, '')}-${orderData[0].userId}`;
 
+        //[TODO]결제정보 추가 예정 orderData
+        /*{
+            point: 5000,
+            orderList {
+                menuId: order.menuId,
+                name: order.name,
+                count: order.count,
+                price: order.price * order.count, // 총 금액 계산
+            }
+        }*/
+
         // 메뉴 ID, 이름, 수량을 그룹화하여 생성
         const menuSummary = orderData.map(order => ({
             menuId: order.menuId,

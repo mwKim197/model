@@ -14,8 +14,8 @@ const serialDataManager = require("../../services/serialDataManager");
 const {serialCommCom1} = require("../../serial/serialCommManager");
 const {getOrdersByDateRange, calculateSalesStatistics} = require("./utils/getPayment");
 const {updateUserInfo, getUserById} = require("./utils/getUser");
-const {saveMileageToDynamoDB, getMileageFromDynamoDB, updateMileageInDynamoDB, deleteMileageFromDynamoDB,
-    getMileageHistoryFromDynamoDB
+const {saveMileageToDynamoDB, getMileage, updateMileageInDynamoDB, deleteMileageFromDynamoDB,
+    getMileageHistory, checkMileageExists, verifyMileageAndReturnPoints, updateMileageAndLogHistory
 } = require("./utils/getMileage");
 const upload = multer({ storage: memoryStorage() }); // 메모리 저장소 사용
 const polling = new serialDataManager(serialCommCom1);
@@ -487,7 +487,7 @@ Menu.get('/mileage', async (req, res) => {
 
     try {
         const parsedKey = lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : null;
-        const result = await getMileageFromDynamoDB(searchKey, parseInt(limit), parsedKey);
+        const result = await getMileage(searchKey, parseInt(limit), parsedKey);
 
         res.json({
             items: result.items,
@@ -508,7 +508,7 @@ Menu.put('/mileage/:mileageNo', async (req, res) => {
         const { password, points, note, tel } = req.body;
 
         // 기존 마일리지 데이터 조회
-        const mileageData = await getMileageFromDynamoDB(mileageNo);
+        const mileageData = await getMileage(mileageNo);
         if (!mileageData) {
             return res.status(404).json({ success: false, message: '마일리지 데이터가 존재하지 않습니다.' });
         }
@@ -539,17 +539,73 @@ Menu.delete('/mileage/:mileageNo', async (req, res) => {
 });
 
 // 마일리지 이용내역 조회
-Menu.get('/mileage-history/:mileageNo', async (req, res) => {
+Menu.get('/mileage-history', async (req, res) => {
+    try {
+        const { limit = "10", searchKey = '', lastEvaluatedKey } = req.query;
+
+        // 이용 내역 조회 함수 호출
+        const parsedKey = lastEvaluatedKey ? JSON.parse(lastEvaluatedKey) : null;
+        const usageHistory = await getMileageHistory(searchKey, parseInt(limit), parsedKey);
+
+        res.json({
+            items: usageHistory.items,
+            total: usageHistory.total,
+            lastEvaluatedKey: usageHistory.lastEvaluatedKey ? JSON.stringify(usageHistory.lastEvaluatedKey) : null,
+            pageKeys: usageHistory.pageKeys
+        });
+    } catch (error) {
+        log.error('이용 내역 조회 중 오류 발생:', error);
+        res.status(500).json({ success: false, message: '이용 내역 조회 실패' });
+    }
+});
+
+// 마일리지 유저검증
+Menu.get('/mileage-user/:mileageNo', async (req, res) => {
     try {
         const { mileageNo } = req.params;
 
         // 이용 내역 조회 함수 호출
-        const usageHistory = await getMileageHistoryFromDynamoDB(mileageNo);
+        const userCheck = await checkMileageExists(mileageNo);
 
-        res.json({ success: true, data: usageHistory });
+        res.json({ success: true, data: userCheck });
     } catch (error) {
-        log.error('이용 내역 조회 중 오류 발생:', error);
-        res.status(500).json({ success: false, message: '이용 내역 조회 실패' });
+        log.error('마일리지 유저 정보 비교 중 오류 발생:', error);
+        res.status(500).json({ success: false, message: '마일리지 유저 정보 비교 실패' });
+    }
+});
+
+// 마일리지 비밀번호 검증
+Menu.post('/mileage-user', async (req, res) => {
+    try {
+
+        const {mileageNo, password} = req.body;
+        log.info("패스워드 검증 :", JSON.stringify(mileageNo, password));
+
+        if (!mileageNo || !password) {
+            return res.status(400).json({ error: 'mileageNo와 password를 입력하세요.' });
+        }
+
+        // 이용 내역 조회 함수 호출
+        const passwordCheck = await verifyMileageAndReturnPoints(mileageNo, password);
+
+        res.json({ success: true, data: passwordCheck });
+    } catch (error) {
+        log.error('마일리지 유저 패스워드 비교 오류 발생:', error);
+        res.status(500).json({ success: false, message: '마일리지 유저 패스워드 비교 실패' });
+    }
+});
+
+// 마일리지내역 등록
+Menu.post('/mileage-transaction', async (req, res) => {
+    const { mileageNo, totalAmt, changePoints, type, note } = req.body;
+
+    try {
+        // 트랜잭션 처리
+        const result = await updateMileageAndLogHistory(mileageNo, totalAmt, changePoints, type, note);
+        res.status(200).json({ success: true, message: '트랜잭션 성공', result });
+    } catch (error) {
+        console.error('트랜잭션 실패:', error.message);
+        res.status(500).json({ success: false, message: '트랜잭션 실패', error: error.message });
     }
 });
 

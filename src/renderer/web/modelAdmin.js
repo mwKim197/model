@@ -1527,6 +1527,7 @@ let page = 1;
 let limit = 10;
 let totalItems = 0;
 let lastEvaluatedKey = null;
+let historyLastEvaluatedKey = null;
 let mileagePageKeys = [];
 
 // 공통 API 호출 함수
@@ -1871,6 +1872,160 @@ confirmRegisterBtn.addEventListener("click", async () => {
 });
 // 등록 모달 END
 
+// 마일리지 데이터 조회
+async function fetchMileageHistoryData(searchKey, selectedPageKey = null ) {
+
+    try {
+        // API 요청 쿼리 생성
+        const queryString = `?limit=${10}&searchKey=${encodeURIComponent(searchKey)}&lastEvaluatedKey=${encodeURIComponent(JSON.stringify(selectedPageKey)|| '')}`;
+        const response = await callApi(`/mileage-history${queryString}`, "GET");
+
+        // 서버 응답 처리
+        const { items, total, lastEvaluatedKey: newLastEvaluatedKey, pageKeys: serverPageKeys } = response;
+
+        // 클라이언트 상태 업데이트
+        totalItems = total;
+
+        // serverPageKeys 가 있을때만 저장
+        if (serverPageKeys) {
+            mileagePageKeys = serverPageKeys; // 서버에서 전달된 pageKeys 저장
+        }
+
+       updateHistoryTable(items); // 테이블 데이터 갱신
+       updateHistoryPagination(searchKey); // 페이지네이션 갱신
+
+        // 다음 페이지를 위한 키 갱신
+        historyLastEvaluatedKey = newLastEvaluatedKey;
+    } catch (error) {
+        console.error("Error fetching mileage data:", error);
+        alert("데이터 조회 중 오류가 발생했습니다.");
+    }
+}
+
+// 테이블 업데이트
+function updateHistoryTable(items) {
+    const tbody = document.getElementById("usageHistoryTableBody");
+    tbody.innerHTML = ""; // 기존 데이터 초기화
+
+    if (!items || items.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td class="p-2 text-center" colspan="6">이용 내역이 없습니다.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    items.forEach((entry, index) => {
+const row = `
+            <tr class="hover:bg-gray-200">
+                <td class="p-2 text-center">${index + 1}</td>
+                <td class="p-2 text-center">${new Date(entry.timestamp).toLocaleDateString()}</td>
+                <td class="p-2 text-center">${new Date(entry.timestamp).toLocaleTimeString()}</td>
+                <td class="p-2 text-right">${(entry.totalAmt || 0).toLocaleString() + "원"}</td>
+                <td class="p-2 text-right">${(entry.type === "earn" ? "+" : "-")}${(entry.points || 0).toLocaleString()}p</td>
+                <td class="p-2 text-right">${(entry.amount || 0).toLocaleString() + "p"}</td>
+            </tr>
+        `;
+        tbody.insertAdjacentHTML("beforeend", row);
+    });
+
+}
+
+// 페이지네이션 업데이트
+function updateHistoryPagination(point) {
+    limit = parseInt(document.getElementById("limit").value) || 10;
+    const totalPages = Math.ceil(totalItems / limit);
+    const paginationContainer = document.getElementById("historyPaginationContainer");
+    const visiblePages = 5; // 한 번에 표시할 페이지 번호 개수
+    paginationContainer.innerHTML = ""; // 기존 버튼 초기화
+
+    if (totalPages <= 1) {
+        return; // 페이지가 하나뿐이면 아무것도 표시하지 않음
+    }
+
+    // 이전 버튼
+    const prevButton = document.createElement("button");
+    prevButton.className = "bg-gray-300 text-gray-700 px-2 py-1 rounded hover:bg-gray-400 disabled:opacity-50";
+    prevButton.disabled = page === 1;
+    prevButton.innerText = "이전";
+    prevButton.addEventListener("click", () => historyChangePage(point,page - 1));
+    paginationContainer.appendChild(prevButton);
+
+    // 페이지 번호 버튼
+    let startPage = Math.max(1, page - Math.floor(visiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + visiblePages - 1);
+
+    if (endPage - startPage + 1 < visiblePages) {
+        startPage = Math.max(1, endPage - visiblePages + 1);
+    }
+
+    if (startPage > 1) {
+        const firstPageButton = document.createElement("button");
+        firstPageButton.className = "bg-gray-300 text-gray-700 px-2 py-1 rounded hover:bg-gray-400";
+        firstPageButton.innerText = "1";
+        firstPageButton.addEventListener("click", () => historyChangePage(point,1));
+        paginationContainer.appendChild(firstPageButton);
+
+        if (startPage > 2) {
+            const ellipsis = document.createElement("span");
+            ellipsis.innerText = "...";
+            ellipsis.className = "px-2";
+            paginationContainer.appendChild(ellipsis);
+        }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        const pageButton = document.createElement("button");
+        pageButton.className =
+            "px-2 py-1 rounded mx-1 " + (i === page ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-700 hover:bg-gray-400");
+        pageButton.innerText = i.toString();
+        pageButton.setAttribute("aria-current", i === page ? "page" : null);
+        // 올바른 페이지 번호를 changePage에 전달
+        pageButton.addEventListener("click", () => historyChangePage(point,i));
+        paginationContainer.appendChild(pageButton);
+    }
+
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            const ellipsis = document.createElement("span");
+            ellipsis.innerText = "...";
+            ellipsis.className = "px-2";
+            paginationContainer.appendChild(ellipsis);
+        }
+
+        const lastPageButton = document.createElement("button");
+        lastPageButton.className = "bg-gray-300 text-gray-700 px-2 py-1 rounded hover:bg-gray-400";
+        lastPageButton.innerText = totalPages.toString();
+        lastPageButton.addEventListener("click", () => historyChangePage(point,totalPages));
+        paginationContainer.appendChild(lastPageButton);
+    }
+
+    // 다음 버튼
+    const nextButton = document.createElement("button");
+    nextButton.className = "bg-gray-300 text-gray-700 px-2 py-1 rounded hover:bg-gray-400 disabled:opacity-50";
+    nextButton.disabled = page === totalPages;
+    nextButton.innerText = "다음";
+    nextButton.addEventListener("click", () => historyChangePage(point, page + 1));
+    paginationContainer.appendChild(nextButton);
+}
+
+// 페이지 변경 함수
+function historyChangePage(point, newPage) {
+    const totalPages = Math.ceil(totalItems / limit);
+
+    if (newPage < 1 || newPage > totalPages) {
+        return; // 잘못된 페이지 요청 방지
+    }
+
+    page = newPage; // 페이지 번호 업데이트
+
+    // 현재 페이지에 맞는 lastEvaluatedKey 가져오기
+    const lastKey = mileagePageKeys[page-2] || null;
+    // API 호출
+    fetchMileageHistoryData(point, lastKey).then(); // 새 페이지 데이터 가져오기
+}
+
 // 수정, 비밀번호찾기, 상세 모달 START
 // 모달열기
 async function openDetailModal(item) {
@@ -1887,16 +2042,8 @@ async function openDetailModal(item) {
         // 이용 내역 초기화
         updateUsageHistoryTable([]);
 
-
-        // 이용 내역 조회
-        const historyResponse = await callApi(`/mileage-history/${encodeURIComponent(item.mileageNo)}`, "GET");
-        const usageHistory = historyResponse.data || [];
-
-        // 이용 내역 테이블 업데이트
-        updateUsageHistoryTable(usageHistory);
-
-        // 이용 내역 테이블 업데이트
-        updateUsageHistoryTable(usageHistory);
+        const historyResponse = await fetchMileageHistoryData(item.mileageNo);
+        console.log("historyResponse: ",historyResponse);
 
         // 모달 열기
         const modal = document.getElementById("detailModal");

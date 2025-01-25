@@ -351,39 +351,51 @@ okButton.addEventListener('click', () => {
     // 필요한 추가 로직 실행
 });
 
-
+// 모든아이템 제거
+const removeAll = () => {
+    removeAllItem();
+    checkAndShowEmptyImage();
+    closeModal();
+}
 
 const confirmModal = document.getElementById('confirmModal');
 const cancelButton = document.getElementById('cancelButton');
 const confirmButton = document.getElementById('confirmButton');
 
-// 모달 열기
-const openModal = () => {
-    if (orderList.length > 0) {
-        confirmModal.classList.remove('hidden');
-    }
+// 모달 열기 함수
+const openModal = (message, onConfirm, onCancel) => {
+    const modalMessage = confirmModal.querySelector('h2');
+    modalMessage.innerText = message; // 모달 메시지 설정
+    confirmModal.classList.remove('hidden'); // 모달 보이기
 
+    // 이전 이벤트 리스너 제거 (중복 방지)
+    const newConfirmButton = confirmButton.cloneNode(true);
+    confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
+
+    const newCancelButton = cancelButton.cloneNode(true);
+    cancelButton.parentNode.replaceChild(newCancelButton, cancelButton);
+
+    // 확인 버튼 이벤트 추가
+    newConfirmButton.addEventListener('click', () => {
+        if (typeof onConfirm === 'function') {
+            onConfirm(); // 확인 함수 실행
+        }
+        closeModal(); // 모달 닫기
+    });
+
+    // 취소 버튼 이벤트 추가
+    newCancelButton.addEventListener('click', () => {
+        if (typeof onCancel === 'function') {
+            onCancel(); // 취소 함수 실행
+        }
+        closeModal(); // 모달 닫기
+    });
 };
 
-// 모달 닫기
+// 모달 닫기 함수
 const closeModal = () => {
-    confirmModal.classList.add('hidden');
+    confirmModal.classList.add('hidden'); // 모달 숨기기
 };
-
-// 확인 버튼 클릭
-confirmButton.addEventListener('click', () => {
-    console.log('모든 주문이 삭제되었습니다.');
-    removeAllItem();
-    checkAndShowEmptyImage();
-    closeModal();
-    // 여기에서 삭제 로직 실행
-});
-
-// 취소 버튼 클릭
-cancelButton.addEventListener('click', () => {
-    console.log('취소되었습니다.');
-    closeModal();
-});
 
 function removeAllItem() {
     orderList = [];
@@ -430,37 +442,545 @@ document.getElementById('payment').addEventListener('click', async () => {
     }
     
     // 통합 결제
-    //await payment();
-
-    // 카드 결제
-    await cardPayment();
+    await payment();
 });
+
+
+// 적립 마일리지 사용등록 (마일리지 금액 수정, 마일리지이용내역등록)
+const addMileage = async (mileageNo, totalAmt, earnRate) => {
+    const pointsToAdd = Math.round((totalAmt * earnRate) / 100);
+    const note = `결제 금액 ${totalAmt}원에 대한 ${earnRate}% 적립`;
+    return await window.electronAPI.updateMileageAndLogHistory(mileageNo, totalAmt, pointsToAdd, 'earn', note);
+};
+
+// 사용 마일리지 사용등록 (마일리지 금액 수정, 마일리지이용내역등록)
+const useMileage = async (mileageNo, totalAmt, pointsToUse) => {
+    const note = `사용자 요청으로 ${pointsToUse}포인트 사용`;
+    return await window.electronAPI.updateMileageAndLogHistory(mileageNo, totalAmt, -pointsToUse, 'use', note);
+};
+
+// 롤백 마일리지 사용등록 (마일리지 금액 수정, 마일리지이용내역등록)
+const rollbackMileage = async (mileageNo, totalAmt, pointsToRollback) => {
+    const note = `카드 결제 실패로 인해 ${pointsToRollback}포인트 롤백`;
+
+    return await window.electronAPI.updateMileageAndLogHistory(mileageNo, totalAmt, pointsToRollback, 'rollback', note);
+};
 
 // 통합 결제
 const payment = async () => {
-    await pointPayment();
+    let earnRate = userInfo.earnMileage; // 적립률
+    let price = 0;
+    orderList.map((order) => {
+        price += Number(order.price) * order.count; // 수량만큼 가격 계산
+    });
+
+    const orderAmount = price; // 주문 금액
+    let response = await pointPayment(orderAmount); // 포인트 모달 띄우기 및 포인트 사용 금액 반환
+    console.log("pointPayment: ", response);
+
+    /*
+    포인트가 리턴됬을때
+    포인트 결제금액이 있을경우 마일리지 사용
+    포인트 결제금액 결제 이후 잔액이 남을 경우
+    카드결제 실시
+    포인트번호가 들어오면 카드 결제 성공 이후 마일리지 적립 처리
+    로그 저장
+    */
+
+    // 결제 취소
+    if (response.action === "exit") return;
+
+    // 즉시결제 타입
+    if (response.action === ACTIONS.IMMEDIATE_PAYMENT) {
+
+        // 포인트 번호가 있을경우 적립
+        if (response.point) {
+            console.log("적립 결제 시작");
+            const payEnd = await cardPayment(orderAmount, 0);
+            if (payEnd) {
+
+                await addMileage(response.point, orderAmount, earnRate);
+                await ordStart(); // 주문 시작
+            } else {
+                console.error("카드 결제가 실패했습니다.");
+            }
+
+        } else {
+            console.log("미적립 결제 시작");
+            // 포인트 없을 경우 바로 카드결제
+            const payEnd = await cardPayment(price, 0);
+            if (payEnd) {
+                await ordStart(); // 주문 시작
+            } else {
+                console.error("카드 결제가 실패했습니다.");
+            }
+        }
+    }
+
+    // 포인트 결제
+    if (response.action === ACTIONS.USE_POINTS) {
+        try {
+            // 포인트 결제 시도
+            const pointResult = await applyPointPayment(response.discountAmount);
+
+            if (!pointResult.success) {
+                console.error("포인트 결제 실패:", pointResult.message);
+                throw new Error("포인트 결제가 실패했습니다.");
+            }
+
+            console.log("포인트 결제 성공:", response.discountAmount);
+
+            // 카드 결제 처리
+            const discountAmount = response.discountAmount || 0;
+            const totalAmount = orderAmount - discountAmount;
+
+            if (totalAmount > 0) {
+                console.log("잔여 금액 카드 결제 진행 중...");
+                const payEnd = await cardPayment(orderAmount, discountAmount);
+
+                if (payEnd) {
+                    await ordStart(); // 주문 시작
+                } else {
+                    console.error("카드 결제가 실패했습니다. 포인트 결제를 롤백합니다.");
+                    await rollbackPointPayment(response.discountAmount); // 포인트 롤백
+                }
+            } else {
+                console.log("포인트로 전액 결제 완료.");
+                await ordStart(); // 주문 시작
+            }
+        } catch (error) {
+            console.error("결제 중 오류 발생:", error.message);
+            await rollbackPointPayment(response.discountAmount); // 포인트 롤백
+        }
+    } else {
+        console.log("포인트 결제가 사용되지 않았습니다.");
+    }
+
+};
+
+/**
+ * ACTIONS 구분값 (결제 상태 관리)
+ * @readonly
+ * @enum {string}
+ */
+const ACTIONS = {
+    /*즉시결제*/
+    IMMEDIATE_PAYMENT: "immediatePayment",
+    /*통합결제 취소*/
+    EXIT: "exit",
+   /*포인트결제*/
+    USE_POINTS: "usePoints",
+};
+
+
+// 포인트 전역 변수
+let inputCount = 12; // 입력 제한 초기 값
+let inputTarget = null; // 현재 콘텐츠 상태 저장\
+let type = "number";
+let usePoint = 0; // 사용포인트
+let totalAmt = 0; // 전체결제금액
+let availablePoints = 0; // 보유포인트
+let remainingAmount = 0; // 잔여결제액
+// 포인트 결제 (모달 열기)
+const pointPayment = (orderAmount) => {
+    return new Promise((resolve) => {
+        const modal = document.getElementById("pointModal");
+        inputCount = 4; // 입력 제한 초기화
+        usePoint = 0; //
+        totalAmt = orderAmount;
+
+        modal.classList.remove("hidden"); // 모달 열기
+        updateDynamicContent("pointInput", orderAmount ,resolve);
+    });
+};
+
+
+// 입력 템플릿 생성 함수
+function createInputTemplate(title = "") {
+    return `
+        <div class="h-32">${title ? `<p class="text-2xl font-bold text-center mb-4">${title}</p>` : ""}</div>
+        <div id="inputDisplay" class="text-center text-5xl font-bold mb-4 h-12 border-b-2 border-gray-300">
+            <!-- 여기에 숫자 표시 -->
+        </div>
+    `;
 }
 
-// 전역 변수
-let inputCount = 11; // 입력 제한 초기 값
-let isPasswordMode = false; // 모드 상태 (false: 포인트, true: 비밀번호)
+let stateStack = []; // 상태 스택
 
-// 포인트 결제 (모달 열기)
-const pointPayment = async () => {
-    const modalTitle = document.getElementById("modalTitle");
-    const inputDisplay = document.getElementById("inputDisplay"); // 입력창
-    const actionBtn = document.getElementById("actionBtn");
+// 동적 콘텐츠 업데이트 함수
+function updateDynamicContent(contentType, data ,resolve) {
+    const dynamicContent = document.getElementById("dynamicContent");
+    const dynamicButton = document.getElementById('dynamicButton');
     const modal = document.getElementById("pointModal");
 
-    // 초기화 상태
-    inputDisplay.textContent = ""; // 입력창 초기화
-    modalTitle.textContent = "포인트 적립 혹은 사용"; // 제목 초기화
-    inputCount = 11; // 입력 제한 초기화
-    isPasswordMode = false; // 모드 초기화
+    // 현재 상태를 스택에 저장
+    if (stateStack.length === 0 || stateStack[stateStack.length - 1] !== contentType) {
+        stateStack.push(contentType);
+    }
 
-    // 모달 열기
-    modal.classList.remove("hidden");
-};
+    // 뒤로가기 함수
+    function goBack() {
+        if (stateStack.length > 1) {
+            stateStack.pop(); // 현재 상태를 제거
+            const previousState = stateStack[stateStack.length - 1]; // 이전 상태 가져오기
+            updateDynamicContent(previousState); // 이전 상태로 복원
+        } else {
+            console.warn("더 이상 뒤로 갈 상태가 없습니다.");
+        }
+    }
+
+    // 버튼 추가 함수
+    function addButton(id, text, className) {
+        const button = document.createElement('button');
+        button.id = id;
+        button.innerText = text;
+        button.className = className;
+        dynamicButton.appendChild(button);
+    }
+
+    // 버튼 삭제 함수
+    function removeButton(id) {
+        const button = document.getElementById(id);
+        if (button) {
+            button.remove();
+        }
+    }
+
+    // 버튼 전체 삭제 함수
+    function removeAllButtons() {
+        while (dynamicButton.firstChild) {
+            dynamicButton.removeChild(dynamicButton.firstChild); // 첫 번째 자식 요소를 제거
+        }
+    }
+
+    if (contentType === "pointInput") {
+        // 포인트 번호 입력 화면
+        dynamicContent.innerHTML = createInputTemplate("마일리지 번호 입력");
+        inputTarget = document.getElementById("inputDisplay"); // 입력 타겟 설정
+        inputTarget.innerText = ""; // 초기화
+        type = "number";
+        totalAmt = data;
+        removeAllButtons();
+
+        // 버튼 설정
+        addButton("addPointBtn", "적립하기", "bg-blue-500 text-white py-3 text-3xl rounded-lg font-bold hover:bg-blue-600 w-full");
+        addButton("usePointBtn", "사용하기", "bg-gray-200 py-3 text-3xl rounded-lg font-bold hover:bg-gray-300 w-full");
+        addButton("joinPointBtn", "등록하기", "bg-gray-200 py-3 text-3xl rounded-lg font-bold hover:bg-gray-300 w-full");
+        addButton("immediatePaymentBtn", "바로결제", "bg-gray-400 text-white py-3 text-3xl rounded-lg font-bold hover:bg-gray-500 w-full h-48");
+
+        // 포인트 적립버튼
+        document.getElementById("addPointBtn").addEventListener("click", () => {
+            if (inputTarget.textContent.length === inputCount) {
+                modal.classList.add("hidden"); // 모달 닫기
+                // 즉시 결제 포인트 적립 O
+                resolve({ success: true, action: ACTIONS.IMMEDIATE_PAYMENT, point: inputTarget.textContent, discountAmount: 0  }); // 확인 시 resolve 호출
+            } else {
+                openAlertModal(`마일리지 번호는 ${inputCount} 자리 입니다.`);
+            }
+        });
+
+        // 포인트 사용버튼
+        document.getElementById("usePointBtn").addEventListener("click", async () => {
+            if (inputTarget.textContent.length === inputCount) {
+                const pointNumberCheck = await window.electronAPI.checkMileageExists(inputTarget.textContent);
+
+                if (pointNumberCheck) {
+
+                    if (pointNumberCheck.data) {
+                        updateDynamicContent("passwordInput", inputTarget.textContent ,resolve);
+                    } else {
+                        openAlertModal("등록되지 않은 유저입니다.");
+                    }
+
+                } else {
+                    openAlertModal("유저정보 조회에 실패하였습니다.");
+                }
+
+            } else {
+                openAlertModal(`마일리지 번호는 ${inputCount} 자리 입니다.`);
+            }
+        });
+
+        // 포인트가입
+        document.getElementById("joinPointBtn").addEventListener("click", () => {
+            updateDynamicContent("joinPoints",data ,resolve);
+        });
+
+        // 즉시결제 포인트 적립 X
+        document.getElementById("immediatePaymentBtn").addEventListener("click", () => {
+            // 즉시결제 포인트적립 X
+            resolve({ success: true, action: ACTIONS.IMMEDIATE_PAYMENT, discountAmount: 0  }); // 결과 전달
+
+            modal.classList.add("hidden"); // 모달 닫기
+        });
+
+    } else if (contentType === "passwordInput") {
+        // 비밀번호 입력 화면
+        dynamicContent.innerHTML = createInputTemplate("비밀번호 입력");
+        inputTarget = document.getElementById("inputDisplay");
+        inputTarget.innerText = ""; // 초기화
+        type = "number";
+        removeAllButtons();
+
+        addButton("windowBack", "뒤로가기", "bg-gray-200 py-3 text-3xl rounded-lg font-bold hover:bg-gray-300 w-full");
+        addButton("usePointBtn", "사용하기", "bg-gray-400 text-white py-3 text-3xl rounded-lg font-bold hover:bg-gray-500 w-full h-48");
+
+        document.getElementById("windowBack").addEventListener("click", () => {
+            goBack();
+        });
+
+        // 비밀번호 검증
+        document.getElementById("usePointBtn").addEventListener("click", async () => {
+            // 비밀번호 검증후 사용하기화면으로 이동
+            if (inputTarget.textContent.length === inputCount) {
+                try {
+                    const pointPasswordCheck = await window.electronAPI.verifyMileageAndReturnPoints(data, inputTarget.textContent);
+                    if (pointPasswordCheck) {
+
+                        if (pointPasswordCheck.data.success) {
+                            const pointData = {...pointPasswordCheck.data, totalAmt: totalAmt};
+                            updateDynamicContent("usePoints", pointData ,resolve);
+                        } else {
+                            openAlertModal("페스워드가 틀렸습니다.");
+                        }
+
+                    } else {
+                        openAlertModal("페스워드 조회에 실패하였습니다.");
+                    }
+                } catch (e) {
+                    openAlertModal("에러가 발생했습니다. 관리자에게 문의하세요.");
+                }
+
+            } else {
+                openAlertModal(`마일리지 페스워드 번호는 ${inputCount} 자리 입니다.`);
+            }
+            
+        });
+
+    } else if (contentType === "usePoints") {
+        const pointData = data;
+        type = "point";
+
+        // 3자리 콤마 추가를 toLocaleString으로 처리
+        const formattedPoints = pointData.points.toLocaleString(); // 보유 포인트 포맷팅
+        availablePoints = pointData.points; // 보유포인트
+        const pointNo = pointData.mileageNo; // 조회된 포인트 번호
+
+        // 포인트 사용 화면
+        dynamicContent.innerHTML = `
+            <div class="text-center">
+                <div class="text-left mx-auto w-full max-w-lg">
+                    <p class="text-4xl font-bold mb-4">총 주문 금액: <span id="totalOrderAmount">${totalAmt}</span>원</p>
+                    <div class="flex gap-2">
+                    <p class="text-2xl font-bold mb-4">보유 포인트:</p>
+                    <span id="availablePoints" class="text-right text-2xl font-bold mb-4 w-40 ml-1">${formattedPoints}</span><span class="text-2xl font-bold"> P</span>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <p class="text-2xl font-bold">사용 포인트:</p>
+                        <div id="usePoint" class="text-right text-2xl font-bold mb-4 border-b-2 border-gray-300 w-40 ml-1"></div><span class="text-2xl font-bold"> P</span>
+                        <button id="useAllPointsBtn" class="border-gray-300 py-1 px-4 text-xl rounded-lg bg-gray-200 hover:bg-gray-300">전액 사용</button>
+                    </div>
+                    <p class="text-4xl font-bold mt-4">결제 금액: <span id="remainingAmount"></span>원</p>   
+                </div>
+            </div>
+        `;
+
+        remainingAmount = document.getElementById("remainingAmount");
+        remainingAmount.innerText = totalAmt; // 초기화
+        inputTarget = document.getElementById("usePoint");
+        inputTarget.innerText = "0"; // 초기화
+        removeAllButtons();
+
+        addButton("exit", "결제취소", "bg-gray-200 py-3 text-3xl rounded-lg font-bold hover:bg-gray-300 w-full");
+
+        document.getElementById("exit").addEventListener("click", () => {
+            modal.classList.add("hidden"); // 모달닫기
+            // 통합결제 취소
+            resolve({success: true, action: ACTIONS.EXIT});
+        });
+
+        // 전체 사용
+        document.getElementById("useAllPointsBtn").addEventListener("click", () => {
+            if (type === "point" && inputTarget) {
+                const maxUsablePoints = Math.min(availablePoints, totalAmt);
+                inputTarget.textContent = maxUsablePoints.toLocaleString(); // 포인트 업데이트
+                const remaining = Math.max(totalAmt - maxUsablePoints, 0);
+                remainingAmount.textContent = remaining.toLocaleString(); // 남은 금액 업데이트
+            }
+        });
+
+        addButton("pointPaymentBtn", "포인트결제", "bg-gray-400 text-white py-3 text-3xl rounded-lg font-bold hover:bg-gray-500 w-full h-48");
+        document.getElementById("pointPaymentBtn").addEventListener("click", () => {
+
+            // 포인트 결제,사용할포인트번호, 사용포인트
+            resolve({success: true, action: ACTIONS.USE_POINTS, point: pointNo, discountAmount: inputTarget.innerText }); // 포인트 사용 금액 반환
+            modal.classList.add("hidden"); // 모달 닫기
+        });
+    } else if (contentType === "joinPoints") {
+        // 마일리지 가입 화면
+        dynamicContent.innerHTML = createInputTemplate("마일리지 가입 번호 입력");
+        inputTarget = document.getElementById("inputDisplay");
+        inputTarget.innerText = ""; // 초기화
+
+        removeAllButtons();
+
+        addButton("exit", "등록취소", "bg-gray-200 py-3 text-3xl rounded-lg font-bold hover:bg-gray-300 w-full");
+
+        document.getElementById("exit").addEventListener("click", () => {
+            modal.classList.add("hidden"); // 모달닫기
+            // 통합결제 취소
+            resolve({success: true, action: ACTIONS.EXIT});
+        });
+
+        addButton("addPassword", "비밀번호입력", "bg-gray-400 py-3 text-3xl rounded-lg font-bold hover:bg-gray-500 w-full h-48");
+
+        // 마일리지 번호 검증 후 비밀번호입력으로 이동
+        document.getElementById("addPassword").addEventListener("click", async () => {
+
+            if (inputTarget.textContent.length === inputCount) {
+
+                const regex = new RegExp(`^\\d{${inputCount}}$`);
+
+                // 입력값 검증
+                if (!regex.test(inputTarget.textContent)) {
+                    alert(`번호는 ${inputCount}자리 숫자여야 합니다.`);
+                    return;
+                }
+
+                const pointNumberCheck = await window.electronAPI.checkMileageExists(inputTarget.textContent);
+
+                if (pointNumberCheck) {
+
+                    if (!pointNumberCheck.data) {
+                        updateDynamicContent("addPassword", inputTarget.textContent, resolve);
+                    } else {
+                        openAlertModal("이미 등록된 유저입니다.");
+                    }
+
+                } else {
+                    openAlertModal("유저정보 조회에 실패하였습니다.");
+                }
+
+            } else {
+                openAlertModal(`마일리지 번호는 ${inputCount} 자리 입니다.`);
+            }
+
+        });
+    } else if (contentType === "addPassword") {
+        // 마일리지 가입 화면
+        dynamicContent.innerHTML = createInputTemplate("마일리지 가입 비밀번호 입력");
+        inputTarget = document.getElementById("inputDisplay");
+        inputTarget.innerText = ""; // 초기화
+
+        removeAllButtons();
+        addButton("exit", "등록취소", "bg-gray-200 py-3 text-3xl rounded-lg font-bold hover:bg-gray-300 w-full");
+
+        document.getElementById("exit").addEventListener("click", () => {
+            modal.classList.add("hidden"); // 모달닫기
+
+            // 통합결제취소
+            resolve({success: true, action: ACTIONS.EXIT});
+        });
+
+        addButton("addPoint", "마일리지등록", "bg-gray-400 py-3 text-3xl rounded-lg font-bold hover:bg-gray-500 w-full h-48");
+
+        // 마일리지 번호 검증 후 비밀번호입력으로 이동
+        document.getElementById("addPoint").addEventListener("click", async () => {
+
+            // 비밀번호 검증후 마일리지 가입
+            if (inputTarget.textContent.length === inputCount) {
+                try {
+
+                    if (!inputTarget.textContent) {
+                        alert("비밀번호를 입력하세요.");
+                        return;
+                    }
+
+                    // 입력값 검증
+                    if (!/^\d{4}$/.test(inputTarget.textContent)) {
+                        alert("비밀번호는 정확히 4자리 숫자여야 합니다.");
+                        return;
+                    }
+
+                    // 마일리지 등록 api 호출
+                    const addPoint = await window.electronAPI.saveMileageToDynamoDB(data, inputTarget.textContent);
+                    if (addPoint) {
+                        // 컴펌 창 띄우기
+                        openModal(
+                            "마일리지 등록이 완료되었습니다. 즉시 결제하시겠습니까?",
+                            () => {
+                                modal.classList.add("hidden"); // 모달 닫기
+                                // 즉시결제 포인트 적립 O
+                                resolve({ success: true, action: ACTIONS.IMMEDIATE_PAYMENT, point: data }); // 확인 시 resolve 호출
+                            },
+                            () => {
+                                modal.classList.add("hidden"); // 모달 닫기
+                                //통합결제 취소
+                                resolve({ success: true, action: ACTIONS.EXIT }); // 취소 시 resolve 호출
+                            }
+                        );
+                    } else {
+                        openAlertModal("마일리지 등록에 실패하였습니다.");
+                    }
+                } catch (e) {
+                    openAlertModal("에러가 발생했습니다. 관리자에게 문의하세요.");
+                }
+
+            } else {
+                openAlertModal(`마일리지 페스워드 번호는 ${inputCount} 자리 입니다.`);
+            }
+
+        });
+    } else {
+        console.warn("알 수 없는 contentType:", contentType);
+    }
+}
+
+// 번호 버튼 이벤트 등록
+function setupNumberButtons() {
+    const numberButtons = document.querySelectorAll("[data-number]");
+
+    numberButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            const number = button.getAttribute("data-number");
+
+            if (type === "number") {
+                if (inputTarget) {
+                    // 현재 타겟이 설정되어 있으면 해당 타겟에 숫자 추가
+                    if (inputTarget.textContent.length < inputCount) {
+                        inputTarget.textContent += number;
+                    } else {
+                        openAlertModal(`최대 ${inputCount}자리까지만 입력 가능합니다.`);
+                    }
+                }
+            } else if (type === "point") {
+                if (inputTarget) {
+                    // 현재 입력된 텍스트에서 콤마를 제거
+                    let currentText = inputTarget.textContent.replace(/,/g, "");
+                    let updatedText = currentText + number;
+
+                    // 문자열을 숫자로 변환
+                    let usedPoints = Number(updatedText);
+
+                    // 사용 가능한 최대 포인트 계산
+                    if (usedPoints > availablePoints) {
+                        usedPoints = availablePoints; // 보유 포인트로 제한
+                    }
+                    if (usedPoints > totalAmt) {
+                        usedPoints = totalAmt; // 총 주문 금액으로 제한
+                    }
+
+                    // 입력 필드와 남은 금액을 업데이트
+                    inputTarget.textContent = usedPoints.toLocaleString(); // 3자리 콤마 추가
+                    const remaining = Math.max(totalAmt - usedPoints, 0); // 남은 금액 계산
+                    remainingAmount.textContent = remaining.toLocaleString();
+                }
+            }
+        });
+    });
+}
+
 
 // 포인트 모달 닫기
 document.getElementById("closeModalBtn").addEventListener("click", () => {
@@ -468,66 +988,47 @@ document.getElementById("closeModalBtn").addEventListener("click", () => {
     modal.classList.add("hidden"); // 모달 숨기기
 });
 
-// DOMContentLoaded 이벤트 핸들러
+// 마일리지 초기화
 document.addEventListener("DOMContentLoaded", () => {
-    const modalTitle = document.getElementById("modalTitle");
-    const inputDisplay = document.getElementById("inputDisplay"); // 입력창
-    const numberButtons = document.querySelectorAll("[data-number]"); // 숫자 버튼
-    const backspaceBtn = document.getElementById("backspaceBtn"); // 백스페이스 버튼
-    const clearAllBtn = document.getElementById("clearAllBtn"); // 전체 지움 버튼
-    const actionBtn = document.getElementById("actionBtn");
-    inputDisplay.textContent = ""; // 입력창 초기화
+    const backspaceBtn = document.getElementById("backspaceBtn"); // 단건 지우기 버튼
+    const clearAllBtn = document.getElementById("clearAllBtn"); // 전체 삭제 버튼
 
-    // 숫자 버튼 클릭 이벤트
-    numberButtons.forEach((button) => {
-        button.addEventListener("click", () => {
-            const number = button.getAttribute("data-number");
-            // 최대 inputCount자리까지만 입력
-            if (inputDisplay.textContent.length < inputCount) {
-                inputDisplay.textContent += number; // 입력창에 숫자 추가
-            } else {
-                openAlertModal(`최대 ${inputCount}자리까지만 입력 가능합니다.`); // 경고 메시지
-            }
-        });
-    });
+    setupNumberButtons(); // 번호 버튼 이벤트 초기화
 
-    // 백스페이스 버튼 클릭 이벤트
+    // 단건 지우기 (Backspace 버튼)
     backspaceBtn.addEventListener("click", () => {
-        inputDisplay.textContent = inputDisplay.textContent.slice(0, -1); // 마지막 글자 제거
-    });
+        if (type === "point" && inputTarget.textContent) {
+            // 기존 콤마를 제거하고 숫자 처리
+            const currentText = inputTarget.textContent.replace(/,/g, ""); // 콤마 제거
+            const updatedText = currentText.slice(0, -1); // 마지막 문자 제거
 
-    // 전체 지움 버튼 클릭 이벤트
-    clearAllBtn.addEventListener("click", () => {
-        inputDisplay.textContent = ""; // 입력창 초기화
-    });
+            // 결과를 다시 3자리 콤마 형식으로 표시
+            inputTarget.textContent = updatedText ? Number(updatedText).toLocaleString() : "";
 
-    // 적립하기 버튼 (모드 전환)
-    actionBtn.addEventListener("click", () => {
-        if (inputDisplay.textContent > 4) {
-            // DB 조회 이후 DB에 데이터 있으면 넘어가고 없으면 패스워드 입력받아서 등록
-            if (!isPasswordMode) {
-                // 포인트 -> 비밀번호 설정 모드로 전환
-                isPasswordMode = true;
-                modalTitle.textContent = "비밀번호 설정";
-                inputDisplay.textContent = ""; // 입력 초기화
-                inputCount = 4; // 비밀번호 입력 제한
-            } else {
-                // 비밀번호 설정 완료
-                openAlertModal(`설정된 비밀번호: ${inputDisplay.textContent}`);
-                isPasswordMode = false; // 초기 상태로 복구
-                modalTitle.textContent = "포인트 적립 혹은 사용";
-                inputDisplay.textContent = "";
-                inputCount = 11; // 포인트 입력 제한 복구
-            }
+            // 남은 금액 업데이트
+            const usedPoints = Number(updatedText) || 0;
+            const remaining = Math.max(totalAmt - usedPoints, 0);
+            remainingAmount.textContent = remaining.toLocaleString();
         } else {
-            openAlertModal(`최소 4자리이상 입력하세요.`); // 경고 메시지
+            inputTarget.textContent = inputTarget.textContent.slice(0, -1);
+        }
+    });
+
+    // 전체 삭제 (Clear All 버튼)
+    clearAllBtn.addEventListener("click", () => {
+        if (type === "point") {
+            inputTarget.textContent = ""; // 입력 초기화
+
+            // 남은 금액 초기화
+            remainingAmount.textContent = totalAmt.toLocaleString();
+        } else {
+            inputTarget.textContent = ""; // 입력 초기화
         }
     });
 });
 
-
 // 카드 결제
-const cardPayment = async () => {
+const cardPayment = async (orderAmount, discountAmount) => {
     const audio = new Audio('../../assets/audio/카드결제를 선택하셨습니다 카드를 단말기에 넣어주세요.mp3');
     // 음성 재생
     if (audio) {
@@ -536,17 +1037,11 @@ const cardPayment = async () => {
         });
     }
 
-    let price = 0;
-    orderList.map((order) => {
-        price += Number(order.price) * order.count;  // 수량만큼 가격 계산
-    })
-    const orderAmount = price; // 주문 금액
-    const discountAmount = 0; // 할인 금액
     const totalAmount = orderAmount - discountAmount; // 전체 금액 계산
 
     // 모달금액 세팅
-    document.getElementById('orderAmount').textContent = `주문금액: W ${orderAmount.toLocaleString()}원`;
-    document.getElementById('discountAmount').textContent = `할인금액: W ${discountAmount.toLocaleString()}원`;
+    document.getElementById('orderAmount').textContent = `주문금액: W ${totalAmount.toLocaleString()}원`;
+    document.getElementById('discountAmount').textContent = `포인트사용 금액: W ${discountAmount.toLocaleString()}원`;
     document.getElementById('totalAmount').textContent = `전체금액: W ${totalAmount.toLocaleString()}원`;
 
     // 모달
@@ -558,7 +1053,7 @@ const cardPayment = async () => {
         // 0.1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {
             setTimeout(async () => {
-                const res = await window.electronAPI.reqVcatHttp(price);
+                const res = await window.electronAPI.reqVcatHttp(totalAmount);
                 //const res = {success: true};
                 resolve(res); // 결제 결과 반환
             }, 100);
@@ -567,7 +1062,7 @@ const cardPayment = async () => {
 
         // 결제 성공 여부 확인
         if (result.success) {
-            sendLogToMain('info', `결제 성공 - 결제 금액:  ${price}`);
+            sendLogToMain('info', `결제 성공 - 결제 금액:  ${totalAmount}`);
             sendLogToMain('info', `주문 목록 ${JSON.stringify(orderList)}`);
             // 모달 닫기
             modal.classList.add('hidden');
@@ -581,10 +1076,7 @@ const cardPayment = async () => {
                 });
             }
 
-            orderModal.classList.remove('hidden');
-
-            await window.electronAPI.setOrder(orderList); // 주문 처리
-            removeAllItem(); // 주문 목록삭제
+            return true;
 
         } else {
             // 결제 실패 처리
@@ -592,6 +1084,7 @@ const cardPayment = async () => {
             openAlertModal("결제에 실패하였습니다. 다시 시도해주세요.");
             console.error("결제 실패: ", result.message);
             sendLogToMain('error', `결제 실패: ${result.message}`);
+            return false;
         }
     } catch (error) {
         // 오류 처리
@@ -600,8 +1093,20 @@ const cardPayment = async () => {
         sendLogToMain('error', `결제 오류: ${error.message}`);
         console.error("결제 오류: ", error.message);
         removeAllItem(); // 주문 목록삭제
+        return false;
     }
 }
+
+// 주문 시작
+const ordStart = async () => {
+    const orderModal = document.getElementById('orderModal');
+
+    // 주문 모달 띄우기
+    orderModal.classList.remove('hidden');
+
+    await window.electronAPI.setOrder(orderList); // 주문 처리
+    removeAllItem(); // 주문 목록 삭제
+};
 
 
 /* 버튼 비동기 처리 0.2 초대기*/

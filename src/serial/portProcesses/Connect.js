@@ -23,6 +23,7 @@ Connect.post('/start-order', async (req, res) => {
         log.info("주문 데이터 확인: ", JSON.stringify(reqBody));
         await saveOrdersToDynamoDB(reqBody);
         // [TODO] 잔여량 계산 로직 추가 예정.
+        // [TODO] reqBody.ordList 로변경예정
         await startOrder(reqBody);
         await polling.startPolling(serialCommCom1, 10000).then(); // 주문 작업이 끝난 후 조회 재개
         // list 받음 -> 메뉴판에 있는 데이터 불러서 조합 시작!

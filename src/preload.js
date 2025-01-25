@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 const userApi = require('./renderer/api/userApi');
 const menuApi = require('./renderer/api/menuApi');
 const orderApi = require('./renderer/api/orderApi');
+const mileageApi = require('./renderer/api/mileageApi');
 const image = require('./aws/s3/utils/image');
 
 let NODE_SERVER_URL = '';
@@ -104,5 +105,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // 해당 계정의 카테고리 + 메뉴 데이터 복제
     setMenuAllUpdate: async (sourceUserId, targetUserId) => await userApi.setMenuAllUpdate(sourceUserId, targetUserId),
+
+    // 마일리지 번호 비교
+    checkMileageExists: async (mileageNo) => await mileageApi.checkMileageExists(mileageNo),
+
+    // 마일리지 비밀번호 비교
+    verifyMileageAndReturnPoints: async (mileageNo, password) => await mileageApi.verifyMileageAndReturnPoints(mileageNo, password),
+
+    // 마일리지 등록
+    saveMileageToDynamoDB: async (mileageNo, password) => await mileageApi.saveMileageToDynamoDB(mileageNo, password),
+
+    //마일리지 트렌젝션
+    updateMileageAndLogHistory: async (mileageNo, totalAmt, pointsToAdd, type, note) => await mileageApi.updateMileageAndLogHistory(mileageNo, totalAmt, pointsToAdd, type, note),
+
 
 });
