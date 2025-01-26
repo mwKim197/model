@@ -2229,4 +2229,35 @@ window.addEventListener('DOMContentLoaded', () => {
     activateTab(activeTab); // 활성화된 탭 설정
 });
 
+// 로그인 상태 검증
+document.addEventListener('DOMContentLoaded', async () => {
+    const token = localStorage.getItem('authToken');
+
+    if (!token) {
+        // 로그인되지 않은 상태이면 로그인 화면으로 이동
+        window.location.href = 'login.html';
+        return;
+    }
+
+    try {
+        // 토큰 유효성 검사 (선택적)
+        const response = await fetch(`http://${url}:3142/validate-token`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error('Invalid token');
+        }
+
+        // 토큰이 유효하면 데이터 가져오기
+        userInfo = await getUserData();
+    } catch (error) {
+        console.error('Token validation error:', error);
+        localStorage.removeItem('authToken');
+        window.location.href = 'login.html';
+    }
+});
 /* 텝 컨트롤 END */

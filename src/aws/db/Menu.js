@@ -17,8 +17,11 @@ const {updateUserInfo, getUserById} = require("./utils/getUser");
 const {saveMileageToDynamoDB, getMileage, updateMileageInDynamoDB, deleteMileageFromDynamoDB,
     getMileageHistory, checkMileageExists, verifyMileageAndReturnPoints, updateMileageAndLogHistory
 } = require("./utils/getMileage");
+const {compare} = require("bcrypt");
 const upload = multer({ storage: memoryStorage() }); // 메모리 저장소 사용
 const polling = new serialDataManager(serialCommCom1);
+const jwt = require('jsonwebtoken'); // jsonwebtoken 모듈 가져오기
+const JWT_SECRET = 'modelSecurity';
 
 // 유저정보 조회
 Menu.get('/get-user-info', async (req, res) => {
@@ -462,6 +465,56 @@ Menu.get('/fetch-and-save-user', async (req, res) => {
         });
     }
 });
+
+// 로그인처리
+Menu.post('/login', async (req, res) => {
+    const { userId, password } = req.body;
+
+    if (!userId || !password) {
+        return res.status(400).json({ message: '아이디와 비밀번호를 입력해주세요.' });
+    }
+
+    try {
+        // 사용자 정보 조회
+        const user = await getUserById(userId);
+        console.log("user : ", user);
+        // 비밀번호 검증
+        const isPasswordValid = await compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
+        }
+
+        // JWT 토큰 발급
+        const token = jwt.sign(
+            { userId: user.userId, storeName: user.storeName },
+            JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        res.json({ token });
+    } catch (error) {
+        console.error('로그인 처리 중 오류:', error.message);
+        res.status(500).json({ message: '로그인 처리 중 오류가 발생했습니다.' });
+    }
+});
+
+// 토큰 검증
+Menu.post('/validate-token', (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ message: '인증 토큰이 필요합니다.' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        res.json({ valid: true, userId: decoded.userId });
+    } catch (error) {
+        res.status(403).json({ message: '토큰이 유효하지 않습니다.' });
+    }
+});
+
 
 // 마일리지 등록
 Menu.post('/mileage-add', async (req, res) => {
