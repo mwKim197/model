@@ -17,11 +17,12 @@ let menuName = "";
 // 주문 처리 로직
 const startOrder = async (data) => {
     try {
+
         // 주문 데이터 검증
-        if (!Array.isArray(data) || data.length === 0) {
+        if (!Array.isArray(data.orderList) || data.orderList.length === 0) {
             throw new Error("Invalid or empty order data");
         }
-        let orderData = data;  // 주문 데이터
+        let orderData = data.orderList;  // 주문 데이터
 
         // 전체 메뉴 조회
         const menu = await allProduct();

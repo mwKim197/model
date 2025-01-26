@@ -522,6 +522,7 @@ const payment = async () => {
         try {
             if (response.point && response.discountAmount ) {
                 // 포인트 결제 시도
+                sendLogToMain('info', `마일리지 결제 실행 - 번호: ${response.point}, 결제금액: ${orderAmount}, 사용포인트 : ${response.discountAmount}`);
                 const pointResult = await useMileage(response.point, orderAmount, response.discountAmount);
 
                 if (!pointResult.success) {
@@ -536,7 +537,7 @@ const payment = async () => {
                 const totalAmount = orderAmount - discountAmount;
 
                 if (totalAmount > 0) {
-                    sendLogToMain('info', `적립 마일리지번호: ${response.point}`);
+                    sendLogToMain('info', `포인트 잔액 카드결제 - 적립 마일리지번호: ${response.point}`);
                     const payEnd = await cardPayment(price, response.discountAmount);
 
                     if (payEnd) {
@@ -544,29 +545,31 @@ const payment = async () => {
                         await addMileage(response.point, orderAmount, earnRate);
 
                         try {
-                            await ordStart(); // 주문 시작
+                            await ordStart(response.discountAmount); // 주문 시작
                         } catch (e) {
                             // 주문에러발생시 마일리치 롤백
                             sendLogToMain('error', `마일리지 적립 롤백 (주문 에러)- 번호: ${response.point}, 결제금액: ${orderAmount}, 적립률 : ${earnRate}`);
                             await rollbackMileage(response.point, orderAmount, earnRate);
                         }
                     } else {
-
+                        sendLogToMain('error', `마일리지 적립 롤백 (주문 에러)- 번호: ${response.point}, 결제금액: ${orderAmount}, 롤백포인트 : ${response.discountAmount}`);
                         // 포인트 사용후 카드결제 실패시 사용포인트 롤백
                         await rollbackMileage(response.point, orderAmount, earnRate ,response.discountAmount);
                         console.error("카드 결제가 실패했습니다.");
                     }
                 } else {
-                    console.log("포인트로 전액 결제 완료.");
-                    await ordStart(); // 주문 시작
+                    sendLogToMain('info', `포인트 전액결제완료 - 결제포인트: ${response.discountAmount}`);
+                    await ordStart(response.discountAmount); // 주문 시작
                 }
             }
 
         } catch (error) {
+            sendLogToMain('error', `결제 중 오류 발생: ${error.message}`);
             console.error("결제 중 오류 발생:", error.message);
         }
     } else {
         console.log("포인트 결제가 사용되지 않았습니다.");
+        sendLogToMain('error', `포인트 결제가 사용되지 않았습니다.`);
     }
 
 };
@@ -1113,14 +1116,17 @@ const cardPayment = async (orderAmount, discountAmount) => {
 }
 
 // 주문 시작
-const ordStart = async () => {
+const ordStart = async (point = 0) => {
     const orderModal = document.getElementById('orderModal');
 
     try {
         // 주문 모달 띄우기
         orderModal.classList.remove('hidden');
-        
-        await window.electronAPI.setOrder(orderList); // 주문 처리
+        const ordInfo = {
+            point: point,
+            orderList: orderList
+        }
+        await window.electronAPI.setOrder(ordInfo); // 주문 처리
         removeAllItem(); // 주문 목록 삭제
     } catch (error) {
         console.error("ordStart 에러 발생:", error.message);

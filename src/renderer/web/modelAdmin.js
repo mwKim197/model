@@ -1477,7 +1477,9 @@ async function renderGroupedOrdersToHTML(startDate, endDate, ascending = true) {
                 <th class="px-4 py-2 border border-gray-300 text-center text-sm font-semibold text-gray-600">순번</th>
                 <th class="px-4 py-2 border border-gray-300 text-center text-sm font-semibold text-gray-600">날짜</th>
                 <th class="px-4 py-2 border border-gray-300 text-left text-sm font-semibold text-gray-600">메뉴</th>
-                <th class="px-4 py-2 border border-gray-300 text-right text-sm font-semibold text-gray-600">가격</th>
+                <th class="px-4 py-2 border border-gray-300 text-right text-sm font-semibold text-gray-600">포인트</th>
+                <th class="px-4 py-2 border border-gray-300 text-right text-sm font-semibold text-gray-600">카드</th>
+                <th class="px-4 py-2 border border-gray-300 text-right text-sm font-semibold text-gray-600">총 금액</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -1497,6 +1499,8 @@ async function renderGroupedOrdersToHTML(startDate, endDate, ascending = true) {
             .slice(1) // 첫 번째 메뉴를 제외한 메뉴들의
             .reduce((sum, menu) => sum + menu.count, 0) + firstMenu.count - 1; // 추가 메뉴 count 합산
 
+        const point = order.point ? order.point: 0;
+        const cardAmt = order.totalPrice - point;
         const row = document.createElement('tr');
         row.innerHTML = `
             <td class="px-4 py-2 border border-gray-300 text-center text-gray-600 text-sm">${index + 1}</td>
@@ -1504,6 +1508,8 @@ async function renderGroupedOrdersToHTML(startDate, endDate, ascending = true) {
             <td class="px-4 py-2 border border-gray-300 text-gray-600 text-sm">
                 ${firstMenu.name} ${additionalMenuCount > 0 ? `<span class="text-blue-600 font-semibold">+${additionalMenuCount}</span>` : ''}
             </td>
+            <td class="px-4 py-2 border border-gray-300 text-right text-gray-600 text-sm">${point.toLocaleString()}원</td>
+            <td class="px-4 py-2 border border-gray-300 text-right text-gray-600 text-sm">${cardAmt.toLocaleString()}원</td>
             <td class="px-4 py-2 border border-gray-300 text-right text-gray-600 text-sm">${order.totalPrice.toLocaleString()}원</td>
         `;
         tbody.appendChild(row);
@@ -2039,9 +2045,6 @@ async function openDetailModal(item) {
         document.getElementById("updatePassword").value = item.password || "";
         document.getElementById("updateTel").value = item.tel || "";
 
-        // 이용 내역 초기화
-        //updateUsageHistoryTable([]);
-
         const historyResponse = await fetchMileageHistoryData(item.mileageNo);
         console.log("historyResponse: ",historyResponse);
 
@@ -2053,39 +2056,6 @@ async function openDetailModal(item) {
         alert("이용 내역 조회 중 오류가 발생했습니다.");
     }
 }
-
-
-/*
-// 모달그리드
-function updateUsageHistoryTable(usageHistory) {
-    const tbody = document.getElementById("usageHistoryTableBody");
-    tbody.innerHTML = ""; // 기존 데이터 초기화
-
-    if (!usageHistory || usageHistory.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td class="p-2 text-center" colspan="6">이용 내역이 없습니다.</td>
-            </tr>
-        `;
-        return;
-    }
-
-    usageHistory.forEach((entry, index) => {
-        const row = `
-            <tr class="hover:bg-gray-200">
-                <td class="p-2 text-center">${index + 1}</td>
-                <td class="p-2 text-center">${entry.timestamp.replace('T', ' ').slice(0, 19)}</td>
-                <td class="p-2 text-center">${entry.timestamp.replace('T', ' ').slice(0, 19)}</td>
-                <td class="p-2 text-right">${(entry.payment || 0).toLocaleString() + "원"}</td>
-                <td class="p-2 text-right">${(entry.useMileage || 0).toLocaleString() + "p"}</td>
-                <td class="p-2 text-right">${(entry.amount || 0).toLocaleString() + "p"}</td>
-            </tr>
-        `;
-        tbody.insertAdjacentHTML("beforeend", row);
-    });
-}
-*/
-
 
 // 모달 닫기
 function closeDetailModal() {

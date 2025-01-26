@@ -20,14 +20,16 @@ processUserAndProduct().then();
 /**
 * 주문 DB 저장
 *  */
-const saveOrdersToDynamoDB = async (orderData) => {
+const saveOrdersToDynamoDB = async (order) => {
     try {
         // 현재 시간 (KST 기준)
         const now = new Date();
         const kstTimestamp = new Date(now.getTime() + 9 * 60 * 60 * 1000); // UTC + 9시간 추가
+        const orderData = order.orderList;
 
         // orderId 생성 (YYYYMMDDHHmm 형태)
         const orderId = `${kstTimestamp.toISOString().slice(0, 16).replace(/[-T:]/g, '')}-${orderData[0].userId}`;
+
 
         //[TODO]결제정보 추가 예정 orderData
         /*{
@@ -56,6 +58,7 @@ const saveOrdersToDynamoDB = async (orderData) => {
                 orderId: orderId, // Sort Key
                 menuSummary: menuSummary, // 메뉴 정보 (ID, 이름, 수량 포함)
                 totalPrice: menuSummary.reduce((sum, item) => sum + item.price, 0), // 주문 총 금액
+                point: order.point,
                 timestamp: kstTimestamp.toISOString() // 저장 시각
             }
         };
