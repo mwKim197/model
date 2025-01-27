@@ -792,9 +792,9 @@ tab2.querySelector('#saveItemBtn').addEventListener('click', async () => {
         }
         if (itemData.type === 'syrup') {
 
-            if (itemData.value3 < 30 && itemData.value4 < 30) {
-                alert('시럽 핫 워터 또는 탄산수 중 하나는 30 이상의 값이어야 합니다.');
-                throw new Error('Invalid values: Both Value3 and Value4 are less than 30.');
+            if (itemData.value3 < 20 && itemData.value4 < 20) {
+                alert('시럽 핫 워터 또는 탄산수 중 하나는 20 이상의 값이어야 합니다.');
+                throw new Error('Invalid values: Both Value3 and Value4 are less than 20.');
             }
         }
 
@@ -1067,9 +1067,9 @@ function collectDynamicItems() {
 
             if (item.type === 'syrup') {
 
-                if (item.value3 < 30 && item.value4 < 30) {
-                    alert('시럽 핫 워터 또는 탄산수 중 하나는 30 이상의 값이어야 합니다.');
-                    throw new Error('Invalid values: Both Value3 and Value4 are less than 30.');
+                if (item.value3 < 20 && item.value4 < 20) {
+                    alert('시럽 핫 워터 또는 탄산수 중 하나는 20 이상의 값이어야 합니다.');
+                    throw new Error('Invalid values: Both Value3 and Value4 are less than 20.');
                 }
             }
 
