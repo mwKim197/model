@@ -353,32 +353,63 @@
                     </header>
 
                     <!-- 검색 및 필터 -->
-                    <div class="flex items-center gap-4 mb-6">
-                        <input
-                                type="text"
-                                id="earnMileage"
-                                placeholder="0"
-                                class="border border-gray-300 rounded p-2 focus:outline-none focus:ring focus:ring-blue-300 max-w-[40px]"
-                        />
-                        %
-                        <button
-                                id="earnMileageBtn"
-                                class="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 min-w-16"
-                        >
-                            설정
-                        </button>
-                        <input
-                                type="text"
-                                id="searchKey"
-                                placeholder="고객 번호 검색"
-                                class="border border-gray-300 rounded p-2 flex-grow focus:outline-none focus:ring focus:ring-blue-300 min-w-[40px]"
-                        />
-                        <button
-                                id="searchMileageBtn"
-                                class="bg-black text-white px-2 py-1 rounded hover:bg-gray-600 min-w-16"
-                        >
-                            <i class="fa fa-search"></i>
-                        </button>
+                    <div class="flex flex-wrap gap-4 mb-6">
+                        <!-- 첫 번째 그룹 -->
+                        <div class="flex items-center gap-4 flex-wrap">
+                            <div class="flex items-center gap-2">
+                                <input
+                                        type="text"
+                                        id="earnMileage"
+                                        placeholder="0"
+                                        class="border border-gray-300 rounded p-2 focus:outline-none focus:ring focus:ring-blue-300 w-[60px]"
+                                />
+                                <span>%</span>
+                            </div>
+                            <!-- Mileage 입력 -->
+                            <div>
+                                <input
+                                        type="text"
+                                        id="mileageInput"
+                                        placeholder="4"
+                                        maxlength="2"
+                                        class="border border-gray-300 rounded p-2 focus:outline-none focus:ring focus:ring-blue-300 w-[60px]"
+                                />
+                                <span class="text-gray-600 text-sm">마일리지넘버 4~12 숫자</span>
+                            </div>
+
+                            <!-- 체크박스 -->
+                            <label class="flex items-center gap-2">
+                                <input
+                                        type="checkbox"
+                                        id="phoneNumberCheck"
+                                        class="rounded border-gray-300 text-blue-500 focus:ring focus:ring-blue-300"
+                                />
+                                <span class="text-gray-600 text-sm">휴대폰 번호 (11자리)</span>
+                            </label>
+
+                            <button
+                                    id="mileageSettingBtn"
+                                    class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                            >
+                                설정
+                            </button>
+                        </div>
+
+                        <!-- 두 번째 그룹 -->
+                        <div class="flex items-center gap-4 mt-4 sm:mt-0">
+                            <input
+                                    type="text"
+                                    id="searchKey"
+                                    placeholder="고객 번호 검색"
+                                    class="border border-gray-300 rounded p-2 flex-grow focus:outline-none focus:ring focus:ring-blue-300 w-[200px]"
+                            />
+                            <button
+                                    id="searchMileageBtn"
+                                    class="bg-black text-white px-4 py-2 rounded hover:bg-gray-600"
+                            >
+                                <i class="fa fa-search"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- 데이터 테이블 -->

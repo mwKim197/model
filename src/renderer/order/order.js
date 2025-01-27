@@ -601,7 +601,8 @@ let remainingAmount = 0; // 잔여결제액
 const pointPayment = (orderAmount) => {
     return new Promise((resolve) => {
         const modal = document.getElementById("pointModal");
-        inputCount = 4; // 입력 제한 초기화
+        userInfo.isPhone // 휴대폰 여부
+        inputCount = userInfo.mileageNumber; // 입력 제한 초기화
         usePoint = 0; //
         totalAmt = orderAmount;
 
@@ -612,15 +613,36 @@ const pointPayment = (orderAmount) => {
 
 
 // 입력 템플릿 생성 함수
-function createInputTemplate(title = "") {
+function createInputTemplate(title = "", digitCount = 4) {
+    // 자리수에 따른 언더바 생성
+    const underscores = Array(digitCount).fill('_').join('');
+
     return `
-        <div class="h-32">${title ? `<p class="text-2xl font-bold text-center mb-4">${title}</p>` : ""}</div>
-        <div id="inputDisplay" class="text-center text-5xl font-bold mb-4 h-12 border-b-2 border-gray-300">
-            <!-- 여기에 숫자 표시 -->
+        <div class="h-32">
+            ${title ? `<p class="text-2xl font-bold text-center mb-4">${title}</p>` : ""}
+        </div>
+        <div class="h-12 flex justify-center items-center">
+            <div class="relative">
+                <!-- 숫자 표시 -->
+                <div 
+                    id="inputDisplay" 
+                    class="absolute top-0 left-1/2 transform -translate-x-1/2 text-5xl font-bold text-left w-full"
+                    style="letter-spacing: ${digitCount > 1 ? '0.75rem' : '0'};"
+                >
+                    <!-- 여기에 숫자 표시 -->
+                </div>
+                <!-- 언더바 표시 -->
+                <div 
+                    id="inputUnderscore" 
+                    class="text-5xl text-gray-400 tracking-wide text-center"
+                    style="letter-spacing: ${digitCount > 1 ? '0.75rem' : '0'};"
+                >
+                    ${underscores}
+                </div>
+            </div>
         </div>
     `;
 }
-
 let stateStack = []; // 상태 스택
 
 // 동적 콘텐츠 업데이트 함수
@@ -671,7 +693,7 @@ function updateDynamicContent(contentType, data ,resolve) {
 
     if (contentType === "pointInput") {
         // 포인트 번호 입력 화면
-        dynamicContent.innerHTML = createInputTemplate("마일리지 번호 입력");
+        dynamicContent.innerHTML = createInputTemplate("마일리지 번호 입력", inputCount);
         inputTarget = document.getElementById("inputDisplay"); // 입력 타겟 설정
         inputTarget.innerText = ""; // 초기화
         type = "number";
@@ -732,7 +754,7 @@ function updateDynamicContent(contentType, data ,resolve) {
 
     } else if (contentType === "passwordInput") {
         // 비밀번호 입력 화면
-        dynamicContent.innerHTML = createInputTemplate("비밀번호 입력");
+        dynamicContent.innerHTML = createInputTemplate("비밀번호 입력", inputCount);
         inputTarget = document.getElementById("inputDisplay");
         inputTarget.innerText = ""; // 초기화
         type = "number";
@@ -837,7 +859,7 @@ function updateDynamicContent(contentType, data ,resolve) {
         });
     } else if (contentType === "joinPoints") {
         // 마일리지 가입 화면
-        dynamicContent.innerHTML = createInputTemplate("마일리지 가입 번호 입력");
+        dynamicContent.innerHTML = createInputTemplate("마일리지 가입 번호 입력", inputCount);
         inputTarget = document.getElementById("inputDisplay");
         inputTarget.innerText = ""; // 초기화
 
@@ -887,7 +909,7 @@ function updateDynamicContent(contentType, data ,resolve) {
         });
     } else if (contentType === "addPassword") {
         // 마일리지 가입 화면
-        dynamicContent.innerHTML = createInputTemplate("마일리지 가입 비밀번호 입력");
+        dynamicContent.innerHTML = createInputTemplate("마일리지 가입 비밀번호 입력", inputCount);
         inputTarget = document.getElementById("inputDisplay");
         inputTarget.innerText = ""; // 초기화
 

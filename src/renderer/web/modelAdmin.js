@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('time-input').value = userInfo.washTime ? userInfo.washTime : 0;
             document.getElementById('limit-input').value = userInfo.limitCount ? userInfo.limitCount: 20;
             document.getElementById('earnMileage').value = userInfo.earnMileage ? userInfo.earnMileage : 0;
+            document.getElementById('mileageInput').value = userInfo.mileageNumber ? userInfo.mileageNumber : 0;
             // 초기 어드민 카테고리 리스트 렌더링
             renderCategoryList(userInfo.category);
         } else {
@@ -1556,34 +1557,83 @@ async function callApi(endpoint, method, body = null) {
     return response.json();
 }
 
-// 마일리지 적립률 업데이트
-async function putEarnMileage() {
+// 마일리지 설정 업데이트
+async function putMileageSetting() {
     const earnMileage = document.getElementById("earnMileage").value;
-    console.log("earnMileage: ", earnMileage);
-    let data;
+    const mileageInput = document.getElementById("mileageInput").value;
+    const phoneNumberCheck = document.getElementById("phoneNumberCheck").checked; // 체크 여부 가져오기
 
-    if (earnMileage >= 0 && earnMileage < 99) {
-        data = {
-            earnMileage: earnMileage,
-        };
-        console.log("저장된 마일리지 적립률:", data);
-    } else {
-     return   alert("올바른 적립률을 설정해 주세요.");
+    // 벨리데이션 체크
+    if (!earnMileage || earnMileage < 0 || earnMileage >= 99) {
+        return alert("올바른 적립률을 설정해 주세요. (0~98)");
     }
+
+    if (!mileageInput || parseInt(mileageInput, 10) < 4 || parseInt(mileageInput, 10) > 12) {
+        return alert("포인트 번호는 4~12 사이의 숫자여야 합니다.");
+    }
+
+    // 서버에 전송할 데이터 준비
+    const data = {
+        earnMileage: parseInt(earnMileage, 10),
+        mileageNumber: parseInt(mileageInput, 10), // Mileage 값 추가
+        isPhone: phoneNumberCheck, // 체크 여부 추가
+    };
+
+    console.log("저장된 데이터:", data);
 
     try {
         // 서버에 업데이트 요청
-        await updateUserInfo(data);
-        await fetchAndSaveUserInfo();
-        alert("마일리지 적립률이 저장되었습니다. 프로그램을 재시작해주세요.");
+        await updateUserInfo(data); // 사용자 정보 업데이트
+        await fetchAndSaveUserInfo(); // 사용자 정보 저장
+        alert("마일리지 설정이 저장되었습니다. 프로그램을 재시작해주세요.");
     } catch (error) {
         console.error("저장 중 오류:", error);
         alert("저장에 실패했습니다. 다시 시도해주세요.");
     }
 }
 
-// 마일리지 적립률 업데이트
-document.getElementById("earnMileageBtn").addEventListener("click", async ()=>{await putEarnMileage()});
+// 마일리지 자리수 설정
+const mileageInput = document.getElementById('mileageInput');
+const phoneNumberCheck = document.getElementById('phoneNumberCheck');
+
+// 입력값 검증 함수: 4~12 숫자 제한
+const validateMileageValue = (input) => {
+    input.addEventListener('input', () => {
+        // 숫자 이외의 문자는 제거
+        input.value = input.value.replace(/\D/g, '');
+
+        // 값이 4 미만이거나 12 초과일 경우 제거
+        if (input.value && (parseInt(input.value, 10) < 4 || parseInt(input.value, 10) > 12)) {
+            input.value = ''; // 조건에 맞지 않으면 초기화
+            alert('입력값은 4부터 12 사이의 숫자여야 합니다.');
+        }
+    });
+};
+
+// 초기 상태: Mileage는 4~12 사이의 값만 입력 가능
+validateMileageValue(mileageInput);
+
+// 체크박스 상태 변경 시 동작
+phoneNumberCheck.addEventListener('change', () => {
+    if (phoneNumberCheck.checked) {
+        // 체크된 경우: 11로 고정
+        mileageInput.value = '11'; // 11로 값 고정
+        mileageInput.disabled = true; // 입력 불가
+        mileageInput.placeholder = '휴대폰 번호 (11로 고정)';
+    } else {
+        // 체크 해제: 4~12 숫자 입력 가능
+        mileageInput.value = ''; // 초기화
+        mileageInput.disabled = false; // 입력 가능
+        mileageInput.placeholder = 'Mileage 번호 입력 (4~12)';
+        validateMileageValue(mileageInput); // 검증 다시 적용
+    }
+});
+
+// 마일리지 설정 업데이트 버튼 이벤트 등록
+document.getElementById("mileageSettingBtn").addEventListener("click", async () => {
+    await putMileageSetting();
+});
+
 
 // 마일리지 데이터 조회
 async function fetchMileageData(selectedPageKey = null) {
