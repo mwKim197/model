@@ -558,17 +558,9 @@ video {
   width: 100%;
 }
 
-.\!container {
-  width: 100% !important;
-}
-
 @media (min-width: 640px) {
   .container {
     max-width: 640px;
-  }
-
-  .\!container {
-    max-width: 640px !important;
   }
 }
 
@@ -576,19 +568,11 @@ video {
   .container {
     max-width: 768px;
   }
-
-  .\!container {
-    max-width: 768px !important;
-  }
 }
 
 @media (min-width: 1024px) {
   .container {
     max-width: 1024px;
-  }
-
-  .\!container {
-    max-width: 1024px !important;
   }
 }
 
@@ -596,19 +580,11 @@ video {
   .container {
     max-width: 1280px;
   }
-
-  .\!container {
-    max-width: 1280px !important;
-  }
 }
 
 @media (min-width: 1536px) {
   .container {
     max-width: 1536px;
-  }
-
-  .\!container {
-    max-width: 1536px !important;
   }
 }
 
@@ -635,10 +611,6 @@ video {
   /* 글자 크기 동적 조정 */
   text-overflow: ellipsis;
   /* 넘칠 경우 생략 표시 */
-}
-
-.pointer-events-none {
-  pointer-events: none;
 }
 
 .static {
@@ -703,10 +675,6 @@ video {
 
 .top-4 {
   top: 1rem;
-}
-
-.left-\[-9999px\] {
-  left: -9999px;
 }
 
 .z-10 {
@@ -880,10 +848,6 @@ video {
   height: 2rem;
 }
 
-.h-\[100px\] {
-  height: 100px;
-}
-
 .h-\[1px\] {
   height: 1px;
 }
@@ -930,10 +894,6 @@ video {
 
 .h-screen {
   height: 100vh;
-}
-
-.h-2 {
-  height: 0.5rem;
 }
 
 .max-h-\[800px\] {
@@ -1036,24 +996,16 @@ video {
   width: 600px;
 }
 
+.w-\[60px\] {
+  width: 60px;
+}
+
 .w-\[calc\(100\%-25\%\)\] {
   width: calc(100% - 25%);
 }
 
 .w-full {
   width: 100%;
-}
-
-.w-\[60px\] {
-  width: 60px;
-}
-
-.w-10 {
-  width: 2.5rem;
-}
-
-.w-12 {
-  width: 3rem;
 }
 
 .min-w-16 {
@@ -1064,24 +1016,12 @@ video {
   min-width: 7rem;
 }
 
-.min-w-\[40px\] {
-  min-width: 40px;
-}
-
-.min-w-\[200px\] {
-  min-width: 200px;
-}
-
 .max-w-3xl {
   max-width: 48rem;
 }
 
 .max-w-6xl {
   max-width: 72rem;
-}
-
-.max-w-\[40px\] {
-  max-width: 40px;
 }
 
 .max-w-full {
@@ -1629,16 +1569,8 @@ video {
   font-weight: 600;
 }
 
-.leading-none {
-  line-height: 1;
-}
-
 .tracking-wide {
   letter-spacing: 0.025em;
-}
-
-.tracking-widest {
-  letter-spacing: 0.1em;
 }
 
 .text-black {
@@ -1698,10 +1630,6 @@ video {
 
 .opacity-70 {
   opacity: 0.7;
-}
-
-.opacity-0 {
-  opacity: 0;
 }
 
 .shadow {
