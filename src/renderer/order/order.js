@@ -456,6 +456,7 @@ const addMileage = async (mileageNo, totalAmt, earnRate) => {
 // 사용 마일리지 사용등록 (마일리지 금액 수정, 마일리지이용내역등록)
 const useMileage = async (mileageNo, totalAmt, pointsToUse) => {
     const note = `사용자 요청으로 ${pointsToUse}포인트 사용`;
+    console.log(note);
     return await window.electronAPI.updateMileageAndLogHistory(mileageNo, totalAmt, -pointsToUse, 'use', note);
 };
 
@@ -844,9 +845,9 @@ function updateDynamicContent(contentType, data ,resolve) {
         document.getElementById("useAllPointsBtn").addEventListener("click", () => {
             if (type === "point" && inputTarget) {
                 const maxUsablePoints = Math.min(availablePoints, totalAmt);
-                inputTarget.textContent = maxUsablePoints.toLocaleString(); // 포인트 업데이트
+                inputTarget.innerText = maxUsablePoints.toLocaleString(); // 포인트 업데이트
                 const remaining = Math.max(totalAmt - maxUsablePoints, 0);
-                remainingAmount.textContent = remaining.toLocaleString(); // 남은 금액 업데이트
+                remainingAmount.innerText = remaining.toLocaleString(); // 남은 금액 업데이트
             }
         });
 
