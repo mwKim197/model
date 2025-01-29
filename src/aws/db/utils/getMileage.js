@@ -282,19 +282,28 @@ const deleteMileageFromDynamoDB = async (mileageNo) => {
     }
 };
 
+/** 세자리 콤마 숫자로 변경*/
+const cleanNumber = (value) => Number(String(value).replace(/,/g, ''));
+
 /**
  * DynamoDB 트랜잭션으로 마일리지 처리 마일리지 수정, 마일리지이용내역 등록
  * @param {string} mileageNo - 마일리지 번호
- * @param {string} totalAmt - 전체결제금액
- * @param {number} changePoints - 변경할 포인트 (양수: 적립, 음수: 사용)
+ * @param {string} totalAmtNum - 전체결제금액
+ * @param {number} changePointsNum - 변경할 포인트 (양수: 적립, 음수: 사용)
  * @param {string} type - 작업 유형 (earn, use, rollback, delete 등)
  * @param {string} note - 작업 설명
  */
-const updateMileageAndLogHistory = async (mileageNo, totalAmt, changePoints, type, note) => {
+const updateMileageAndLogHistory = async (mileageNo, totalAmtNum, changePointsNum, type, note) => {
     try {
+        log.info(`a뭐가 문제인데? ${changePointsNum}`);
         const now = new Date();
         const kstTimestamp = new Date(now.getTime() + 9 * 60 * 60 * 1000); // UTC + 9시간 추가
         const historySortKey = `${mileageNo}#${kstTimestamp.toISOString()}`;
+
+        // 입력값을 숫자로 변환
+        const totalAmt = cleanNumber(totalAmtNum);
+        const changePoints = cleanNumber(changePointsNum);
+        log.info(`a뭐가 문제인데? ${changePoints}`);
         // 트랜잭션: model_mileage 업데이트
         const updateParams = {
             TransactItems: [

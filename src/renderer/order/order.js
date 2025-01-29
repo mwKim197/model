@@ -445,23 +445,31 @@ document.getElementById('payment').addEventListener('click', async () => {
     await payment();
 });
 
+// 세자리 콤마 숫자로 변경
+const cleanNumber = (value) => Number(String(value).replace(/,/g, ''));
 
 // 적립 마일리지 사용등록 (마일리지 금액 수정, 마일리지이용내역등록)
-const addMileage = async (mileageNo, totalAmt, earnRate) => {
+const addMileage = async (mileageNo, totalAmtNum, earnRate) => {
+    const totalAmt = cleanNumber(totalAmtNum);
     const pointsToAdd = Math.round((totalAmt * earnRate) / 100);
     const note = `결제 금액 ${totalAmt}원에 대한 ${earnRate}% 적립`;
     return await window.electronAPI.updateMileageAndLogHistory(mileageNo, totalAmt, pointsToAdd, 'earn', note);
 };
 
 // 사용 마일리지 사용등록 (마일리지 금액 수정, 마일리지이용내역등록)
-const useMileage = async (mileageNo, totalAmt, pointsToUse) => {
+const useMileage = async (mileageNo, totalAmtNum, pointsToUseNum) => {
+    const totalAmt = cleanNumber(totalAmtNum);
+    const pointsToUse = cleanNumber(pointsToUseNum);
     const note = `사용자 요청으로 ${pointsToUse}포인트 사용`;
     console.log(note);
+
     return await window.electronAPI.updateMileageAndLogHistory(mileageNo, totalAmt, -pointsToUse, 'use', note);
 };
 
 // 롤백 마일리지 사용등록 (마일리지 금액 수정, 마일리지이용내역등록)
-const rollbackMileage = async (mileageNo, totalAmt, earnRate, rollBackPoint) => {
+const rollbackMileage = async (mileageNo, totalAmtNum, earnRate, rollBackPointNum) => {
+    const totalAmt = cleanNumber(totalAmtNum);
+    const rollBackPoint = cleanNumber(rollBackPointNum);
     const pointsToAdd = rollBackPoint || -(Math.round((totalAmt * earnRate) / 100));
     const note = `카드 결제 실패로 인해 ${Math.abs(pointsToAdd)}포인트 롤백`;
     console.log(note);
