@@ -341,10 +341,10 @@ const updateMileageAndLogHistory = async (mileageNo, totalAmt, changePoints, typ
         };
 
         await dynamoDB.put(historyParams).promise();
-
+        log.info('마일리지 트랜젝션 성공');
         return { success: true, updatedAmount };
     } catch (error) {
-        console.error('오류 발생:', error.message);
+        log.error('오류 발생:', error.message);
         throw new Error('마일리지 업데이트 실패');
     }
 };

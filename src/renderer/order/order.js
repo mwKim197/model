@@ -601,7 +601,7 @@ let remainingAmount = 0; // 잔여결제액
 const pointPayment = (orderAmount) => {
     return new Promise((resolve) => {
         const modal = document.getElementById("pointModal");
-        userInfo.isPhone // 휴대폰 여부
+        //userInfo.isPhone // 휴대폰 여부
         inputCount = userInfo.mileageNumber ? userInfo.mileageNumber : 12; // 입력 제한 초기화
         usePoint = 0; //
         totalAmt = orderAmount;

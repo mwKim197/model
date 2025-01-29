@@ -657,7 +657,7 @@ Menu.post('/mileage-transaction', async (req, res) => {
         const result = await updateMileageAndLogHistory(mileageNo, totalAmt, changePoints, type, note);
         res.status(200).json({ success: true, message: '트랜잭션 성공', result });
     } catch (error) {
-        console.error('트랜잭션 실패:', error.message);
+        log.error('트랜잭션 실패:', error.message);
         res.status(500).json({ success: false, message: '트랜잭션 실패', error: error.message });
     }
 });
