@@ -17,6 +17,8 @@ const processUserAndProduct = async () => {
 
 processUserAndProduct().then();
 
+/** 세자리 콤마 숫자로 변경*/
+const cleanNumber = (value) => Number(String(value).replace(/,/g, ''));
 /**
 * 주문 DB 저장
 *  */
@@ -58,7 +60,7 @@ const saveOrdersToDynamoDB = async (order) => {
                 orderId: orderId, // Sort Key
                 menuSummary: menuSummary, // 메뉴 정보 (ID, 이름, 수량 포함)
                 totalPrice: menuSummary.reduce((sum, item) => sum + item.price, 0), // 주문 총 금액
-                point: order.point,
+                point: cleanNumber(order.point),
                 timestamp: kstTimestamp.toISOString() // 저장 시각
             }
         };

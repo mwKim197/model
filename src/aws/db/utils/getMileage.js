@@ -295,7 +295,6 @@ const cleanNumber = (value) => Number(String(value).replace(/,/g, ''));
  */
 const updateMileageAndLogHistory = async (mileageNo, totalAmtNum, changePointsNum, type, note) => {
     try {
-        log.info(`a뭐가 문제인데? ${changePointsNum}`);
         const now = new Date();
         const kstTimestamp = new Date(now.getTime() + 9 * 60 * 60 * 1000); // UTC + 9시간 추가
         const historySortKey = `${mileageNo}#${kstTimestamp.toISOString()}`;
@@ -303,7 +302,6 @@ const updateMileageAndLogHistory = async (mileageNo, totalAmtNum, changePointsNu
         // 입력값을 숫자로 변환
         const totalAmt = cleanNumber(totalAmtNum);
         const changePoints = cleanNumber(changePointsNum);
-        log.info(`a뭐가 문제인데? ${changePoints}`);
         // 트랜잭션: model_mileage 업데이트
         const updateParams = {
             TransactItems: [
