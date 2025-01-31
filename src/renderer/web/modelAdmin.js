@@ -1601,12 +1601,6 @@ const validateMileageValue = (input) => {
     input.addEventListener('input', () => {
         // 숫자 이외의 문자는 제거
         input.value = input.value.replace(/\D/g, '');
-
-        // 값이 4 미만이거나 12 초과일 경우 제거
-        if (input.value && (parseInt(input.value, 10) < 4 || parseInt(input.value, 10) > 12)) {
-            input.value = ''; // 조건에 맞지 않으면 초기화
-            alert('입력값은 4부터 12 사이의 숫자여야 합니다.');
-        }
     });
 };
 
