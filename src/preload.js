@@ -113,7 +113,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     verifyMileageAndReturnPoints: async (mileageNo, password) => await mileageApi.verifyMileageAndReturnPoints(mileageNo, password),
 
     // 마일리지 등록
-    saveMileageToDynamoDB: async (mileageNo, password) => await mileageApi.saveMileageToDynamoDB(mileageNo, password),
+    saveMileageToDynamoDB: async (mileageInfo) => await mileageApi.saveMileageToDynamoDB(mileageInfo),
 
     //마일리지 트렌젝션
     updateMileageAndLogHistory: async (mileageNo, totalAmt, pointsToAdd, type, note) => await mileageApi.updateMileageAndLogHistory(mileageNo, totalAmt, pointsToAdd, type, note),

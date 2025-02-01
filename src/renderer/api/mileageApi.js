@@ -81,7 +81,7 @@ const verifyMileageAndReturnPoints = async (mileageNo, password) => {
 }
 
 // 마일리지 등록
-const saveMileageToDynamoDB = async (mileageNo, password) => {
+const saveMileageToDynamoDB = async (mileageInfo) => {
     try {
 
         await ensureUserDataInitialized(); // userData 초기화 보장
@@ -96,7 +96,7 @@ const saveMileageToDynamoDB = async (mileageNo, password) => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ mileageNo: mileageNo, password: password })
+            body: JSON.stringify({ mileageNo: mileageInfo.mileageNo, password: mileageInfo.password, tel: mileageInfo.tel })
         });
 
         if (!response.ok) {

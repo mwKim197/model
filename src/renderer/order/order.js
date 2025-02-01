@@ -608,22 +608,23 @@ let totalAmt = 0; // 전체결제금액
 let availablePoints = 0; // 보유포인트
 let remainingAmount = 0; // 잔여결제액
 let digitCount = 4;
+let isPhone = false;
 
 // 포인트 결제 (모달 열기)
 const pointPayment = (orderAmount) => {
     return new Promise((resolve) => {
         const modal = document.getElementById("pointModal");
-        //userInfo.isPhone // 휴대폰 여부
         inputCount = userInfo.mileageNumber ? userInfo.mileageNumber : 12; // 입력 제한 초기화
         usePoint = 0; //
         totalAmt = orderAmount;
-
+        isPhone = userInfo.isPhone // 휴대폰 여부
         modal.classList.remove("hidden"); // 모달 열기
         updateDynamicContent("pointInput", orderAmount ,resolve);
     });
 };
 
 // 입력 템플릿 생성 함수
+/*
 function createInputTemplate(title = "", count = 4) {
     digitCount = count;
     return `
@@ -647,28 +648,105 @@ function createInputTemplate(title = "", count = 4) {
         </div>
     `;
 }
+*/
+
+// 입력 템플릿 생성 함수
+function createInputTemplate(title = "", count = 4) {
+    digitCount = count;
+    return `
+        <div class="h-32 flex flex-col items-center w-full">
+            ${title ? `<p class="text-2xl text-center mb-4">${title}</p>` : ""}
+        </div>
+        <div class="h-12 flex justify-center items-center w-full">
+        <div class="relative w-[425px] h-[60px] flex flex-col justify-center">
+            <!-- 숫자 표시 (입력 값) -->
+            <div id="inputDisplay" 
+                class="text-5xl text-black tracking-widest w-full text-center min-h-[50px] flex items-center justify-center box-border border-b-4 border-black">
+            </div>
+        </div>
+    `;
+}
+
+// 모바일번호 폼
+function createPhoneInputTemplate() {
+    return `
+        <div class="h-32 text-center">
+            <p class="text-2xl mb-4">휴대전화 번호 입력</p>
+        </div>
+        <div class="h-12 flex justify-center items-center">
+            <div class="flex gap-2">
+                <!-- 첫 번째 입력칸 (010 고정) -->
+                <div class="relative flex items-center">
+                    <div class="text-5xl text-center">010</div>
+                    <div class="text-5xl text-center mx-2">-</div>
+                </div>
+                <!-- 두 번째 입력칸 (4자리) -->
+                <div class="relative flex items-center">
+                    <div id="inputDigit-101" class="text-5xl text-center text-black">_</div>
+                    <div id="inputDigit-102" class="text-5xl text-center text-black">_</div>
+                    <div id="inputDigit-103" class="text-5xl text-center text-black">_</div>
+                    <div id="inputDigit-104" class="text-5xl text-center text-black">_</div>
+                    <div class="text-5xl text-center mx-2">-</div>
+                </div>
+                <!-- 세 번째 입력칸 (4자리) -->
+                <div class="relative flex items-center">
+                    <div id="inputDigit-201" class="text-5xl text-center text-black">_</div>
+                    <div id="inputDigit-202" class="text-5xl text-center text-black">_</div>
+                    <div id="inputDigit-203" class="text-5xl text-center text-black">_</div>
+                    <div id="inputDigit-204" class="text-5xl text-center text-black">_</div>
+                </div>
+            </div>
+        </div>
+
+    `;
+}
 
 // 입력값 저장할 배열
-let inputValues = [];
-let inputIndex = 0; // 현재 입력할 위치
+let inputValue = ""; // 입력된 숫자를 저장하는 문자열 변수
+let phoneValues = [[], []];
+let phoneIndex = 0; // 현재 입력할 위치
+
+// 입력된 숫자를 HTML(`#inputDisplay`)에 업데이트하는 함수
+function updateInputDisplay() {
+    const display = document.getElementById("inputDisplay");
+    if (display) {
+        display.textContent = inputValue; // 입력된 값 표시
+    }
+}
+
 // 번호 버튼 이벤트 등록
 function setupNumberButtons() {
     const numberButtons = document.querySelectorAll("[data-number]");
+    inputValue = ""; // 입력된 숫자를 저장하는 문자열 변수
+    phoneValues = [[], []];
+    phoneIndex = 0; // 현재 입력할 위치
 
     numberButtons.forEach((button) => {
         button.addEventListener("click", () => {
             const number = button.getAttribute("data-number");
 
             if (type === "number") {
-                if (inputIndex < digitCount) {
-                    // 현재 칸에 숫자 입력
-                    inputValues[inputIndex] = number;
-                    document.getElementById(`inputDigit-${inputIndex}`).textContent = number;
-
-                    // 다음 칸으로 이동
-                    inputIndex++;
+                if (inputValue.length < 12) {
+                    inputValue += number; // 입력된 값에 추가
+                    updateInputDisplay();
                 } else {
-                    openAlertModal(`최대 ${digitCount}자리까지만 입력 가능합니다.`);
+                    openAlertModal(`4~12 자리까지만 입력 가능합니다.`);
+                }
+            } else if (type === "phone") {
+                if (phoneIndex < 2) {
+                    if (phoneValues[phoneIndex].length < 4) {
+                        // 현재 칸에 숫자 추가
+                        phoneValues[phoneIndex] += number;
+                        const targetIndex = phoneIndex === 0 ? 101 : 201; // 첫 번째 칸(101~104), 두 번째 칸(201~204)
+
+                        // 해당 칸 업데이트
+                        document.getElementById(`inputDigit-${targetIndex + phoneValues[phoneIndex].length - 1}`).textContent = number;
+
+                        // 4자리 입력하면 다음 칸으로 이동
+                        if (phoneValues[phoneIndex].length === 4) {
+                            phoneIndex++;
+                        }
+                    }
                 }
             } else if (type === "point") {
                 if (inputTarget) {
@@ -699,11 +777,13 @@ function setupNumberButtons() {
 
 // 초기화 함수 (삭제 버튼 등에서 호출 가능)
 function resetInput() {
-    inputValues = [];
-    inputIndex = 0;
+    phoneValues = [[], []];
+    phoneIndex = 0; // 현재 입력할 위치
 
-    for (let i = 0; i < digitCount; i++) {
-        document.getElementById(`inputDigit-${i}`).textContent = "_";
+    if (type === "number") {
+        const inputDisplay = document.getElementById("inputDisplay");
+        inputValue = "";  // 저장된 입력 값 초기화
+        inputDisplay.textContent = ""; // 화면에서도 삭제
     }
 }
 
@@ -756,24 +836,25 @@ function updateDynamicContent(contentType, data ,resolve) {
     }
 
     if (contentType === "pointInput") {
-        dynamicContent.innerHTML = createInputTemplate("마일리지 번호 입력", inputCount);
+        dynamicContent.innerHTML = createInputTemplate(`마일리지 번호 입력 ${inputCount} 자리`, inputCount);
         type = "number";
         totalAmt = data;
         removeAllButtons();
 
         // 버튼 설정
-        addButton("addPointBtn", "적립하기", "bg-blue-500 text-white py-3 text-3xl rounded-lg font-bold hover:bg-blue-600 w-full");
-        addButton("usePointBtn", "사용하기", "bg-gray-200 py-3 text-3xl rounded-lg font-bold hover:bg-gray-300 w-full");
-        addButton("joinPointBtn", "등록하기", "bg-gray-200 py-3 text-3xl rounded-lg font-bold hover:bg-gray-300 w-full");
-        addButton("immediatePaymentBtn", "바로결제", "bg-gray-400 text-white py-3 text-3xl rounded-lg font-bold hover:bg-gray-500 w-full h-48");
+        addButton("addPointBtn", "적립하기", "bg-blue-500 text-white py-3 text-3xl rounded-lg  hover:bg-blue-600 w-full");
+        addButton("usePointBtn", "사용하기", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
+        addButton("joinPointBtn", "등록하기", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
+        addButton("immediatePaymentBtn", "바로결제", "bg-gray-400 text-white py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48");
 
         // 포인트 적립버튼
         document.getElementById("addPointBtn").addEventListener("click", async () => {
+            const inputDisplay = document.getElementById("inputDisplay");
+            const pointNumber = inputDisplay.textContent.trim(); // 입력된 숫자 가져오기
 
-            if (inputValues.length === inputCount) {
+            if (pointNumber.length > 4 && pointNumber.length < 12) {
                 modal.classList.add("hidden"); // 모달 닫기
-                // 즉시 결제 포인트 적립 O
-                const pointNumber = inputValues.join(""); // 포인트 배열 to String
+
                 const pointNumberCheck = await window.electronAPI.checkMileageExists(pointNumber);
                 if (pointNumberCheck) {
                     if (pointNumberCheck.data) {
@@ -785,14 +866,16 @@ function updateDynamicContent(contentType, data ,resolve) {
                     openAlertModal("유저정보 조회에 실패하였습니다.");
                 }
             } else {
-                openAlertModal(`마일리지 번호는 ${inputCount} 자리 입니다.`);
+                openAlertModal(`마일리지 번호는 4~12 자리 입니다.`);
             }
         });
 
         // 포인트 사용버튼
         document.getElementById("usePointBtn").addEventListener("click", async () => {
-            if (inputValues.length === inputCount) {
-                const pointNumber = inputValues.join(""); // 포인트 배열 to String
+            const inputDisplay = document.getElementById("inputDisplay");
+            const pointNumber = inputDisplay.textContent.trim(); // 입력된 숫자 가져오기
+
+            if (pointNumber.length < 12) {
                 const pointNumberCheck = await window.electronAPI.checkMileageExists(pointNumber);
 
                 if (pointNumberCheck) {
@@ -808,7 +891,7 @@ function updateDynamicContent(contentType, data ,resolve) {
                 }
 
             } else {
-                openAlertModal(`마일리지 번호는 ${inputCount} 자리 입니다.`);
+                openAlertModal(`마일리지 번호는 4~12 자리 입니다.`);
             }
         });
 
@@ -834,8 +917,8 @@ function updateDynamicContent(contentType, data ,resolve) {
         type = "number";
         removeAllButtons();
 
-        addButton("exit", "사용취소", "bg-gray-200 py-3 text-3xl rounded-lg font-bold hover:bg-gray-300 w-full");
-        addButton("usePointBtn", "사용하기", "bg-gray-400 text-white py-3 text-3xl rounded-lg font-bold hover:bg-gray-500 w-full h-48");
+        addButton("exit", "사용취소", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
+        addButton("usePointBtn", "사용하기", "bg-gray-400 text-white py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48");
 
         document.getElementById("exit").addEventListener("click", () => {
             modal.classList.add("hidden"); // 모달닫기
@@ -845,12 +928,14 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         // 비밀번호 검증
         document.getElementById("usePointBtn").addEventListener("click", async () => {
+            const inputDisplay = document.getElementById("inputDisplay");
+            const passwordNumber = inputDisplay.textContent.trim(); // 입력된 숫자 가져오기
+
             // 비밀번호 검증후 사용하기화면으로 이동
-            if (inputValues.length === passwordCount) {
+            if (passwordNumber.length === passwordCount) {
                 try {
                     // 포인트 password
-                    const pointPassword = inputValues.join("");
-                    const pointPasswordCheck = await window.electronAPI.verifyMileageAndReturnPoints(data, pointPassword);
+                    const pointPasswordCheck = await window.electronAPI.verifyMileageAndReturnPoints(data, passwordNumber);
                     if (pointPasswordCheck) {
 
                         if (pointPasswordCheck.data.success) {
@@ -888,18 +973,18 @@ function updateDynamicContent(contentType, data ,resolve) {
         dynamicContent.innerHTML = `
             <div class="text-center">
                 <div class="text-left mx-auto w-full max-w-lg">
-                    <p class="text-4xl font-bold mb-4">총 주문 금액: <span id="totalOrderAmount">${totalAmt}</span>원</p>
+                    <p class="text-4xl mb-4">총 주문 금액: <span id="totalOrderAmount">${totalAmt}</span>원</p>
                     <div class="flex gap-2">
-                    <p class="text-2xl font-bold mb-4">보유 포인트:</p>
-                    <span id="availablePoints" class="text-right text-2xl font-bold mb-4 w-40 ml-1">${formattedPoints}</span><span class="text-2xl font-bold"> P</span>
+                    <p class="text-2xl mb-4">보유 포인트:</p>
+                    <span id="availablePoints" class="text-right text-2xl mb-4 w-40 ml-1">${formattedPoints}</span><span class="text-2xl"> P</span>
                     </div>
                     
                     <div class="flex gap-2">
-                        <p class="text-2xl font-bold">사용 포인트:</p>
-                        <div id="usePoint" class="text-right text-2xl font-bold mb-4 border-b-2 border-gray-300 w-40 ml-1"></div><span class="text-2xl font-bold"> P</span>
+                        <p class="text-2xl">사용 포인트:</p>
+                        <div id="usePoint" class="text-right text-2xl mb-4 border-b-2 border-gray-300 w-40 ml-1"></div><span class="text-2xl"> P</span>
                         <button id="useAllPointsBtn" class="border-gray-300 py-1 px-4 text-xl rounded-lg bg-gray-200 hover:bg-gray-300">전액 사용</button>
                     </div>
-                    <p class="text-4xl font-bold mt-4">결제 금액: <span id="remainingAmount"></span>원</p>   
+                    <p class="text-4xl mt-4">결제 금액: <span id="remainingAmount"></span>원</p>   
                 </div>
             </div>
         `;
@@ -910,7 +995,7 @@ function updateDynamicContent(contentType, data ,resolve) {
         inputTarget.innerText = "0"; // 초기화
         removeAllButtons();
 
-        addButton("exit", "결제취소", "bg-gray-200 py-3 text-3xl rounded-lg font-bold hover:bg-gray-300 w-full");
+        addButton("exit", "결제취소", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
 
         document.getElementById("exit").addEventListener("click", () => {
             modal.classList.add("hidden"); // 모달닫기
@@ -928,7 +1013,7 @@ function updateDynamicContent(contentType, data ,resolve) {
             }
         });
 
-        addButton("pointPaymentBtn", "포인트결제", "bg-gray-400 text-white py-3 text-3xl rounded-lg font-bold hover:bg-gray-500 w-full h-48");
+        addButton("pointPaymentBtn", "포인트결제", "bg-gray-400 text-white py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48");
         document.getElementById("pointPaymentBtn").addEventListener("click", () => {
 
             // 포인트 결제,사용할포인트번호, 사용포인트
@@ -938,12 +1023,12 @@ function updateDynamicContent(contentType, data ,resolve) {
     } else if (contentType === "joinPoints") {
         // 입력폼 초기화
         resetInput();
-
+        type = "number";
         // 마일리지 가입 화면
-        dynamicContent.innerHTML = createInputTemplate("마일리지 가입 번호 입력", inputCount);
+        dynamicContent.innerHTML = createInputTemplate(`마일리지 가입 번호 입력 ${inputCount} 자리`, inputCount);
         removeAllButtons();
 
-        addButton("exit", "등록취소", "bg-gray-200 py-3 text-3xl rounded-lg font-bold hover:bg-gray-300 w-full");
+        addButton("exit", "취소하기", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
 
         document.getElementById("exit").addEventListener("click", () => {
             modal.classList.add("hidden"); // 모달닫기
@@ -951,13 +1036,16 @@ function updateDynamicContent(contentType, data ,resolve) {
             resolve({success: true, action: ACTIONS.EXIT});
         });
 
-        addButton("addPassword", "비밀번호입력", "bg-gray-400 py-3 text-3xl rounded-lg font-bold hover:bg-gray-500 w-full h-48");
+        addButton("addPhone", "전화번호입력", "bg-gray-400 py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48");
 
         // 마일리지 번호 검증 후 비밀번호입력으로 이동
-        document.getElementById("addPassword").addEventListener("click", async () => {
+        document.getElementById("addPhone").addEventListener("click", async () => {
 
-            if (inputValues.length === inputCount) {
-                const pointNumber = inputValues.join(""); // 포인트 배열 to String
+            const inputDisplay = document.getElementById("inputDisplay");
+            const pointNumber = inputDisplay.textContent.trim(); // 입력된 숫자 가져오기
+
+            // 가입시에는 관리자가지정한 자리수로 가입
+            if (pointNumber.length === inputCount) {
                 const regex = new RegExp(`^\\d{${inputCount}}$`);
 
                 // 입력값 검증
@@ -971,7 +1059,7 @@ function updateDynamicContent(contentType, data ,resolve) {
                 if (pointNumberCheck) {
 
                     if (!pointNumberCheck.data) {
-                        updateDynamicContent("addPassword", pointNumber, resolve);
+                        updateDynamicContent("addPhone", pointNumber, resolve);
                     } else {
                         openAlertModal("이미 등록된 유저입니다.");
                     }
@@ -985,14 +1073,45 @@ function updateDynamicContent(contentType, data ,resolve) {
             }
 
         });
+    } else if (contentType === "addPhone") {
+        // 입력폼 초기화
+        resetInput();
+        type = "phone";
+        // 마일리지 가입 화면
+        dynamicContent.innerHTML = createPhoneInputTemplate();
+        removeAllButtons();
+
+        addButton("exit", "등록취소", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
+
+        document.getElementById("exit").addEventListener("click", () => {
+            modal.classList.add("hidden"); // 모달닫기
+            // 통합결제 취소
+            resolve({success: true, action: ACTIONS.EXIT});
+        });
+
+        addButton("addPassword", "비밀번호입력", "bg-gray-400 py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48");
+
+        // 마일리지 번호 검증 후 비밀번호입력으로 이동
+        document.getElementById("addPassword").addEventListener("click", async () => {
+            const phoneNumber = "010" + phoneValues.join(""); // 전화번호 배열 to String
+            const regex = new RegExp(`^\\d{11}$`);
+
+            // 입력값 검증
+            if (!regex.test(phoneNumber)) {
+                openAlertModal(`번호는 11자리 숫자여야 합니다.`);
+            } else {
+                updateDynamicContent("addPassword", {mileageNo: data, tel: phoneNumber}, resolve);
+            }
+        });
     } else if (contentType === "addPassword") {
         // 입력폼 초기화
         resetInput();
+        type = "number";
         // 마일리지 가입 화면
-        dynamicContent.innerHTML = createInputTemplate("마일리지 가입 비밀번호 입력", passwordCount);
+        dynamicContent.innerHTML = createInputTemplate("비밀번호 등록", passwordCount);
 
         removeAllButtons();
-        addButton("exit", "등록취소", "bg-gray-200 py-3 text-3xl rounded-lg font-bold hover:bg-gray-300 w-full");
+        addButton("exit", "등록취소", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
 
         document.getElementById("exit").addEventListener("click", () => {
             modal.classList.add("hidden"); // 모달닫기
@@ -1001,31 +1120,34 @@ function updateDynamicContent(contentType, data ,resolve) {
             resolve({success: true, action: ACTIONS.EXIT});
         });
 
-        addButton("addPoint", "마일리지등록", "bg-gray-400 py-3 text-3xl rounded-lg font-bold hover:bg-gray-500 w-full h-48");
+        addButton("addPoint", "마일리지등록", "bg-gray-400 py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48");
 
         // 마일리지 번호 검증 후 비밀번호입력으로 이동
         document.getElementById("addPoint").addEventListener("click", async () => {
 
+            const inputDisplay = document.getElementById("inputDisplay");
+            const passwordNumber = inputDisplay.textContent.trim(); // 입력된 숫자 가져오기
+
             // 비밀번호 검증후 마일리지 가입
-            if (inputValues.length === passwordCount) {
+            if (passwordNumber.length === passwordCount) {
                 try {
 
-                    if (inputValues.length === 0) {
+                    if (passwordNumber.length === 0) {
                         openAlertModal("비밀번호를 입력하세요.");
                         return;
                     }
-                    // 입력 페스워드
-                    const password = inputValues.join(""); // 포인트 배열 to String
 
                     // 입력값 검증
                     const regex = new RegExp(`^\\d{${passwordCount}}$`);
-                    if (!regex.test(password)) {
+                    if (!regex.test(passwordNumber)) {
                         openAlertModal(`비밀번호는 정확히 자리 ${passwordCount}숫자여야 합니다.`);
                         return;
                     }
 
+                    const mileageInfo = {...data, password: passwordNumber}
+
                     // 마일리지 등록 api 호출
-                    const addPoint = await window.electronAPI.saveMileageToDynamoDB(data, password);
+                    const addPoint = await window.electronAPI.saveMileageToDynamoDB(mileageInfo);
                     if (addPoint) {
                         // 컴펌 창 띄우기
                         openModal(
@@ -1033,7 +1155,7 @@ function updateDynamicContent(contentType, data ,resolve) {
                             () => {
                                 modal.classList.add("hidden"); // 모달 닫기
                                 // 즉시결제 포인트 적립 O
-                                resolve({ success: true, action: ACTIONS.IMMEDIATE_PAYMENT, point: data }); // 확인 시 resolve 호출
+                                resolve({ success: true, action: ACTIONS.IMMEDIATE_PAYMENT, point: mileageInfo.mileageNo }); // 확인 시 resolve 호출
                             },
                             () => {
                                 modal.classList.add("hidden"); // 모달 닫기
@@ -1061,6 +1183,8 @@ function updateDynamicContent(contentType, data ,resolve) {
 // 포인트 모달 닫기
 document.getElementById("closeModalBtn").addEventListener("click", () => {
     const modal = document.getElementById("pointModal");
+    // 입력폼 초기화
+    resetInput();
     modal.classList.add("hidden"); // 모달 숨기기
 });
 
@@ -1070,8 +1194,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const clearAllBtn = document.getElementById("clearAllBtn"); // 전체 삭제 버튼
 
     setupNumberButtons(); // 번호 버튼 이벤트 초기화
-
-
 
     // 단건 지우기 (Backspace 버튼)
     backspaceBtn.addEventListener("click", () => {
@@ -1088,11 +1210,33 @@ document.addEventListener("DOMContentLoaded", () => {
             const usedPoints = Number(updatedText) || 0;
             const remaining = Math.max(totalAmt - usedPoints, 0);
             remainingAmount.textContent = remaining.toLocaleString();
+        } else if (type === "phone") {
+
+            if (phoneIndex >= 0) {
+                if (phoneIndex === 2) {
+                    phoneIndex = phoneIndex - 1;
+                }
+
+                if (phoneValues[phoneIndex].length > 0) {
+                    // 현재 칸에서 숫자 하나 삭제
+                    phoneValues[phoneIndex] = phoneValues[phoneIndex].slice(0, -1);
+                } else if (phoneIndex > 0) {
+                    // 이전 칸으로 이동하여 삭제
+                    phoneIndex--;
+                    phoneValues[phoneIndex] = phoneValues[phoneIndex].slice(0, -1);
+                }
+
+                // 화면 업데이트
+                const targetIndex = phoneIndex === 0 ? 101 : 201;
+                const digitToClear = targetIndex + phoneValues[phoneIndex].length;
+                document.getElementById(`inputDigit-${digitToClear}`).textContent = "_";
+            }
         } else {
-            if (inputIndex > 0) {
-                inputIndex--; // 이전 칸으로 이동
-                inputValues[inputIndex] = ""; // 해당 칸 데이터 삭제
-                document.getElementById(`inputDigit-${inputIndex}`).textContent = "_"; // 화면에서도 삭제
+            const inputDisplay = document.getElementById("inputDisplay");
+
+            if (inputValue.length > 0) {
+                inputValue = inputValue.slice(0, -1); // 내부 변수에서도 마지막 문자 삭제
+                inputDisplay.textContent = inputValue; // 화면에서도 삭제
             }
         }
     });
@@ -1103,6 +1247,18 @@ document.addEventListener("DOMContentLoaded", () => {
             inputTarget.textContent = "0"; // 입력 초기화
             // 남은 금액 초기화
             remainingAmount.textContent = totalAmt.toLocaleString();
+        } else if (type === "phone") {
+            phoneValues = [[], []];
+            phoneIndex = 0; // 현재 입력할 위치
+
+            document.getElementById(`inputDigit-101`).textContent = "_";
+            document.getElementById(`inputDigit-102`).textContent = "_";
+            document.getElementById(`inputDigit-103`).textContent = "_";
+            document.getElementById(`inputDigit-104`).textContent = "_";
+            document.getElementById(`inputDigit-201`).textContent = "_";
+            document.getElementById(`inputDigit-202`).textContent = "_";
+            document.getElementById(`inputDigit-203`).textContent = "_";
+            document.getElementById(`inputDigit-204`).textContent = "_";
         } else {
             resetInput();
         }
