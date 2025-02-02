@@ -32,6 +32,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('limit-input').value = userInfo.limitCount ? userInfo.limitCount: 20;
             document.getElementById('earnMileage').value = userInfo.earnMileage ? userInfo.earnMileage : 0;
             document.getElementById('mileageInput').value = userInfo.mileageNumber ? userInfo.mileageNumber : 0;
+            const phoneCheckBox = document.getElementById("phoneNumberCheck");
+
+            if (phoneCheckBox) {
+                phoneCheckBox.checked = Boolean(userInfo.isPhone);
+            } else {
+                console.warn('phoneNumberCheck checkbox not found.');
+            }
             // 초기 어드민 카테고리 리스트 렌더링
             renderCategoryList(userInfo.category);
         } else {

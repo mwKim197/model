@@ -472,7 +472,6 @@ const rollbackMileage = async (mileageNo, totalAmtNum, earnRate, rollBackPointNu
     const rollBackPoint = cleanNumber(rollBackPointNum);
     const pointsToAdd = rollBackPoint || -(Math.round((totalAmt * earnRate) / 100));
     const note = `카드 결제 실패로 인해 ${Math.abs(pointsToAdd)}포인트 롤백`;
-    console.log(note);
     return await window.electronAPI.updateMileageAndLogHistory(mileageNo, totalAmt, Number(pointsToAdd), 'rollback', note);
 };
 
@@ -552,19 +551,19 @@ const payment = async () => {
 
                     if (payEnd) {
                         sendLogToMain('info', `마일리지 적립 실행 - 번호: ${response.point}, 결제금액: ${orderAmount}, 적립률 : ${earnRate}`);
-                        await addMileage(response.point, orderAmount, earnRate);
+                        await addMileage(response.point, totalAmount, earnRate);
 
                         try {
                             await ordStart(response.discountAmount); // 주문 시작
                         } catch (e) {
                             // 주문에러발생시 마일리치 롤백
                             sendLogToMain('error', `마일리지 적립 롤백 (주문 에러)- 번호: ${response.point}, 결제금액: ${orderAmount}, 적립률 : ${earnRate}`);
-                            await rollbackMileage(response.point, orderAmount, earnRate);
+                            await rollbackMileage(response.point, totalAmount, earnRate);
                         }
                     } else {
                         sendLogToMain('error', `마일리지 적립 롤백 (주문 에러)- 번호: ${response.point}, 결제금액: ${orderAmount}, 롤백포인트 : ${response.discountAmount}`);
                         // 포인트 사용후 카드결제 실패시 사용포인트 롤백
-                        await rollbackMileage(response.point, orderAmount, earnRate ,response.discountAmount);
+                        await rollbackMileage(response.point, totalAmount, earnRate ,response.discountAmount);
                         console.error("카드 결제가 실패했습니다.");
                     }
                 } else {
@@ -642,10 +641,10 @@ function createInputTemplate(title = "", count = 4) {
 }
 
 // 모바일번호 폼
-function createPhoneInputTemplate() {
+function createPhoneInputTemplate(title) {
     return `
         <div class="h-32 text-center">
-            <p class="text-2xl mb-4">휴대전화 번호 입력</p>
+            ${title ? `<p class="text-2xl text-center mb-4">${title}</p>` : ""}
         </div>
         <div class="h-12 flex justify-center items-center">
             <div class="flex gap-2">
@@ -760,10 +759,10 @@ function setupNumberButtons() {
 function resetInput() {
     phoneValues = [[], []];
     phoneIndex = 0; // 현재 입력할 위치
+    inputValue = "";  // 저장된 입력 값 초기화
 
     if (type === "number" || type === "password") {
         const inputDisplay = document.getElementById("inputDisplay");
-        inputValue = "";  // 저장된 입력 값 초기화
         inputDisplay.textContent = ""; // 화면에서도 삭제
     }
 }
@@ -818,8 +817,14 @@ function updateDynamicContent(contentType, data ,resolve) {
     // 입력값 초기화
     resetInput();
     if (contentType === "pointInput") {
-        dynamicContent.innerHTML = createInputTemplate(`마일리지 번호 입력 ${inputCount} 자리`, inputCount);
-        type = "number";
+        if (isPhone) {
+            type = "phone";
+            dynamicContent.innerHTML = createPhoneInputTemplate("마일리지 사용 휴대전화 번호 입력");
+        } else {
+            type = "number";
+            dynamicContent.innerHTML = createInputTemplate(`마일리지 번호 입력 ${inputCount} 자리`, inputCount);
+        }
+
         totalAmt = data;
         removeAllButtons();
 
@@ -831,14 +836,28 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         // 포인트 적립버튼
         document.getElementById("addPointBtn").addEventListener("click", async () => {
+            let mileageInfo = {mileageNo: inputValue, tel: ""};
+            // 휴대폰일경우 inputValue 휴대폰번호로 변경
+            if (isPhone) {
+                inputValue = "010" + phoneValues.join(""); // 전화번호 배열 to String
+                const regex = new RegExp(`^\\d{11}$`);
+
+                // 입력값 검증
+                if (!regex.test(inputValue)) {
+                    openAlertModal(`번호는 11 자리 숫자여야 합니다.`);
+                    return;
+                }
+                mileageInfo = {mileageNo: "", tel: inputValue};
+            }
 
             if (inputValue.length > 4 && inputValue.length < 12) {
+
                 modal.classList.add("hidden"); // 모달 닫기
-                const mileageInfo = {mileageNo: inputValue, tel: ""};
                 const pointNumberCheck = await window.electronAPI.checkMileageExists(mileageInfo);
                 if (pointNumberCheck) {
                     if (pointNumberCheck.data.exists) {
-                        resolve({success: true, action: ACTIONS.IMMEDIATE_PAYMENT, point: pointNumberCheck.data.uniqueMileageNo, discountAmount: 0}); // 확인 시 resolve 호출
+                        const data = pointNumberCheck.data;
+                        resolve({success: true, action: ACTIONS.IMMEDIATE_PAYMENT, point: data.uniqueMileageNo, discountAmount: 0}); // 확인 시 resolve 호출
                     } else {
                         openAlertModal("등록되지 않은 번호입니다.");
                     }
@@ -852,15 +871,29 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         // 포인트 사용버튼
         document.getElementById("usePointBtn").addEventListener("click", async () => {
+            let mileageInfo = {mileageNo: inputValue, tel: ""};
+            // 휴대폰일경우 inputValue 휴대폰번호로 변경
+            if (isPhone) {
+                inputValue = "010" + phoneValues.join(""); // 전화번호 배열 to String
+                const regex = new RegExp(`^\\d{11}$`);
 
-            if (inputValue.length < 12) {
-                const mileageInfo = {mileageNo: inputValue, tel: ""};
+                // 입력값 검증
+                if (!regex.test(inputValue)) {
+                    openAlertModal(`번호는 11 자리 숫자여야 합니다.`);
+                    return;
+                }
+                mileageInfo = {mileageNo: "", tel: inputValue};
+            }
+
+            if (inputValue.length > 4 && inputValue.length < 12) {
+
                 const pointNumberCheck = await window.electronAPI.checkMileageExists(mileageInfo);
 
                 if (pointNumberCheck) {
 
                     if (pointNumberCheck.data.exists) {
-                        const mileageInfo = {mileageNo: inputValue, tel: "", uniqueMileageNo:pointNumberCheck.data.uniqueMileageNo };
+                        const item = pointNumberCheck.data.item;
+                        const mileageInfo = {mileageNo: item.mileageNo, tel: item.tel, uniqueMileageNo:pointNumberCheck.data.uniqueMileageNo };
                         updateDynamicContent("passwordInput", mileageInfo ,resolve);
                     } else {
                         openAlertModal("등록되지 않은 번호입니다.");
@@ -1028,7 +1061,7 @@ function updateDynamicContent(contentType, data ,resolve) {
 
                 // 입력값 검증
                 if (!regex.test(inputValue)) {
-                    alert(`번호는 ${inputCount}자리 숫자여야 합니다.`);
+                    openAlertModal(`번호는 ${inputCount}자리 숫자여야 합니다.`);
                     return;
                 }
 
@@ -1057,7 +1090,7 @@ function updateDynamicContent(contentType, data ,resolve) {
         resetInput();
         type = "phone";
         // 마일리지 가입 화면
-        dynamicContent.innerHTML = createPhoneInputTemplate();
+        dynamicContent.innerHTML = createPhoneInputTemplate("마일리지 등록 휴대전화 번호 입력");
         removeAllButtons();
 
         addButton("exit", "등록취소", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
