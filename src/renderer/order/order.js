@@ -1176,14 +1176,16 @@ function updateDynamicContent(contentType, data ,resolve) {
 
                     // 마일리지 등록 api 호출
                     const addPoint = await window.electronAPI.saveMileageToDynamoDB(mileageInfo);
-                    if (addPoint) {
+
+                    if (addPoint.success) {
+                        const data = addPoint.data;
                         // 컴펌 창 띄우기
                         openModal(
                             "마일리지 등록이 완료되었습니다. 즉시 결제하시겠습니까?",
                             () => {
                                 modal.classList.add("hidden"); // 모달 닫기
                                 // 즉시결제 포인트 적립 O
-                                resolve({ success: true, action: ACTIONS.IMMEDIATE_PAYMENT, point: mileageInfo.mileageNo }); // 확인 시 resolve 호출
+                                resolve({ success: true, action: ACTIONS.IMMEDIATE_PAYMENT, point: data.uniqueMileageNo }); // 확인 시 resolve 호출
                             },
                             () => {
                                 modal.classList.add("hidden"); // 모달 닫기

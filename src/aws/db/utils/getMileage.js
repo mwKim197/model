@@ -43,22 +43,28 @@ const saveMileageToDynamoDB = async (mileageData) => {
         const uniqueMileageNo = generateUniqueMileageNo();
 
         // DynamoDB 저장 데이터 생성
+        const newItem = {
+            userId: user.userId, // Partition Key
+            uniqueMileageNo: uniqueMileageNo, // Sort Key
+            mileageNo: mileageData.mileageNo, // 마일리지 번호
+            amount: mileageData.amount, // 마일리지 포인트
+            password: mileageData.password, // 비밀번호
+            tel: mileageData.tel, // 연락처
+            timestamp: kstTimestamp.toISOString(), // 저장 시각
+        };
+
+        // DynamoDB에 데이터 저장
         const params = {
-            TableName: 'model_mileage', // DynamoDB 테이블 이름
-            Item: {
-                userId: user.userId, // Partition Key
-                uniqueMileageNo: uniqueMileageNo, // Sort Key
-                mileageNo: mileageData.mileageNo, // 마일리지 번호
-                amount: mileageData.amount, // 마일리지 포인트
-                password: mileageData.password, // 비밀번호
-                tel: mileageData.tel, // 연락처
-                timestamp: kstTimestamp.toISOString(), // 저장 시각
-            },
+            TableName: 'model_mileage',
+            Item: newItem,
         };
 
         // 데이터 저장
         await dynamoDB.put(params).promise();
         log.info(`마일리지 저장 성공: ${mileageData.mileageNo}`);
+
+        // 등록된 데이터 반환
+        return newItem;
     } catch (error) {
         log.error('DynamoDB 마일리지 저장 중 오류 발생:', error);
         throw new Error('마일리지 데이터 저장 실패');

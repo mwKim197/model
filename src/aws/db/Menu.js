@@ -523,9 +523,9 @@ Menu.post('/mileage-add', async (req, res) => {
         log.info("마일리지 등록 요청:", JSON.stringify(mileageData));
 
         // DynamoDB 저장
-        await saveMileageToDynamoDB(mileageData);
+        const data = await saveMileageToDynamoDB(mileageData);
 
-        res.json({ success: true, message: '마일리지 등록 성공' });
+        res.json({ success: true, message: '마일리지 등록 성공', data: data});
     } catch (err) {
         log.error('마일리지 등록 중 오류 발생:', err);
         res.status(500).json({ success: false, message: '마일리지 등록 실패' });
