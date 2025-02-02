@@ -55,6 +55,7 @@ const signupUser = async (userId, password, ipAddress, storeName, tel) => {
                     item: "dessert"
                 }
             ],
+            limitCount: 10,
             storeName: storeName,
             tel: tel,
             url: url
