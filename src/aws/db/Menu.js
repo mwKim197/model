@@ -555,19 +555,19 @@ Menu.get('/mileage', async (req, res) => {
 });
 
 // 마일리지 수정
-Menu.put('/mileage/:mileageNo', async (req, res) => {
+Menu.put('/mileage/:uniqueMileageNo', async (req, res) => {
     try {
-        const { mileageNo } = req.params;
-        const { password, points, note, tel } = req.body;
+        const { uniqueMileageNo } = req.params;
+        const {mileageNo, password, points, note, tel } = req.body;
 
-        // 기존 마일리지 데이터 조회
-        const mileageData = await getMileage(mileageNo);
+        /*// 기존 마일리지 데이터 조회
+        const mileageData = await checkMileageExists(mileageNo);
         if (!mileageData) {
             return res.status(404).json({ success: false, message: '마일리지 데이터가 존재하지 않습니다.' });
-        }
+        }*/
 
         // DynamoDB 데이터 업데이트
-        const updatedMileage = await updateMileageInDynamoDB(mileageNo, { points, note, password, tel});
+        const updatedMileage = await updateMileageInDynamoDB(uniqueMileageNo, { points, note, password, tel});
 
         res.json({ success: true, data: updatedMileage });
     } catch (err) {
@@ -578,11 +578,11 @@ Menu.put('/mileage/:mileageNo', async (req, res) => {
 
 
 // 마일리지 삭제
-Menu.delete('/mileage/:mileageNo', async (req, res) => {
+Menu.delete('/mileage/:uniqueMileageNo', async (req, res) => {
     try {
-        const { mileageNo } = req.params;
+        const { uniqueMileageNo } = req.params;
 
-        await deleteMileageFromDynamoDB(mileageNo);
+        await deleteMileageFromDynamoDB(uniqueMileageNo);
 
         res.json({ success: true, message: '마일리지 삭제 성공' });
     } catch (err) {
@@ -613,12 +613,16 @@ Menu.get('/mileage-history', async (req, res) => {
 });
 
 // 마일리지 유저검증
-Menu.get('/mileage-user/:mileageNo', async (req, res) => {
+Menu.get('/mileage-user', async (req, res) => {
     try {
-        const { mileageNo } = req.params;
+        const { mileageNo, tel } = req.query;
+
+        if (!mileageNo && !tel) {
+            return res.status(400).json({ success: false, message: "mileageNo 또는 tel이 필요합니다." });
+        }
 
         // 이용 내역 조회 함수 호출
-        const userCheck = await checkMileageExists(mileageNo);
+        const userCheck = await checkMileageExists(mileageNo, tel);
 
         res.json({ success: true, data: userCheck });
     } catch (error) {
@@ -631,15 +635,15 @@ Menu.get('/mileage-user/:mileageNo', async (req, res) => {
 Menu.post('/mileage-user', async (req, res) => {
     try {
 
-        const {mileageNo, password} = req.body;
-        log.info("패스워드 검증 :", JSON.stringify(mileageNo, password));
+        const {mileageNo, tel, password} = req.body;
+        log.info("패스워드 검증 :", JSON.stringify(req.body));
 
         if (!mileageNo || !password) {
             return res.status(400).json({ error: 'mileageNo와 password를 입력하세요.' });
         }
 
         // 이용 내역 조회 함수 호출
-        const passwordCheck = await verifyMileageAndReturnPoints(mileageNo, password);
+        const passwordCheck = await verifyMileageAndReturnPoints(mileageNo, tel, password);
 
         res.json({ success: true, data: passwordCheck });
     } catch (error) {

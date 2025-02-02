@@ -492,7 +492,7 @@ const payment = async () => {
 
     // 즉시결제 타입
     if (response.action === ACTIONS.IMMEDIATE_PAYMENT) {
-
+        console.log("response: ", response);
         // 포인트 번호가 있을경우 적립
         if (response.point) {
             sendLogToMain('info', `적립 마일리지번호: ${response.point}`);
@@ -528,6 +528,7 @@ const payment = async () => {
 
     // 포인트 결제
     if (response.action === ACTIONS.USE_POINTS) {
+        console.log("포인트 결제response: ", response);
         try {
             if (response.point && response.discountAmount ) {
                 // 포인트 결제 시도
@@ -624,33 +625,6 @@ const pointPayment = (orderAmount) => {
 };
 
 // 입력 템플릿 생성 함수
-/*
-function createInputTemplate(title = "", count = 4) {
-    digitCount = count;
-    return `
-        <div class="h-32">
-            ${title ? `<p class="text-2xl font-bold text-center mb-4">${title}</p>` : ""}
-        </div>
-        <div class="h-12 flex justify-center items-center">
-            <div id="inputDisplay" class="flex gap-2">
-                ${Array(digitCount)
-        .fill(0)
-        .map((_, index) => `
-                        <div class="relative w-12 h-16 flex flex-col items-center">
-                            <div 
-                                id="inputDigit-${index}" 
-                                class="text-5xl font-bold text-center text-black"
-                            >_</div>
-                        </div>
-                    `)
-        .join('')}
-            </div>
-        </div>
-    `;
-}
-*/
-
-// 입력 템플릿 생성 함수
 function createInputTemplate(title = "", count = 4) {
     digitCount = count;
     return `
@@ -732,6 +706,13 @@ function setupNumberButtons() {
                 } else {
                     openAlertModal(`4~12 자리까지만 입력 가능합니다.`);
                 }
+            } if (type === "password") {
+                if (inputValue.length < passwordCount) {
+                    inputValue += number; // 입력된 값에 추가
+                    updateInputDisplay();
+                } else {
+                    openAlertModal(`4 자리까지만 입력 가능합니다.`);
+                }
             } else if (type === "phone") {
                 if (phoneIndex < 2) {
                     if (phoneValues[phoneIndex].length < 4) {
@@ -780,7 +761,7 @@ function resetInput() {
     phoneValues = [[], []];
     phoneIndex = 0; // 현재 입력할 위치
 
-    if (type === "number") {
+    if (type === "number" || type === "password") {
         const inputDisplay = document.getElementById("inputDisplay");
         inputValue = "";  // 저장된 입력 값 초기화
         inputDisplay.textContent = ""; // 화면에서도 삭제
@@ -834,7 +815,8 @@ function updateDynamicContent(contentType, data ,resolve) {
             dynamicButton.removeChild(dynamicButton.firstChild); // 첫 번째 자식 요소를 제거
         }
     }
-
+    // 입력값 초기화
+    resetInput();
     if (contentType === "pointInput") {
         dynamicContent.innerHTML = createInputTemplate(`마일리지 번호 입력 ${inputCount} 자리`, inputCount);
         type = "number";
@@ -849,16 +831,14 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         // 포인트 적립버튼
         document.getElementById("addPointBtn").addEventListener("click", async () => {
-            const inputDisplay = document.getElementById("inputDisplay");
-            const pointNumber = inputDisplay.textContent.trim(); // 입력된 숫자 가져오기
 
-            if (pointNumber.length > 4 && pointNumber.length < 12) {
+            if (inputValue.length > 4 && inputValue.length < 12) {
                 modal.classList.add("hidden"); // 모달 닫기
-
-                const pointNumberCheck = await window.electronAPI.checkMileageExists(pointNumber);
+                const mileageInfo = {mileageNo: inputValue, tel: ""};
+                const pointNumberCheck = await window.electronAPI.checkMileageExists(mileageInfo);
                 if (pointNumberCheck) {
-                    if (pointNumberCheck.data) {
-                        resolve({success: true, action: ACTIONS.IMMEDIATE_PAYMENT, point: pointNumber, discountAmount: 0}); // 확인 시 resolve 호출
+                    if (pointNumberCheck.data.exists) {
+                        resolve({success: true, action: ACTIONS.IMMEDIATE_PAYMENT, point: pointNumberCheck.data.uniqueMileageNo, discountAmount: 0}); // 확인 시 resolve 호출
                     } else {
                         openAlertModal("등록되지 않은 번호입니다.");
                     }
@@ -872,16 +852,16 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         // 포인트 사용버튼
         document.getElementById("usePointBtn").addEventListener("click", async () => {
-            const inputDisplay = document.getElementById("inputDisplay");
-            const pointNumber = inputDisplay.textContent.trim(); // 입력된 숫자 가져오기
 
-            if (pointNumber.length < 12) {
-                const pointNumberCheck = await window.electronAPI.checkMileageExists(pointNumber);
+            if (inputValue.length < 12) {
+                const mileageInfo = {mileageNo: inputValue, tel: ""};
+                const pointNumberCheck = await window.electronAPI.checkMileageExists(mileageInfo);
 
                 if (pointNumberCheck) {
 
-                    if (pointNumberCheck.data) {
-                        updateDynamicContent("passwordInput", pointNumber ,resolve);
+                    if (pointNumberCheck.data.exists) {
+                        const mileageInfo = {mileageNo: inputValue, tel: "", uniqueMileageNo:pointNumberCheck.data.uniqueMileageNo };
+                        updateDynamicContent("passwordInput", mileageInfo ,resolve);
                     } else {
                         openAlertModal("등록되지 않은 번호입니다.");
                     }
@@ -897,7 +877,13 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         // 포인트가입
         document.getElementById("joinPointBtn").addEventListener("click", () => {
-            updateDynamicContent("joinPoints",data ,resolve);
+
+            if (isPhone) {
+                updateDynamicContent("addPhone", data ,resolve);
+            } else {
+                updateDynamicContent("joinPoints", data ,resolve);
+            }
+
         });
 
         // 즉시결제 포인트 적립 X
@@ -909,8 +895,6 @@ function updateDynamicContent(contentType, data ,resolve) {
         });
 
     } else if (contentType === "passwordInput") {
-        // 입력폼 초기화
-        resetInput();
 
         // 비밀번호 입력 화면
         dynamicContent.innerHTML = createInputTemplate("비밀번호 입력", passwordCount);
@@ -928,18 +912,18 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         // 비밀번호 검증
         document.getElementById("usePointBtn").addEventListener("click", async () => {
-            const inputDisplay = document.getElementById("inputDisplay");
-            const passwordNumber = inputDisplay.textContent.trim(); // 입력된 숫자 가져오기
 
             // 비밀번호 검증후 사용하기화면으로 이동
-            if (passwordNumber.length === passwordCount) {
+            if (inputValue.length === passwordCount) {
                 try {
+                    const mileageInfo = {...data, password: inputValue};
                     // 포인트 password
-                    const pointPasswordCheck = await window.electronAPI.verifyMileageAndReturnPoints(data, passwordNumber);
+                    const pointPasswordCheck = await window.electronAPI.verifyMileageAndReturnPoints(mileageInfo);
+
                     if (pointPasswordCheck) {
 
                         if (pointPasswordCheck.data.success) {
-                            const pointData = {...pointPasswordCheck.data, totalAmt: totalAmt};
+                            const pointData = {...pointPasswordCheck.data, ...data, totalAmt: totalAmt};
                             updateDynamicContent("usePoints", pointData ,resolve);
                         } else {
                             openAlertModal("페스워드가 틀렸습니다.");
@@ -967,8 +951,7 @@ function updateDynamicContent(contentType, data ,resolve) {
         // 3자리 콤마 추가를 toLocaleString으로 처리
         const formattedPoints = pointData.points.toLocaleString(); // 보유 포인트 포맷팅
         availablePoints = pointData.points; // 보유포인트
-        const pointNo = pointData.mileageNo; // 조회된 포인트 번호
-
+        const pointNo = pointData.uniqueMileageNo; // 조회된 포인트 번호
         // 포인트 사용 화면
         dynamicContent.innerHTML = `
             <div class="text-center">
@@ -1021,8 +1004,6 @@ function updateDynamicContent(contentType, data ,resolve) {
             modal.classList.add("hidden"); // 모달 닫기
         });
     } else if (contentType === "joinPoints") {
-        // 입력폼 초기화
-        resetInput();
         type = "number";
         // 마일리지 가입 화면
         dynamicContent.innerHTML = createInputTemplate(`마일리지 가입 번호 입력 ${inputCount} 자리`, inputCount);
@@ -1041,25 +1022,23 @@ function updateDynamicContent(contentType, data ,resolve) {
         // 마일리지 번호 검증 후 비밀번호입력으로 이동
         document.getElementById("addPhone").addEventListener("click", async () => {
 
-            const inputDisplay = document.getElementById("inputDisplay");
-            const pointNumber = inputDisplay.textContent.trim(); // 입력된 숫자 가져오기
-
             // 가입시에는 관리자가지정한 자리수로 가입
-            if (pointNumber.length === inputCount) {
+            if (inputValue.length === inputCount) {
                 const regex = new RegExp(`^\\d{${inputCount}}$`);
 
                 // 입력값 검증
-                if (!regex.test(pointNumber)) {
+                if (!regex.test(inputValue)) {
                     alert(`번호는 ${inputCount}자리 숫자여야 합니다.`);
                     return;
                 }
 
-                const pointNumberCheck = await window.electronAPI.checkMileageExists(pointNumber);
+                const mileageInfo = {mileageNo: inputValue, tel: ""};
+                const pointNumberCheck = await window.electronAPI.checkMileageExists(mileageInfo);
 
                 if (pointNumberCheck) {
 
-                    if (!pointNumberCheck.data) {
-                        updateDynamicContent("addPhone", pointNumber, resolve);
+                    if (!pointNumberCheck.data.exists) {
+                        updateDynamicContent("addPhone", inputValue, resolve);
                     } else {
                         openAlertModal("이미 등록된 유저입니다.");
                     }
@@ -1097,16 +1076,35 @@ function updateDynamicContent(contentType, data ,resolve) {
             const regex = new RegExp(`^\\d{11}$`);
 
             // 입력값 검증
-            if (!regex.test(phoneNumber)) {
-                openAlertModal(`번호는 11자리 숫자여야 합니다.`);
+            if (regex.test(phoneNumber)) {
+                const mileageInfo = {mileageNo: "", tel: phoneNumber};
+                const pointNumberCheck = await window.electronAPI.checkMileageExists(mileageInfo);
+
+                if (pointNumberCheck) {
+
+                    if (!pointNumberCheck.data.exists) {
+                        // 휴대폰번호 설정되어있을경우 mileageNo 휴대폰 번호로 설정
+                        if (isPhone) {
+                            updateDynamicContent("addPassword", {mileageNo: phoneNumber, tel: phoneNumber}, resolve);
+                        } else {
+                            updateDynamicContent("addPassword", {mileageNo: data, tel: phoneNumber}, resolve);
+                        }
+
+                    } else {
+                        openAlertModal("이미 등록된 유저입니다.");
+                    }
+
+                } else {
+                    openAlertModal("유저정보 조회에 실패하였습니다.");
+                }
+
             } else {
-                updateDynamicContent("addPassword", {mileageNo: data, tel: phoneNumber}, resolve);
+                openAlertModal(`번호는 11자리 숫자여야 합니다.`);
             }
+
         });
     } else if (contentType === "addPassword") {
-        // 입력폼 초기화
-        resetInput();
-        type = "number";
+        type = "password";
         // 마일리지 가입 화면
         dynamicContent.innerHTML = createInputTemplate("비밀번호 등록", passwordCount);
 
@@ -1125,26 +1123,23 @@ function updateDynamicContent(contentType, data ,resolve) {
         // 마일리지 번호 검증 후 비밀번호입력으로 이동
         document.getElementById("addPoint").addEventListener("click", async () => {
 
-            const inputDisplay = document.getElementById("inputDisplay");
-            const passwordNumber = inputDisplay.textContent.trim(); // 입력된 숫자 가져오기
-
             // 비밀번호 검증후 마일리지 가입
-            if (passwordNumber.length === passwordCount) {
+            if (inputValue.length === passwordCount) {
                 try {
 
-                    if (passwordNumber.length === 0) {
+                    if (inputValue.length === 0) {
                         openAlertModal("비밀번호를 입력하세요.");
                         return;
                     }
 
                     // 입력값 검증
                     const regex = new RegExp(`^\\d{${passwordCount}}$`);
-                    if (!regex.test(passwordNumber)) {
+                    if (!regex.test(inputValue)) {
                         openAlertModal(`비밀번호는 정확히 자리 ${passwordCount}숫자여야 합니다.`);
                         return;
                     }
 
-                    const mileageInfo = {...data, password: passwordNumber}
+                    const mileageInfo = {...data, password: inputValue}
 
                     // 마일리지 등록 api 호출
                     const addPoint = await window.electronAPI.saveMileageToDynamoDB(mileageInfo);

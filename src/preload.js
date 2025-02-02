@@ -107,10 +107,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     setMenuAllUpdate: async (sourceUserId, targetUserId) => await userApi.setMenuAllUpdate(sourceUserId, targetUserId),
 
     // 마일리지 번호 비교
-    checkMileageExists: async (mileageNo) => await mileageApi.checkMileageExists(mileageNo),
+    checkMileageExists: async (mileageInfo) => await mileageApi.checkMileageExists(mileageInfo),
 
     // 마일리지 비밀번호 비교
-    verifyMileageAndReturnPoints: async (mileageNo, password) => await mileageApi.verifyMileageAndReturnPoints(mileageNo, password),
+    verifyMileageAndReturnPoints: async (mileageInfo) => await mileageApi.verifyMileageAndReturnPoints(mileageInfo),
 
     // 마일리지 등록
     saveMileageToDynamoDB: async (mileageInfo) => await mileageApi.saveMileageToDynamoDB(mileageInfo),

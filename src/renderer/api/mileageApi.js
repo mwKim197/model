@@ -28,7 +28,7 @@ const ensureUserDataInitialized = async () => {
 };
 
 // 유저 번호 체크
-const checkMileageExists = async (mileageNo) => {
+const checkMileageExists = async (mileageInfo) => {
     try {
 
         await ensureUserDataInitialized(); // userData 초기화 보장
@@ -38,7 +38,14 @@ const checkMileageExists = async (mileageNo) => {
             throw new Error('User data is not initialized');
         }
 
-        const response = await fetch(`http://localhost:3142/mileage-user/${mileageNo}`);
+        const { mileageNo, tel } = mileageInfo; // 객체 구조 분해 할당
+
+        // mileageNo와 tel을 함께 쿼리 파라미터로 전달
+        const queryParams = new URLSearchParams();
+        if (mileageNo) queryParams.append("mileageNo", mileageNo);
+        if (tel) queryParams.append("tel", tel);
+
+        const response = await fetch(`http://localhost:3142/mileage-user?${queryParams.toString()}`);
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
         }
@@ -51,7 +58,7 @@ const checkMileageExists = async (mileageNo) => {
 }
 
 // 유저 번호 체크
-const verifyMileageAndReturnPoints = async (mileageNo, password) => {
+const verifyMileageAndReturnPoints = async (mileageInfo) => {
     try {
 
         await ensureUserDataInitialized(); // userData 초기화 보장
@@ -66,7 +73,7 @@ const verifyMileageAndReturnPoints = async (mileageNo, password) => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ mileageNo: mileageNo, password: password })
+            body: JSON.stringify({ mileageNo: mileageInfo.mileageNo, tel: mileageInfo.tel, password: mileageInfo.password })
         });
 
         if (!response.ok) {

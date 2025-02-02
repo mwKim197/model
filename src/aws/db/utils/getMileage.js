@@ -17,18 +17,38 @@ const processUserAndProduct = async () => {
 
 processUserAndProduct().then();
 
+// 랜덤마일리지 고유키
+function generateUniqueMileageNo() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // 1~12월
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+
+    // 랜덤 4자리 추가
+    const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
+
+    return `${year}${month}${day}${hours}${minutes}${seconds}${randomPart}`;
+}
+
 // 등록
 const saveMileageToDynamoDB = async (mileageData) => {
     try {
         const now = new Date();
         const kstTimestamp = new Date(now.getTime() + 9 * 60 * 60 * 1000); // UTC + 9시간 추가
 
+        // 고유한 mileageNo 생성 (Sort Key)
+        const uniqueMileageNo = generateUniqueMileageNo();
+
         // DynamoDB 저장 데이터 생성
         const params = {
             TableName: 'model_mileage', // DynamoDB 테이블 이름
             Item: {
                 userId: user.userId, // Partition Key
-                mileageNo: mileageData.mileageNo, // Sort Key
+                uniqueMileageNo: uniqueMileageNo, // Sort Key
+                mileageNo: mileageData.mileageNo, // 마일리지 번호
                 amount: mileageData.amount, // 마일리지 포인트
                 password: mileageData.password, // 비밀번호
                 tel: mileageData.tel, // 연락처
@@ -67,21 +87,28 @@ const getMileage = async (searchKey, limit, lastEvaluatedKey) => {
 };
 
 /**
- * DynamoDB에서 마일리지 이용내역를 조회하는 함수
- * @param mileageNo - 조회키 0000, 01011112222
+ * DynamoDB에서 마일리지 이용내역을 조회하는 함수
+ * @param uniqueMileageNo - 조회할 uniqueMileageNo 값
  * @param {number} limit - 한 페이지에서 조회할 데이터 개수
  * @param {Object} lastEvaluatedKey - DynamoDB 페이징용 시작 키 (null일 경우 첫 페이지)
  * @returns {Object} - 조회된 데이터와 다음 페이지 키
  */
-const getMileageHistory = async (mileageNo, limit, lastEvaluatedKey) => {
-    const keyCondition = 'userId = :userId AND begins_with(mileageNo_timestamp, :mileageNo)';
+const getMileageHistory = async (uniqueMileageNo, limit, lastEvaluatedKey) => {
+    const keyCondition = 'userId = :userId AND begins_with(uniqueMileageNo_timestamp, :uniqueMileageNo)';
     const expressionValues = {
-        ':userId': user.userId,
-        ':mileageNo': mileageNo,
+        ':userId': user.userId, // Partition Key 유지
+        ':uniqueMileageNo': uniqueMileageNo, //  uniqueMileageNo 기반 조회
     };
 
-    return await queryWithPagination('model_mileage_history', keyCondition, expressionValues, limit, lastEvaluatedKey);
+    return await queryWithPagination(
+        'model_mileage_history',
+        keyCondition,
+        expressionValues,
+        limit,
+        lastEvaluatedKey
+    );
 };
+
 
 // 페이징 공통
 const queryWithPagination = async (tableName, keyConditionExpression, expressionAttributeValues, limit = 20, lastEvaluatedKey = null) => {
@@ -141,52 +168,101 @@ const queryWithPagination = async (tableName, keyConditionExpression, expression
             pageKeys, // 모든 페이지의 시작 키
         };
     } catch (error) {
-        console.error('DynamoDB 페이징 쿼리 중 오류 발생:', error.message);
+        log.error('DynamoDB 페이징 쿼리 중 오류 발생:', error.message);
         throw new Error('DynamoDB 데이터 조회 실패');
     }
 };
 
-// 계정조회
-const checkMileageExists = async (mileageNo) => {
+// 계정확인
+const checkMileageExists = async (mileageNo, tel) => {
     try {
-        // Query 파라미터 설정
-        const params = {
-            TableName: 'model_mileage',
-            KeyConditionExpression: 'userId = :userId AND mileageNo = :mileageNo',
-            ExpressionAttributeValues: {
-                ':userId': user.userId,
-                ':mileageNo': mileageNo,
-            },
-            Limit: 1, // 단건 조회
-        };
+        let result;
 
-        // DynamoDB Query 실행
-        const result = await dynamoDB.query(params).promise();
+        if (mileageNo) {
+            // mileageNo 인덱스를 사용하여 조회
+            const params = {
+                TableName: 'model_mileage',
+                IndexName: 'mileageNo-index', // 🔥 GSI 사용
+                KeyConditionExpression: 'mileageNo = :mileageNo',
+                ExpressionAttributeValues: {
+                    ':mileageNo': mileageNo
+                },
+                Limit: 1, // 단건 조회
+            };
+            log.info("Query params (mileageNo): ", params);
+            result = await dynamoDB.query(params).promise();
+        }
 
-        // 조회된 아이템이 있으면 true, 없으면 false 반환
-        return result.Items && result.Items.length > 0;
+        if ((!result || result.Items.length === 0) && tel) {
+            // tel 인덱스를 사용하여 조회
+            const params = {
+                TableName: 'model_mileage',
+                IndexName: 'tel-index', // 🔥 GSI 사용
+                KeyConditionExpression: 'tel = :tel',
+                ExpressionAttributeValues: {
+                    ':tel': tel
+                },
+                Limit: 1, // 단건 조회
+            };
+            log.info("Query params (tel): ", params);
+            result = await dynamoDB.query(params).promise();
+        }
+
+        log.info("Query result: ", result);
+
+        // 조회된 결과가 있다면 uniqueMileageNo 반환
+        if (result && result.Items.length > 0) {
+            const item = result.Items[0]; // 첫 번째 결과 아이템
+            return {
+                exists: true,
+                uniqueMileageNo: item.uniqueMileageNo, // uniqueMileageNo 정보 반환
+                item, // 추가적으로 필요한 정보 포함
+            };
+        }
+
+        return { exists: false, uniqueMileageNo: null, item: null }; // 조회된 결과가 없으면 false 반환
     } catch (error) {
-        log.error(`DynamoDB 마일리지 단건 조회 중 오류 발생. userId: ${user.userId}, mileageNo: ${mileageNo}`, error);
+        log.error(`DynamoDB 마일리지 단건 조회 중 오류 발생. mileageNo: ${mileageNo}, tel: ${tel}`, error);
         throw new Error('마일리지 단건 조회 실패');
     }
 };
 
 // 계정 비밀번호 확인
-const verifyMileageAndReturnPoints = async (mileageNo, password) => {
+const verifyMileageAndReturnPoints = async (mileageNo, tel, password) => {
     try {
-        // Query 파라미터 설정
-        const params = {
-            TableName: 'model_mileage',
-            KeyConditionExpression: 'userId = :userId AND mileageNo = :mileageNo',
-            ExpressionAttributeValues: {
-                ':userId': user.userId, // 기본 계정 정보
-                ':mileageNo': mileageNo, // 입력받은 mileageNo
-            },
-            Limit: 1, // 단건 조회
-        };
+        let result;
 
-        // DynamoDB Query 실행
-        const result = await dynamoDB.query(params).promise();
+        if (mileageNo) {
+            // mileageNo 인덱스를 사용하여 조회
+            const params = {
+                TableName: 'model_mileage',
+                IndexName: 'mileageNo-index',  // 🔥 GSI 사용
+                KeyConditionExpression: 'mileageNo = :mileageNo',
+                ExpressionAttributeValues: {
+                    ':mileageNo': mileageNo
+                },
+                Limit: 1, // 단건 조회
+            };
+            log.info("Query params (mileageNo): ", params);
+            result = await dynamoDB.query(params).promise();
+        }
+
+        if ((!result || result.Items.length === 0) && tel) {
+            // tel 인덱스를 사용하여 조회
+            const params = {
+                TableName: 'model_mileage',
+                IndexName: 'tel-index',  // 🔥 GSI 사용
+                KeyConditionExpression: 'tel = :tel',
+                ExpressionAttributeValues: {
+                    ':tel': tel
+                },
+                Limit: 1, // 단건 조회
+            };
+            log.info("Query params (tel): ", params);
+            result = await dynamoDB.query(params).promise();
+        }
+
+        log.info("Query result: ", result);
 
         // 조회된 아이템이 있는지 확인
         if (result.Items && result.Items.length > 0) {
@@ -221,42 +297,43 @@ const verifyMileageAndReturnPoints = async (mileageNo, password) => {
 };
 
 // 수정
-const updateMileageInDynamoDB = async (mileageNo, updateData) => {
+const updateMileageInDynamoDB = async (uniqueMileageNo, updateData) => {
     try {
-        // UpdateExpression 및 ExpressionAttributeValues 초기화
-        let updateExpression = 'SET #points = :points, #note = :note, #tel = :tel';
-        const expressionAttributeNames = {
-            '#points': 'amount', // 포인트
-            '#note': 'note',    // 메모
-            '#tel' :'tel',      // 연락처
-        };
-        const expressionAttributeValues = {
-            ':points': updateData.points,
-            ':note': updateData.note || '',
-            ':tel': updateData.tel || '',
-        };
+        const existingData = await dynamoDB.get({
+            TableName: 'model_mileage',
+            Key: {userId: user.userId, uniqueMileageNo }
+        }).promise();
 
-        // 패스워드가 존재할 경우 업데이트 표현식에 추가
-        if (updateData.password) {
-            updateExpression += ', #password = :password';
-            expressionAttributeNames['#password'] = 'password'; // 패스워드
-            expressionAttributeValues[':password'] = updateData.password;
+        if (!existingData.Item) {
+            throw new Error('해당 마일리지 정보를 찾을 수 없습니다.');
         }
 
-        const params = {
-            TableName: 'model_mileage',
-            Key: {
-                userId: user.userId, // Partition Key
-                mileageNo: mileageNo, // Sort Key
-            },
-            UpdateExpression: updateExpression,
-            ExpressionAttributeNames: expressionAttributeNames,
-            ExpressionAttributeValues: expressionAttributeValues,
-            ReturnValues: 'ALL_NEW', // 업데이트된 데이터 반환
+        // 새 데이터 생성
+        const newItem = {
+            ...existingData.Item, // 기존 데이터 복사
+            mileageNo: updateData.mileageNo, // 새로운 mileageNo 적용
+            amount: updateData.points,
+            note: updateData.note || '',
+            tel: updateData.tel || '',
         };
 
-        const result = await dynamoDB.update(params).promise();
-        return result.Attributes; // 업데이트된 데이터 반환
+        if (updateData.password) {
+            newItem.password = updateData.password;
+        }
+
+        // 새로운 데이터 저장
+        await dynamoDB.put({
+            TableName: 'model_mileage',
+            Item: newItem
+        }).promise();
+
+        // 기존 데이터 삭제
+        await dynamoDB.delete({
+            TableName: 'model_mileage',
+            Key: {userId: user.userId, uniqueMileageNo }
+        }).promise();
+
+        return newItem;
     } catch (error) {
         log.error('DynamoDB 마일리지 수정 중 오류 발생:', error);
         throw new Error('마일리지 수정 실패');
@@ -264,18 +341,18 @@ const updateMileageInDynamoDB = async (mileageNo, updateData) => {
 };
 
 // 삭제
-const deleteMileageFromDynamoDB = async (mileageNo) => {
+const deleteMileageFromDynamoDB = async (uniqueMileageNo) => {
     try {
         const params = {
             TableName: 'model_mileage',
             Key: {
                 userId: user.userId, // Partition Key
-                mileageNo: mileageNo, // Sort Key
+                uniqueMileageNo: uniqueMileageNo, // Sort Key
             },
         };
 
         await dynamoDB.delete(params).promise();
-        log.info(`마일리지 삭제 성공: ${mileageNo}`);
+        log.info(`마일리지 삭제 성공: ${uniqueMileageNo}`);
     } catch (error) {
         log.error('DynamoDB 마일리지 삭제 중 오류 발생:', error);
         throw new Error('마일리지 데이터 삭제 실패');
@@ -287,28 +364,29 @@ const cleanNumber = (value) => Number(String(value).replace(/,/g, ''));
 
 /**
  * DynamoDB 트랜잭션으로 마일리지 처리 마일리지 수정, 마일리지이용내역 등록
- * @param {string} mileageNo - 마일리지 번호
+ * @param {string} uniqueMileageNo - 마일리지 유니크 키
  * @param {string} totalAmtNum - 전체결제금액
  * @param {number} changePointsNum - 변경할 포인트 (양수: 적립, 음수: 사용)
  * @param {string} type - 작업 유형 (earn, use, rollback, delete 등)
  * @param {string} note - 작업 설명
  */
-const updateMileageAndLogHistory = async (mileageNo, totalAmtNum, changePointsNum, type, note) => {
+const updateMileageAndLogHistory = async (uniqueMileageNo, totalAmtNum, changePointsNum, type, note) => {
     try {
         const now = new Date();
         const kstTimestamp = new Date(now.getTime() + 9 * 60 * 60 * 1000); // UTC + 9시간 추가
-        const historySortKey = `${mileageNo}#${kstTimestamp.toISOString()}`;
+        const historySortKey = `${uniqueMileageNo}#${kstTimestamp.toISOString()}`;
 
         // 입력값을 숫자로 변환
         const totalAmt = cleanNumber(totalAmtNum);
         const changePoints = cleanNumber(changePointsNum);
+
         // 트랜잭션: model_mileage 업데이트
         const updateParams = {
             TransactItems: [
                 {
                     Update: {
                         TableName: 'model_mileage',
-                        Key: { userId: user.userId, mileageNo: mileageNo },
+                        Key: { userId: user.userId, uniqueMileageNo: uniqueMileageNo }, // ✅ 변경
                         UpdateExpression: 'SET #points = if_not_exists(#points, :start) + :changePoints',
                         ExpressionAttributeNames: { '#points': 'amount' },
                         ExpressionAttributeValues: {
@@ -323,21 +401,25 @@ const updateMileageAndLogHistory = async (mileageNo, totalAmtNum, changePointsNu
 
         await dynamoDB.transactWrite(updateParams).promise();
 
-        // 업데이트된 최종 금액을 조회
+        // 업데이트된 최종 금액을 조회 (uniqueMileageNo 기반)
         const getParams = {
             TableName: 'model_mileage',
-            Key: { userId: user.userId, mileageNo: mileageNo },
+            Key: { userId: user.userId, uniqueMileageNo: uniqueMileageNo }, // ✅ 변경
         };
         const result = await dynamoDB.get(getParams).promise();
 
+        if (!result.Item) {
+            throw new Error('마일리지 데이터를 찾을 수 없습니다.');
+        }
+
         const updatedAmount = result.Item.amount;
 
-        // 이용 내역 기록
+        // 이용 내역 기록 (uniqueMileageNo 기반)
         const historyParams = {
             TableName: 'model_mileage_history',
             Item: {
                 userId: user.userId,
-                mileageNo_timestamp: historySortKey,
+                uniqueMileageNo_timestamp: historySortKey, // ✅ uniqueMileageNo 기반 Key
                 timestamp: kstTimestamp.toISOString(),
                 totalAmt: totalAmt,
                 type,
@@ -348,13 +430,14 @@ const updateMileageAndLogHistory = async (mileageNo, totalAmtNum, changePointsNu
         };
 
         await dynamoDB.put(historyParams).promise();
-        log.info('마일리지 트랜젝션 성공');
+        log.info('마일리지 트랜잭션 성공');
         return { success: true, updatedAmount };
     } catch (error) {
         log.error('오류 발생:', error.message);
         throw new Error('마일리지 업데이트 실패');
     }
 };
+
 // 마일리지 사용
 // 마일리지 사용취소
 

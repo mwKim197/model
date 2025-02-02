@@ -1663,15 +1663,15 @@ async function fetchMileageData(selectedPageKey = null) {
 }
 
 // 마일리지 삭제
-async function deleteMileage(mileageNo) {
+async function deleteMileage(item) {
     // 사용자 확인
-    if (!confirm(`Mileage No: ${mileageNo}을(를) 삭제하시겠습니까?`)) {
+    if (!confirm(`Mileage No: ${item.mileageNo}을(를) 삭제하시겠습니까?`)) {
         return;
     }
 
     try {
         // 서버로 삭제 요청
-        const response = await callApi(`/mileage/${mileageNo}`, "DELETE");
+        const response = await callApi(`/mileage/${item.uniqueMileageNo}`, "DELETE");
 
         if (response.success) {
             alert("마일리지가 성공적으로 삭제되었습니다.");
@@ -1721,7 +1721,7 @@ function updateTable(items) {
         // 이벤트 리스너 추가
         deleteButton.addEventListener("click", (event) => {
             event.stopPropagation(); // 클릭 이벤트가 행으로 전달되지 않도록 방지
-            deleteMileage(item.mileageNo, item.userId);
+            deleteMileage(item);
         });
 
         // 삭제 버튼 추가
@@ -2081,6 +2081,9 @@ function historyChangePage(point, newPage) {
 async function openDetailModal(item) {
     try {
         // 리스트 데이터를 모달 기본 필드에 설정
+        // uniqueMileageNo 값을 hidden input에 저장
+        document.getElementById("updateUniqueMileageNo").value = item.uniqueMileageNo || "";
+
         document.getElementById("updateMileageNo").value = item.mileageNo || "";
         document.getElementById("updatePoints").value = item.amount || 0;
         document.getElementById("registerUpdatePoints").value = item.amount || 0;
@@ -2089,8 +2092,7 @@ async function openDetailModal(item) {
         document.getElementById("updatePassword").value = item.password || "";
         document.getElementById("updateTel").value = item.tel || "";
 
-        const historyResponse = await fetchMileageHistoryData(item.mileageNo);
-        console.log("historyResponse: ",historyResponse);
+        const historyResponse = await fetchMileageHistoryData(item.uniqueMileageNo);
 
         // 모달 열기
         const modal = document.getElementById("detailModal");
@@ -2112,6 +2114,7 @@ document.getElementById("cancelModalBtn").addEventListener("click", closeDetailM
 
 // 저장 버튼 이벤트
 document.getElementById("saveModalBtn").addEventListener("click", async () => {
+    const uniqueMileageNo = document.getElementById("updateUniqueMileageNo").value;
     const mileageNo = document.getElementById("updateMileageNo").value; // 마일리지 번호
     const password = document.getElementById("updatePassword").value; // 패스워드
     const points = parseInt(document.getElementById("registerUpdatePoints").value, 10); // 포인트
@@ -2148,7 +2151,7 @@ document.getElementById("saveModalBtn").addEventListener("click", async () => {
 
     try {
         // API 호출
-        await callApi(`/mileage/${encodeURIComponent(mileageNo)}`, "PUT", { password, points, note, tel });
+        await callApi(`/mileage/${encodeURIComponent(uniqueMileageNo)}`, "PUT", {mileageNo, password, points, note, tel });
         alert("정보가 성공적으로 저장되었습니다.");
         closeDetailModal(); // 모달 닫기
         await fetchMileageData(null); // 테이블 새로고침
