@@ -179,54 +179,49 @@ const queryWithPagination = async (tableName, keyConditionExpression, expression
     }
 };
 
-// 계정확인
+// 계정 확인
 const checkMileageExists = async (mileageNo, tel) => {
     try {
-        let result;
+        //  1. userId 기반으로 먼저 조회 (기본 테이블에서 직접 조회)
+        const params = {
+            TableName: 'model_mileage',
+            KeyConditionExpression: 'userId = :userId',
+            ExpressionAttributeValues: {
+                ':userId': user.userId
+            }
+        };
 
-        if (mileageNo) {
-            // mileageNo 인덱스를 사용하여 조회
-            const params = {
-                TableName: 'model_mileage',
-                IndexName: 'mileageNo-index', // 🔥 GSI 사용
-                KeyConditionExpression: 'mileageNo = :mileageNo',
-                ExpressionAttributeValues: {
-                    ':mileageNo': mileageNo
-                },
-                Limit: 1, // 단건 조회
-            };
-            log.info("Query params (mileageNo): ", params);
-            result = await dynamoDB.query(params).promise();
-        }
+        log.info("Query params (userId): ", params);
+        const userItems = await dynamoDB.query(params).promise();
 
-        if ((!result || result.Items.length === 0) && tel) {
-            // tel 인덱스를 사용하여 조회
-            const params = {
-                TableName: 'model_mileage',
-                IndexName: 'tel-index', // 🔥 GSI 사용
-                KeyConditionExpression: 'tel = :tel',
-                ExpressionAttributeValues: {
-                    ':tel': tel
-                },
-                Limit: 1, // 단건 조회
-            };
-            log.info("Query params (tel): ", params);
-            result = await dynamoDB.query(params).promise();
-        }
-
-        log.info("Query result: ", result);
-
-        // 조회된 결과가 있다면 uniqueMileageNo 반환
-        if (result && result.Items.length > 0) {
-            const item = result.Items[0]; // 첫 번째 결과 아이템
+        if (!userItems.Items || userItems.Items.length === 0) {
             return {
-                exists: true,
-                uniqueMileageNo: item.uniqueMileageNo, // uniqueMileageNo 정보 반환
-                item, // 추가적으로 필요한 정보 포함
+                success: false,
+                message: '해당 userId로 등록된 마일리지 정보가 없습니다.'
             };
         }
 
-        return { exists: false, uniqueMileageNo: null, item: null }; // 조회된 결과가 없으면 false 반환
+        //  2. 조회된 데이터에서 mileageNo 또는 tel이 일치하는 데이터 찾기
+        const matchedItem = userItems.Items.find(
+            item => (mileageNo && item.mileageNo === mileageNo) || (tel && item.tel === tel)
+        );
+
+        if (!matchedItem) {
+            return {
+                success: false,
+                message: '해당 마일리지 번호 또는 연락처를 찾을 수 없습니다.'
+            };
+        }
+
+        log.info("Matched item: ", matchedItem);
+
+        //  3. uniqueMileageNo 및 데이터 반환
+        return {
+            exists: true,
+            uniqueMileageNo: matchedItem.uniqueMileageNo, // 정확한 uniqueMileageNo 반환
+            item: matchedItem, // 실제 찾은 데이터 반환
+        };
+
     } catch (error) {
         log.error(`DynamoDB 마일리지 단건 조회 중 오류 발생. mileageNo: ${mileageNo}, tel: ${tel}`, error);
         throw new Error('마일리지 단건 조회 실패');
@@ -236,71 +231,65 @@ const checkMileageExists = async (mileageNo, tel) => {
 // 계정 비밀번호 확인
 const verifyMileageAndReturnPoints = async (mileageNo, tel, password) => {
     try {
-        let result;
+        //  1. userId 기반으로 먼저 조회 (기본 테이블에서 직접 조회)
+        const params = {
+            TableName: 'model_mileage',
+            KeyConditionExpression: 'userId = :userId',
+            ExpressionAttributeValues: {
+                ':userId': user.userId
+            }
+        };
+
+        log.info("Query params (userId): ", params);
+        const userItems = await dynamoDB.query(params).promise();
+
+        if (!userItems.Items || userItems.Items.length === 0) {
+            return {
+                success: false,
+                message: '해당 userId로 등록된 마일리지 정보가 없습니다.'
+            };
+        }
+
+        //  2. 조회된 데이터에서 mileageNo 또는 tel이 일치하는 데이터 찾기
+        let matchedItem = null;
 
         if (mileageNo) {
-            // mileageNo 인덱스를 사용하여 조회
-            const params = {
-                TableName: 'model_mileage',
-                IndexName: 'mileageNo-index',  // 🔥 GSI 사용
-                KeyConditionExpression: 'mileageNo = :mileageNo',
-                ExpressionAttributeValues: {
-                    ':mileageNo': mileageNo
-                },
-                Limit: 1, // 단건 조회
+            matchedItem = userItems.Items.find(item => item.mileageNo === mileageNo);
+        }
+
+        if (!matchedItem && tel) {
+            matchedItem = userItems.Items.find(item => item.tel === tel);
+        }
+
+        //  3. 일치하는 데이터가 없으면 실패 처리
+        if (!matchedItem) {
+            return {
+                success: false,
+                message: '해당 마일리지 번호를 찾을 수 없습니다.'
             };
-            log.info("Query params (mileageNo): ", params);
-            result = await dynamoDB.query(params).promise();
         }
 
-        if ((!result || result.Items.length === 0) && tel) {
-            // tel 인덱스를 사용하여 조회
-            const params = {
-                TableName: 'model_mileage',
-                IndexName: 'tel-index',  // 🔥 GSI 사용
-                KeyConditionExpression: 'tel = :tel',
-                ExpressionAttributeValues: {
-                    ':tel': tel
-                },
-                Limit: 1, // 단건 조회
+        //  4. 비밀번호 확인
+        if (matchedItem.password !== password) {
+            return {
+                success: false,
+                message: '비밀번호가 일치하지 않습니다.'
             };
-            log.info("Query params (tel): ", params);
-            result = await dynamoDB.query(params).promise();
         }
 
-        log.info("Query result: ", result);
-
-        // 조회된 아이템이 있는지 확인
-        if (result.Items && result.Items.length > 0) {
-            const mileageData = result.Items[0];
-
-            // 비밀번호 비교
-            if (mileageData.password === password) {
-                // 성공: 포인트 정보 반환
-                return {
-                    success: true,
-                    points: mileageData.amount || 0, // 포인트 정보 반환
-                    mileageNo: mileageNo,
-                };
-            } else {
-                // 실패: 비밀번호 불일치
-                return {
-                    success: false,
-                    message: '비밀번호가 일치하지 않습니다.',
-                };
-            }
-        }
-
-        // 실패: 조회된 데이터 없음
+        //  5. 포인트 정보 반환
         return {
-            success: false,
-            message: '해당 마일리지 번호를 찾을 수 없습니다.',
+            success: true,
+            points: matchedItem.amount || 0,
+            mileageNo: matchedItem.mileageNo
         };
+
     } catch (error) {
-        log.error(`DynamoDB 조회 중 오류 발생. userId: ${user.userId}, mileageNo: ${mileageNo}`, error);
+        log.error(`DynamoDB 조회 중 오류 발생. userId: ${user.userId}, mileageNo: ${mileageNo}, tel: ${tel}`, error);
         throw new Error('마일리지 정보 확인 실패');
     }
 };
+
 
 // 수정
 const updateMileageInDynamoDB = async (uniqueMileageNo, updateData) => {
