@@ -1155,58 +1155,75 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         // 마일리지 번호 검증 후 비밀번호입력으로 이동
         document.getElementById("addPoint").addEventListener("click", async () => {
-
-            // 비밀번호 검증후 마일리지 가입
+            let mileageData = data;
+            // 비밀번호 검증 후 마일리지 가입
             if (inputValue.length === passwordCount) {
                 try {
-
-                    if (inputValue.length === 0) {
-                        openAlertModal("비밀번호를 입력하세요.");
-                        return;
-                    }
-
                     // 입력값 검증
                     const regex = new RegExp(`^\\d{${passwordCount}}$`);
                     if (!regex.test(inputValue)) {
-                        openAlertModal(`비밀번호는 정확히 자리 ${passwordCount}숫자여야 합니다.`);
+                        openAlertModal(`비밀번호는 정확히 ${passwordCount}자리 숫자여야 합니다.`);
                         return;
                     }
 
-                    const mileageInfo = {...data, password: inputValue}
+                    const mileageInfo = { ...mileageData, password: inputValue };
 
-                    // 마일리지 등록 api 호출
-                    const addPoint = await window.electronAPI.saveMileageToDynamoDB(mileageInfo);
+                    // 마일리지 등록 API 호출
+                    const addPoint = await window.electronAPI?.saveMileageToDynamoDB?.(mileageInfo);
 
-                    if (addPoint.success) {
-                        const data = addPoint.data;
-                        // 컴펌 창 띄우기
-                        openModal(
-                            "마일리지 등록이 완료되었습니다. 즉시 결제하시겠습니까?",
-                            () => {
-                                modal.classList.add("hidden"); // 모달 닫기
-                                // 즉시결제 포인트 적립 O
-                                resolve({ success: true, action: ACTIONS.IMMEDIATE_PAYMENT, point: data.uniqueMileageNo }); // 확인 시 resolve 호출
-                            },
-                            () => {
-                                modal.classList.add("hidden"); // 모달 닫기
-                                //통합결제 취소
-                                resolve({ success: true, action: ACTIONS.EXIT }); // 취소 시 resolve 호출
-                            }
-                        );
-                    } else {
+                    if (!addPoint || !addPoint.success) {
                         openAlertModal("마일리지 등록에 실패하였습니다.");
+                        return;
                     }
+
+                    console.log("addPoint 결과:", addPoint);
+
+                    const data = addPoint.data || {};
+
+                    if (!data?.uniqueMileageNo) {
+                        openAlertModal("마일리지 번호를 가져올 수 없습니다.");
+                        return;
+                    }
+
+                    // 컴펌 창 띄우기
+                    openModal(
+                        "마일리지 등록이 완료되었습니다. 즉시 결제하시겠습니까?",
+                        () => {
+                            if (modal) {
+                                modal.classList.add("hidden"); // 모달 닫기
+                            } else {
+                                console.error("modal 요소가 존재하지 않습니다.");
+                            }
+
+                            if (typeof resolve === "function") {
+                                resolve({ success: true, action: ACTIONS.IMMEDIATE_PAYMENT, point: data.uniqueMileageNo });
+                            } else {
+                                console.error("resolve 함수가 정의되지 않았습니다.");
+                            }
+                        },
+                        () => {
+                            if (modal) {
+                                modal.classList.add("hidden"); // 모달 닫기
+                            } else {
+                                console.error("modal 요소가 존재하지 않습니다.");
+                            }
+
+                            if (typeof resolve === "function") {
+                                resolve({ success: true, action: ACTIONS.EXIT });
+                            } else {
+                                console.error("resolve 함수가 정의되지 않았습니다.");
+                            }
+                        }
+                    );
                 } catch (e) {
+                    console.error("예외 발생:", e);
                     openAlertModal("에러가 발생했습니다. 관리자에게 문의하세요.");
                 }
-
             } else {
-                openAlertModal(`마일리지 페스워드 번호는 ${passwordCount} 자리 입니다.`);
+                openAlertModal(`마일리지 패스워드는 ${passwordCount} 자리 입니다.`);
             }
 
         });
-    } else {
-        console.warn("알 수 없는 contentType:", contentType);
     }
 }
 
