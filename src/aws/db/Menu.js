@@ -540,8 +540,6 @@ Menu.post('/mileage-add', async (req, res) => {
     }
 });
 
-
-
 // 마일리지 목록조회
 Menu.get('/mileage', async (req, res) => {
     const { limit = "10", searchKey = '', lastEvaluatedKey } = req.query;

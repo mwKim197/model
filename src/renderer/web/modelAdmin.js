@@ -1640,29 +1640,26 @@ document.getElementById("mileageSettingBtn").addEventListener("click", async () 
 async function fetchMileageData(selectedPageKey = null) {
     const searchKey = document.getElementById("searchKey").value.trim();
     const limit = parseInt(document.getElementById("limit").value) || 10;
-
+    
     try {
         // API 요청 쿼리 생성
-        const queryString = `?limit=${limit}&searchKey=${encodeURIComponent(searchKey)}&lastEvaluatedKey=${encodeURIComponent(JSON.stringify(selectedPageKey)|| '')}`;
+        const queryString = `?limit=${limit}&searchKey=${encodeURIComponent(searchKey)}&lastEvaluatedKey=${encodeURIComponent(JSON.stringify(selectedPageKey) || '')}`;
         const response = await callApi(`/mileage${queryString}`, "GET");
 
         // 서버 응답 처리
-        const { items, total, lastEvaluatedKey: newLastEvaluatedKey, pageKeys: serverPageKeys } = response;
-
-        // 클라이언트 상태 업데이트
-        totalItems = total;
+        const { items, total, lastEvaluatedKey: newLastEvaluatedKey, pageKeys: serverPageKeys} = response;
         
         // serverPageKeys 가 있을때만 저장
         if (serverPageKeys) {
             mileagePageKeys = serverPageKeys; // 서버에서 전달된 pageKeys 저장
         }
 
+        // 클라이언트 상태 업데이트
+        totalItems = total || totalItems; // 첫 페이지에서만 total 업데이트
+        lastEvaluatedKey = newLastEvaluatedKey; // 다음 페이지 키 업데이트
 
         updateTable(items); // 테이블 데이터 갱신
         updatePagination(); // 페이지네이션 갱신
-
-        // 다음 페이지를 위한 키 갱신
-        lastEvaluatedKey = newLastEvaluatedKey;
     } catch (error) {
         console.error("Error fetching mileage data:", error);
         alert("데이터 조회 중 오류가 발생했습니다.");
@@ -1988,6 +1985,18 @@ const row = `
 
 }
 
+// 페이지네이션 초기화
+function resetHistoryPagination() {
+    page = 1; // 현재 페이지를 1로 초기화
+    totalItems = 0; // 총 아이템 개수 초기화
+    mileagePageKeys = []; // 페이지 키 배열 초기화
+
+    const paginationContainer = document.getElementById("historyPaginationContainer");
+    if (paginationContainer) {
+        paginationContainer.innerHTML = ""; // 기존 페이지네이션 버튼 초기화
+    }
+}
+
 // 페이지네이션 업데이트
 function updateHistoryPagination(point) {
     limit = parseInt(document.getElementById("limit").value) || 10;
@@ -2107,7 +2116,8 @@ async function openDetailModal(item) {
         // 기존 비밀번호 저장 (보이지 않게)
         document.getElementById("realPassword").value = item.password || "";
         document.getElementById("updatePassword").value = "****"; // 가려진 상태로 표시
-
+        // 모달열때 페이징 초기화
+        resetHistoryPagination(); // 상태 초기화
         await fetchMileageHistoryData(item.uniqueMileageNo);
 
         // 모달 열기
@@ -2121,8 +2131,12 @@ async function openDetailModal(item) {
 
 // 모달 닫기
 function closeDetailModal() {
+    // 모달닫을때 페이징 초기화
+    resetHistoryPagination(); // 상태 초기화
+    fetchMileageData(null).then(() => {});
     const modal = document.getElementById("detailModal");
     modal.classList.add("hidden");
+
 }
 document.getElementById("closeModalBtn").addEventListener("click", closeDetailModal);
 document.getElementById("cancelModalBtn").addEventListener("click", closeDetailModal);

@@ -81,16 +81,73 @@ const saveMileageToDynamoDB = async (mileageData) => {
  * @returns {Object} - 조회된 데이터와 다음 페이지 키
  */
 const getMileage = async (searchKey, limit, lastEvaluatedKey) => {
-    let keyCondition = 'userId = :userId';
-    const expressionValues = { ':userId': user.userId };
-
-    if (searchKey) {
-        keyCondition += ' AND begins_with(mileageNo, :searchKey)';
-        expressionValues[':searchKey'] = searchKey;
+    if (!user.userId) {
+        throw new Error("userId가 필요합니다.");
     }
 
-    return await queryWithPagination('model_mileage', keyCondition, expressionValues, limit, lastEvaluatedKey);
+    // Step 1: userId 기준으로 먼저 전체 데이터 조회
+    const userParams = {
+        TableName: 'model_mileage',
+        KeyConditionExpression: 'userId = :userId',
+        ExpressionAttributeValues: { ':userId': user.userId },
+        Limit: limit,
+    };
+
+    if (lastEvaluatedKey) {
+        userParams.ExclusiveStartKey = lastEvaluatedKey;
+    }
+
+    const userResult = await dynamoDB.query(userParams).promise();
+
+    // Step 2: 조회된 데이터에서 mileageNo 필터링
+    let filteredItems = userResult.Items;
+    if (searchKey) {
+        filteredItems = userResult.Items.filter(item => item.mileageNo.startsWith(searchKey));
+    }
+
+    // 전체 데이터 개수 (첫 페이지에서만 실행)
+    let totalCount = null;
+    let pageKeys = null;
+
+    if (!lastEvaluatedKey) {
+        // 전체 개수 가져오기
+        const countParams = {
+            TableName: 'model_mileage',
+            KeyConditionExpression: 'userId = :userId',
+            ExpressionAttributeValues: { ':userId': user.userId },
+            Select: 'COUNT'
+        };
+        const countResult = await dynamoDB.query(countParams).promise();
+        totalCount = countResult.Count;
+
+        // 전체 페이지 키 계산
+        pageKeys = [];
+        let currentLastEvaluatedKey = null;
+
+        do {
+            const pageParams = { ...userParams };
+            if (currentLastEvaluatedKey) {
+                pageParams.ExclusiveStartKey = currentLastEvaluatedKey;
+            }
+
+            const pageResult = await dynamoDB.query(pageParams).promise();
+            currentLastEvaluatedKey = pageResult.LastEvaluatedKey;
+
+            if (currentLastEvaluatedKey) {
+                pageKeys.push(currentLastEvaluatedKey);
+            }
+        } while (currentLastEvaluatedKey);
+    }
+
+    // 기존 리턴 형식 유지
+    return {
+        items: filteredItems, // 조회된 데이터 (필터링 적용됨)
+        total: totalCount, // 전체 데이터 개수
+        lastEvaluatedKey: userResult.LastEvaluatedKey ? JSON.stringify(userResult.LastEvaluatedKey) : null, // 다음 페이지 시작 키
+        pageKeys, // 전체 페이지 키
+    };
 };
+
 
 /**
  * DynamoDB에서 마일리지 이용내역을 조회하는 함수
