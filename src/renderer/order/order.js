@@ -683,7 +683,11 @@ let phoneIndex = 0; // 현재 입력할 위치
 function updateInputDisplay() {
     const display = document.getElementById("inputDisplay");
     if (display) {
-        display.textContent = inputValue; // 입력된 값 표시
+        if (type === "password") {
+            display.textContent = "*".repeat(inputValue.length); // 비밀번호 입력 시 * 로 표시
+        } else {
+            display.textContent = inputValue; // 일반 숫자는 그대로 표시
+        }
     }
 }
 
@@ -931,7 +935,7 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         // 비밀번호 입력 화면
         dynamicContent.innerHTML = createInputTemplate("비밀번호 입력", passwordCount);
-        type = "number";
+        type = "password";
         removeAllButtons();
 
         addButton("exit", "사용취소", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
