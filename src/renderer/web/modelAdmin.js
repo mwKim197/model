@@ -2108,7 +2108,6 @@ async function openDetailModal(item) {
         document.getElementById("realPassword").value = item.password || "";
         document.getElementById("updatePassword").value = "****"; // 가려진 상태로 표시
 
-
         await fetchMileageHistoryData(item.uniqueMileageNo);
 
         // 모달 열기
@@ -2133,9 +2132,10 @@ document.getElementById("cancelModalBtn").addEventListener("click", closeDetailM
 document.getElementById("saveModalBtn").addEventListener("click", async () => {
     const uniqueMileageNo = document.getElementById("updateUniqueMileageNo").value;
     const mileageNo = document.getElementById("updateMileageNo").value; // 마일리지 번호
-    const password = document.getElementById("updatePassword").value; // 패스워드
+    const passwordInput = document.getElementById("updatePassword").value; // 화면에 보이는 비밀번호
+    const realPassword = document.getElementById("realPassword").value; // 기존 저장된 비밀번호
     const points = parseInt(document.getElementById("registerUpdatePoints").value, 10); // 포인트
-    const tel = document.getElementById("updateTel").value; // 메모
+    const tel = document.getElementById("updateTel").value; // 연락처
     const note = document.getElementById("updateNote").value; // 메모
 
     // 입력값 검증
@@ -2144,9 +2144,8 @@ document.getElementById("saveModalBtn").addEventListener("click", async () => {
         return;
     }
 
-    // 입력값 검증
     if (!/^\d{0,11}$/.test(tel)) {
-        alert("연락처 번호는 0~12자리 숫자여야 합니다.");
+        alert("연락처 번호는 0~11자리 숫자여야 합니다.");
         return;
     }
 
@@ -2155,20 +2154,34 @@ document.getElementById("saveModalBtn").addEventListener("click", async () => {
         return;
     }
 
-    if (!password) {
-        alert("패스워드를 입력하세요.");
-        return;
-    }
+    let passwordToSave = null;
 
-    // 입력값 검증
-    if (!/^\d{4}$/.test(password)) {
-        alert("비밀번호는 정확히 4자리 숫자여야 합니다.");
-        return;
+    // 🔥 비밀번호가 변경되었을 경우에만 값 설정
+    if (passwordInput !== "****") {
+        if (!/^\d{4}$/.test(passwordInput)) {
+            alert("비밀번호는 정확히 4자리 숫자여야 합니다.");
+            return;
+        }
+        passwordToSave = passwordInput; // 변경된 비밀번호 저장
     }
 
     try {
+        // API 요청 데이터 구성
+        const requestData = {
+            mileageNo,
+            points,
+            note,
+            tel
+        };
+
+        // 🔥 비밀번호가 변경된 경우에만 API 요청에 포함
+        if (passwordToSave !== null) {
+            requestData.password = passwordToSave;
+        }
+
         // API 호출
-        await callApi(`/mileage/${encodeURIComponent(uniqueMileageNo)}`, "PUT", {mileageNo, password, points, note, tel });
+        await callApi(`/mileage/${encodeURIComponent(uniqueMileageNo)}`, "PUT", requestData);
+
         alert("정보가 성공적으로 저장되었습니다.");
         closeDetailModal(); // 모달 닫기
         await fetchMileageData(null); // 테이블 새로고침
