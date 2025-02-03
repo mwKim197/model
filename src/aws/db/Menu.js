@@ -522,10 +522,18 @@ Menu.post('/mileage-add', async (req, res) => {
         const mileageData = req.body;
         log.info("마일리지 등록 요청:", JSON.stringify(mileageData));
 
-        // DynamoDB 저장
-        const data = await saveMileageToDynamoDB(mileageData);
+        const check = await checkMileageExists(mileageData.mileageNo, mileageData.tel);
 
-        res.json({ success: true, message: '마일리지 등록 성공', data: data});
+        if (check.exists) {
+            const item = check.item;
+            const text = item.mileageNo === mileageData.mileageNo ? "마일리지 번호" : "전화번호";
+            res.json({ success: false, message: `${text} 가 중복됩니다.`, data: check});
+        } else {
+            // DynamoDB 저장
+            const data = await saveMileageToDynamoDB(mileageData);
+            res.json({ success: true, message: '마일리지 등록 성공', data: data});// DynamoDB 저장
+        }
+
     } catch (err) {
         log.error('마일리지 등록 중 오류 발생:', err);
         res.status(500).json({ success: false, message: '마일리지 등록 실패' });
@@ -560,14 +568,14 @@ Menu.put('/mileage/:uniqueMileageNo', async (req, res) => {
         const { uniqueMileageNo } = req.params;
         const {mileageNo, password, points, note, tel } = req.body;
 
-        /*// 기존 마일리지 데이터 조회
-        const mileageData = await checkMileageExists(mileageNo);
-        if (!mileageData) {
+        // 기존 마일리지 데이터 조회
+        const mileageData = await checkMileageExists(mileageNo, tel);
+        if (!mileageData.exists) {
             return res.status(404).json({ success: false, message: '마일리지 데이터가 존재하지 않습니다.' });
-        }*/
+        }
 
         // DynamoDB 데이터 업데이트
-        const updatedMileage = await updateMileageInDynamoDB(uniqueMileageNo, { points, note, password, tel});
+        const updatedMileage = await updateMileageInDynamoDB(uniqueMileageNo, { mileageNo, points, note, password, tel});
 
         res.json({ success: true, data: updatedMileage });
     } catch (err) {

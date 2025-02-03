@@ -327,16 +327,16 @@ const updateMileageInDynamoDB = async (uniqueMileageNo, updateData) => {
             newItem.password = updateData.password;
         }
 
-        // 새로운 데이터 저장
-        await dynamoDB.put({
-            TableName: 'model_mileage',
-            Item: newItem
-        }).promise();
-
         // 기존 데이터 삭제
         await dynamoDB.delete({
             TableName: 'model_mileage',
             Key: {userId: user.userId, uniqueMileageNo }
+        }).promise();
+
+        // 새로운 데이터 저장
+        await dynamoDB.put({
+            TableName: 'model_mileage',
+            Item: newItem
         }).promise();
 
         return newItem;

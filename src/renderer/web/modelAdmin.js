@@ -1914,7 +1914,6 @@ confirmRegisterBtn.addEventListener("click", async () => {
 
     try {
         const data = await callApi("/mileage-add", "POST", { mileageNo, password, amount, tel });
-
         if (data.success) {
             alert("마일리지가 성공적으로 등록되었습니다.");
             closeRegisterModal();
@@ -2084,6 +2083,13 @@ function historyChangePage(point, newPage) {
 }
 
 // 수정, 비밀번호찾기, 상세 모달 START
+
+document.getElementById("updatePassword").addEventListener("focus", function () {
+    if (this.value === "****") {
+        this.value = ""; // 포커스하면 비워서 입력 가능하게 함
+    }
+});
+
 // 모달열기
 async function openDetailModal(item) {
     try {
@@ -2096,10 +2102,14 @@ async function openDetailModal(item) {
         document.getElementById("registerUpdatePoints").value = item.amount || 0;
         document.getElementById("updateCount").value = item.count || 0;
         document.getElementById("updateNote").value = item.note || "";
-        document.getElementById("updatePassword").value = item.password || "";
         document.getElementById("updateTel").value = item.tel || "";
 
-        const historyResponse = await fetchMileageHistoryData(item.uniqueMileageNo);
+        // 기존 비밀번호 저장 (보이지 않게)
+        document.getElementById("realPassword").value = item.password || "";
+        document.getElementById("updatePassword").value = "****"; // 가려진 상태로 표시
+
+
+        await fetchMileageHistoryData(item.uniqueMileageNo);
 
         // 모달 열기
         const modal = document.getElementById("detailModal");
@@ -2135,7 +2145,7 @@ document.getElementById("saveModalBtn").addEventListener("click", async () => {
     }
 
     // 입력값 검증
-    if (!/^\d{0,12}$/.test(tel)) {
+    if (!/^\d{0,11}$/.test(tel)) {
         alert("연락처 번호는 0~12자리 숫자여야 합니다.");
         return;
     }
