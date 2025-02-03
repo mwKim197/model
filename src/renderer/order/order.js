@@ -852,10 +852,10 @@ function updateDynamicContent(contentType, data ,resolve) {
 
             if (inputValue.length >= 4 && inputValue.length <= 12) {
 
-                modal.classList.add("hidden"); // 모달 닫기
                 const pointNumberCheck = await window.electronAPI.checkMileageExists(mileageInfo);
                 if (pointNumberCheck) {
                     if (pointNumberCheck.data.exists) {
+                        modal.classList.add("hidden"); // 모달 닫기
                         const data = pointNumberCheck.data;
                         resolve({success: true, action: ACTIONS.IMMEDIATE_PAYMENT, point: data.uniqueMileageNo, discountAmount: 0}); // 확인 시 resolve 호출
                     } else {
