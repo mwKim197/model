@@ -850,7 +850,7 @@ function updateDynamicContent(contentType, data ,resolve) {
                 mileageInfo = {mileageNo: "", tel: inputValue};
             }
 
-            if (inputValue.length > 4 && inputValue.length < 12) {
+            if (inputValue.length >= 4 && inputValue.length <= 12) {
 
                 modal.classList.add("hidden"); // 모달 닫기
                 const pointNumberCheck = await window.electronAPI.checkMileageExists(mileageInfo);
@@ -884,8 +884,8 @@ function updateDynamicContent(contentType, data ,resolve) {
                 }
                 mileageInfo = {mileageNo: "", tel: inputValue};
             }
-
-            if (inputValue.length > 4 && inputValue.length < 12) {
+            console.log("inputValue: ", inputValue.length);
+            if (inputValue.length >= 4 && inputValue.length <= 12) {
 
                 const pointNumberCheck = await window.electronAPI.checkMileageExists(mileageInfo);
 
