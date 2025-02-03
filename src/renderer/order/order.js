@@ -461,7 +461,6 @@ const useMileage = async (mileageNo, totalAmtNum, pointsToUseNum) => {
     const totalAmt = cleanNumber(totalAmtNum);
     const pointsToUse = cleanNumber(pointsToUseNum);
     const note = `사용자 요청으로 ${pointsToUse}포인트 사용`;
-    console.log(note);
 
     return await window.electronAPI.updateMileageAndLogHistory(mileageNo, totalAmt, -pointsToUse, 'use', note);
 };
@@ -527,19 +526,8 @@ const payment = async () => {
 
     // 포인트 결제
     if (response.action === ACTIONS.USE_POINTS) {
-        console.log("포인트 결제response: ", response);
         try {
             if (response.point && response.discountAmount ) {
-                // 포인트 결제 시도
-                sendLogToMain('info', `마일리지 결제 실행 - 번호: ${response.point}, 결제금액: ${orderAmount}, 사용포인트 : ${response.discountAmount}`);
-                const pointResult = await useMileage(response.point, orderAmount, response.discountAmount);
-
-                if (!pointResult.success) {
-                    console.error("포인트 결제 실패:", pointResult.message);
-                    throw new Error("포인트 결제가 실패했습니다.");
-                }
-
-                console.log("포인트 결제 성공:", response.discountAmount);
 
                 // 카드 결제 처리
                 const discountAmount = response.discountAmount || 0;
@@ -550,6 +538,18 @@ const payment = async () => {
                     const payEnd = await cardPayment(price, response.discountAmount);
 
                     if (payEnd) {
+                        // 포인트 결제 시도
+                        sendLogToMain('info', `포인트 결제 실행 - 번호: ${response.point}, 결제금액: ${orderAmount}, 사용포인트 : ${response.discountAmount}`);
+                        const pointResult = await useMileage(response.point, orderAmount, response.discountAmount);
+
+                        if (!pointResult.success) {
+                            console.error("포인트 결제 실패:", pointResult.message);
+                            throw new Error("포인트 결제가 실패했습니다.");
+                        }
+
+                        console.log("포인트 결제 성공:", response.discountAmount);
+
+                        // 카드 결제 마일리지 적립
                         sendLogToMain('info', `마일리지 적립 실행 - 번호: ${response.point}, 결제금액: ${orderAmount}, 적립률 : ${earnRate}`);
                         await addMileage(response.point, totalAmount, earnRate);
 
@@ -561,12 +561,22 @@ const payment = async () => {
                             await rollbackMileage(response.point, totalAmount, earnRate);
                         }
                     } else {
-                        sendLogToMain('error', `마일리지 적립 롤백 (주문 에러)- 번호: ${response.point}, 결제금액: ${orderAmount}, 롤백포인트 : ${response.discountAmount}`);
+                        /*sendLogToMain('error', `마일리지 사용 롤백 (주문 에러)- 번호: ${response.point}, 결제금액: ${orderAmount}, 롤백포인트 : ${response.discountAmount}`);
                         // 포인트 사용후 카드결제 실패시 사용포인트 롤백
-                        await rollbackMileage(response.point, totalAmount, earnRate ,response.discountAmount);
+                        await rollbackMileage(response.point, totalAmount, earnRate ,response.discountAmount);*/
                         console.error("카드 결제가 실패했습니다.");
                     }
                 } else {
+                    // 포인트 결제 시도
+                    sendLogToMain('info', `포인트 결제 실행 - 번호: ${response.point}, 결제금액: ${orderAmount}, 사용포인트 : ${response.discountAmount}`);
+                    const pointResult = await useMileage(response.point, orderAmount, response.discountAmount);
+
+                    if (!pointResult.success) {
+                        console.error("포인트 결제 실패:", pointResult.message);
+                        throw new Error("포인트 결제가 실패했습니다.");
+                    }
+
+                    console.log("포인트 결제 성공:", response.discountAmount);
                     sendLogToMain('info', `포인트 전액결제완료 - 결제포인트: ${response.discountAmount}`);
                     await ordStart(response.discountAmount); // 주문 시작
                 }
@@ -597,7 +607,6 @@ const ACTIONS = {
     USE_POINTS: "usePoints",
 };
 
-
 // 포인트 전역 변수
 let inputCount = 12; // 입력 제한 초기 값
 const passwordCount = 4; // 비밀번호 제한 값
@@ -613,6 +622,13 @@ let isPhone = false;
 // 포인트 결제 (모달 열기)
 const pointPayment = (orderAmount) => {
     return new Promise((resolve) => {
+        const audio = new Audio('../../assets/audio/포인트를 적립 혹은 사용하시겠습니까.mp3');
+        // 음성 재생
+        if (audio) {
+            audio.play().catch((err) => {
+                console.error('Audio play error:', err);
+            });
+        }
         const modal = document.getElementById("pointModal");
         inputCount = userInfo.mileageNumber ? userInfo.mileageNumber : 12; // 입력 제한 초기화
         usePoint = 0; //
@@ -804,14 +820,6 @@ function updateDynamicContent(contentType, data ,resolve) {
         dynamicButton.appendChild(button);
     }
 
-    // 버튼 삭제 함수
-    function removeButton(id) {
-        const button = document.getElementById(id);
-        if (button) {
-            button.remove();
-        }
-    }
-
     // 버튼 전체 삭제 함수
     function removeAllButtons() {
         while (dynamicButton.firstChild) {
@@ -888,7 +896,7 @@ function updateDynamicContent(contentType, data ,resolve) {
                 }
                 mileageInfo = {mileageNo: "", tel: inputValue};
             }
-            console.log("inputValue: ", inputValue.length);
+
             if (inputValue.length >= 4 && inputValue.length <= 12) {
 
                 const pointNumberCheck = await window.electronAPI.checkMileageExists(mileageInfo);
@@ -932,6 +940,13 @@ function updateDynamicContent(contentType, data ,resolve) {
         });
 
     } else if (contentType === "passwordInput") {
+        const audio = new Audio('../../assets/audio/비밀번호 4자리를 입력해주세요.mp3');
+        // 음성 재생
+        if (audio) {
+            audio.play().catch((err) => {
+                console.error('Audio play error:', err);
+            });
+        }
 
         // 비밀번호 입력 화면
         dynamicContent.innerHTML = createInputTemplate("비밀번호 입력", passwordCount);
@@ -1035,12 +1050,29 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         addButton("pointPaymentBtn", "포인트결제", "bg-gray-400 text-white py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48");
         document.getElementById("pointPaymentBtn").addEventListener("click", () => {
+            if (inputTarget.innerText > 0) {
+                // 포인트 결제,사용할포인트번호, 사용포인트
+                resolve({success: true, action: ACTIONS.USE_POINTS, point: pointNo, discountAmount: inputTarget.innerText }); // 포인트 사용 금액 반환
+                modal.classList.add("hidden"); // 모달 닫기
+            } else {
+                const audio = new Audio('../../assets/audio/사용할 금액을 입력후 결제를 눌러주세요.mp3');
+                // 음성 재생
+                if (audio) {
+                    audio.play().catch((err) => {
+                        console.error('Audio play error:', err);
+                    });
+                }
+            }
 
-            // 포인트 결제,사용할포인트번호, 사용포인트
-            resolve({success: true, action: ACTIONS.USE_POINTS, point: pointNo, discountAmount: inputTarget.innerText }); // 포인트 사용 금액 반환
-            modal.classList.add("hidden"); // 모달 닫기
         });
     } else if (contentType === "joinPoints") {
+        const audio = new Audio('../../assets/audio/등록하실 고객번호를입력해주세요.mp3');
+        // 음성 재생
+        if (audio) {
+            audio.play().catch((err) => {
+                console.error('Audio play error:', err);
+            });
+        }
         type = "number";
         // 마일리지 가입 화면
         dynamicContent.innerHTML = createInputTemplate(`마일리지 가입 번호 입력 ${inputCount} 자리`, inputCount);
@@ -1090,6 +1122,14 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         });
     } else if (contentType === "addPhone") {
+        const audio = new Audio('../../assets/audio/연락처를 입력해주세요.mp3');
+        // 음성 재생
+        if (audio) {
+            audio.play().catch((err) => {
+                console.error('Audio play error:', err);
+            });
+        }
+
         // 입력폼 초기화
         resetInput();
         type = "phone";
@@ -1141,6 +1181,14 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         });
     } else if (contentType === "addPassword") {
+        const audio = new Audio('../../assets/audio/비밀번호 4자리를 입력해주세요.mp3');
+        // 음성 재생
+        if (audio) {
+            audio.play().catch((err) => {
+                console.error('Audio play error:', err);
+            });
+        }
+
         type = "password";
         // 마일리지 가입 화면
         dynamicContent.innerHTML = createInputTemplate("비밀번호 등록", passwordCount);
@@ -1180,13 +1228,21 @@ function updateDynamicContent(contentType, data ,resolve) {
                         return;
                     }
 
-                    console.log("addPoint 결과:", addPoint);
-
                     const data = addPoint.data || {};
 
                     if (!data?.uniqueMileageNo) {
                         openAlertModal("마일리지 번호를 가져올 수 없습니다.");
                         return;
+                    }
+
+                    if (addPoint.success || data?.uniqueMileageNo) {
+                        const audio = new Audio('../../assets/audio/가입이 완료되었습니다 확인버튼을눌러주세요.mp3');
+                        // 음성 재생
+                        if (audio) {
+                            audio.play().catch((err) => {
+                                console.error('Audio play error:', err);
+                            });
+                        }
                     }
 
                     // 컴펌 창 띄우기
@@ -1282,6 +1338,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 const digitToClear = targetIndex + phoneValues[phoneIndex].length;
                 document.getElementById(`inputDigit-${digitToClear}`).textContent = "_";
             }
+        } else if (type === "password") {
+            const inputDisplay = document.getElementById("inputDisplay");
+
+            if (inputValue.length > 0) {
+                inputValue = inputValue.slice(0, -1); // 내부 변수에서도 마지막 문자 삭제
+                inputDisplay.textContent = "*".repeat(inputValue.length); // 비밀번호 입력 시 * 로 표시; // 화면에서도 삭제
+            }
         } else {
             const inputDisplay = document.getElementById("inputDisplay");
 
@@ -1342,8 +1405,8 @@ const cardPayment = async (orderAmount, discountAmount) => {
         // 0.1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {
             setTimeout(async () => {
-                const res = await window.electronAPI.reqVcatHttp(totalAmount);
-                //const res = {success: true};
+                //const res = await window.electronAPI.reqVcatHttp(totalAmount);
+                const res = {success: true};
                 resolve(res); // 결제 결과 반환
             }, 100);
         });
