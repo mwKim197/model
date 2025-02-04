@@ -532,10 +532,11 @@ const payment = async () => {
                 // 카드 결제 처리
                 const discountAmount = response.discountAmount || 0;
                 const totalAmount = orderAmount - discountAmount;
-
+                console.log(price);
+                console.log(response.discountAmount);
                 if (totalAmount > 0) {
                     sendLogToMain('info', `포인트 잔액 카드결제 - 적립 마일리지번호: ${response.point}`);
-                    const payEnd = await cardPayment(price, response.discountAmount);
+                    const payEnd = await cardPayment(orderAmount, response.discountAmount);
 
                     if (payEnd) {
                         // 포인트 결제 시도
@@ -1050,9 +1051,12 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         addButton("pointPaymentBtn", "포인트결제", "bg-gray-400 text-white py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48");
         document.getElementById("pointPaymentBtn").addEventListener("click", () => {
-            if (inputTarget.innerText > 0) {
+            // 포인트 포멧 to number
+            const usePoint = cleanNumber(inputTarget.innerText);
+
+            if (usePoint > 0) {
                 // 포인트 결제,사용할포인트번호, 사용포인트
-                resolve({success: true, action: ACTIONS.USE_POINTS, point: pointNo, discountAmount: inputTarget.innerText }); // 포인트 사용 금액 반환
+                resolve({success: true, action: ACTIONS.USE_POINTS, point: pointNo, discountAmount: usePoint }); // 포인트 사용 금액 반환
                 modal.classList.add("hidden"); // 모달 닫기
             } else {
                 const audio = new Audio('../../assets/audio/사용할 금액을 입력후 결제를 눌러주세요.mp3');
@@ -1379,6 +1383,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+
 // 카드 결제
 const cardPayment = async (orderAmount, discountAmount) => {
     const audio = new Audio('../../assets/audio/카드결제를 선택하셨습니다 카드를 단말기에 넣어주세요.mp3');
@@ -1405,8 +1410,8 @@ const cardPayment = async (orderAmount, discountAmount) => {
         // 0.1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {
             setTimeout(async () => {
-                //const res = await window.electronAPI.reqVcatHttp(totalAmount);
-                const res = {success: true};
+                const res = await window.electronAPI.reqVcatHttp(totalAmount);
+                //const res = {success: true};
                 resolve(res); // 결제 결과 반환
             }, 100);
         });
