@@ -365,7 +365,7 @@ const confirmButton = document.getElementById('confirmButton');
 // 모달 열기 함수
 const openModal = (message, onConfirm, onCancel) => {
     const modalMessage = confirmModal.querySelector('h2');
-    modalMessage.innerText = message; // 모달 메시지 설정
+    modalMessage.innerHTML = message; // 모달 메시지 설정
     confirmModal.classList.remove('hidden'); // 모달 보이기
 
     // 이전 이벤트 리스너 제거 (중복 방지)
@@ -1251,7 +1251,7 @@ function updateDynamicContent(contentType, data ,resolve) {
 
                     // 컴펌 창 띄우기
                     openModal(
-                        "마일리지 등록이 완료되었습니다. 즉시 결제하시겠습니까?",
+                        "마일리지 등록이 완료되었습니다.<br>즉시 결제하시겠습니까?",
                         () => {
                             if (modal) {
                                 modal.classList.add("hidden"); // 모달 닫기
