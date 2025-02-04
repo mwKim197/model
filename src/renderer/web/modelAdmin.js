@@ -1637,8 +1637,7 @@ document.getElementById("mileageSettingBtn").addEventListener("click", async () 
 
 
 // 마일리지 데이터 조회
-async function fetchMileageData(selectedPageKey = null) {
-    const searchKey = document.getElementById("searchKey").value.trim();
+async function fetchMileageData(searchKey, selectedPageKey = null) {
     const limit = parseInt(document.getElementById("limit").value) || 10;
     
     try {
@@ -1657,9 +1656,8 @@ async function fetchMileageData(selectedPageKey = null) {
         // 클라이언트 상태 업데이트
         totalItems = total || totalItems; // 첫 페이지에서만 total 업데이트
         lastEvaluatedKey = newLastEvaluatedKey; // 다음 페이지 키 업데이트
-
         updateTable(items); // 테이블 데이터 갱신
-        updatePagination(); // 페이지네이션 갱신
+        updatePagination(searchKey); // 페이지네이션 갱신
     } catch (error) {
         console.error("Error fetching mileage data:", error);
         alert("데이터 조회 중 오류가 발생했습니다.");
@@ -1679,7 +1677,7 @@ async function deleteMileage(item) {
 
         if (response.success) {
             alert("마일리지가 성공적으로 삭제되었습니다.");
-            await fetchMileageData(null); // 테이블 새로고침
+            await fetchMileageData("",null); // 테이블 새로고침
         } else {
             alert(response.message || "삭제에 실패했습니다.");
         }
@@ -1748,7 +1746,7 @@ function updateTable(items) {
 }
 
 // 페이지네이션 업데이트
-function updatePagination() {
+function updatePagination(searchKey) {
     limit = parseInt(document.getElementById("limit").value) || 10;
     const totalPages = Math.ceil(totalItems / limit);
     const paginationContainer = document.getElementById("paginationContainer");
@@ -1764,7 +1762,7 @@ function updatePagination() {
     prevButton.className = "bg-gray-300 text-gray-700 px-2 py-1 rounded hover:bg-gray-400 disabled:opacity-50";
     prevButton.disabled = page === 1;
     prevButton.innerText = "이전";
-    prevButton.addEventListener("click", () => changePage(page - 1));
+    prevButton.addEventListener("click", () => changePage(searchKey,page - 1));
     paginationContainer.appendChild(prevButton);
 
     // 페이지 번호 버튼
@@ -1779,7 +1777,7 @@ function updatePagination() {
         const firstPageButton = document.createElement("button");
         firstPageButton.className = "bg-gray-300 text-gray-700 px-2 py-1 rounded hover:bg-gray-400";
         firstPageButton.innerText = "1";
-        firstPageButton.addEventListener("click", () => changePage(1));
+        firstPageButton.addEventListener("click", () => changePage(searchKey,1));
         paginationContainer.appendChild(firstPageButton);
 
         if (startPage > 2) {
@@ -1797,7 +1795,7 @@ function updatePagination() {
         pageButton.innerText = i.toString();
         pageButton.setAttribute("aria-current", i === page ? "page" : null);
         // 올바른 페이지 번호를 changePage에 전달
-        pageButton.addEventListener("click", () => changePage(i));
+        pageButton.addEventListener("click", () => changePage(searchKey,i));
         paginationContainer.appendChild(pageButton);
     }
 
@@ -1812,7 +1810,7 @@ function updatePagination() {
         const lastPageButton = document.createElement("button");
         lastPageButton.className = "bg-gray-300 text-gray-700 px-2 py-1 rounded hover:bg-gray-400";
         lastPageButton.innerText = totalPages.toString();
-        lastPageButton.addEventListener("click", () => changePage(totalPages));
+        lastPageButton.addEventListener("click", () => changePage(searchKey,totalPages));
         paginationContainer.appendChild(lastPageButton);
     }
 
@@ -1821,12 +1819,12 @@ function updatePagination() {
     nextButton.className = "bg-gray-300 text-gray-700 px-2 py-1 rounded hover:bg-gray-400 disabled:opacity-50";
     nextButton.disabled = page === totalPages;
     nextButton.innerText = "다음";
-    nextButton.addEventListener("click", () => changePage(page + 1));
+    nextButton.addEventListener("click", () => changePage(searchKey,page + 1));
     paginationContainer.appendChild(nextButton);
 }
 
 // 페이지 변경 함수
-function changePage(newPage) {
+function changePage(searchKey,newPage) {
     const totalPages = Math.ceil(totalItems / limit);
 
     if (newPage < 1 || newPage > totalPages) {
@@ -1838,11 +1836,14 @@ function changePage(newPage) {
     // 현재 페이지에 맞는 lastEvaluatedKey 가져오기
     const lastKey = mileagePageKeys[page-2] || null;
     // API 호출
-    fetchMileageData(lastKey).then(); // 새 페이지 데이터 가져오기
+    fetchMileageData(searchKey, lastKey).then(); // 새 페이지 데이터 가져오기
 }
 
 // 검색 버튼 클릭 이벤트
-document.getElementById("searchMileageBtn").addEventListener("click", ()=>{fetchMileageData(null)});
+document.getElementById("searchMileageBtn").addEventListener("click", ()=>{
+    const searchKey = document.getElementById("searchKey").value.trim();
+    fetchMileageData(searchKey);
+});
 
 // 등록 모달 START
 const registerModal = document.getElementById("registerModal");
@@ -1914,7 +1915,7 @@ confirmRegisterBtn.addEventListener("click", async () => {
         if (data.success) {
             alert("마일리지가 성공적으로 등록되었습니다.");
             closeRegisterModal();
-            await fetchMileageData(null); // 테이블 새로고침
+            await fetchMileageData("",null); // 테이블 새로고침
         } else {
             alert(data.message || "등록에 실패했습니다.");
         }
@@ -2133,7 +2134,7 @@ async function openDetailModal(item) {
 function closeDetailModal() {
     // 모달닫을때 페이징 초기화
     resetHistoryPagination(); // 상태 초기화
-    fetchMileageData(null).then(() => {});
+    fetchMileageData("",null).then(() => {});
     const modal = document.getElementById("detailModal");
     modal.classList.add("hidden");
 
@@ -2198,7 +2199,7 @@ document.getElementById("saveModalBtn").addEventListener("click", async () => {
 
         alert("정보가 성공적으로 저장되었습니다.");
         closeDetailModal(); // 모달 닫기
-        await fetchMileageData(null); // 테이블 새로고침
+        await fetchMileageData("",null); // 테이블 새로고침
     } catch (error) {
         console.error("Error:", error);
         alert("정보 저장 중 오류가 발생했습니다.");
@@ -2220,7 +2221,7 @@ function resetForm(fieldIds) {
 
 // 초기 데이터 로드
 document.addEventListener("DOMContentLoaded", () => {
-    fetchMileageData(null);
+    fetchMileageData("", null);
 });
 
 

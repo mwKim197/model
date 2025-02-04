@@ -90,8 +90,9 @@ const getMileage = async (searchKey, limit, lastEvaluatedKey) => {
         TableName: 'model_mileage',
         KeyConditionExpression: 'userId = :userId',
         ExpressionAttributeValues: { ':userId': user.userId },
-        Limit: limit,
+        ScanIndexForward: false,  // 내림차순 정렬
     };
+
 
     if (lastEvaluatedKey) {
         userParams.ExclusiveStartKey = lastEvaluatedKey;
@@ -105,45 +106,36 @@ const getMileage = async (searchKey, limit, lastEvaluatedKey) => {
         filteredItems = userResult.Items.filter(item => item.mileageNo.startsWith(searchKey));
     }
 
-    // 전체 데이터 개수 (첫 페이지에서만 실행)
-    let totalCount = null;
+    // ✅ limit 개수만큼 데이터 선택
+    const paginatedItems = filteredItems.slice(0, limit);
+
+    // ✅ 첫 페이지 여부 확인
+    const isFirstPage = !lastEvaluatedKey;
+
+    // ✅ 첫 페이지일 때만 `total`과 `pageKeys` 반환
+    const totalCount = isFirstPage ? filteredItems.length : undefined;
+
+    // 전체 페이지 키 계산
     let pageKeys = null;
 
     if (!lastEvaluatedKey) {
-        // 전체 개수 가져오기
-        const countParams = {
-            TableName: 'model_mileage',
-            KeyConditionExpression: 'userId = :userId',
-            ExpressionAttributeValues: { ':userId': user.userId },
-            Select: 'COUNT'
-        };
-        const countResult = await dynamoDB.query(countParams).promise();
-        totalCount = countResult.Count;
-
-        // 전체 페이지 키 계산
         pageKeys = [];
-        let currentLastEvaluatedKey = null;
 
-        do {
-            const pageParams = { ...userParams };
-            if (currentLastEvaluatedKey) {
-                pageParams.ExclusiveStartKey = currentLastEvaluatedKey;
+        if (isFirstPage) {
+            for (let i = limit - 1; i < filteredItems.length; i += limit) {
+                pageKeys.push({
+                    userId: user.userId,
+                    uniqueMileageNo: filteredItems[i].uniqueMileageNo
+                });
             }
-
-            const pageResult = await dynamoDB.query(pageParams).promise();
-            currentLastEvaluatedKey = pageResult.LastEvaluatedKey;
-
-            if (currentLastEvaluatedKey) {
-                pageKeys.push(currentLastEvaluatedKey);
-            }
-        } while (currentLastEvaluatedKey);
+        }
     }
 
-    // 기존 리턴 형식 유지
+    // ✅ 기존 리턴 형식 유지
     return {
-        items: filteredItems, // 조회된 데이터 (필터링 적용됨)
-        total: totalCount, // 전체 데이터 개수
-        lastEvaluatedKey: userResult.LastEvaluatedKey ? JSON.stringify(userResult.LastEvaluatedKey) : null, // 다음 페이지 시작 키
+        items: paginatedItems, // 조회된 데이터 (필터링 적용됨)
+        total: totalCount, // 🔥 필터링된 데이터 개수 반영
+        lastEvaluatedKey: userResult.LastEvaluatedKey ? JSON.stringify(userResult.LastEvaluatedKey) : null,
         pageKeys, // 전체 페이지 키
     };
 };
