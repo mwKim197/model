@@ -1,6 +1,6 @@
 {
   "name": "model",
-  "version": "1.8.8",
+  "version": "1.8.9",
   "main": "src/main.js",
   "scripts": {
     "start": "npx tailwindcss build src/styles/tailwind.css -o src/styles/output.css && set NODE_ENV=development && electron .",
@@ -54,6 +54,7 @@
     "electron-store": "^10.0.0",
     "electron-updater": "^6.3.9",
     "express": "^4.21.1",
+    "follow-redirects": "^1.15.9",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
     "nat-upnp": "^1.1.1",
