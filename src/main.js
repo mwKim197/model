@@ -1,5 +1,5 @@
-const express = require('express');
-const { app, BrowserWindow } = require('electron');
+//const express = require('express');
+const { app, BrowserWindow} = require('electron');
 const path = require('path');
 const { initializeUpdater } = require('./updater');
 const { createMainWindow } = require('./windows/mainWindow');
@@ -10,14 +10,15 @@ const { setupPortForwarding } = require('./services/portForwarding');
 const { getBasePath } = require(path.resolve(__dirname, './aws/s3/utils/cacheDirManager'));
 const log = require('./logger');
 const fs = require('fs');
+const {setupCloudflare} = require("./cloudflare/cloudflared");
 
 // 디렉토리 확인 및 생성
 const basePath = getBasePath(); // getBasePath 함수 호출
 if (!fs.existsSync(basePath)) {
     fs.mkdirSync(basePath, { recursive: true });
-    console.log(`[DEBUG] Created directory: ${basePath}`);
+    log.info(`[DEBUG] Created directory: ${basePath}`);
 } else {
-    console.log(`[DEBUG] Directory already exists: ${basePath}`);
+    log.info(`[DEBUG] Directory already exists: ${basePath}`);
 }
 
 async function initializeApp() {
@@ -34,6 +35,12 @@ async function initializeApp() {
         // 4. Electron 메인 창 생성
         const mainWindow = await createMainWindow();
         log.info('[DEBUG] Main window created.');
+
+        //[TODO] 테스트 이후적용  `electron-store`의 URL을 기반으로 Cloudflare Tunnel 설정 - window 생성이후에 실행
+        // ✅ `userData.apiUrl` 가져오기
+        // const userData = await mainWindow.webContents.executeJavaScript('window.electronAPI.getUserData()');
+       
+        // await setupCloudflare(userData.userId);
 
         // 5. Serial Polling 시작
         serialPolling.start();
