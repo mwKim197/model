@@ -32,13 +32,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('limit-input').value = userInfo.limitCount ? userInfo.limitCount: 20;
             document.getElementById('earnMileage').value = userInfo.earnMileage ? userInfo.earnMileage : 0;
             document.getElementById('mileageInput').value = userInfo.mileageNumber ? userInfo.mileageNumber : 0;
+            const payType = document.getElementById("payType");
             const phoneCheckBox = document.getElementById("phoneNumberCheck");
 
             if (phoneCheckBox) {
                 phoneCheckBox.checked = Boolean(userInfo.isPhone);
+
+                if (phoneNumberCheck.checked) {
+                    updateInputState(mileageInput, true, '11', '휴대폰 번호 (11로 고정)');
+                } else {
+                    updateInputState(mileageInput, false, '', 'Mileage 번호 입력 (4~12)');
+                    validateMileageValue(mileageInput); // 검증 다시 적용
+                }
             } else {
                 console.warn('phoneNumberCheck checkbox not found.');
             }
+
+            if (payType) {
+                payType.checked = Boolean(userInfo.payType);
+
+                const elementsToToggle = [mileageInput, phoneNumberCheck, earnMileage, searchKey, searchMileageBtn];
+                toggleDisabled(elementsToToggle, payType.checked);
+            } else {
+                console.warn('payType checkbox not found.');
+            }
+
             // 초기 어드민 카테고리 리스트 렌더링
             renderCategoryList(userInfo.category);
         } else {
@@ -298,14 +316,25 @@ const createMenuHTML = (menuData, categories) => {
                     </div>
                     <!-- 품절 -->
                     <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
-                        <label class="text-sm text-gray-600">empty</label>
+                        <label class="text-sm text-gray-600">품절여부</label>
                         <fieldset class="flex items-center gap-2">
                             <label for="emptyYes" class="flex items-center gap-2">
-                                <input type="radio" id="emptyYes" name="empty-${menuData.menuId}" value="yes" ${menuData.empty === 'yes' ? 'checked' : ''} disabled>
+                                <input type="radio" name="empty-${menuData.menuId}" value="yes" ${menuData.empty === 'yes' ? 'checked' : ''} disabled>
                                 <span>Yes</span>
                             </label>
                             <label for="emptyNo" class="flex items-center gap-2">
-                                <input type="radio" id="emptyNo" name="empty-${menuData.menuId}" value="no" ${menuData.empty === 'no' ? 'checked' : ''} disabled>
+                                <input type="radio" name="empty-${menuData.menuId}" value="no" ${menuData.empty === 'no' ? 'checked' : ''} disabled>
+                                <span>No</span>
+                            </label>
+                        </fieldset>
+                        <label class="text-sm text-gray-600">일반상품여부</label>
+                        <fieldset class="flex items-center gap-2">
+                            <label for="cupYes" class="flex items-center gap-2">
+                                <input type="radio" name="cupYn-${menuData.menuId}" value="yes" ${menuData.cupYn === 'yes' ? 'checked' : ''} disabled>
+                                <span>Yes</span>
+                            </label>
+                            <label for="cupNo" class="flex items-center gap-2">
+                                <input type="radio" name="cupYn-${menuData.menuId}" value="no" ${menuData.cupYn === 'no' ? 'checked' : ''} disabled>
                                 <span>No</span>
                             </label>
                         </fieldset>
@@ -626,6 +655,58 @@ document.getElementById('itemContainer').addEventListener('click', (event) => {
         fieldset.remove();
     }
 });
+
+// 신규등록 시작이벤트 등록
+document.addEventListener('DOMContentLoaded', () => {
+    const cupYes = document.getElementById('cupYes');
+    const cupNo = document.getElementById('cupNo');
+
+    const cupPlastic = document.getElementById('cupPlastic');
+    const cupPaper = document.getElementById('cupPaper');
+
+    const iceYes = document.getElementById('iceYes');
+    const iceNo = document.getElementById('iceNo');
+
+    const iceTime = document.getElementById('iceTime');
+    const waterTime = document.getElementById('waterTime');
+
+    function setDisabledState(isDisabled, ...elements) {
+        elements.forEach(element => {
+            element.disabled = isDisabled;
+        });
+    }
+
+    function resetValues(...elements) {
+        elements.forEach(element => {
+            /*if (element.type === 'radio') {
+                element.checked = false; // 라디오 버튼 선택 해제
+            } else */
+            if (element.type === 'number') {
+                element.value = 0; // 숫자 입력 필드 초기화
+            }
+        });
+    }
+
+    // ✅ 컵 라디오 변경 시 실행
+    document.querySelectorAll('input[name="cupYn"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            if (cupNo.checked) {
+                // "Yes" 선택 시: 모든 요소 활성화
+                setDisabledState(false, cupPlastic, cupPaper, iceYes, iceNo, iceTime, waterTime);
+                // 기본값 설정
+                cupPlastic.checked = true;
+                iceYes.checked = true;
+
+            } else {
+                // "No" 선택 시: 모든 요소 비활성화 및 초기화
+                setDisabledState(true, cupPlastic, cupPaper, iceYes, iceNo, iceTime, waterTime);
+                resetValues(cupPlastic, cupPaper, iceYes, iceNo, iceTime, waterTime);
+            }
+        });
+    });
+});
+
+
 /* [MENU SET] 등록 ITEM 추가, 삭제 END */
 
 /* [MENU SET] 등록 ITEM 동적 등록 START */
@@ -725,6 +806,7 @@ tab2.querySelector('#saveItemBtn').addEventListener('click', async () => {
         cup: tab2.querySelector('input[name="cup"]:checked')?.value || '',
         iceYn: tab2.querySelector('input[name="iceYn"]:checked')?.value || '',
         empty: tab2.querySelector('input[name="empty"]:checked')?.value || 'no',
+        cupYn: tab2.querySelector('input[name="cupYn"]:checked')?.value || 'no',
         iceTime: tab2.querySelector('#iceTime').value || '0',
         waterTime: tab2.querySelector('#waterTime').value || '0',
         state: {
@@ -867,6 +949,12 @@ window.handleUpdateClick = function (menuId) {
     document.querySelector(`#cup${menuItem.cup === "plastic" ? "Plastic" : "Paper"}`).checked = true;
     document.querySelector(`#ice${menuItem.iceYn === "yes" ? "Yes" : "No"}`).checked = true;
 
+    // 품절
+    document.querySelector(`#empty${menuItem.empty === "yes" ? "Yes" : "No"}`).checked = true;
+
+    // 일반상품
+    document.querySelector(`#cup${menuItem.cupYn === "yes" ? "Yes" : "No"}`).checked = true;
+
     // 상태 정보 설정
     document.getElementById('new').value = menuItem.state.new;
     document.getElementById('event').value = menuItem.state.event;
@@ -899,7 +987,6 @@ window.handleUpdateClick = function (menuId) {
     // 수정 버튼 클릭 이벤트
     updateButton.addEventListener('click', async () => {
         const menuData = collectFormData(menuId); // 데이터 수집
-        console.log(menuData);
         const fileInput = document.getElementById('fileInput'); // 이미지 파일 input
         const formData = new FormData();
 
@@ -1003,8 +1090,9 @@ function collectFormData(menuId) {
         price: parseFloat(document.getElementById('price').value),
         iceTime: parseFloat(document.getElementById('iceTime').value),
         waterTime: parseFloat(document.getElementById('waterTime').value),
-        empty: document.querySelector('input[name="empty"]:checked')?.value || 'no',
         cup: document.querySelector('input[name="cup"]:checked').value,
+        empty: document.querySelector('input[name="empty"]:checked')?.value || 'no',
+        cupYn: document.querySelector('input[name="cupYn"]:checked').value,
         iceYn: document.querySelector('input[name="iceYn"]:checked').value,
         state: {
             new: document.getElementById('new').value,
@@ -1569,6 +1657,7 @@ async function putMileageSetting() {
     const earnMileage = document.getElementById("earnMileage").value;
     const mileageInput = document.getElementById("mileageInput").value;
     const phoneNumberCheck = document.getElementById("phoneNumberCheck").checked; // 체크 여부 가져오기
+    const payType = document.getElementById("payType").checked; // 체크 여부 가져오기
 
     // 벨리데이션 체크
     if (!earnMileage || earnMileage < 0 || earnMileage >= 99) {
@@ -1584,6 +1673,7 @@ async function putMileageSetting() {
         earnMileage: parseInt(earnMileage, 10),
         mileageNumber: parseInt(mileageInput, 10), // Mileage 값 추가
         isPhone: phoneNumberCheck, // 체크 여부 추가
+        payType: payType,
     };
 
     console.log("저장된 데이터:", data);
@@ -1600,8 +1690,40 @@ async function putMileageSetting() {
 }
 
 // 마일리지 자리수 설정
+const payType = document.getElementById('payType');
 const mileageInput = document.getElementById('mileageInput');
 const phoneNumberCheck = document.getElementById('phoneNumberCheck');
+const earnMileage = document.getElementById('earnMileage');
+const searchKey = document.getElementById('searchKey');
+const searchMileageBtn = document.getElementById('searchMileageBtn');
+
+// 마일리지 미사용토글시 element disabled 처리
+function toggleDisabled(elements, isDisabled) {
+    elements.forEach(element => element.disabled = isDisabled);
+}
+
+// payType 체크시 마일리지 미사용 적용
+payType.addEventListener('change', () => {
+    const elementsToToggle = [mileageInput, phoneNumberCheck, earnMileage, searchKey, searchMileageBtn];
+    toggleDisabled(elementsToToggle, payType.checked);
+});
+
+// 입력 필드의 상태를 변경하는 함수
+function updateInputState(input, isDisabled, value = '', placeholder = '') {
+    input.value = value;
+    input.disabled = isDisabled;
+    input.placeholder = placeholder;
+}
+
+// 체크박스 상태 변경 시 동작
+phoneNumberCheck.addEventListener('change', () => {
+    if (phoneNumberCheck.checked) {
+        updateInputState(mileageInput, true, '11', '휴대폰 번호 (11로 고정)');
+    } else {
+        updateInputState(mileageInput, false, '', 'Mileage 번호 입력 (4~12)');
+        validateMileageValue(mileageInput); // 검증 다시 적용
+    }
+})
 
 // 입력값 검증 함수: 4~12 숫자 제한
 const validateMileageValue = (input) => {
@@ -1613,22 +1735,6 @@ const validateMileageValue = (input) => {
 
 // 초기 상태: Mileage는 4~12 사이의 값만 입력 가능
 validateMileageValue(mileageInput);
-
-// 체크박스 상태 변경 시 동작
-phoneNumberCheck.addEventListener('change', () => {
-    if (phoneNumberCheck.checked) {
-        // 체크된 경우: 11로 고정
-        mileageInput.value = '11'; // 11로 값 고정
-        mileageInput.disabled = true; // 입력 불가
-        mileageInput.placeholder = '휴대폰 번호 (11로 고정)';
-    } else {
-        // 체크 해제: 4~12 숫자 입력 가능
-        mileageInput.value = ''; // 초기화
-        mileageInput.disabled = false; // 입력 가능
-        mileageInput.placeholder = 'Mileage 번호 입력 (4~12)';
-        validateMileageValue(mileageInput); // 검증 다시 적용
-    }
-});
 
 // 마일리지 설정 업데이트 버튼 이벤트 등록
 document.getElementById("mileageSettingBtn").addEventListener("click", async () => {

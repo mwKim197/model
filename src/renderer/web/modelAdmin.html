@@ -168,14 +168,25 @@
                                 </div>
                                 <!-- 품절 -->
                                 <div class="item flex flex-col bg-gray-200 border border-gray-300 rounded-md p-2">
-                                    <label class="text-sm text-gray-600">진열여부</label>
+                                    <label class="text-sm text-gray-600">품절여부</label>
                                     <fieldset class="flex items-center gap-2">
                                         <label for="emptyYes" class="flex items-center gap-2">
-                                            <input type="radio" id="emptyYes" name="empty" value="yes" >
+                                            <input type="radio" id="emptyYes" name="empty" value="yes">
                                             <span>Yes</span>
                                         </label>
                                         <label for="emptyNo" class="flex items-center gap-2">
                                             <input type="radio" id="emptyNo" name="empty" value="no" checked>
+                                            <span>No</span>
+                                        </label>
+                                    </fieldset>
+                                    <label class="text-sm text-gray-600">일반상품여부</label>
+                                    <fieldset class="flex items-center gap-2">
+                                        <label for="cupYes" class="flex items-center gap-2">
+                                            <input type="radio" id="cupYes" name="cupYn" value="yes" >
+                                            <span>Yes</span>
+                                        </label>
+                                        <label for="cupNo" class="flex items-center gap-2">
+                                            <input type="radio" id="cupNo" name="cupYn" value="no" checked>
                                             <span>No</span>
                                         </label>
                                     </fieldset>
@@ -356,6 +367,14 @@
                     <div class="flex flex-wrap gap-4 mb-6">
                         <!-- 첫 번째 그룹 -->
                         <div class="flex items-center gap-4 flex-wrap">
+                            <label class="flex items-center gap-2">
+                                <input
+                                        type="checkbox"
+                                        id="payType"
+                                        class="rounded border-gray-300 text-blue-500 focus:ring focus:ring-blue-300"
+                                />
+                                <span class="text-gray-600 text-sm">마일리지 미사용</span>
+                            </label>
                             <div class="flex items-center gap-2">
                                 <input
                                         type="text"

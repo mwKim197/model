@@ -34,6 +34,7 @@ const startOrder = async (data) => {
         // 메뉴와 주문 데이터가 정상적으로 로드되었으면 주문 처리 시작
         if (menuData.length > 0) {
             log.info("주문 제조...");
+            log.info("주문 목록: ", orderData);
             await processQueue(orderData, menuData).catch((error) => {
                 log.error("Error in startOrder:", error.message);
                 throw error; // 명시적으로 에러를 다시 던짐
@@ -67,10 +68,10 @@ const processQueue = async (orderList, menuList) => {
                 
                 // 메뉴 명을 넣어준다
                 menuName = recipe.name;
+                eventEmitter.emit('order-update', { menu: menuName, status: 'completed', message: '주문 시작되었습니다.' });
+                if(recipe.cupYn === "yes") return
                 log.info(`주문 처리 시작 (${i + 1}/${order.count}): ${recipe.name} - [메뉴 ID: ${recipe.menuId}, 주문 ID: ${order.orderId}]`);
                 // 주문 데이터 처리 시작
-                eventEmitter.emit('order-update', { menu: menuName, status: 'processing', message: '주문 시작되었습니다.' });
-
                 try {
                     await processOrder(recipe); // 레시피 처리
                     log.info(`주문 처리 완료 (${i + 1}/${order.count}): ${recipe.name} - [메뉴 ID: ${recipe.menuId}, 주문 ID: ${order.orderId}]`);
@@ -91,7 +92,9 @@ const processQueue = async (orderList, menuList) => {
 // 주문 처리
 const processOrder = async (recipe) => {
     try {
-        await dispenseCup(recipe);
+        log.info("주문처리중 레시피: ", recipe);
+        if (recipe.cupYn === 'yes' ) return;
+        if (!recipe.cupYn || recipe.cupYn === 'no' ) await dispenseCup(recipe);
 
         if (recipe.iceYn === 'yes') await dispenseIce(recipe);
 

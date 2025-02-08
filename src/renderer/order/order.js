@@ -370,10 +370,17 @@ const openModal = (message, onConfirm, onCancel) => {
 
     // 이전 이벤트 리스너 제거 (중복 방지)
     const newConfirmButton = confirmButton.cloneNode(true);
-    confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
+
+    if (confirmButton || confirmButton.parentNode) {
+        confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
+    }
+
 
     const newCancelButton = cancelButton.cloneNode(true);
-    cancelButton.parentNode.replaceChild(newCancelButton, cancelButton);
+
+    if (cancelButton || cancelButton.parentNode) {
+        cancelButton.parentNode.replaceChild(newCancelButton, cancelButton);
+    }
 
     // 확인 버튼 이벤트 추가
     newConfirmButton.addEventListener('click', () => {
@@ -476,21 +483,44 @@ const rollbackMileage = async (mileageNo, totalAmtNum, earnRate, rollBackPointNu
 
 // 통합 결제
 const payment = async () => {
+    let payType; // 결제 타입 기본값 포인트 결제
     let earnRate = userInfo.earnMileage; // 적립률
+    let response = 0;
     let price = 0;
+
     orderList.map((order) => {
         price += Number(order.price) * order.count; // 수량만큼 가격 계산
     });
 
     const orderAmount = price; // 주문 금액
-    let response = await pointPayment(orderAmount); // 포인트 모달 띄우기 및 포인트 사용 금액 반환
 
-    // 결제 취소
-    if (response.action === "exit") return;
+    // 결제 타입 지정
+    if (userInfo.payType) {
+        payType = ACTIONS.USE_CARD;
+    } else {
+        response = await pointPayment(orderAmount); // 포인트 모달 띄우기 및 포인트 사용 금액 반환
+        payType = response.action;
 
-    // 즉시결제 타입
-    if (response.action === ACTIONS.IMMEDIATE_PAYMENT) {
-        console.log("response: ", response);
+        // 결제 취소
+        if (payType === "exit") return;
+    }
+
+    // 카드결제
+    if (payType === ACTIONS.USE_CARD) {
+        sendLogToMain('info', `카드 결제 시작`);
+        // 포인트 없을 경우 바로 카드결제
+        const payEnd = await cardPayment(orderAmount, 0);
+
+        if (payEnd) {
+            await ordStart(); // 주문 시작
+        } else {
+            console.error("카드 결제가 실패했습니다.");
+        }
+    }
+
+    // 포인트 즉시결제 타입
+    if (payType === ACTIONS.IMMEDIATE_PAYMENT) {
+
         // 포인트 번호가 있을경우 적립
         if (response.point) {
             sendLogToMain('info', `적립 마일리지번호: ${response.point}`);
@@ -512,7 +542,7 @@ const payment = async () => {
             }
 
         } else {
-            sendLogToMain('info', `미적립 결제 시작`);
+            sendLogToMain('info', `포인트 미적립 결제 시작`);
             // 포인트 없을 경우 바로 카드결제
             const payEnd = await cardPayment(orderAmount, 0);
 
@@ -525,15 +555,14 @@ const payment = async () => {
     }
 
     // 포인트 결제
-    if (response.action === ACTIONS.USE_POINTS) {
+    if (payType === ACTIONS.USE_POINTS) {
         try {
             if (response.point && response.discountAmount ) {
 
                 // 카드 결제 처리
                 const discountAmount = response.discountAmount || 0;
                 const totalAmount = orderAmount - discountAmount;
-                console.log(price);
-                console.log(response.discountAmount);
+
                 if (totalAmount > 0) {
                     sendLogToMain('info', `포인트 잔액 카드결제 - 적립 마일리지번호: ${response.point}`);
                     const payEnd = await cardPayment(orderAmount, response.discountAmount);
@@ -604,8 +633,10 @@ const ACTIONS = {
     IMMEDIATE_PAYMENT: "immediatePayment",
     /*통합결제 취소*/
     EXIT: "exit",
-   /*포인트결제*/
+    /*포인트결제*/
     USE_POINTS: "usePoints",
+    /*카드결제*/
+    USE_CARD: "useCard"
 };
 
 // 포인트 전역 변수

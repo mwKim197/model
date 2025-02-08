@@ -149,6 +149,7 @@ const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
                         #cup = :cup, 
                         #iceYn = :iceYn, 
                         #empty = :empty, 
+                        #cupYn = :cupYn,
                         #iceTime = :iceTime, 
                         #waterTime = :waterTime, 
                         #state = :state, 
@@ -162,6 +163,7 @@ const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
                     "#cup": "cup",
                     "#iceYn": "iceYn",
                     "#empty": "empty",
+                    "#cupYn": "cupYn",
                     "#iceTime": "iceTime",
                     "#waterTime": "waterTime",
                     "#state": "state",
@@ -175,6 +177,7 @@ const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
                     ":cup": updatedData.cup,
                     ":iceYn": updatedData.iceYn,
                     ":empty": updatedData.empty,
+                    ":cupYn": updatedData.cupYn,
                     ":iceTime": updatedData.iceTime.toString(),
                     ":waterTime": updatedData.waterTime.toString(),
                     ":state": updatedData.state,
@@ -182,10 +185,9 @@ const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
                     ":image": updatedData.image,
                 },
             };
-            console.log("updatedData", updatedData);
-            console.log("updatedData.items", updatedData.items);
+            log.info("updatedData.items", updatedData.items);
             await dynamoDB.update(updateParams).promise();
-            console.log("Item updated successfully without changing order.");
+            log.info("Item updated successfully without changing order.");
             return;
         }
 
@@ -254,7 +256,8 @@ const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
                     #price = :price, 
                     #cup = :cup, 
                     #iceYn = :iceYn, 
-                    #empty = :empty, 
+                    #empty = :empty,
+                    #cupYn = :cupYn,  
                     #iceTime = :iceTime, 
                     #waterTime = :waterTime, 
                     #state = :state, 
@@ -269,6 +272,7 @@ const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
                 "#cup": "cup",
                 "#iceYn": "iceYn",
                 "#empty": "empty",
+                "#cupYn": "cupYn",
                 "#iceTime": "iceTime",
                 "#waterTime": "waterTime",
                 "#state": "state",
@@ -283,6 +287,7 @@ const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
                 ":cup": updatedData.cup,
                 ":iceYn": updatedData.iceYn,
                 ":empty": updatedData.empty,
+                ":cupYn": updatedData.cupYn,
                 ":iceTime": updatedData.iceTime.toString(),
                 ":waterTime": updatedData.waterTime.toString(),
                 ":state": updatedData.state,
@@ -295,7 +300,7 @@ const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
 
         // 모든 업데이트 실행
         await Promise.all(updatePromises);
-        console.log("Menu updated and order adjusted successfully.");
+        log.info("Menu updated and order adjusted successfully.");
     } catch (error) {
         console.error("Error updating menu or adjusting order:", error);
         throw error;
