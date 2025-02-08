@@ -670,6 +670,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const iceTime = document.getElementById('iceTime');
     const waterTime = document.getElementById('waterTime');
 
+    const addItemBtn = document.getElementById('addItemBtn');
+
     function setDisabledState(isDisabled, ...elements) {
         elements.forEach(element => {
             element.disabled = isDisabled;
@@ -687,7 +689,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ✅ 컵 라디오 변경 시 실행
+    // 컵 라디오 변경 시 실행
     document.querySelectorAll('input[name="cupYn"]').forEach(radio => {
         radio.addEventListener('change', () => {
             if (cupNo.checked) {
@@ -696,11 +698,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 기본값 설정
                 cupPlastic.checked = true;
                 iceYes.checked = true;
+                addItemBtn.disabled = false;
 
             } else {
                 // "No" 선택 시: 모든 요소 비활성화 및 초기화
                 setDisabledState(true, cupPlastic, cupPaper, iceYes, iceNo, iceTime, waterTime);
                 resetValues(cupPlastic, cupPaper, iceYes, iceNo, iceTime, waterTime);
+                addItemBtn.disabled = true;
+
+                itemCounter = 0;
+                document.querySelectorAll('.new-item').forEach(item => {
+                    item.remove();
+                });
+
             }
         });
     });
