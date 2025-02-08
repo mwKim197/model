@@ -2050,9 +2050,15 @@ async function fetchMileageHistoryData(searchKey, selectedPageKey = null ) {
         if (serverPageKeys) {
             mileagePageKeys = serverPageKeys; // 서버에서 전달된 pageKeys 저장
         }
+        // [TODO] 따로 이용횟수를 관리하지않고 히스토리의 전체 카운트로 사용
+        const updateCount = document.getElementById("updateCount");
 
-       updateHistoryTable(items); // 테이블 데이터 갱신
-       updateHistoryPagination(searchKey); // 페이지네이션 갱신
+        if (updateCount && total) {
+            updateCount.value = total;
+        }
+
+        updateHistoryTable(items); // 테이블 데이터 갱신
+        updateHistoryPagination(searchKey); // 페이지네이션 갱신
 
         // 다음 페이지를 위한 키 갱신
         historyLastEvaluatedKey = newLastEvaluatedKey;
@@ -2065,6 +2071,7 @@ async function fetchMileageHistoryData(searchKey, selectedPageKey = null ) {
 // 테이블 업데이트
 function updateHistoryTable(items) {
     const tbody = document.getElementById("usageHistoryTableBody");
+
     tbody.innerHTML = ""; // 기존 데이터 초기화
 
     if (!items || items.length === 0) {
