@@ -15,6 +15,9 @@ let allProducts = [];
 let wash = false;
 let userInfo = {};
 
+// 현재 재생 중인 오디오 객체
+let currentAudio = null;
+
 let isDataLoaded = false;
 
 // Product Grid
@@ -166,14 +169,8 @@ async function addItemToOrder(menuId) {
         console.error(`Product not found for menuId: ${menuId}`);
         return;
     }
-    const audio = new Audio('../../assets/audio/음료를 선택하셨습니다.mp3');
 
-    // 음성 재생
-    if (audio) {
-        audio.play().catch((err) => {
-            console.error('Audio play error:', err);
-        });
-    }
+    playAudio('../../assets/audio/음료를 선택하셨습니다.mp3');
 
     // 기존 항목 검색
     const existingOrder = orderList.find(order => order.menuId === product.menuId);
@@ -654,13 +651,9 @@ let isPhone = false;
 // 포인트 결제 (모달 열기)
 const pointPayment = (orderAmount) => {
     return new Promise((resolve) => {
-        const audio = new Audio('../../assets/audio/포인트를 적립 혹은 사용하시겠습니까.mp3');
-        // 음성 재생
-        if (audio) {
-            audio.play().catch((err) => {
-                console.error('Audio play error:', err);
-            });
-        }
+
+        playAudio('../../assets/audio/포인트를 적립 혹은 사용하시겠습니까.mp3');
+
         const modal = document.getElementById("pointModal");
         inputCount = userInfo.mileageNumber ? userInfo.mileageNumber : 12; // 입력 제한 초기화
         usePoint = 0; //
@@ -972,13 +965,8 @@ function updateDynamicContent(contentType, data ,resolve) {
         });
 
     } else if (contentType === "passwordInput") {
-        const audio = new Audio('../../assets/audio/비밀번호 4자리를 입력해주세요.mp3');
-        // 음성 재생
-        if (audio) {
-            audio.play().catch((err) => {
-                console.error('Audio play error:', err);
-            });
-        }
+
+        playAudio('../../assets/audio/비밀번호 4자리를 입력해주세요.mp3');
 
         // 비밀번호 입력 화면
         dynamicContent.innerHTML = createInputTemplate("비밀번호 입력", passwordCount);
@@ -1090,24 +1078,14 @@ function updateDynamicContent(contentType, data ,resolve) {
                 resolve({success: true, action: ACTIONS.USE_POINTS, point: pointNo, discountAmount: usePoint }); // 포인트 사용 금액 반환
                 modal.classList.add("hidden"); // 모달 닫기
             } else {
-                const audio = new Audio('../../assets/audio/사용할 금액을 입력후 결제를 눌러주세요.mp3');
-                // 음성 재생
-                if (audio) {
-                    audio.play().catch((err) => {
-                        console.error('Audio play error:', err);
-                    });
-                }
+                playAudio('../../assets/audio/사용할 금액을 입력후 결제를 눌러주세요.mp3');
             }
 
         });
     } else if (contentType === "joinPoints") {
-        const audio = new Audio('../../assets/audio/등록하실 고객번호를입력해주세요.mp3');
-        // 음성 재생
-        if (audio) {
-            audio.play().catch((err) => {
-                console.error('Audio play error:', err);
-            });
-        }
+
+        playAudio('../../assets/audio/등록하실 고객번호를입력해주세요.mp3');
+
         type = "number";
         // 마일리지 가입 화면
         dynamicContent.innerHTML = createInputTemplate(`마일리지 가입 번호 입력 ${inputCount} 자리`, inputCount);
@@ -1157,13 +1135,8 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         });
     } else if (contentType === "addPhone") {
-        const audio = new Audio('../../assets/audio/연락처를 입력해주세요.mp3');
-        // 음성 재생
-        if (audio) {
-            audio.play().catch((err) => {
-                console.error('Audio play error:', err);
-            });
-        }
+
+        playAudio('../../assets/audio/연락처를 입력해주세요.mp3');
 
         // 입력폼 초기화
         resetInput();
@@ -1216,13 +1189,8 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         });
     } else if (contentType === "addPassword") {
-        const audio = new Audio('../../assets/audio/비밀번호 4자리를 입력해주세요.mp3');
-        // 음성 재생
-        if (audio) {
-            audio.play().catch((err) => {
-                console.error('Audio play error:', err);
-            });
-        }
+
+        playAudio('../../assets/audio/비밀번호 4자리를 입력해주세요.mp3');
 
         type = "password";
         // 마일리지 가입 화면
@@ -1271,13 +1239,8 @@ function updateDynamicContent(contentType, data ,resolve) {
                     }
 
                     if (addPoint.success || data?.uniqueMileageNo) {
-                        const audio = new Audio('../../assets/audio/가입이 완료되었습니다 확인버튼을눌러주세요.mp3');
-                        // 음성 재생
-                        if (audio) {
-                            audio.play().catch((err) => {
-                                console.error('Audio play error:', err);
-                            });
-                        }
+
+                        playAudio('../../assets/audio/가입이 완료되었습니다 확인버튼을눌러주세요.mp3');
                     }
 
                     // 컴펌 창 띄우기
@@ -1417,13 +1380,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // 카드 결제
 const cardPayment = async (orderAmount, discountAmount) => {
-    const audio = new Audio('../../assets/audio/카드결제를 선택하셨습니다 카드를 단말기에 넣어주세요.mp3');
-    // 음성 재생
-    if (audio) {
-        audio.play().catch((err) => {
-            console.error('Audio play error:', err);
-        });
-    }
+
+    playAudio('../../assets/audio/카드결제를 선택하셨습니다 카드를 단말기에 넣어주세요.mp3');
 
     const totalAmount = orderAmount - discountAmount; // 전체 금액 계산
 
@@ -1455,14 +1413,7 @@ const cardPayment = async (orderAmount, discountAmount) => {
             // 모달 닫기
             modal.classList.add('hidden');
 
-            const audio = new Audio('../../assets/audio/결제가 완료되었습니다 카드를 꺼내주세요.mp3');
-
-            // 음성 재생
-            if (audio) {
-                audio.play().catch((err) => {
-                    console.error('Audio play error:', err);
-                });
-            }
+            playAudio('../../assets/audio/결제가 완료되었습니다 카드를 꺼내주세요.mp3');
 
             return true;
 
@@ -1656,6 +1607,21 @@ function generateMenu(categories) {
         nav.appendChild(menuTab);
     });
 }
+
+function playAudio(audioSrc) {
+    // ✅ 기존 재생 중인 오디오가 있다면 정지
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+    }
+
+    // ✅ 새로운 오디오 객체 생성 및 재생
+    currentAudio = new Audio(audioSrc);
+    currentAudio.play().catch((err) => {
+        console.error('Audio play error:', err);
+    });
+}
+
 
 async function fetchData() {
     try {
