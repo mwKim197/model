@@ -65,11 +65,18 @@ const processQueue = async (orderList, menuList) => {
             }
 
             for (let i = 0; i < order.count; i++) {
-                
+
+
                 // 메뉴 명을 넣어준다
                 menuName = recipe.name;
-                eventEmitter.emit('order-update', { menu: menuName, status: 'completed', message: '주문 시작되었습니다.' });
-                if(recipe.cupYn === "yes") return
+
+                if(recipe.cupYn === "yes") {
+                    eventEmitter.emit('order-update', { menu: menuName, status: 'generalProduct', message: '구매하신 물품을 가져가주세요.' });
+                    log.info(`주문 처리 완료 (${i + 1}/${order.count}): ${recipe.name} - [메뉴 ID: ${recipe.menuId}, 주문 ID: ${order.orderId}]`);
+                    // ✅ 3초 대기 (Promise 사용)
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+
+                }
                 log.info(`주문 처리 시작 (${i + 1}/${order.count}): ${recipe.name} - [메뉴 ID: ${recipe.menuId}, 주문 ID: ${order.orderId}]`);
                 // 주문 데이터 처리 시작
                 try {
