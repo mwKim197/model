@@ -12,7 +12,8 @@ import {
     getUserData,
     requestAppRestart,
     requestAppShutdown,
-    updateUserInfo
+    updateUserInfo,
+    requestAppRefresh
 } from '/renderer/api/menuApi.browser.js';
 
 const url = window.location.hostname;
@@ -1263,6 +1264,7 @@ document.getElementById('syrup2-cleaning').addEventListener('click',async ()=>{ 
 document.getElementById('syrup3-cleaning').addEventListener('click',async ()=>{ await allUserAdminWash("syrup3")});
 document.getElementById('syrup5-cleaning').addEventListener('click',async ()=>{ await allUserAdminWash("syrup5")});
 document.getElementById('syrup6-cleaning').addEventListener('click',async ()=>{ await allUserAdminWash("syrup6")});
+document.getElementById('refresh-button').addEventListener('click', requestAppRefresh);
 
 // 시간 저장 버튼 클릭
 document.getElementById('schedule-cleaning').addEventListener('click', async () => {
@@ -2328,8 +2330,6 @@ document.getElementById("saveModalBtn").addEventListener("click", async () => {
         alert("정보 저장 중 오류가 발생했습니다.");
     }
 });
-
-
 // 수정, 비밀번호찾기, 상세 모달 END
 
 // 필드 초기화 함수
@@ -2393,8 +2393,6 @@ function escapeHTML(string) {
     };
     return String(string).replace(/[&<>"'/]/g, (s) => entityMap[s]);
 }
-
-
 
 /* 텝 컨트롤 START */
 function switchTab(targetTabId) {

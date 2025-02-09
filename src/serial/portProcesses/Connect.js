@@ -9,9 +9,9 @@ const {signupUser, loginUser, getAllUserIds} = require("../../login");
 const {duplicateMenuData} = require("../../aws/db/utils/getMenu");
 const {getSerialData} = require("../../services/serialPolling");
 const {saveOrdersToDynamoDB} = require("../../aws/db/utils/getPayment");
+const {getMainWindow} = require('../../windows/mainWindow');
 // MC 머신 Data - SerialPolling 인스턴스 생성
 const polling = new serialDataManager(serialCommCom1);
-
 
 // 주문 요청 처리 엔드포인트
 Connect.post('/start-order', async (req, res) => {
@@ -141,6 +141,25 @@ Connect.post('/shutdown-app', (req, res) => {
         res.json({ success: true, message: '앱이 종료됩니다.' });
     } catch (err) {
         log.error('프로그램 종료 중 오류 발생:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+Connect.post('/order-refresh', (req, res) => {
+    try {
+        log.info('프로그램 리프레시 명령 수신');
+
+        // ✅ 메인 프로세스의 BrowserWindow를 가져와 새로고침 실행
+        const win = getMainWindow();
+        if (win && win.webContents) {
+            win.reload();
+            res.json({ success: true, message: '프로그램이 새로고침됩니다.' });
+        } else {
+            throw new Error("Electron 창이 존재하지 않습니다.");
+        }
+
+    } catch (err) {
+        log.error('프로그램 리프레시 중 오류 발생:', err.message);
         res.status(500).json({ success: false, error: err.message });
     }
 });

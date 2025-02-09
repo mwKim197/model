@@ -183,6 +183,26 @@ async function requestAppShutdown() {
     }
 }
 
+// 프로그램 리프레시 API 호출 함수
+async function requestAppRefresh() {
+    try {
+        const response = await fetch(`http://${url}:3142/order-refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        const result = await response.json();
+        if (result.success) {
+            alert('리프레시 요청 성공');
+            console.log('리프레시 요청 성공:', result.message);
+        } else {
+            console.error('리프레시 요청 실패:', result.message);
+        }
+    } catch (error) {
+        console.error('리프레시 요청 중 오류 발생:', error);
+    }
+}
+
+
 // 플라스틱 컵 투출 함수
 const fetchCupPlUse = async () => {
     try {
@@ -300,5 +320,6 @@ export {
     fetchCupPaUse,
     adminUseWash,
     updateUserInfo,
-    fetchAndSaveUserInfo
+    fetchAndSaveUserInfo,
+    requestAppRefresh
 };
