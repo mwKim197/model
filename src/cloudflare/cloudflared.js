@@ -11,9 +11,15 @@ const appDataPath = app.getPath('userData');
 const cloudflareDir = path.join(appDataPath, 'cloudflared');
 const cloudflareBin = path.join(cloudflareDir, process.platform === 'win32' ? 'cloudflared.exe' : 'cloudflared');
 const configFile = path.join(cloudflareDir, 'config.yml');
-const cloudflareCert = path.join(cloudflareDir, 'cert.pem');
-const { exec, execSync, spawn } = require('child_process');
+// ✅ Cloudflared 기본 `cert.pem` 경로 설정
+function getCloudflaredCertPath() {
+    return path.join(os.homedir(), '.cloudflared', 'cert.pem');
+}
 
+const cloudflareCert = getCloudflaredCertPath(); // ✅ 올바른 cert.pem 경로 사용
+
+const { exec, execSync, spawn } = require('child_process');
+log.info("cloudflareDir ::: ",cloudflareDir);
 const cloudflareCertPath = path.join(
     process.env.APPDATA || path.join(process.env.HOME, '.config'),
     'model',

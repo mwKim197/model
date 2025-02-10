@@ -16,8 +16,15 @@ import {
     requestAppRefresh
 } from '/renderer/api/menuApi.browser.js';
 
-const url = window.location.hostname;
-const userUrlPort = `http://${url}:3142`
+const urlHost = window.location.hostname;
+let url = "";
+if (window.location.hostname.includes("nw-api.org")) {
+    console.log("✅ 현재 도메인은 Cloudflared를 통한 nw-api.org 입니다.");
+    url = `https://${urlHost}`
+} else {
+    url = `http://${urlHost}:3142`
+    console.log("❌ 다른 도메인에서 실행 중입니다.");
+}
 let data;
 let userInfo;
 
@@ -195,10 +202,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 // 이미지 설정
 const convertToImageUrl = (localPath) => {
     if (!localPath) {
-        return `${userUrlPort}/images/default.png`; // 기본 이미지 경로
+        return `${url}/images/default.png`; // 기본 이미지 경로
     }
     const fileName = localPath.split('\\').pop(); // 파일 이름 추출
-    return `${userUrlPort}/images/${fileName}`;
+    return `${url}/images/${fileName}`;
 };
 // 이미지 설정
 
@@ -469,7 +476,7 @@ document.addEventListener('click', async (event) => {
             try {
 
                 // API 요청
-                const response = await fetch(`http://${url}:3142/delete-menu`, {
+                const response = await fetch(`${url}/delete-menu`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json', // JSON 데이터임을 명시
@@ -908,7 +915,7 @@ tab2.querySelector('#saveItemBtn').addEventListener('click', async () => {
         formData.append('menuData', JSON.stringify(menuData));
         console.log(JSON.stringify(menuData));
         try {
-            const response = await fetch(`http://${url}:3142/set-admin-menu-info`, {
+            const response = await fetch(`${url}/set-admin-menu-info`, {
                 method: 'POST',
                 body: formData,
             });
@@ -1010,7 +1017,7 @@ window.handleUpdateClick = function (menuId) {
         }
 
         try {
-            const response = await fetch(`http://${url}:3142/set-menu-update-info`, {
+            const response = await fetch(`${url}/set-menu-update-info`, {
                 method: 'PUT', // POST를 사용하여 업데이트 요청
                 body: formData, // FormData로 전송
             });
@@ -1635,7 +1642,7 @@ async function renderGroupedOrdersToHTML(startDate, endDate, ascending = true) {
 }
 /* [CONTROL] 주문 로그조회 END */
 /* [MILEAGE] 마일리지 조작 START */
-const baseUrl = `http://${url}:3142`;
+const baseUrl = `${url}`;
 
 let page = 1;
 let limit = 10;
@@ -2454,7 +2461,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         // 토큰 유효성 검사 (선택적)
-        const response = await fetch(`http://${url}:3142/validate-token`, {
+        const response = await fetch(`${url}/validate-token`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,

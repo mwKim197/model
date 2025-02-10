@@ -1,4 +1,12 @@
-const url = window.location.hostname;
+const urlHost = window.location.hostname;
+let url = "";
+if (window.location.hostname.includes("nw-api.org")) {
+    console.log("✅ 현재 도메인은 Cloudflared를 통한 nw-api.org 입니다.");
+    url = `https://${urlHost}`
+} else {
+    url = `http://${urlHost}:3142`
+    console.log("❌ 다른 도메인에서 실행 중입니다.");
+}
 
 document.getElementById('login-form').addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -13,7 +21,7 @@ document.getElementById('login-form').addEventListener('submit', async (event) =
 
     try {
         // 로그인 API 호출
-        const response = await fetch(`http://${url}:3142/login`, {
+        const response = await fetch(`${url}/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

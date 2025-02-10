@@ -25,13 +25,13 @@ const createCloudflareSubdomain = async (subdomain, tunnelUUID) => {
             log.info(`✅ 성공: ${subdomain}.nw-api.org 등록 완료!`);
             return `${subdomain}.nw-api.org`;
         } else {
-            log.error("❌ DNS 등록 실패:", response.data.errors);
+            log.info("❌ DNS 등록 실패:", response.data.errors);
             return null;
         }
     } catch (error) {
         if (error.response && error.response.data) {
             const errorData = error.response.data;
-            log.error("❌ API 요청 오류:", errorData);
+            log.info("❌ API 요청 오류:", errorData);
 
             // 🔥 기존 도메인 존재 오류일 경우, 그냥 해당 도메인 리턴
             const existingRecordError = errorData.errors.find(err => err.code === 81053);
@@ -41,7 +41,7 @@ const createCloudflareSubdomain = async (subdomain, tunnelUUID) => {
             }
         }
 
-        log.error("❌ API 요청 중 알 수 없는 오류 발생:", error.message);
+        log.info("❌ API 요청 중 알 수 없는 오류 발생:", error.message);
         return null;
     }
 }

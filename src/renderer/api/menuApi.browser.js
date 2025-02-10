@@ -1,8 +1,16 @@
-const url = window.location.hostname;
+const urlHost = window.location.hostname;
+let url = "";
+if (window.location.hostname.includes("nw-api.org")) {
+    console.log("✅ 현재 도메인은 Cloudflared를 통한 nw-api.org 입니다.");
+    url = `https://${urlHost}`
+} else {
+    url = `http://${urlHost}:3142`
+    console.log("❌ 다른 도메인에서 실행 중입니다.");
+}
 
 const getUserData = async () => {
     try {
-        const response = await fetch(`http://${url}:3142/get-user-info`);
+        const response = await fetch(`${url}/get-user-info`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -19,7 +27,7 @@ const getUserData = async () => {
 // 메뉴정보 전체 조회
 const getMenuInfoAll = async () => {
     try {
-        const response = await fetch(`http://${url}:3142/get-menu-info-all`);
+        const response = await fetch(`${url}/get-menu-info-all`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -35,7 +43,7 @@ const getMenuInfoAll = async () => {
 
 const callSerialAdminDrinkOrder = async (recipe) => {
     try {
-        const response = await fetch(`http://${url}:3142/serial-admin-drink-order`, {
+        const response = await fetch(`${url}/serial-admin-drink-order`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -62,7 +70,7 @@ const callSerialAdminDrinkOrder = async (recipe) => {
 
 const callSerialAdminIceOrder = async (recipe) => {
     try {
-        const response = await fetch(`http://${url}:3142/serial-admin-ice-order`, {
+        const response = await fetch(`${url}/serial-admin-ice-order`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -88,7 +96,7 @@ const callSerialAdminIceOrder = async (recipe) => {
 
 const callSerialAdminCupOrder = async (recipe) => {
     try {
-        const response = await fetch(`http://${url}:3142/serial-admin-cup-order`, {
+        const response = await fetch(`${url}/serial-admin-cup-order`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -111,7 +119,7 @@ const callSerialAdminCupOrder = async (recipe) => {
 
 // 결제 내역 조회
 const getOrdersByDateRange = async (startDate, endDate, ascending = true) => {
-    const apiUrl = `http://${url}:3142/get-orders-by-date-range?startDate=${startDate}&endDate=${endDate}&ascending=${ascending}`;
+    const apiUrl = `${url}/get-orders-by-date-range?startDate=${startDate}&endDate=${endDate}&ascending=${ascending}`;
     try {
         const response = await fetch(apiUrl);
         const data = await response.json();
@@ -129,7 +137,7 @@ const getOrdersByDateRange = async (startDate, endDate, ascending = true) => {
 
 // 기간별 통계조회
 const calculateSalesStatistics = async () => {
-    const apiUrl = `http://${url}:3142/calculate-sales-statistics`;
+    const apiUrl = `${url}/calculate-sales-statistics`;
     try {
         const response = await fetch(apiUrl);
         const data = await response.json();
@@ -148,7 +156,7 @@ const calculateSalesStatistics = async () => {
 // 프로그램 재시작 API 호출 함수
 async function requestAppRestart() {
     try {
-        const response = await fetch(`http://${url}:3142/restart-app`, {
+        const response = await fetch(`${url}/restart-app`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         });
@@ -167,7 +175,7 @@ async function requestAppRestart() {
 // 프로그램 종료 API 호출 함수
 async function requestAppShutdown() {
     try {
-        const response = await fetch(`http://${url}:3142/shutdown-app`, {
+        const response = await fetch(`${url}/shutdown-app`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         });
@@ -186,7 +194,7 @@ async function requestAppShutdown() {
 // 프로그램 리프레시 API 호출 함수
 async function requestAppRefresh() {
     try {
-        const response = await fetch(`http://${url}:3142/order-refresh`, {
+        const response = await fetch(`${url}/order-refresh`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         });
@@ -206,7 +214,7 @@ async function requestAppRefresh() {
 // 플라스틱 컵 투출 함수
 const fetchCupPlUse = async () => {
     try {
-        const response = await fetch(`http://${url}:3142/serial-cup-plastic-use`);
+        const response = await fetch(`${url}/serial-cup-plastic-use`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -224,7 +232,7 @@ const fetchCupPlUse = async () => {
 const fetchCupPaUse = async () => {
     try {
 
-        const response = await fetch(`http://${url}:3142/serial-cup-paper-use`);
+        const response = await fetch(`${url}/serial-cup-paper-use`);
 
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -240,7 +248,7 @@ const fetchCupPaUse = async () => {
 // 어드민 세척 함수
 const adminUseWash = async (data) => {
     try {
-        const response = await fetch(`http://${url}:3142/admin-use-wash`, {
+        const response = await fetch(`${url}/admin-use-wash`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -267,7 +275,7 @@ const adminUseWash = async (data) => {
 const updateUserInfo = async (data) => {
     try {
         console.log("data: ", data);
-        const response = await fetch(`http://${url}:3142/update-user-info`, {
+        const response = await fetch(`${url}/update-user-info`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -292,7 +300,7 @@ const updateUserInfo = async (data) => {
 
 const fetchAndSaveUserInfo = async () => {
     try {
-        const response = await fetch(`http://${url}:3142/fetch-and-save-user`);
+        const response = await fetch(`${url}/fetch-and-save-user`);
         const result = await response.json();
 
         if (response.ok) {

@@ -37,10 +37,23 @@ async function initializeApp() {
         log.info('[DEBUG] Main window created.');
 
         //[TODO] 테스트 이후적용  `electron-store`의 URL을 기반으로 Cloudflare Tunnel 설정 - window 생성이후에 실행
-        // ✅ `userData.apiUrl` 가져오기
-        // const userData = await mainWindow.webContents.executeJavaScript('window.electronAPI.getUserData()');
-       
-        // await setupCloudflare(userData.userId);
+        // ✅ `did-finish-load` 이후 userData 가져오기
+        /*mainWindow.webContents.once('did-finish-load', async () => {
+            try {
+                const userData = await mainWindow.webContents.executeJavaScript('window.electronAPI.getUserData()');
+                log.info("✅ userData 가져오기 성공:", userData);
+
+                // ✅ Cloudflared 설정 실행
+                if (userData && userData.userId) {
+                    await setupCloudflare(userData.userId);
+                    log.info("✅ Cloudflare Tunnel 설정 완료");
+                } else {
+                    log.warn("⚠️ userData.userId가 없습니다. Cloudflare 설정을 건너뜁니다.");
+                }
+            } catch (error) {
+                log.error("❌ userData 가져오기 실패:", error.message);
+            }
+        });*/
 
         // 5. Serial Polling 시작
         serialPolling.start();
