@@ -4,6 +4,8 @@ const menuApi = require('./renderer/api/menuApi');
 const orderApi = require('./renderer/api/orderApi');
 const mileageApi = require('./renderer/api/mileageApi');
 const image = require('./aws/s3/utils/image');
+const fs = require("fs");
+const path = require("path");
 
 let NODE_SERVER_URL = '';
 
@@ -62,6 +64,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
             throw error;
         }
     },
+
+    // 버전가져오기
+    getVersion: async () => JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8')).version,
 
     // 사용자 정보 설정
     setUserInfo: async (data) => await userApi.setUserInfo(data),

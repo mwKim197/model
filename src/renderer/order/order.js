@@ -1622,15 +1622,21 @@ function playAudio(audioSrc) {
     });
 }
 
+function setVersion(version) {
+    document.getElementById('version').textContent = "v" + version;
+}
 
 async function fetchData() {
     try {
         const basePath = await window.electronAPI.getBasePath();
-        console.log('Cache Directory Path:', basePath);
+
         const allData = await window.electronAPI.getMenuInfoAll();
         sendLogToMain('info', `전체 메뉴:  ${JSON.stringify(allData)}`);
         userInfo = await window.electronAPI.getUserInfo();
-        console.log("allData", allData);
+        const version = await window.electronAPI.getVersion();
+        setVersion(version);
+        console.log("version", version);
+
         limitCount = userInfo.limitCount ? userInfo.limitCount : 20;
         // 이미지 받아오기
         await window.electronAPI.downloadAllFromS3WithCache("model-narrow-road", `model/${userInfo.userId}`);
