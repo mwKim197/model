@@ -10,10 +10,10 @@ import {
     getMenuInfoAll,
     getOrdersByDateRange,
     getUserData,
+    requestAppRefresh,
     requestAppRestart,
     requestAppShutdown,
-    updateUserInfo,
-    requestAppRefresh
+    updateUserInfo
 } from '/renderer/api/menuApi.browser.js';
 
 const urlHost = window.location.hostname;
@@ -188,6 +188,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 createMenuHTML(item, userInfo.category)
             ).join('');
             menuListContainer.innerHTML = menuHTML;
+
+            // 모든 DOM 업데이트 후 스크롤 이동 (setTimeout 사용)
+            setTimeout(() => {
+                scrollToSavedMenu();
+            }, 100); // DOM 업데이트 후 약간의 딜레이 추가
         } else {
             console.warn('No menu items found.');
         }
@@ -231,6 +236,7 @@ const createMenuHTML = (menuData, categories) => {
                     <div class="item flex flex-col grid-cols-2 gap-2 bg-gray-200 border border-gray-300 rounded-md p-2">
                         <div>
                             <label for="no" class="text-sm text-gray-600">순번</label>
+                            <input type="hidden" name="menuId" value="${Number(escapeHTML(menuData.menuId?.toString() || 0))}"">
                             <input type="text" name="no" class="w-full border border-gray-400 rounded-md px-2 py-1" value="${Number(escapeHTML(menuData.no?.toString() || 0))}" disabled />
                         </div>
                         <div>
@@ -1023,9 +1029,13 @@ window.handleUpdateClick = function (menuId) {
             });
 
             const result = await response.json();
+            console.log("result 수정 리턴 :", result);
             if (result.success) {
                 alert("수정 성공");
-                location.reload();
+                console.log("menuId ", menuId);
+                //location.reload();
+                switchTab('tab1', menuId);
+
             } else {
                 alert('수정 실패: ' + result.message);
             }
@@ -1035,6 +1045,30 @@ window.handleUpdateClick = function (menuId) {
     });
     console.log("탭으로 데이터 전송 완료: ", menuItem);
 };
+
+// 스크롤 이동
+function scrollToMenuId(containerId, menuId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    // menuId와 일치하는 name="no"을 가진 숨겨진 input 찾기
+    const inputs = container.querySelectorAll(`input[name="menuId"][type="hidden"]`);
+
+    for (let input of inputs) {
+        if (parseInt(input.value) === menuId) {
+            // 부모 div로 스크롤 이동
+            const parentDiv = input.closest("div");
+            if (parentDiv) {
+                parentDiv.scrollIntoView({ behavior: "smooth", block: "center" });
+
+                // 강조 효과 (테두리 빨간색 추가)
+                parentDiv.style.border = "2px solid black";
+                setTimeout(() => parentDiv.style.border = "", 2000);
+            }
+            break;
+        }
+    }
+}
 
 // 동적으로 생성된 items 채우기 함수
 function populateDynamicItems(items) {
@@ -2405,11 +2439,17 @@ function escapeHTML(string) {
 }
 
 /* 텝 컨트롤 START */
-function switchTab(targetTabId) {
+function switchTab(targetTabId, menuId = "") {
     if (targetTabId === 'tab2') {
         // tab2일 때는 리프레시 없이 동작
         activateTab(targetTabId);
     } else {
+
+        // 변경된 데이터가 있으면 로컬스토리지에 저장
+        if (menuId) {
+            localStorage.setItem('scrollToItem', menuId); // ID를 저장
+        }
+
         // 다른 탭일 경우 리프레시 동작
         // 현재 탭 정보를 URL 쿼리 파라미터에 저장
         const url = new URL(window.location.href);
@@ -2420,6 +2460,17 @@ function switchTab(targetTabId) {
         location.reload();
     }
 }
+
+// tab1 페이지 로드시 스크롤위치이동
+function scrollToSavedMenu() {
+    const savedMenuId = localStorage.getItem('scrollToItem');
+
+    if (savedMenuId) {
+        scrollToMenuId("menu-list", parseInt(savedMenuId));
+        localStorage.removeItem('scrollToItem'); // 스크롤 후 데이터 삭제
+    }
+}
+
 
 // 전역으로 함수 연결
 window.switchTab = switchTab;
