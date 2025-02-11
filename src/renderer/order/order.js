@@ -359,28 +359,34 @@ const confirmModal = document.getElementById('confirmModal');
 const cancelButton = document.getElementById('cancelButton');
 const confirmButton = document.getElementById('confirmButton');
 
-// 모달 열기 함수
 const openModal = (message, onConfirm, onCancel) => {
+    if (!confirmModal || !cancelButton || !confirmButton) {
+        console.error("모달 또는 버튼 요소를 찾을 수 없습니다.");
+        return;
+    }
+
     const modalMessage = confirmModal.querySelector('h2');
+    if (!modalMessage) {
+        console.error("모달 메시지 요소(h2)를 찾을 수 없습니다.");
+        return;
+    }
+
     modalMessage.innerHTML = message; // 모달 메시지 설정
     confirmModal.classList.remove('hidden'); // 모달 보이기
 
-    // 이전 이벤트 리스너 제거 (중복 방지)
+    // 기존 이벤트 리스너 제거 (중복 실행 방지)
     const newConfirmButton = confirmButton.cloneNode(true);
-
-    if (confirmButton || confirmButton.parentNode) {
-        confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
-    }
-
+    confirmButton.replaceWith(newConfirmButton); // 기존 버튼을 새 버튼으로 교체
 
     const newCancelButton = cancelButton.cloneNode(true);
+    cancelButton.replaceWith(newCancelButton); // 기존 버튼을 새 버튼으로 교체
 
-    if (cancelButton || cancelButton.parentNode) {
-        cancelButton.parentNode.replaceChild(newCancelButton, cancelButton);
-    }
+    // 새로 교체된 버튼 참조 업데이트
+    const updatedConfirmButton = document.getElementById('confirmButton');
+    const updatedCancelButton = document.getElementById('cancelButton');
 
     // 확인 버튼 이벤트 추가
-    newConfirmButton.addEventListener('click', () => {
+    updatedConfirmButton.addEventListener('click', () => {
         if (typeof onConfirm === 'function') {
             onConfirm(); // 확인 함수 실행
         }
@@ -388,7 +394,7 @@ const openModal = (message, onConfirm, onCancel) => {
     });
 
     // 취소 버튼 이벤트 추가
-    newCancelButton.addEventListener('click', () => {
+    updatedCancelButton.addEventListener('click', () => {
         if (typeof onCancel === 'function') {
             onCancel(); // 취소 함수 실행
         }
@@ -400,6 +406,7 @@ const openModal = (message, onConfirm, onCancel) => {
 const closeModal = () => {
     confirmModal.classList.add('hidden'); // 모달 숨기기
 };
+
 
 function removeAllItem() {
     orderList = [];
