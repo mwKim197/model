@@ -133,8 +133,12 @@ async function cloudflareLogin(callback) {
         }
         log.info("✅ Cloudflare 로그인 성공");
 
-        setCloudflareEnvVariable(); // ✅ 로그인 후 환경 변수 설정
-        callback();
+        // 🔥 로그인 후 터널을 생성해서 credentials.json이 반드시 존재하도록 만듦
+        setTimeout(async () => {
+            await getOrCreateTunnelUUID(); // ✅ 터널 생성 강제 실행
+            setCloudflareEnvVariable(); // ✅ 로그인 후 환경 변수 설정
+            callback();
+        }, 3000);
     });
 }
 

@@ -38,7 +38,7 @@ async function initializeApp() {
 
         //[TODO] 테스트 이후적용  `electron-store`의 URL을 기반으로 Cloudflare Tunnel 설정 - window 생성이후에 실행
         // ✅ `did-finish-load` 이후 userData 가져오기
-        /*mainWindow.webContents.once('did-finish-load', async () => {
+       /* mainWindow.webContents.once('did-finish-load', async () => {
             try {
                 const userData = await mainWindow.webContents.executeJavaScript('window.electronAPI.getUserData()');
                 log.info("✅ userData 가져오기 성공:", userData);

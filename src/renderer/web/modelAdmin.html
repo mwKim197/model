@@ -532,78 +532,86 @@
                 </div>
             </div>
             <!-- 상세,수정 -->
-            <div id="detailModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                <div class="bg-white rounded-lg shadow-lg p-6 w-3/4 max-w-3xl">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-bold">고객 정보</h2>
-                        <button id="closeModalBtn" class="text-gray-500 hover:text-gray-800">X</button>
-                    </div>
-                    <div class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <input id="updateUniqueMileageNo" type="hidden" />
-                                <label for="updateMileageNo" class="block text-sm font-semibold">고객번호</label>
-                                <input id="updateMileageNo" type="text" class="w-full border rounded p-2" />
+            <<!-- 상세,수정 -->
+                <div id="detailModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                    <div class="bg-white rounded-lg shadow-lg w-3/4 max-w-3xl max-h-screen overflow-hidden flex flex-col">
+                        <!-- 헤더 -->
+                        <div class="flex justify-between items-center p-6 border-b">
+                            <h2 class="text-xl font-bold">고객 정보</h2>
+                            <button id="closeModalBtn" class="text-gray-500 hover:text-gray-800">X</button>
+                        </div>
+                        <!-- 내용 -->
+                        <div class="p-6 flex-1 overflow-y-auto">
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <input id="updateUniqueMileageNo" type="hidden" />
+                                        <label for="updateMileageNo" class="block text-sm font-semibold">고객번호</label>
+                                        <input id="updateMileageNo" type="text" class="w-full border rounded p-2" />
+                                    </div>
+                                    <div>
+                                        <label for="updatePassword" class="block text-sm font-semibold">비밀번호</label>
+                                        <input id="realPassword" type="hidden" value="기존비밀번호" />
+                                        <input id="updatePassword" type="text" class="w-full border rounded p-2" />
+                                    </div>
+                                    <div>
+                                        <label for="updateCount" class="block text-sm font-semibold">누적 이용 횟수</label>
+                                        <input id="updateCount" type="text" class="w-full border rounded p-2" disabled />
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label for="updatePoints" class="block text-sm font-semibold">보유 포인트</label>
+                                        <input id="updatePoints" type="text" class="w-full border rounded p-2" disabled />
+                                    </div>
+                                    <div>
+                                        <label for="registerUpdatePoints" class="block text-sm font-semibold">수정 포인트</label>
+                                        <input id="registerUpdatePoints" type="text" class="w-full border rounded p-2" />
+                                    </div>
+                                    <div>
+                                        <label for="updateTel" class="block text-sm font-semibold">연락처</label>
+                                        <input id="updateTel" type="text" class="w-full border rounded p-2" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="updateNote" class="block text-sm font-semibold">메모</label>
+                                    <textarea id="updateNote" class="w-full border rounded p-2"></textarea>
+                                </div>
                             </div>
-                            <div>
-                                <label for="updatePassword" class="block text-sm font-semibold">비밀번호</label>
-                                <input id="realPassword" type="hidden" value="기존비밀번호" />
-                                <input id="updatePassword" type="text" class="w-full border rounded p-2" />
-                            </div>
-                            <div>
-                                <label for="updateCount" class="block text-sm font-semibold">누적 이용 횟수</label>
-                                <input id="updateCount" type="text" class="w-full border rounded p-2" disabled />
+                            <!-- 이용 내역 -->
+                            <div class="mt-6">
+                                <h3 class="text-lg font-bold mb-4">이용 내역</h3>
+                                <div class="max-h-60 overflow-y-auto border rounded-lg">
+                                    <table class="table-auto w-full">
+                                        <thead>
+                                        <tr>
+                                            <th class="p-2 min-w-16">순번</th>
+                                            <th class="p-2 min-w-28">일자</th>
+                                            <th class="p-2 min-w-28">시간</th>
+                                            <th class="p-2 min-w-28">결제 금액</th>
+                                            <th class="p-2 min-w-28">변동 포인트</th>
+                                            <th class="p-2 min-w-28">잔여 포인트</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody id="usageHistoryTableBody">
+                                        <!-- 이용 내역 데이터 추가 -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <!-- 페이지네이션 -->
+                                <div id="historyPaginationContainer" class="flex justify-center items-center space-x-2 mt-4"></div>
                             </div>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label for="updatePoints" class="block text-sm font-semibold">보유 포인트</label>
-                                <input id="updatePoints" type="text" class="w-full border rounded p-2" disabled />
-                            </div>
-                            <div>
-                                <label for="registerUpdatePoints" class="block text-sm font-semibold">수정 포인트</label>
-                                <input id="registerUpdatePoints" type="text" class="w-full border rounded p-2" />
-                            </div>
-                            <div>
-                                <label for="updateTel" class="block text-sm font-semibold">연락처</label>
-                                <input id="updateTel" type="text" class="w-full border rounded p-2" />
-                            </div>
+                        <!-- 버튼 영역 (고정) -->
+                        <div class="p-6 border-t bg-white flex justify-center items-center gap-2">
+                            <button id="saveModalBtn" class="bg-black text-white px-4 py-2 rounded hover:bg-gray-600">확인</button>
+                            <button id="cancelModalBtn" class="bg-white border border-gray-800 px-4 py-2 rounded hover:bg-gray-400">취소</button>
                         </div>
-                        <div>
-                            <label for="updateNote" class="block text-sm font-semibold">메모</label>
-                            <textarea id="updateNote" class="w-full border rounded p-2"></textarea>
-                        </div>
-                    </div>
-                    <div class="mt-6">
-                        <h3 class="text-lg font-bold mb-4">이용 내역</h3>
-                        <div class="overflow-x-auto">
-                            <table class="table-auto w-full">
-                                <thead>
-                                <tr>
-                                    <th class="p-2 min-w-16">순번</th>
-                                    <th class="p-2 min-w-28">일자</th>
-                                    <th class="p-2 min-w-28">시간</th>
-                                    <th class="p-2 min-w-28">결제 금액</th>
-                                    <th class="p-2 min-w-28">변동 포인트</th>
-                                    <th class="p-2 min-w-28">잔여 포인트</th>
-                                </tr>
-                                </thead>
-                                <tbody id="usageHistoryTableBody">
-                                <!-- 이용 내역 데이터가 여기에 추가됩니다 -->
-                                </tbody>
-                            </table>
-                            <!-- 페이지네이션 -->
-                            <div id="historyPaginationContainer" class="flex justify-center items-center space-x-2 mb-6"></div>
-                        </div>
-                    </div>
-                    <div class="flex justify-center mt-4 items-center gap-1">
-                        <button id="saveModalBtn" class="bg-black text-white px-4 py-2 rounded hover:bg-gray-600">확인</button>
-                        <button id="cancelModalBtn" class="bg-white border border-gray-800 px-4 py-2 rounded hover:bg-gray-400 mr-2">취소</button>
                     </div>
                 </div>
-            </div>
 
-            <!-- 마일리지 END -->
+
+                <!-- 마일리지 END -->
             </div>
             <div id="order-details-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
                 <div class="bg-white w-3/4 max-w-lg rounded-lg shadow-lg p-6">

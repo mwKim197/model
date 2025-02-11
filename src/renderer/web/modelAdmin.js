@@ -2253,6 +2253,8 @@ async function openDetailModal(item) {
         resetHistoryPagination(); // 상태 초기화
         await fetchMileageHistoryData(item.uniqueMileageNo);
 
+        document.body.style.overflow = "hidden"; // 바닥 페이지 스크롤 막기
+
         // 모달 열기
         const modal = document.getElementById("detailModal");
         modal.classList.remove("hidden");
@@ -2267,6 +2269,7 @@ function closeDetailModal() {
     // 모달닫을때 페이징 초기화
     resetHistoryPagination(); // 상태 초기화
     fetchMileageData("",null).then(() => {});
+    document.body.style.overflow = "auto"; // 바닥 페이지 스크롤 복구
     const modal = document.getElementById("detailModal");
     modal.classList.add("hidden");
 
