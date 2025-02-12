@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 유저 정보 및 메뉴 데이터 가져오기
         userInfo = await getUserData(); // 유저 정보 가져오기
         data = await getMenuInfoAll(); // 메뉴 정보 가져오기
-        const menuListContainer = document.getElementById("menu-list");
+        const searchInput = document.getElementById("search-input");
 
         if (!userInfo?.category) {
             console.error("카테고리 정보가 없습니다.");
@@ -180,14 +180,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (Array.isArray(data?.Items)) {
-            // `no` 순번으로 정렬
-            const sortedData = data.Items.sort((a, b) => a.no - b.no);
-            console.log(sortedData);
-            // HTML 생성 및 삽입
-            const menuHTML = sortedData.map(item =>
-                createMenuHTML(item, userInfo.category)
-            ).join('');
-            menuListContainer.innerHTML = menuHTML;
+            let menuItems = data.Items.sort((a, b) => a.no - b.no);
+            renderMenu(menuItems); // 초기 메뉴 렌더링
+
+            // 검색 입력 이벤트 리스너 추가
+            searchInput.addEventListener('input', (event) => {
+                const searchTerm = event.target.value.toLowerCase();
+                const filteredItems = menuItems.filter(item =>
+                    item.name.toLowerCase().includes(searchTerm) // `name` 기준으로 필터링
+                );
+                renderMenu(filteredItems);
+            });
 
             // 모든 DOM 업데이트 후 스크롤 이동 (setTimeout 사용)
             setTimeout(() => {
@@ -203,6 +206,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Error fetching menu info or user info:', error);
     }
 });
+
+// 메뉴 렌더링 함수
+function renderMenu(items) {
+    const menuListContainer = document.getElementById("menu-list");
+    menuListContainer.innerHTML = items.map(item =>
+        createMenuHTML(item, userInfo.category)
+    ).join('');
+}
 
 // 이미지 설정
 const convertToImageUrl = (localPath) => {

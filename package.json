@@ -1,6 +1,6 @@
 {
   "name": "model",
-  "version": "1.9.3",
+  "version": "1.9.5",
   "main": "src/main.js",
   "scripts": {
     "start": "npx tailwindcss build src/styles/tailwind.css -o src/styles/output.css && set NODE_ENV=development && electron .",
