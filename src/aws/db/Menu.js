@@ -1,22 +1,24 @@
 const express = require('express');
 const Menu = express.Router();
+const log = require("../../logger");
+const multer = require("multer");
+const { memoryStorage} = require("multer");
 const {checkProduct, addProduct, allProduct, deleteProduct, swapNoAndAddProduct, updateMenuAndAdjustNo, duplicateMenuData,
     getMenuById
 } = require('./utils/getMenu');
-const { getUser, setUser } = require('../../util/store');
-const log = require("../../logger");
-const {uploadImageToS3andLocal, deleteImageFromS3andLocal} = require("../s3/utils/image");
 const {incrementCounter} = require("./utils/getCount");
-const multer = require("multer");
-const {memoryStorage} = require("multer");
-const { dispenseCup, adminIceOrder, adminDrinkOrder} = require("../../services/serialOrderManager");
-const serialDataManager = require("../../services/serialDataManager");
-const {serialCommCom1} = require("../../serial/serialCommManager");
 const {getOrdersByDateRange, calculateSalesStatistics} = require("./utils/getPayment");
 const {updateUserInfo, getUserById} = require("./utils/getUser");
 const {saveMileageToDynamoDB, getMileage, updateMileageInDynamoDB, deleteMileageFromDynamoDB,
     getMileageHistory, checkMileageExists, verifyMileageAndReturnPoints, updateMileageAndLogHistory
 } = require("./utils/getMileage");
+const {saveNoticeToDynamoDB, getNotice, getNoticesByDateRange, updateNotice, deleteNotice} = require("./utils/getNotice");
+const {uploadImageToS3andLocal, deleteImageFromS3andLocal} = require("../s3/utils/image");
+const { getUser, setUser } = require('../../util/store');
+const { dispenseCup, adminIceOrder, adminDrinkOrder} = require("../../services/serialOrderManager");
+const serialDataManager = require("../../services/serialDataManager");
+const {serialCommCom1} = require("../../serial/serialCommManager");
+
 const {compare} = require("bcrypt");
 const upload = multer({ storage: memoryStorage() }); // 메모리 저장소 사용
 const polling = new serialDataManager(serialCommCom1);
@@ -669,6 +671,84 @@ Menu.post('/mileage-transaction', async (req, res) => {
     } catch (error) {
         log.error('트랜잭션 실패:', error.message);
         res.status(500).json({ success: false, message: '트랜잭션 실패', error: error.message });
+    }
+});
+
+/**
+ * 공지사항 등록 (POST)
+ */
+Menu.post('/notice', async (req, res) => {
+    try {
+        const notice = req.body;
+        await saveNoticeToDynamoDB(notice);
+        res.status(200).json({ success: true, message: '공지 등록 성공' });
+    } catch (error) {
+        log.error('공지 등록 실패:', error);
+        res.status(500).json({ success: false, message: '공지 등록 실패', error: error.message });
+    }
+});
+
+/**
+ * 공지사항 조회 (GET)
+ */
+Menu.get('/notice/:noticeId', async (req, res) => {
+    try {
+        const { noticeId } = req.params;
+        const notice = await getNotice(noticeId);
+
+        if (!notice) {
+            return res.status(404).json({ success: false, message: '공지 없음' });
+        }
+
+        res.status(200).json({ success: true, data: notice });
+    } catch (error) {
+        log.error('공지 조회 실패:', error);
+        res.status(500).json({ success: false, message: '공지 조회 실패', error: error.message });
+    }
+});
+
+/**
+ * 공지사항 수정 (PUT)
+ */
+Menu.put('/notice/:noticeId', async (req, res) => {
+    try {
+        const { noticeId } = req.params;
+        const updatedFields = req.body;
+
+        await updateNotice(noticeId, updatedFields);
+        res.status(200).json({ success: true, message: '공지 수정 성공' });
+    } catch (error) {
+        log.error('공지 수정 실패:', error);
+        res.status(500).json({ success: false, message: '공지 수정 실패', error: error.message });
+    }
+});
+
+/**
+ * 공지사항 삭제 (DELETE)
+ */
+Menu.delete('/notice/:noticeId', async (req, res) => {
+    try {
+        const { noticeId } = req.params;
+        await deleteNotice(noticeId);
+        res.status(200).json({ success: true, message: '공지 삭제 성공' });
+    } catch (error) {
+        log.error('공지 삭제 실패:', error);
+        res.status(500).json({ success: false, message: '공지 삭제 실패', error: error.message });
+    }
+});
+
+/**
+ * 특정 기간 공지사항 조회 (GET)
+ */
+Menu.get('/notices', async (req, res) => {
+    try {
+        const { startDate, endDate, ascending } = req.query;
+        const notices = await getNoticesByDateRange(startDate, endDate, ascending === 'true');
+
+        res.status(200).json({ success: true, data: notices });
+    } catch (error) {
+        log.error('기간별 공지 조회 실패:', error);
+        res.status(500).json({ success: false, message: '기간별 공지 조회 실패', error: error.message });
     }
 });
 

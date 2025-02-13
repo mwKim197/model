@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공지사항 입력</title>
+    <script defer src="notice.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+    <h2 class="text-xl font-bold mb-4">공지사항 입력</h2>
+    <form id="noticeForm" class="space-y-4">
+        <div>
+            <label class="block font-medium mb-1">제목:</label>
+            <input type="text" id="title" name="title" class="w-full px-3 py-2 border rounded-lg focus:ring focus:ring-blue-200" required>
+        </div>
+        <div class="flex items-center justify-between">
+            <div class="flex flex-col">
+                <label for="start-date" class="text-sm font-semibold text-gray-600">시작 날짜</label>
+                <input
+                        type="date"
+                        id="start-date"
+                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm">
+            </div>
+            <!-- 종료 날짜 -->
+            <div class="flex flex-col">
+                <label for="end-date" class="text-sm font-semibold text-gray-600">종료 날짜</label>
+                <input
+                        type="date"
+                        id="end-date"
+                        class="w-full sm:w-auto border border-gray-300 rounded px-3 py-2 text-sm">
+            </div>
+        </div>
+        <div>
+            <label class="block font-medium mb-1">첨부 이미지:</label>
+            <input type="file" id="image" name="image" accept="image/*" class="w-full px-3 py-2 border rounded-lg" onchange="previewImage(event)">
+            <div id="previewContainer" class="mt-2 hidden">
+                <p class="text-sm text-gray-500 mb-1">미리보기:</p>
+                <img id="imagePreview" class="w-full max-h-[480px] object-contain rounded-lg border" alt="notice">
+            </div>
+        </div>
+        <div>
+            <label for="content" class="block font-medium mb-1">내용:</label>
+            <textarea id="content" name="content" rows="5" class="w-full px-3 py-2 border rounded-lg focus:ring focus:ring-blue-200" required></textarea>
+        </div>
+        <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600">등록</button>
+    </form>
+</div>
+
+</body>
+</html>
