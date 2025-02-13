@@ -13,7 +13,7 @@ const {saveMileageToDynamoDB, getMileage, updateMileageInDynamoDB, deleteMileage
     getMileageHistory, checkMileageExists, verifyMileageAndReturnPoints, updateMileageAndLogHistory
 } = require("./utils/getMileage");
 const {saveNoticeToDynamoDB, getNotice, getNoticesByDateRange, updateNotice, deleteNotice} = require("./utils/getNotice");
-const {uploadImageToS3andLocal, deleteImageFromS3andLocal} = require("../s3/utils/image");
+const {uploadImageToS3andLocal, deleteImageFromS3andLocal, uploadImageToS3} = require("../s3/utils/image");
 const { getUser, setUser } = require('../../util/store');
 const { dispenseCup, adminIceOrder, adminDrinkOrder} = require("../../services/serialOrderManager");
 const serialDataManager = require("../../services/serialDataManager");
@@ -677,11 +677,42 @@ Menu.post('/mileage-transaction', async (req, res) => {
 /**
  * 공지사항 등록 (POST)
  */
-Menu.post('/notice', async (req, res) => {
+Menu.post('/notice', upload.single('image'), async (req, res) => {
     try {
-        const notice = req.body;
-        await saveNoticeToDynamoDB(notice);
-        res.status(200).json({ success: true, message: '공지 등록 성공' });
+        let { title, content, startDate, endDate, location, author } = req.body;
+        const file = req.file; // 업로드된 이미지 파일
+
+        if (!file) {
+            return res.status(400).json({ success: false, message: '이미지 파일이 필요합니다.' });
+        }
+
+        const bucketName = 'model-narrow-road';
+
+        if (!file) {
+            return res.status(400).json({ success: false, message: '파일과 메뉴 ID가 필요합니다.' });
+        }
+        // 1. 이미지 저장 (로컬 + S3)
+        const uploadResult = await uploadImageToS3andLocal(bucketName, file.buffer, file.originalname, "notice");
+
+        // 2. 공지사항 데이터 준비
+        const noticeData = {
+            title,
+            content,
+            startDate,
+            endDate,
+            location,
+            author,
+            image: uploadResult.localPath, // S3 URL 저장
+        };
+
+        // 3. DynamoDB 저장
+        await saveNoticeToDynamoDB(noticeData);
+
+        res.status(200).json({
+            success: true,
+            message: '공지 등록 완료',
+            data: noticeData
+        });
     } catch (error) {
         log.error('공지 등록 실패:', error);
         res.status(500).json({ success: false, message: '공지 등록 실패', error: error.message });
