@@ -374,32 +374,37 @@ const openModal = (message, onConfirm, onCancel) => {
     modalMessage.innerHTML = message; // 모달 메시지 설정
     confirmModal.classList.remove('hidden'); // 모달 보이기
 
-    // 기존 이벤트 리스너 제거 (중복 실행 방지)
-    const newConfirmButton = confirmButton.cloneNode(true);
-    confirmButton.replaceWith(newConfirmButton); // 기존 버튼을 새 버튼으로 교체
+    // 기존 이벤트 리스너 제거
+    confirmButton.replaceWith(confirmButton.cloneNode(true));
+    cancelButton.replaceWith(cancelButton.cloneNode(true));
 
-    const newCancelButton = cancelButton.cloneNode(true);
-    cancelButton.replaceWith(newCancelButton); // 기존 버튼을 새 버튼으로 교체
-
-    // 새로 교체된 버튼 참조 업데이트
+    // 새 버튼 참조
     const updatedConfirmButton = document.getElementById('confirmButton');
     const updatedCancelButton = document.getElementById('cancelButton');
 
-    // 확인 버튼 이벤트 추가
-    updatedConfirmButton.addEventListener('click', () => {
+    // ✅ 기존 이벤트 제거 후 추가하는 방식으로 변경
+    updatedConfirmButton.removeEventListener('click', updatedConfirmButton._callback);
+    updatedCancelButton.removeEventListener('click', updatedCancelButton._callback);
+
+    // ✅ 새로운 이벤트 핸들러 등록
+    updatedConfirmButton._callback = () => {
+        console.log("Confirm 버튼 클릭됨");
         if (typeof onConfirm === 'function') {
             onConfirm(); // 확인 함수 실행
         }
-        closeModal(); // 모달 닫기
-    });
+        closeModal();
+    };
 
-    // 취소 버튼 이벤트 추가
-    updatedCancelButton.addEventListener('click', () => {
+    updatedCancelButton._callback = () => {
+        console.log("Cancel 버튼 클릭됨");
         if (typeof onCancel === 'function') {
             onCancel(); // 취소 함수 실행
         }
-        closeModal(); // 모달 닫기
-    });
+        closeModal();
+    };
+
+    updatedConfirmButton.addEventListener('click', updatedConfirmButton._callback);
+    updatedCancelButton.addEventListener('click', updatedCancelButton._callback);
 };
 
 // 모달 닫기 함수
