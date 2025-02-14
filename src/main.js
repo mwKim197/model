@@ -126,6 +126,7 @@ app.on('before-quit', () => {
     serialPolling.stop();
 });
 
+
 app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
         createMainWindow();

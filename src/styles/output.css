@@ -637,10 +637,6 @@ video {
   /* 넘칠 경우 생략 표시 */
 }
 
-.pointer-events-none {
-  pointer-events: none;
-}
-
 .pointer-events-auto {
   pointer-events: auto;
 }
@@ -689,6 +685,18 @@ video {
   left: 50%;
 }
 
+.left-\[170px\] {
+  left: 170px;
+}
+
+.left-\[20px\] {
+  left: 20px;
+}
+
+.left-\[270px\] {
+  left: 270px;
+}
+
 .right-0 {
   right: 0px;
 }
@@ -701,6 +709,10 @@ video {
   right: 1.25rem;
 }
 
+.right-\[20px\] {
+  right: 20px;
+}
+
 .top-0 {
   top: 0px;
 }
@@ -709,76 +721,16 @@ video {
   top: 1rem;
 }
 
-.left-5 {
-  left: 1.25rem;
-}
-
-.top-20 {
-  top: 5rem;
-}
-
-.top-5 {
-  top: 1.25rem;
-}
-
-.left-10 {
-  left: 2.5rem;
-}
-
-.right-10 {
-  right: 2.5rem;
-}
-
-.left-\[20px\] {
-  left: 20px;
-}
-
-.left-\[50px\] {
-  left: 50px;
-}
-
-.right-\[20px\] {
-  right: 20px;
-}
-
-.right-\[50px\] {
-  right: 50px;
-}
-
-.top-\[100px\] {
-  top: 100px;
-}
-
-.top-\[120px\] {
-  top: 120px;
-}
-
 .top-\[20px\] {
   top: 20px;
 }
 
-.left-\[370px\] {
-  left: 370px;
-}
-
-.left-\[670px\] {
-  left: 670px;
-}
-
-.left-\[170px\] {
-  left: 170px;
-}
-
-.left-\[270px\] {
-  left: 270px;
+.top-\[50px\] {
+  top: 50px;
 }
 
 .top-\[70px\] {
   top: 70px;
-}
-
-.top-\[50px\] {
-  top: 50px;
 }
 
 .z-10 {
@@ -877,16 +829,16 @@ video {
   margin-top: 0.5rem;
 }
 
+.mt-3 {
+  margin-top: 0.75rem;
+}
+
 .mt-4 {
   margin-top: 1rem;
 }
 
 .mt-6 {
   margin-top: 1.5rem;
-}
-
-.mt-3 {
-  margin-top: 0.75rem;
 }
 
 .box-border {
@@ -1033,16 +985,12 @@ video {
   max-height: 800px;
 }
 
-.max-h-screen {
-  max-height: 100vh;
-}
-
-.max-h-\[300px\] {
-  max-height: 300px;
-}
-
 .max-h-\[90vh\] {
   max-height: 90vh;
+}
+
+.max-h-screen {
+  max-height: 100vh;
 }
 
 .min-h-24 {
@@ -1173,10 +1121,6 @@ video {
   min-width: 300px;
 }
 
-.min-w-\[500px\] {
-  min-width: 500px;
-}
-
 .max-w-3xl {
   max-width: 48rem;
 }
@@ -1185,24 +1129,16 @@ video {
   max-width: 72rem;
 }
 
+.max-w-\[600px\] {
+  max-width: 600px;
+}
+
 .max-w-full {
   max-width: 100%;
 }
 
 .max-w-lg {
   max-width: 32rem;
-}
-
-.max-w-\[500px\] {
-  max-width: 500px;
-}
-
-.max-w-\[800px\] {
-  max-width: 800px;
-}
-
-.max-w-\[600px\] {
-  max-width: 600px;
 }
 
 .flex-1 {
@@ -2003,10 +1939,6 @@ video {
 }
 
 @media (min-width: 768px) {
-  .md\:max-w-\[90\%\] {
-    max-width: 90%;
-  }
-
   .md\:grid-cols-3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

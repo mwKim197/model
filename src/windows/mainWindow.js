@@ -31,13 +31,6 @@ async function createMainWindow() {
         autoHideMenuBar: true,
     });
 
-    // IPC 리스너 설정 - 렌더러로 데이터 전송
-    eventEmitter.on('order-update', (data) => {
-        if (win && win.webContents) {
-            win.webContents.send('order-update', data);
-        }
-    });
-
     // Renderer에서 win 리프레시
     ipcMain.handle('order-refresh', () => {
         if (win && win.webContents) {

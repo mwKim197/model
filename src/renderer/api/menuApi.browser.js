@@ -210,6 +210,25 @@ async function requestAppRefresh() {
     }
 }
 
+// 프로그램 업데이트 API 호출 함수
+async function requestAppUpdate() {
+    try {
+        const response = await fetch(`${url}/order-update`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        const result = await response.json();
+        if (result.success) {
+            alert('업데이트 요청 성공');
+            console.log('업데이트 요청 성공:', result.message);
+        } else {
+            console.error('업데이트 요청 실패:', result.message);
+        }
+    } catch (error) {
+        console.error('업데이트 요청 중 오류 발생:', error);
+    }
+}
+
 
 // 플라스틱 컵 투출 함수
 const fetchCupPlUse = async () => {
@@ -329,5 +348,6 @@ export {
     adminUseWash,
     updateUserInfo,
     fetchAndSaveUserInfo,
-    requestAppRefresh
+    requestAppRefresh,
+    requestAppUpdate
 };

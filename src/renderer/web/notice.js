@@ -1,4 +1,3 @@
-
 document.addEventListener("DOMContentLoaded", () => {
     const noticeList = document.getElementById("noticeList");
     const noNoticeMessage = document.getElementById("noNoticeMessage");

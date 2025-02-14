@@ -1,5 +1,5 @@
 const express = require('express');
-const { app } = require('electron');
+const { app, BrowserWindow } = require('electron');
 const serialDataManager  = require('../../services/serialDataManager');
 const Connect = express.Router();
 const log = require('../../logger');
@@ -10,6 +10,7 @@ const {duplicateMenuData} = require("../../aws/db/utils/getMenu");
 const {getSerialData} = require("../../services/serialPolling");
 const {saveOrdersToDynamoDB} = require("../../aws/db/utils/getPayment");
 const {getMainWindow} = require('../../windows/mainWindow');
+const {checkForUpdatesManually} = require("../../updater");
 // MC 머신 Data - SerialPolling 인스턴스 생성
 const polling = new serialDataManager(serialCommCom1);
 
