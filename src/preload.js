@@ -123,7 +123,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
     //마일리지 트렌젝션
     updateMileageAndLogHistory: async (mileageNo, totalAmt, pointsToAdd, type, note) => await mileageApi.updateMileageAndLogHistory(mileageNo, totalAmt, pointsToAdd, type, note),
 
-    // 업데이트
-    startUpdate: () => ipcRenderer.send("start-update") // ✅ `start-update` 이벤트를 `main process`로 보냄
 });
 
