@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>공지사항 입력</title>
+    <title>공지사항 관리</title>
     <script defer src="notice.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-<div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-6">
+<div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl">
     <h2 class="text-xl font-bold mb-4">공지사항 입력</h2>
     <form id="noticeForm" class="space-y-4">
         <div>
@@ -18,18 +18,11 @@
         <div class="flex items-center justify-between">
             <div class="flex flex-col">
                 <label for="start-date" class="text-sm font-semibold text-gray-600">시작 날짜</label>
-                <input
-                        type="date"
-                        id="start-date"
-                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm">
+                <input type="date" id="start-date" class="border border-gray-300 rounded px-3 py-2 text-sm">
             </div>
-            <!-- 종료 날짜 -->
             <div class="flex flex-col">
                 <label for="end-date" class="text-sm font-semibold text-gray-600">종료 날짜</label>
-                <input
-                        type="date"
-                        id="end-date"
-                        class="w-full sm:w-auto border border-gray-300 rounded px-3 py-2 text-sm">
+                <input type="date" id="end-date" class="border border-gray-300 rounded px-3 py-2 text-sm">
             </div>
         </div>
         <div>
@@ -48,5 +41,39 @@
     </form>
 </div>
 
+<div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl mt-6">
+    <h2 class="text-xl font-bold mb-4">📢 공지사항 목록</h2>
+    <div class="flex gap-4 mb-4">
+        <div class="flex flex-col">
+            <label for="filter-start-date" class="text-sm font-semibold text-gray-600">시작 날짜</label>
+            <input type="date" id="filter-start-date" class="border border-gray-300 rounded px-3 py-2 text-sm">
+        </div>
+        <div class="flex flex-col">
+            <label for="filter-end-date" class="text-sm font-semibold text-gray-600">종료 날짜</label>
+            <input type="date" id="filter-end-date" class="border border-gray-300 rounded px-3 py-2 text-sm">
+        </div>
+        <button id="searchBtn" class="bg-blue-500 text-white px-4 py-2 rounded-md mt-6 hover:bg-blue-600">
+            조회
+        </button>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full border border-gray-300 rounded-md">
+            <thead>
+            <tr class="bg-gray-200 text-gray-700 text-left">
+                <th class="p-3 border">📌 제목</th>
+                <th class="p-3 border">🗓️ 시작일</th>
+                <th class="p-3 border">🗓️ 종료일</th>
+                <th class="p-3 border">📍 위치</th>
+                <th class="p-3 border text-center">🗑️ 삭제</th> <!-- 🔥 삭제 버튼 열 추가 -->
+            </tr>
+            </thead>
+            <tbody id="noticeList">
+            <!-- 공지사항 데이터 표시 -->
+            </tbody>
+        </table>
+    </div>
+    <p id="noNoticeMessage" class="text-gray-500 text-center mt-4 hidden">📭 표시할 공지사항이 없습니다.</p>
+</div>
 </body>
 </html>
