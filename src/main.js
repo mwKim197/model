@@ -1,7 +1,7 @@
 //const express = require('express');
 const { app, BrowserWindow} = require('electron');
 const path = require('path');
-const { initializeUpdater } = require('./updater');
+const { initializeUpdater, checkForUpdatesManually } = require('./updater');
 const { createMainWindow } = require('./windows/mainWindow');
 const { setupEventHandlers } = require('./events/eventHandlers');
 const server = require('./server');
@@ -113,12 +113,6 @@ async function initializeApp() {
         await checkPublicIp();
     }, 1500000); // 15분마다 실행
 })();
-
-
-function restartApp() {
-    app.relaunch();
-    app.exit(0);
-}
 
 app.whenReady().then(() => {
     initializeApp().catch((err) => log.info('App initialization failed:', err));
