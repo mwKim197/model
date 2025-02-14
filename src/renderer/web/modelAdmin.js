@@ -2519,8 +2519,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     const popupArea = document.getElementById("popupArea");
 
     try {
-        // 🔥 공지사항 API 호출 (공지사항 데이터 가져오기)
-        const response = await fetch("/notices?startDate=2025-02-01&endDate=2025-12-31");
+        // 🔥 오늘 날짜 가져오기
+        const today = new Date();
+
+        // 🔥 7일 후 날짜 계산
+        const sevenDaysLater = new Date();
+        sevenDaysLater.setDate(today.getDate() + 7);
+
+        // 🔥 YYYY-MM-DD 형식으로 변환
+        const startDate = today.toISOString().split("T")[0];
+        const endDate = sevenDaysLater.toISOString().split("T")[0];
+
+        // 🔥 공지사항 API 호출 (오늘부터 7일 이후까지 조회)
+        const response = await fetch(`/notices?startDate=${startDate}&endDate=${endDate}`);
         const result = await response.json();
 
         if (!result.success || result.data.length === 0) {

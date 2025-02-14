@@ -173,7 +173,6 @@ const deleteImageFromS3andLocal = async (bucketName, fileName, userId) => {
     }
 };
 
-
 // S3 업로드 함수
 const uploadImageToS3 = async (bucketName, s3Key) => {
     try {
@@ -204,10 +203,79 @@ const uploadImageToS3 = async (bucketName, s3Key) => {
     }
 };
 
+// notice S3 저장
+const uploadNoticeImageToS3 = async (bucketName, buffer, originalFileName, menuId) => {
+    const fileName = `${menuId}_${originalFileName}`; // 파일명: menuId + 원본 파일명
+    const s3Key = `model/notice/${fileName}`; // S3 키
+    const cacheDir = getBasePath(); // 안전하게 경로 가져오기
+
+    if (!cacheDir) {
+        throw new Error('cacheDir - image 저장경로를 찾을수 없습니다.');
+    }
+
+    const localFilePath = path.join(cacheDir, fileName); // 로컬 저장 경로
+
+    try {
+        // S3 업로드
+        const params = {
+            Bucket: bucketName,
+            Key: s3Key,
+            Body: buffer,
+            ContentType: "image/jpeg", // 적절한 ContentType 지정
+        };
+        const uploadResult = await s3.upload(params).promise();
+        log.info("S3 업로드 완료:", uploadResult.Location);
+
+        // 결과 반환
+        return { s3Url: uploadResult.Location, localPath: localFilePath, fileName };
+    } catch (error) {
+        log.error("이미지 업로드 실패:", error.message);
+        throw error;
+    }
+};
+
+/**
+ * 📌 특정 디렉토리에서 `notice-`로 시작하는 모든 파일 삭제
+ */
+const deleteNoticeFiles = () => {
+    try {
+        const cacheDir = getBasePath(); // 안전하게 경로 가져오기
+
+        if (!fs.existsSync(cacheDir)) {
+            log.info("❌ 지정된 디렉토리가 존재하지 않습니다:", cacheDir);
+            return;
+        }
+
+        // 🔥 1️⃣ 디렉토리에서 모든 파일 목록 가져오기
+        const files = fs.readdirSync(cacheDir);
+
+        // 🔥 2️⃣ `notice-`로 시작하는 파일만 필터링
+        const noticeFiles = files.filter(file => file.startsWith("notice-"));
+
+        if (noticeFiles.length === 0) {
+            log.info("✅ 삭제할 공지사항 파일이 없습니다.");
+            return;
+        }
+
+        // 🔥 3️⃣ 해당 파일들 삭제
+        noticeFiles.forEach(file => {
+            const filePath = path.join(cacheDir, file);
+            fs.unlinkSync(filePath);
+            log.info("🗑️ 삭제 완료:", filePath);
+        });
+
+        log.info(`✅ 총 ${noticeFiles.length}개의 공지사항 파일 삭제 완료!`);
+    } catch (error) {
+        log.error("❌ 공지사항 파일 삭제 중 오류 발생:", error);
+    }
+};
+
 module.exports = {
     downloadImageFromS3,
     downloadAllFromS3WithCache,
     uploadImageToS3andLocal,
     deleteImageFromS3andLocal,
-    uploadImageToS3
+    uploadImageToS3,
+    uploadNoticeImageToS3,
+    deleteNoticeFiles
 };

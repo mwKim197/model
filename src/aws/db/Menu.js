@@ -3,7 +3,7 @@ const Menu = express.Router();
 const log = require("../../logger");
 const multer = require("multer");
 const { memoryStorage} = require("multer");
-const {checkProduct, addProduct, allProduct, deleteProduct, swapNoAndAddProduct, updateMenuAndAdjustNo, duplicateMenuData,
+const {checkProduct, addProduct, allProduct, deleteProduct, swapNoAndAddProduct, updateMenuAndAdjustNo,
     getMenuById
 } = require('./utils/getMenu');
 const {incrementCounter} = require("./utils/getCount");
@@ -13,7 +13,7 @@ const {saveMileageToDynamoDB, getMileage, updateMileageInDynamoDB, deleteMileage
     getMileageHistory, checkMileageExists, verifyMileageAndReturnPoints, updateMileageAndLogHistory
 } = require("./utils/getMileage");
 const {saveNoticeToDynamoDB, getNotice, getNoticesByDateRange, updateNotice, deleteNotice} = require("./utils/getNotice");
-const {uploadImageToS3andLocal, deleteImageFromS3andLocal, uploadImageToS3} = require("../s3/utils/image");
+const {downloadAllFromS3WithCache, uploadImageToS3andLocal, deleteImageFromS3andLocal, uploadNoticeImageToS3, deleteNoticeFiles} = require("../s3/utils/image");
 const { getUser, setUser } = require('../../util/store');
 const { dispenseCup, adminIceOrder, adminDrinkOrder} = require("../../services/serialOrderManager");
 const serialDataManager = require("../../services/serialDataManager");
@@ -679,13 +679,14 @@ Menu.post('/mileage-transaction', async (req, res) => {
  */
 Menu.post('/notice', upload.single('image'), async (req, res) => {
     try {
-        let { title, content, startDate, endDate, location, author } = req.body;
+        let { title, content, startDate, endDate, location } = req.body;
         const file = req.file; // 업로드된 이미지 파일
         const bucketName = 'model-narrow-road';
         let uploadResult;
+
         if (file) {
             // 1. 이미지 저장 (로컬 + S3)
-            uploadResult = await uploadImageToS3andLocal(bucketName, file.buffer, file.originalname, "notice");
+            uploadResult = await uploadNoticeImageToS3(bucketName, file.buffer, file.originalname, "notice");
         }
 
         // 2. 공지사항 데이터 준비
@@ -695,7 +696,6 @@ Menu.post('/notice', upload.single('image'), async (req, res) => {
             startDate,
             endDate,
             location,
-            author,
             image: uploadResult ? uploadResult.localPath: null, // S3 URL 저장
         };
 
@@ -768,8 +768,9 @@ Menu.delete('/notice/:noticeId', async (req, res) => {
 Menu.get('/notices', async (req, res) => {
     try {
         const { startDate, endDate, ascending } = req.query;
+        deleteNoticeFiles();
         const notices = await getNoticesByDateRange(startDate, endDate, ascending === 'true');
-
+        await downloadAllFromS3WithCache("model-narrow-road", "model/notice");
         res.status(200).json({ success: true, data: notices });
     } catch (error) {
         log.error('기간별 공지 조회 실패:', error);

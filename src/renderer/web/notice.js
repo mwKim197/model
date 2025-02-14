@@ -5,6 +5,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const searchBtn = document.getElementById("searchBtn");
     const noticeForm = document.getElementById("noticeForm");
 
+    // 🔥 현재 날짜를 KST(한국 표준시)로 변환
+    const now = new Date();
+    const kstTime = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    const today = kstTime.toISOString().split("T")[0]; // YYYY-MM-DD 형식으로 변환
+
+    // 🔥 input[type="date"] 필드의 `min` 값 설정 (오늘 이후 선택 가능)
+    document.getElementById("start-date").setAttribute("min", today);
+    document.getElementById("end-date").setAttribute("min", today);
+
+    // 🔥 기본값을 오늘 날짜로 설정
+    document.getElementById("start-date").value = today;
+    document.getElementById("end-date").value = today;
+
     async function fetchNotices(startDate, endDate) {
         try {
             const response = await fetch(`/notices?startDate=${startDate}&endDate=${endDate}`);
@@ -79,7 +92,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 method: "POST",
                 body: formData
             });
-
             const result = await response.json();
             if (result.success) {
                 alert("공지사항 등록 성공!");
@@ -104,8 +116,21 @@ document.addEventListener("DOMContentLoaded", () => {
         fetchNotices(startDate, endDate);
     });
 
-    const today = new Date().toISOString().split("T")[0];
     document.getElementById("filter-start-date").value = today;
     document.getElementById("filter-end-date").value = today;
+
+    // 🔥 KST 시간 적용한 상태로 fetch 실행
     fetchNotices(today, today);
 });
+
+function previewImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById("imagePreview").src = e.target.result;
+            document.getElementById("previewContainer").classList.remove("hidden");
+        };
+        reader.readAsDataURL(file);
+    }
+}

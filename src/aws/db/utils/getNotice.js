@@ -1,5 +1,21 @@
 const { dynamoDB } = require('../../aws');
 const log = require('../../../logger');
+const { getUser } = require('../../../util/store');
+let user;
+
+const processUserAndProduct = async () => {
+    // 사용자 정보 가져오기
+    user = await getUser();
+
+    if (user) {
+        log.info('[STORE]User Info:', user);
+    } else {
+        log.error('[STORE]No user found in store.');
+
+    }
+}
+
+processUserAndProduct().then();
 
 /**
  * 공지사항을 DynamoDB에 저장
@@ -12,10 +28,23 @@ const saveNoticeToDynamoDB = async (notice) => {
 
         const noticeData = {
             ...notice,
+            userId: user.userId,
             noticeId: notice.noticeId || `notice-${kstTimestamp.getTime()}`, // noticeId 자동 생성 (없을 경우)
             timestamp: kstTimestamp.toISOString()
         };
 
+        // 🔥 1️⃣ 기존 공지 개수 확인
+        const existingNotices = await getAllNotices();
+        if (existingNotices.length >= 3) {
+            // 🔥 2️⃣ 가장 오래된 공지 삭제
+            const oldestNotice = existingNotices.reduce((prev, curr) =>
+                prev.timestamp < curr.timestamp ? prev : curr
+            );
+            await deleteNotice(oldestNotice.noticeId);
+            log.info(`✅ 이전 공지사항 삭제 완료: ${oldestNotice.noticeId}`);
+        }
+
+        // 🔥 3️⃣ 새 공지 저장
         const params = {
             TableName: 'model_notice',
             Item: noticeData
@@ -27,6 +56,26 @@ const saveNoticeToDynamoDB = async (notice) => {
         log.error('공지 저장 중 오류 발생:', error);
     }
 };
+
+/**
+ * 📌 현재 저장된 모든 공지 가져오기 (최신 순으로 정렬)
+ */
+const getAllNotices = async () => {
+    try {
+        const params = {
+            TableName: 'model_notice',
+            ProjectionExpression: "noticeId, #ts",
+            ExpressionAttributeNames: { "#ts": "timestamp" } // ✅ 예약어 충돌 방지
+        };
+
+        const result = await dynamoDB.scan(params).promise();
+        return result.Items || [];
+    } catch (error) {
+        console.error("❌ 공지 조회 중 오류 발생:", error);
+        return [];
+    }
+};
+
 
 /**
  * 특정 공지사항 조회
@@ -121,6 +170,7 @@ const getNoticesByDateRange = async (startDate, endDate, ascending = true) => {
         };
 
         const result = await dynamoDB.scan(params).promise();
+
         log.info(`기간별 공지 조회 성공: ${result.Items.length}건`);
         return result.Items || [];
     } catch (error) {
