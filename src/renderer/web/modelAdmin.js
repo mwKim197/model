@@ -2514,6 +2514,163 @@ window.addEventListener('DOMContentLoaded', () => {
     activateTab(activeTab); // 활성화된 탭 설정
 });
 
+// [START] 공지사항팝업!
+document.addEventListener("DOMContentLoaded", async () => {
+    const popupArea = document.getElementById("popupArea");
+
+    try {
+        // 🔥 공지사항 API 호출 (공지사항 데이터 가져오기)
+        const response = await fetch("/notices?startDate=2025-02-01&endDate=2025-12-31");
+        const result = await response.json();
+
+        if (!result.success || result.data.length === 0) {
+            console.log("❌ 표시할 공지사항이 없습니다.");
+            return;
+        }
+
+        // 🔥 여러 개의 공지사항 데이터를 순회하며 팝업 생성
+        let hasPopup = false;
+        result.data.forEach((notice, index) => {
+            if (!getCookie(`popup_${notice.noticeId}`)) {
+                const popup = createPopup(notice, index);
+                popupArea.appendChild(popup);
+                hasPopup = true;
+            }
+        });
+
+        // 🔥 팝업이 하나라도 있으면 popupArea 표시
+        if (hasPopup) {
+            popupArea.classList.remove("hidden");
+        } else {
+            popupArea.classList.add("hidden");
+        }
+
+        // 닫기 이벤트 추가
+        attachCloseEvents();
+    } catch (error) {
+        console.error("❌ 공지사항 데이터를 가져오는 중 오류 발생:", error);
+    }
+});
+
+/**
+ * 📌 공지사항 팝업 생성 함수 (각 팝업을 특정 위치에 배치)
+ */
+function createPopup(notice, index) {
+    const positionClasses = getPopupPosition(index); // 위치 지정
+    const imageUrl = convertToImageUrl(notice.image); // 이미지 경로 변환
+    const popup = document.createElement("div");
+    popup.id = `popup_${notice.noticeId}`;
+    popup.className = `popup_module fixed bg-white p-4 shadow-lg rounded-lg border border-gray-300 
+                       min-w-[300px] max-w-[600px] ms:max-w-[80%] ms:max-h-[80%] pointer-events-auto 
+                       max-h-[90vh] overflow-y-auto ${positionClasses}`;
+    popup.innerHTML = `
+        <div class="popup_module_wrap">
+            <div class="popup_module_container">
+                <h2 class="text-lg font-bold mt-2">${notice.title}</h2>
+                ${notice.image ? `<img src="${imageUrl}" alt="${notice.title}" class="w-full rounded-md h-auto object-cover"> `: ``}
+                <p class="text-sm text-gray-600 mt-1">${notice.content}</p>
+            </div>
+        </div>
+        <div class="popup_module_footer flex justify-between items-center mt-3">
+            <label class="flex items-center space-x-2 text-sm">
+                <input type="checkbox" class="todayClose" data-popup-id="popup_${notice.noticeId}">
+                <span>오늘 하루 이 창을 열지 않음</span>
+            </label>
+            <button type="button" class="__popupClose text-red-500 font-bold" data-popup-id="popup_${notice.noticeId}">닫기</button>
+        </div>
+    `;
+    return popup;
+}
+
+/**
+ * 📌 팝업 위치 설정 함수 (여러 개일 경우 위치 조정)
+ */
+function getPopupPosition(index) {
+    const isMobile = window.innerWidth <= 640; // 🔥 모바일 여부 판별 (640px 이하)
+
+    if (isMobile) {
+        // ✅ 모바일에서는 세로 배치 (top 값 증가, left 고정)
+        return `top-[${index * 100 + 20}px] left-[20px] right-[20px] mx-auto`;
+    }
+
+    // ✅ 데스크탑에서는 가로 배치 유지
+    const positions = [
+        "top-[20px] left-[20px]",  // 첫 번째 팝업 → 좌측 상단
+        "top-[50px] left-[170px]", // 두 번째 팝업 → 우측 상단
+        "top-[70px] left-[270px]", // 세 번째 팝업 → 중앙 상단
+    ];
+
+    return positions[index % positions.length]; // 순환하여 위치 배치
+}
+
+/**
+ * 📌 팝업 닫기 및 '오늘 하루 안 보기' 기능 추가
+ */
+function attachCloseEvents() {
+    document.querySelectorAll(".__popupClose").forEach(button => {
+        button.addEventListener("click", (event) => {
+            const popupId = event.target.getAttribute("data-popup-id");
+            const popupElement = document.getElementById(popupId);
+            if (popupElement) {
+                popupElement.remove(); // ✅ 완전히 DOM에서 제거
+            }
+
+            // 🔥 팝업이 모두 닫히면 popupArea 숨기기
+            if (document.querySelectorAll(".popup_module").length === 0) {
+                document.getElementById("popupArea").classList.add("hidden");
+            }
+        });
+    });
+
+    document.querySelectorAll(".todayClose").forEach(checkbox => {
+        checkbox.addEventListener("change", (event) => {
+            const popupId = event.target.getAttribute("data-popup-id");
+            if (event.target.checked) {
+                setCookie(popupId, "hidden", 1); // 1일 동안 유지
+                const popupElement = document.getElementById(popupId);
+                if (popupElement) {
+                    popupElement.remove(); // ✅ 완전히 DOM에서 제거
+                }
+
+                // 🔥 팝업이 모두 닫히면 popupArea 숨기기
+                if (document.querySelectorAll(".popup_module").length === 0) {
+                    document.getElementById("popupArea").classList.add("hidden");
+                }
+            }
+        });
+    });
+}
+
+/**
+ * 📌 쿠키 설정 함수
+ */
+function setCookie(name, value, days) {
+    let expires = "";
+    if (days) {
+        const date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + value + expires + "; path=/";
+}
+
+/**
+ * 📌 쿠키 가져오기 함수
+ */
+function getCookie(name) {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+}
+
+// [END] 공지사항팝업!
+
+
 // 로그인 상태 검증
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('authToken');

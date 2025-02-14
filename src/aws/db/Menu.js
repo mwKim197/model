@@ -681,18 +681,12 @@ Menu.post('/notice', upload.single('image'), async (req, res) => {
     try {
         let { title, content, startDate, endDate, location, author } = req.body;
         const file = req.file; // 업로드된 이미지 파일
-
-        if (!file) {
-            return res.status(400).json({ success: false, message: '이미지 파일이 필요합니다.' });
-        }
-
         const bucketName = 'model-narrow-road';
-
-        if (!file) {
-            return res.status(400).json({ success: false, message: '파일과 메뉴 ID가 필요합니다.' });
+        let uploadResult;
+        if (file) {
+            // 1. 이미지 저장 (로컬 + S3)
+            uploadResult = await uploadImageToS3andLocal(bucketName, file.buffer, file.originalname, "notice");
         }
-        // 1. 이미지 저장 (로컬 + S3)
-        const uploadResult = await uploadImageToS3andLocal(bucketName, file.buffer, file.originalname, "notice");
 
         // 2. 공지사항 데이터 준비
         const noticeData = {
@@ -702,7 +696,7 @@ Menu.post('/notice', upload.single('image'), async (req, res) => {
             endDate,
             location,
             author,
-            image: uploadResult.localPath, // S3 URL 저장
+            image: uploadResult ? uploadResult.localPath: null, // S3 URL 저장
         };
 
         // 3. DynamoDB 저장

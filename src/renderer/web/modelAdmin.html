@@ -247,10 +247,10 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-2">
-                        <button id="limit-count" class="bg-blue-500 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-600 mr-4">최대개수 저장</button>
+                        <button id="limit-count" class="bg-blue-500 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-600 mr-4">최대결제 잔수 저장</button>
                         <!-- Input 대신 숫자 입력 -->
                         <div class="flex items-center space-x-4">
-                            <label for="limit-input" class="text-gray-600 text-sm font-semibold">최대개수</label>
+                            <label for="limit-input" class="text-gray-600 text-sm font-semibold">최대 잔수</label>
                             <input
                                     id="limit-input"
                                     type="number"
@@ -614,8 +614,6 @@
                         </div>
                     </div>
                 </div>
-
-
                 <!-- 마일리지 END -->
             </div>
             <div id="order-details-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -631,6 +629,9 @@
                     </div>
                 </div>
             </div>
+        </div>
+        <div id="popupArea" class="fixed top-0 left-0 z-50">
+        <!-- 동적으로 팝업이 추가될 영역 -->
         </div>
     </main>
 </div>
