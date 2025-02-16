@@ -78,7 +78,7 @@ app.get('/status', (req, res) => {
     res.status(200).json({ status: 'OK', uptime: process.uptime() });
 });
 
-app.post('/order-update', (req, res) => {
+app.post('/electon-update', (req, res) => {
     log.info("✅ API를 통해 프로그램 업데이트 실행");
     checkForUpdatesManually(); // Electron에서 업데이트 체크 실행
     res.json({ message: "업데이트 확인 요청됨" });

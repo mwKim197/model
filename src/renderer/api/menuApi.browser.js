@@ -213,7 +213,7 @@ async function requestAppRefresh() {
 // 프로그램 업데이트 API 호출 함수
 async function requestAppUpdate() {
     try {
-        const response = await fetch(`${url}/order-update`, {
+        const response = await fetch(`${url}/electon-update`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         });
