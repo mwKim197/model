@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function fetchNotices(startDate, endDate) {
         try {
-            const response = await fetch(`/notices?startDate=${startDate}&endDate=${endDate}`);
+            const response = await fetch(`/notices-admin?startDate=${startDate}&endDate=${endDate}`);
             const result = await response.json();
             noticeList.innerHTML = "";
 
@@ -31,11 +31,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
             result.data.forEach(notice => {
                 const row = document.createElement("tr");
+                const formattedTime = notice.timestamp.replace('T', ' ').slice(0, 19); // "YYYY-MM-DDTHH:mm:ss" -> "YYYY-MM-DD HH:mm:ss"
                 row.className = "border-b";
                 row.innerHTML = `
                     <td class="p-3 border">${notice.title}</td>
                     <td class="p-3 border">${notice.startDate}</td>
                     <td class="p-3 border">${notice.endDate}</td>
+                    <td class="p-3 border">${formattedTime}</td>
                     <td class="p-3 border">${notice.location || "-"}</td>
                     <td class="p-3 border text-center">
                         <button class="delete-btn bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600" 

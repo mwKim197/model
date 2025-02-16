@@ -12,7 +12,7 @@ const {updateUserInfo, getUserById} = require("./utils/getUser");
 const {saveMileageToDynamoDB, getMileage, updateMileageInDynamoDB, deleteMileageFromDynamoDB,
     getMileageHistory, checkMileageExists, verifyMileageAndReturnPoints, updateMileageAndLogHistory
 } = require("./utils/getMileage");
-const {saveNoticeToDynamoDB, getNotice, getNoticesByDateRange, updateNotice, deleteNotice} = require("./utils/getNotice");
+const {saveNoticeToDynamoDB, getNotice, getNoticesByDateRange, updateNotice, deleteNotice, getNoticesByTimestampRange} = require("./utils/getNotice");
 const {downloadAllFromS3WithCache, uploadImageToS3andLocal, deleteImageFromS3andLocal, uploadNoticeImageToS3, deleteNoticeFiles} = require("../s3/utils/image");
 const { getUser, setUser } = require('../../util/store');
 const { dispenseCup, adminIceOrder, adminDrinkOrder} = require("../../services/serialOrderManager");
@@ -771,6 +771,20 @@ Menu.get('/notices', async (req, res) => {
         deleteNoticeFiles();
         const notices = await getNoticesByDateRange(startDate, endDate, ascending === 'true');
         await downloadAllFromS3WithCache("model-narrow-road", "model/notice");
+        res.status(200).json({ success: true, data: notices });
+    } catch (error) {
+        log.error('기간별 공지 조회 실패:', error);
+        res.status(500).json({ success: false, message: '기간별 공지 조회 실패', error: error.message });
+    }
+});
+
+/**
+ * 특정 기간 등록일기준 공지사항 조회 (GET)
+ */
+Menu.get('/notices-admin', async (req, res) => {
+    try {
+        const { startDate, endDate, ascending } = req.query;
+        const notices = await getNoticesByTimestampRange(startDate, endDate, ascending === 'true');
         res.status(200).json({ success: true, data: notices });
     } catch (error) {
         log.error('기간별 공지 조회 실패:', error);

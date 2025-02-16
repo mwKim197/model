@@ -60,7 +60,7 @@ async function initializeApp() {
         log.info('[DEBUG] Serial polling started.');
 
         // 6. Electron 업데이트 설정
-        initializeUpdater();
+        //initializeUpdater();
         log.info('[DEBUG] Updater initialized.');
 
         // 7. IPC 이벤트 핸들러 설정

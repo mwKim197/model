@@ -159,12 +159,56 @@ const deleteNotice = async (noticeId) => {
  */
 const getNoticesByDateRange = async (startDate, endDate, ascending = true) => {
     try {
+        // 🔥 endDate 가 YYYY-MM-DD 형식이면 T23:59:59.999Z 추가
+        if (/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+            endDate = `${endDate}T23:59:59.999Z`;
+        }
+
         const params = {
             TableName: 'model_notice',
-            FilterExpression: 'startDate BETWEEN :startDate AND :endDate',
+            FilterExpression: 'startDate <= :endDate AND endDate >= :startDate AND startDate < :startDate',
             ExpressionAttributeValues: {
                 ':startDate': startDate,
                 ':endDate': endDate
+            },
+            ScanIndexForward: ascending
+        };
+
+        const result = await dynamoDB.scan(params).promise();
+
+        log.info(`기간별 공지 조회 성공: ${result.Items.length}건`);
+        return result.Items || [];
+    } catch (error) {
+        log.error('기간별 공지 조회 중 오류 발생:', error);
+        return [];
+    }
+};
+
+
+/**
+ * 특정 기간 내의 등록일 기준 공지사항 조회
+ * @param {string} startTimestamp 조회 시작 날짜 (ISO 8601)
+ * @param {string} endTimestamp 조회 종료 날짜 (ISO 8601)
+ * @param {boolean} ascending 정렬 방향 (true: 오름차순, false: 내림차순)
+ * @returns {Promise<Array>} 조회된 공지 리스트
+ */
+const getNoticesByTimestampRange = async (startTimestamp, endTimestamp, ascending = true) => {
+    try {
+
+        // 🔥 endTimestamp 가 YYYY-MM-DD 형식이라면 T23:59:59.999Z 추가
+        if (/^\d{4}-\d{2}-\d{2}$/.test(endTimestamp)) {
+            endTimestamp = `${endTimestamp}T23:59:59.999Z`;
+        }
+
+        const params = {
+            TableName: 'model_notice',
+            FilterExpression: '#ts BETWEEN :startTimestamp AND :endTimestamp',
+            ExpressionAttributeNames: {
+                '#ts': 'timestamp' // 예약어 우회 (timestamp → #ts 로 참조)
+            },
+            ExpressionAttributeValues: {
+                ':startTimestamp': startTimestamp,
+                ':endTimestamp': endTimestamp
             },
             ScanIndexForward: ascending
         };
@@ -184,5 +228,6 @@ module.exports = {
     getNotice,
     updateNotice,
     deleteNotice,
-    getNoticesByDateRange
+    getNoticesByDateRange,
+    getNoticesByTimestampRange
 }
