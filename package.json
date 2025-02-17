@@ -27,7 +27,17 @@
       "target": "nsis",
       "sign": false,
       "artifactName": "model-setup-${version}.exe"
-    }
+    },
+    "extraFiles": [
+      {
+        "from": "resources/ca0fec0f-d28d-4ed1-ade8-980fa45adfef.json",
+        "to": "cloudflared/ca0fec0f-d28d-4ed1-ade8-980fa45adfef.json"
+      },
+      {
+        "from": "resources/cloudflared.exe",
+        "to": "cloudflared/cloudflared.exe"
+      }
+    ]
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
