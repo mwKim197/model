@@ -1624,9 +1624,26 @@ async function renderGroupedOrdersToHTML(startDate, endDate, ascending = true) {
 
     // 데이터가 없을 경우 메시지 표시
     if (orders.length === 0) {
+        document.getElementById("summary-points").innerText = "0";
+        document.getElementById("summary-card").innerText = "0";
+        document.getElementById("summary-total").innerText = "0";
         container.innerHTML = '<p class="text-gray-500">조회된 주문이 없습니다.</p>';
         return;
     }
+
+    let totalPoints = 0;
+    let totalCard = 0;
+    let totalAmount = 0;
+
+    orders.forEach(order => {
+        totalPoints += order.point || 0;
+        totalCard += order.totalPrice || 0;
+        totalAmount += order.totalPrice || 0;
+    });
+
+    document.getElementById("summary-points").innerText = totalPoints.toLocaleString();
+    document.getElementById("summary-card").innerText = totalCard.toLocaleString();
+    document.getElementById("summary-total").innerText = totalAmount.toLocaleString();
 
     // 테이블 생성
     const table = document.createElement('table');

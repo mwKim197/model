@@ -305,7 +305,7 @@
             <!--메뉴 조작 END-->
             <!-- 결제 로그 START-->
             <div class="tab-panel hidden" id="tab4">
-                <div id="statistics-container" class="p-4 bg-gray-100 border border-gray-300 rounded-lg shadow-sm">
+                <div id="statistics-container" class="p-4 bg-gray-100 border border-gray-300 rounded-lg shadow-sm mb-2">
                     <!-- 매출 카드들을 한 줄로 구성 -->
                     <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="sales-cards">
                         <!-- 매출 카드들이 동적으로 추가됩니다 -->
@@ -318,7 +318,7 @@
                     </div>
                 </div>
 
-                <div class="flex flex-col gap-4 p-4 sm:p-6 bg-gray-100 border border-gray-300 rounded-lg shadow-sm">
+                <div class="flex flex-col gap-4 p-4 sm:p-6 bg-gray-100 border border-gray-300 rounded-lg shadow-sm mb-2">
                     <!-- 날짜 및 정렬 설정 -->
                     <div class="flex flex-nowrap gap-4 items-center">
                         <!-- 시작 날짜 -->
@@ -354,6 +354,16 @@
                             조회
                         </button>
                     </div>
+                </div>
+
+                <!-- 결제 금액 요약 박스 -->
+                <div id="summary-container" class="p-4 bg-white shadow rounded-lg flex flex-col items-center border border-gray-300 mb-2">
+                    <p class="text-sm font-semibold text-gray-600">기간 내 결제 금액</p>
+                    <p class="text-lg font-bold text-gray-700">
+                        포인트: <span id="summary-points">0</span>P &nbsp; | &nbsp;
+                        카드: <span id="summary-card">0</span>원 &nbsp; | &nbsp;
+                        총 금액: <span id="summary-total">0</span>원
+                    </p>
                 </div>
 
                 <div id="orders-container" class="menu-new-item flex p-4 sm:p-6 border border-gray-300 rounded-lg shadow-sm max-h-[800px] overflow-y-auto">
