@@ -2070,7 +2070,7 @@ cancelRegisterModalBtn.addEventListener("click", closeRegisterModal);
 confirmRegisterBtn.addEventListener("click", async () => {
     const mileageNo = document.getElementById("registerMileageNo").value.trim();
     const password = document.getElementById("registerPassword").value.trim();
-    const amount = parseFloat(document.getElementById("registerAmount").value);
+    let amount = parseFloat(document.getElementById("registerAmount").value.trim());
     const tel = document.getElementById("registerTel").value.trim();
 
     // 입력값 검증
@@ -2094,9 +2094,9 @@ confirmRegisterBtn.addEventListener("click", async () => {
         return;
     }
 
+    // 숫자가 아니거나 입력하지 않았을 경우 0으로 설정
     if (isNaN(amount) || amount <= 0) {
-        alert("마일리지 포인트는 0보다 큰 숫자여야 합니다.");
-        return;
+        amount = 0;
     }
 
     try {
