@@ -72,7 +72,7 @@ async function setupCloudflare(userId) {
     }
 
     log.warn("✅️ config.yml 생성 시작 ");
-    const tunnelUUID = "electron-api-tunnel"; // 기존 터널 UUID 사용
+    const tunnelUUID = "ca0fec0f-d28d-4ed1-ade8-980fa45adfef"; // 기존 터널 UUID 사용
     const url = await cloudflareApi.createCloudflareSubdomain(`${userId}`, tunnelUUID);
 
     if (!url) {
