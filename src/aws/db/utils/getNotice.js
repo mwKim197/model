@@ -166,7 +166,7 @@ const getNoticesByDateRange = async (startDate, endDate, ascending = true) => {
 
         const params = {
             TableName: 'model_notice',
-            FilterExpression: 'startDate <= :endDate AND endDate >= :startDate AND startDate < :startDate',
+            FilterExpression: 'startDate <= :endDate AND endDate >= :startDate AND startDate <= :startDate',
             ExpressionAttributeValues: {
                 ':startDate': startDate,
                 ':endDate': endDate
