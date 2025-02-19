@@ -178,7 +178,7 @@ const dispenseCup = (recipe) => {
         setTimeout(async () => {
             const result = await Cup.getCupInfo(); // `getSomeData()`는 조회하는 함수입니다.
             log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵디스펜서 상태 cup: ${recipe.cup}, 컵1(PL)모터ON=${result.plasticCup.motorActive}, 컵2(PA)모터ON=${result.paperCup.motorActive}`);
-
+            eventEmitter.emit('order-update', { menu: recipe.name, status: 'processing', message: `메뉴를 준비중입니다.` });
             if (recipe.cup === 'plastic') {
                 log.info(`menu: ${recipe.name} - [${recipe.menuId}] : GoCupOut, cup: 'plastic'`);
                 await Cup.getPlasticCupUsage();

@@ -1450,11 +1450,11 @@ const cardPayment = async (orderAmount, discountAmount) => {
 
 // 주문 시작
 const ordStart = async (point = 0) => {
-    const orderModal = document.getElementById('orderModal');
+    //const orderModal = document.getElementById('orderModal');
 
     try {
         // 주문 모달 띄우기
-        orderModal.classList.remove('hidden');
+        //orderModal.classList.remove('hidden');
         const ordInfo = {
             point: point,
             orderList: orderList
