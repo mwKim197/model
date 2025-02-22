@@ -22,6 +22,15 @@ async function getOrCreateTunnel(tunnelName = "model-app") {
     try {
         tunnelName = tunnelName + "-model-app";
 
+        const certFileDir = path.join(homedir(), ".cloudflared");
+
+        if (!fs.existsSync(certFileDir)) {
+            fs.mkdirSync(certFileDir, { recursive: true });
+            console.log(`디렉토리가 생성되었습니다: ${certFileDir}`);
+        } else {
+            console.log(`디렉토리가 이미 존재합니다: ${certFileDir}`);
+        }
+
         certFile = path.join(homedir(), ".cloudflared", "cert.pem");
 
         log.info("🔍 기존 cert 인증서 복사 시작... ");
