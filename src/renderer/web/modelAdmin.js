@@ -1611,18 +1611,14 @@ async function renderSalesStatistics() {
 
 // 주문 내역 랜더링
 async function renderGroupedOrdersToHTML(startDate, endDate, ascending = true) {
-
     // DynamoDB에서 주문 데이터 조회
     const orders = await getOrdersByDateRange(startDate, endDate, ascending);
 
-    // HTML 컨테이너 선택
+    // HTML 컨테이너 선택 및 이전 데이터 제거
     const container = document.getElementById('orders-container');
-
-    // 이전 데이터 제거
     container.innerHTML = '';
 
-
-    // 데이터가 없을 경우 메시지 표시
+    // 데이터가 없을 경우 처리
     if (orders.length === 0) {
         document.getElementById("summary-points").innerText = "0";
         document.getElementById("summary-card").innerText = "0";
@@ -1634,7 +1630,6 @@ async function renderGroupedOrdersToHTML(startDate, endDate, ascending = true) {
     let totalPoints = 0;
     let totalCard = 0;
     let totalAmount = 0;
-
     orders.forEach(order => {
         totalPoints += order.point || 0;
         totalCard += order.totalPrice || 0;
@@ -1645,11 +1640,12 @@ async function renderGroupedOrdersToHTML(startDate, endDate, ascending = true) {
     document.getElementById("summary-card").innerText = totalCard.toLocaleString();
     document.getElementById("summary-total").innerText = totalAmount.toLocaleString();
 
-    // 테이블 생성
+    // 테이블 생성 (데스크탑용)
     const table = document.createElement('table');
+    table.id = 'orders-table'; // id 추가
     table.className = 'table-auto w-full border-collapse border border-gray-300';
 
-    // 테이블 헤더 생성 (고정)
+    // 테이블 헤더 (데스크탑용; 모바일에서는 미디어쿼리로 숨김)
     table.innerHTML = `
         <thead>
             <tr class="bg-gray-100">
@@ -1663,37 +1659,35 @@ async function renderGroupedOrdersToHTML(startDate, endDate, ascending = true) {
         </thead>
         <tbody></tbody>
     `;
-
-    // 테이블 바디 선택
     const tbody = table.querySelector('tbody');
 
-    // 주문 데이터를 반복하여 테이블 바디에 추가
     orders.forEach((order, index) => {
-        // 날짜와 시간을 보기 좋게 포맷 (T 제거)
-        const formattedTime = order.timestamp.replace('T', ' ').slice(0, 19); // "YYYY-MM-DDTHH:mm:ss" -> "YYYY-MM-DD HH:mm:ss"
+        // 날짜 포맷 조정 ("T" 제거)
+        const formattedTime = order.timestamp.replace('T', ' ').slice(0, 19);
 
-        // 첫 번째 메뉴
+        // 첫 번째 메뉴와 추가 메뉴 개수 계산
         const firstMenu = order.menuSummary[0];
         const additionalMenuCount = order.menuSummary
-            .slice(1) // 첫 번째 메뉴를 제외한 메뉴들의
-            .reduce((sum, menu) => sum + menu.count, 0) + firstMenu.count - 1; // 추가 메뉴 count 합산
+            .slice(1)
+            .reduce((sum, menu) => sum + menu.count, 0) + firstMenu.count - 1;
 
-        const point = order.point ? order.point: 0;
+        const point = order.point || 0;
         const cardAmt = order.totalPrice - point;
+
+        // 테이블 행 생성 (각 셀에 data-label 추가)
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td class="px-4 py-2 border border-gray-300 text-center text-gray-600 text-sm">${index + 1}</td>
-            <td class="px-4 py-2 border border-gray-300 text-center text-gray-600 text-sm">${formattedTime}</td>
-            <td class="px-4 py-2 border border-gray-300 text-gray-600 text-sm">
+            <td data-label="순번" class="px-4 py-2 border border-gray-300 text-center text-gray-600 text-sm">${index + 1}</td>
+            <td data-label="날짜" class="px-4 py-2 border border-gray-300 text-center text-gray-600 text-sm">${formattedTime}</td>
+            <td data-label="메뉴" class="px-4 py-2 border border-gray-300 text-gray-600 text-sm">
                 ${firstMenu.name} ${additionalMenuCount > 0 ? `<span class="text-blue-600 font-semibold">+${additionalMenuCount}</span>` : ''}
             </td>
-            <td class="px-4 py-2 border border-gray-300 text-right text-gray-600 text-sm">${point.toLocaleString()}원</td>
-            <td class="px-4 py-2 border border-gray-300 text-right text-gray-600 text-sm">${cardAmt.toLocaleString()}원</td>
-            <td class="px-4 py-2 border border-gray-300 text-right text-gray-600 text-sm">${order.totalPrice.toLocaleString()}원</td>
+            <td data-label="포인트" class="px-4 py-2 border border-gray-300 text-right text-gray-600 text-sm">${point.toLocaleString()}원</td>
+            <td data-label="카드" class="px-4 py-2 border border-gray-300 text-right text-gray-600 text-sm">${cardAmt.toLocaleString()}원</td>
+            <td data-label="총 금액" class="px-4 py-2 border border-gray-300 text-right text-gray-600 text-sm">${order.totalPrice.toLocaleString()}원</td>
         `;
-        tbody.appendChild(row);
 
-        // 테이블 행에 클릭 이벤트 추가
+        // 행 클릭 시 상세 주문 모달 표시
         row.addEventListener('click', () => {
             showOrderDetailsModal(order);
         });
@@ -1701,7 +1695,6 @@ async function renderGroupedOrdersToHTML(startDate, endDate, ascending = true) {
         tbody.appendChild(row);
     });
 
-    // 생성된 테이블을 메인 컨테이너에 추가
     container.appendChild(table);
 }
 /* [CONTROL] 주문 로그조회 END */

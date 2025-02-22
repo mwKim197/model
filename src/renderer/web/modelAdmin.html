@@ -7,6 +7,46 @@
     <title>커피 메뉴 관리</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://use.fontawesome.com/releases/v5.2.0/js/all.js"></script>
+    <style>
+        @media (max-width: 640px) {
+            /* #orders-table 내의 테이블 헤더 숨김 */
+            #orders-table thead {
+                display: none;
+            }
+            /* #orders-table 관련 요소들을 블록 요소로 변경 */
+            #orders-table,
+            #orders-table tbody,
+            #orders-table tr,
+            #orders-table td {
+                display: block;
+                width: 100%;
+            }
+            /* 각 행에 카드 스타일 적용 */
+            #orders-table tr {
+                margin-bottom: 1rem;
+                border: 1px solid #e5e7eb; /* Tailwind의 border-gray-300 */
+                border-radius: 0.5rem;
+                padding: 0.5rem;
+                background: #fff;
+            }
+            /* 각 셀에 기본 스타일 및 레이블 적용 */
+            #orders-table td {
+                text-align: left;
+                padding: 0.5rem;
+                border: none;
+                position: relative;
+            }
+            /* data-label 속성값을 pseudo-element로 표시 */
+            #orders-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                margin-right: 0.5rem;
+                display: inline-block;
+                width: 30%;
+            }
+        }
+
+    </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
 <div class="w-full mx-auto my-10 md:p-8 bg-white shadow-lg rounded-lg">
