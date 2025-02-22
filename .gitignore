@@ -3,3 +3,4 @@
 /dist
 /pem/cert.pem
 /pem/key.pem
+resources/cert.pem
