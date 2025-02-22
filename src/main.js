@@ -1,7 +1,6 @@
 //const express = require('express');
 const { app, BrowserWindow} = require('electron');
 const path = require('path');
-const { initializeUpdater, checkForUpdatesManually } = require('./updater');
 const { createMainWindow } = require('./windows/mainWindow');
 const { setupEventHandlers } = require('./events/eventHandlers');
 const server = require('./server');
@@ -38,7 +37,7 @@ async function initializeApp() {
 
         //[TODO] 테스트 이후적용  `electron-store`의 URL을 기반으로 Cloudflare Tunnel 설정 - window 생성이후에 실행
         // ✅ `did-finish-load` 이후 userData 가져오기
-        /*mainWindow.webContents.once('did-finish-load', async () => {
+        mainWindow.webContents.once('did-finish-load', async () => {
             try {
                 const userData = await mainWindow.webContents.executeJavaScript('window.electronAPI.getUserData()');
                 log.info("✅ userData 가져오기 성공:", userData);
@@ -53,7 +52,7 @@ async function initializeApp() {
             } catch (error) {
                 log.error("❌ userData 가져오기 실패:", error.message);
             }
-        });*/
+        });
 
         // 5. Serial Polling 시작
         serialPolling.start();
@@ -121,7 +120,7 @@ app.whenReady().then(() => {
 // ✅ Cloudflare 종료 처리
 app.on('before-quit', () => {
     serialPolling.stop();
-   // stopCloudflareTunnel(); // ✅ Cloudflare 종료
+    stopCloudflareTunnel(); // ✅ Cloudflare 종료
 });
 
 app.on('window-all-closed', () => {

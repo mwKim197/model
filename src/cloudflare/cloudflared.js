@@ -10,9 +10,10 @@ const {homedir} = require("node:os");
 const basePath = path.dirname(app.getPath('exe')); // model.exe의 디렉토리 찾기
 const cloudflaredDir = path.join(basePath, 'cloudflared'); // Cloudflare 실행 폴더
 const cloudflaredPath = path.join(cloudflaredDir, 'cloudflared.exe');
-const certFile = path.join(cloudflaredDir, 'cert.pem');
 const configFile = path.join(cloudflaredDir, 'config.yml');
 const cloudflaredBin = path.join(cloudflaredDir, process.platform === 'win32' ? 'cloudflared.exe' : 'cloudflared');
+const oldCertFile = path.join(cloudflaredDir, 'cert.pem');
+let certFile;
 let credentialsFile;
 let cloudflareProcess = null; // ✅ Cloudflare 프로세스 핸들러
 
@@ -20,6 +21,17 @@ let cloudflareProcess = null; // ✅ Cloudflare 프로세스 핸들러
 async function getOrCreateTunnel(tunnelName = "model-app") {
     try {
         tunnelName = tunnelName + "-model-app";
+
+        certFile = path.join(homedir(), ".cloudflared", "cert.pem");
+
+        log.info("🔍 기존 cert 인증서 복사 시작... ");
+        try {
+           fs.copyFileSync(oldCertFile, certFile);
+           log.info(`✅ cert JSON 파일 복사 완료: ${certFile}`);
+        } catch (err) {
+           throw new Error(`❌ cert 인증서 복사 실패: ${err.message}`);
+
+        }
 
         log.info("🔍 기존 Cloudflare 터널 UUID 확인 중... tunnelName: ", tunnelName);
 
@@ -37,8 +49,10 @@ async function getOrCreateTunnel(tunnelName = "model-app") {
         if (tunnelUUID) {
             log.info(`✅ 기존 터널 UUID 사용: ${tunnelUUID}`);
 
-            // ✅ 기본 경로에 저장된 인증서 파일을 새 경로로 이동
-            const oldCredentialsFile = path.join(homedir(), ".cloudflared", `${tunnelUUID}.json`);
+            // ✅ 기본 경로에 저장된 인증서 파일을 경로 저장
+            credentialsFile = path.join(homedir(), ".cloudflared", `${tunnelUUID}.json`);
+
+            /*const oldCredentialsFile = path.join(homedir(), ".cloudflared", `${tunnelUUID}.json`);
             credentialsFile = path.join(cloudflaredDir, `${tunnelUUID}.json`);
             
             try {
@@ -46,11 +60,10 @@ async function getOrCreateTunnel(tunnelName = "model-app") {
                 log.info(`✅ 터널 JSON 파일 복사 완료: ${credentialsFile}`);
             } catch (err) {
                 throw new Error(`❌ 터널 인증서 복사 실패: ${err.message}`);
-            }
-
+            }*/
             log.info(`✅ 기존 터널 JSON 파일 위치: ${credentialsFile}`);
 
-            return { tunnelUUID, credentialsFile };
+            return tunnelUUID;
         }
 
         log.info("🆕 기존 터널이 없음. 새 터널 생성 중...");
@@ -73,8 +86,10 @@ async function getOrCreateTunnel(tunnelName = "model-app") {
         tunnelUUID = newMatch[1].trim();
         log.info(`✅ 새 터널 UUID: ${tunnelUUID}`);
 
-        // ✅ 기본 경로에 저장된 인증서 파일을 새 경로로 이동
-        const oldCredentialsFile = path.join(homedir(), ".cloudflared", `${tunnelUUID}.json`);
+        // ✅ 기본 경로에 저장된 인증서 파일을 경로 저장
+        credentialsFile = path.join(homedir(), ".cloudflared", `${tunnelUUID}.json`);
+
+       /* const oldCredentialsFile = path.join(homedir(), ".cloudflared", `${tunnelUUID}.json`);
         credentialsFile = path.join(cloudflaredDir, `${tunnelUUID}.json`);
 
         try {
@@ -83,9 +98,10 @@ async function getOrCreateTunnel(tunnelName = "model-app") {
         } catch (err) {
             throw new Error(`❌ 터널 인증서 복사 실패: ${err.message}`);
         }
+        */
         log.info(`✅ 터널 JSON 파일 저장 위치: ${credentialsFile}`);
 
-        return { tunnelUUID, credentialsFile };
+        return tunnelUUID;
     } catch (error) {
         log.error(`❌ 터널 처리 실패: ${error.message}`);
         return null;
@@ -160,7 +176,7 @@ async function setupCloudflare(userId) {
     const tunnelUUID = await getOrCreateTunnel(userId);
 
     // ✅ config.yml을 먼저 생성해야 터널 실행 가능!
-    await generateConfigYml(tunnelUUID.tunnelUUID, tunnelUUID.credentialsFile, `${userId}.nw-api.org`);
+    await generateConfigYml(tunnelUUID,`${userId}.nw-api.org`);
 
     // ✅ config.yml이 준비된 후 터널 실행
     log.info("🚀 Cloudflare 터널 실행...");
@@ -168,7 +184,7 @@ async function setupCloudflare(userId) {
 
     // ✅ 터널 실행 후 서브도메인 생성
     log.info("🔗 서브도메인 생성 중...");
-    const url = await cloudflareApi.updateOrCreateCloudflareSubdomain(`${userId}`, tunnelUUID.tunnelUUID);
+    const url = await cloudflareApi.updateOrCreateCloudflareSubdomain(`${userId}`, tunnelUUID);
 
     if (!url) {
         log.error("❌ 서브 도메인 생성 실패.");
@@ -179,7 +195,7 @@ async function setupCloudflare(userId) {
 }
 
 // ✅ `config.yml` 생성 함수
-async function generateConfigYml(tunnelUUID, credentialsFile ,url) {
+async function generateConfigYml(tunnelUUID, url) {
     try {
         log.info("🚀 config.yml 생성 중...");
         log.info("🚀 tunnelUUID 생성 중...", tunnelUUID);
