@@ -1,6 +1,6 @@
 {
   "name": "model",
-  "version": "2.0.1",
+  "version": "2.0.0",
   "main": "src/main.js",
   "scripts": {
     "start": "npx tailwindcss build src/styles/tailwind.css -o src/styles/output.css && set NODE_ENV=development && electron .",
@@ -30,12 +30,12 @@
     },
     "extraFiles": [
       {
-        "from": "resources/ca0fec0f-d28d-4ed1-ade8-980fa45adfef.json",
-        "to": "cloudflared/ca0fec0f-d28d-4ed1-ade8-980fa45adfef.json"
-      },
-      {
         "from": "resources/cloudflared.exe",
         "to": "cloudflared/cloudflared.exe"
+      },
+      {
+        "from": "resources/cert.pem",
+        "to": "cloudflared/cert.pem"
       }
     ]
   },

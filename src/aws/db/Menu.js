@@ -479,7 +479,7 @@ Menu.post('/login', async (req, res) => {
     try {
         // 사용자 정보 조회
         const user = await getUserById(userId);
-        console.log("user : ", user);
+        log.info("user : ", user);
         // 비밀번호 검증
         const isPasswordValid = await compare(password, user.password);
         if (!isPasswordValid) {

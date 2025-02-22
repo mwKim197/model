@@ -11,10 +11,10 @@ function sendLogToMain(level, message) {
 const initializeUserData = async () => {
     try {
         userData = await ipcRenderer.invoke('get-user-data'); // 메인 프로세스에서 데이터 가져오기
-        console.log('유저 정보 조회 완료:', userData);
+        log.info('유저 정보 조회 완료:', userData);
         return true;
     } catch (error) {
-        console.error('유저 정보 조회 실패:', error);
+        log.error('유저 정보 조회 실패:', error);
         throw error; // 초기화 실패 시 에러 던지기
     }
 };
@@ -157,11 +157,14 @@ const reqOrder = async (orderList) => {
         if (!response.ok) throw new Error('네트워크 응답 실패');
 
         const data = await response.json();
-        console.log(data);
 
+        if (!response.ok) {
+            throw new Error(data.error || `HTTP error! Status: ${response.status}`);
+        }
+
+        console.log(data);
     } catch (error) {
-        sendLogToMain('error','ORDER :', error);
-        // 에러를 호출한 함수로 전달
+        sendLogToMain('error', 'ORDER :', error?.message || 'Unknown error', error?.stack || 'No stack trace');
         throw error;
     }
 }

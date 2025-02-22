@@ -10,7 +10,7 @@ const { setupPortForwarding } = require('./services/portForwarding');
 const { getBasePath } = require(path.resolve(__dirname, './aws/s3/utils/cacheDirManager'));
 const log = require('./logger');
 const fs = require('fs');
-const {setupCloudflare, stopCloudflareTunnel, isCloudflareRunning} = require("./cloudflare/cloudflared");
+const {setupCloudflare, stopCloudflareTunnel} = require("./cloudflare/cloudflared");
 
 // 디렉토리 확인 및 생성
 const basePath = getBasePath(); // getBasePath 함수 호출
@@ -38,26 +38,22 @@ async function initializeApp() {
 
         //[TODO] 테스트 이후적용  `electron-store`의 URL을 기반으로 Cloudflare Tunnel 설정 - window 생성이후에 실행
         // ✅ `did-finish-load` 이후 userData 가져오기
-        mainWindow.webContents.once('did-finish-load', async () => {
+        /*mainWindow.webContents.once('did-finish-load', async () => {
             try {
                 const userData = await mainWindow.webContents.executeJavaScript('window.electronAPI.getUserData()');
                 log.info("✅ userData 가져오기 성공:", userData);
 
                 // ✅ Cloudflared 설정 실행
                 if (userData && userData.userId) {
-                    if (!isCloudflareRunning()) { // ✅ 이미 실행 중인지 확인
-                        await setupCloudflare(userData.userId);
-                        log.info("✅ Cloudflare Tunnel 설정 완료");
-                    } else {
-                        log.info("⚠️ Cloudflare Tunnel이 이미 실행 중입니다. 중복 실행 방지.");
-                    }
+                    await setupCloudflare(userData.userId);
+                    log.info("✅ Cloudflare Tunnel 설정 완료");
                 } else {
                     log.warn("⚠️ userData.userId가 없습니다. Cloudflare 설정을 건너뜁니다.");
                 }
             } catch (error) {
                 log.error("❌ userData 가져오기 실패:", error.message);
             }
-        });
+        });*/
 
         // 5. Serial Polling 시작
         serialPolling.start();
@@ -125,7 +121,7 @@ app.whenReady().then(() => {
 // ✅ Cloudflare 종료 처리
 app.on('before-quit', () => {
     serialPolling.stop();
-    stopCloudflareTunnel(); // ✅ Cloudflare 종료
+   // stopCloudflareTunnel(); // ✅ Cloudflare 종료
 });
 
 app.on('window-all-closed', () => {
