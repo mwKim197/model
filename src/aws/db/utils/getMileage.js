@@ -11,7 +11,6 @@ const processUserAndProduct = async () => {
         log.info('[STORE]User Info:', user);
     } else {
         log.error('[STORE]No user found in store.');
-
     }
 }
 

@@ -1631,9 +1631,9 @@ async function renderGroupedOrdersToHTML(startDate, endDate, ascending = true) {
     let totalCard = 0;
     let totalAmount = 0;
     orders.forEach(order => {
-        totalPoints += order.point || 0;
-        totalCard += order.totalPrice || 0;
-        totalAmount += order.totalPrice || 0;
+        totalPoints += Number(order.point) || 0;
+        totalCard += Number(order.totalPrice) || 0;
+        totalAmount += Number(order.totalPrice) || 0;
     });
 
     document.getElementById("summary-points").innerText = totalPoints.toLocaleString();
