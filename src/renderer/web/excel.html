@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Excel 파일 업로드</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-6">
+<div class="max-w-md mx-auto bg-white p-4 rounded shadow">
+  <h1 class="text-2xl font-bold mb-4">Excel 파일 업로드</h1>
+  <input type="file" id="excelFile" accept=".xlsx, .xls" class="mb-4 p-2 border">
+  <button id="uploadBtn" class="bg-blue-500 text-white px-4 py-2 rounded">업로드</button>
+  <!-- 전체 데이터 조회 버튼 추가 -->
+  <button id="fetchAllBtn" class="bg-green-500 text-white px-4 py-2 rounded mt-4 block">전체 데이터 조회</button>
+  <!-- 엑셀 데이터 저장 버튼 (병합 후 DB 업데이트) -->
+  <button id="saveExcelBtn" class="bg-purple-500 text-white px-4 py-2 rounded mt-4 block">엑셀 데이터 저장</button>
+  <div id="result" class="mt-4 whitespace-pre-wrap"></div>
+</div>
+
+<script>
+  let excelData;
+  let dbData;
+  const userId = "zero068"; // 또래오래
+
+  document.getElementById('uploadBtn').addEventListener('click', async () => {
+    const fileInput = document.getElementById('excelFile');
+    const resultDiv = document.getElementById('result');
+    if (!fileInput.files.length) {
+      alert('파일을 선택해주세요.');
+      return;
+    }
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append('excel', file);
+
+    try {
+      const response = await fetch('/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await response.json();
+      excelData = data.data;
+
+      resultDiv.textContent = JSON.stringify(data, null, 2);
+    } catch (err) {
+      console.error(err);
+      resultDiv.textContent = '업로드 에러 발생';
+    }
+  });
+
+  function generateUniqueMileageNo() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // 1~12월
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+
+    // 랜덤 4자리 추가
+    const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
+
+    return `${year}${month}${day}${hours}${minutes}${seconds}${randomPart}`;
+  }
+
+  function generateMileageNo() {
+    for (const item of excelData) {
+
+      item.uniqueMileageNo = generateUniqueMileageNo();
+      item.userId = userId;
+      item.mileageNo = item.tel;
+
+      try {
+
+        console.log(`${JSON.stringify(item)} 데이터 추가 성공`);
+      } catch (error) {
+        console.error(`${item} 데이터 추가 실패`, error);
+      }
+    }
+  }
+
+  // 전체 데이터 조회 버튼 이벤트 추가
+  document.getElementById('fetchAllBtn').addEventListener('click', async () => {
+    const resultDiv = document.getElementById('result');
+    resultDiv.textContent = '전체 데이터 조회 중...';
+    try {
+      const response = await fetch('/api/mileage/all');
+      dbData = await response.json();
+      console.log(dbData);
+      resultDiv.textContent = JSON.stringify(dbData, null, 2);
+    } catch (err) {
+      console.error(err);
+      resultDiv.textContent = '전체 데이터 조회 에러 발생';
+    }
+  });
+
+  // 두 배열에서 tel 값이 일치하는 데이터만 필터링하는 함수
+  /**
+   * DB 데이터와 Excel 데이터를 tel 기준으로 full outer join하여 합산한 결과 배열을 반환합니다.
+   */
+  function mergeMileageData(dbData, excelData) {
+    // DB 데이터를 tel 기준으로 매핑 (key: tel, value: record)
+    const dbMapping = {};
+    dbData.forEach(item => {
+      dbMapping[item.tel] = item;
+    });
+
+    // Excel 데이터를 tel 기준으로 금액을 합산하는 매핑 생성
+    const excelMapping = {};
+    excelData.forEach(record => {
+      const tel = record.tel;
+      const amt = Number(record.amount) || 0;
+      if (excelMapping[tel]) {
+        excelMapping[tel] += amt;
+      } else {
+        excelMapping[tel] = amt;
+      }
+    });
+
+    // DB와 Excel에 모두 있는 tel의 집합(전체 union)
+    const allTels = new Set([...Object.keys(dbMapping), ...Object.keys(excelMapping)]);
+
+    const merged = [];
+
+    allTels.forEach(tel => {
+      if (dbMapping[tel] && excelMapping[tel] !== undefined) {
+        // 두 곳 모두에 존재하면, DB 데이터 기준으로 amount 합산
+        const dbAmount = Number(dbMapping[tel].amount) || 0;
+        const combinedAmount = dbAmount + excelMapping[tel];
+        // 기존 DB 데이터를 복사하여 amount만 업데이트
+        merged.push({
+          ...dbMapping[tel],
+          amount: combinedAmount
+        });
+      } else if (dbMapping[tel]) {
+        // DB에만 존재하는 경우 그대로 추가
+        merged.push(dbMapping[tel]);
+      } else if (excelMapping[tel] !== undefined) {
+        // Excel에만 존재하는 경우, 새 레코드를 생성
+        // 필요에 따라 다른 필드(예: password)는 Excel 데이터에서 가져오거나 기본값을 설정
+        const excelRecord = excelData.find(item => item.tel === tel);
+        merged.push({
+          userId: "zero068",         // 고정값
+          uniqueMileageNo: generateUniqueMileageNo(),
+          mileageNo: tel,             // 필요에 따라 달라질 수 있음
+          tel: tel,
+          password: excelRecord ? excelRecord.password : "",
+          amount: excelMapping[tel],
+          timestamp: new Date().toISOString()
+        });
+      }
+    });
+
+    return merged;
+  }
+
+  // 엑셀 데이터 저장 버튼 이벤트: 병합 후 /merge 엔드포인트에 POST
+  document.getElementById('saveExcelBtn').addEventListener('click', async () => {
+    const resultDiv = document.getElementById('result');
+    if (!excelData) {
+      alert("엑셀 데이터를 먼저 업로드 해주세요.");
+      return;
+    }
+    if (!dbData) {
+      alert("전체 DB 데이터를 먼저 조회해 주세요.");
+      return;
+    }
+    // 병합된 데이터를 생성
+    const mergedData = mergeMileageData(dbData, excelData);
+    resultDiv.textContent = "병합된 데이터:\n" + JSON.stringify(mergedData, null, 2);
+
+    // /merge 엔드포인트로 병합된 데이터를 전달
+    try {
+      const response = await fetch('/merge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: mergedData })
+      });
+      const resData = await response.json();
+      resultDiv.textContent += "\n\n업데이트 결과:\n" + JSON.stringify(resData, null, 2);
+    } catch (err) {
+      console.error(err);
+      resultDiv.textContent += "\n\n저장 에러 발생";
+    }
+  });
+</script>
+</body>
+</html>
