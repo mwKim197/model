@@ -165,11 +165,11 @@ Excel.post('/merge', async (req, res) => {
 
             console.log(JSON.stringify(batchParams));
 
-            const result = await dynamoDB.batchWrite(batchParams).promise();
+           /* const result = await dynamoDB.batchWrite(batchParams).promise();
             if (Object.keys(result.UnprocessedItems).length > 0) {
                 console.warn('처리되지 않은 항목이 있습니다:', result.UnprocessedItems);
                 // 필요 시 재시도 로직 구현 가능
-            }
+            }*/
         }
 
         res.json({ message: "Merge 및 업데이트 완료", mergedCount: mergedRecords.length });
