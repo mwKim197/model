@@ -1490,63 +1490,81 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 오늘 날짜 계산
     const today = new Date();
     const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0'); // 월 (0부터 시작)
-    const dd = String(today.getDate()).padStart(2, '0'); // 일
-
-    // 기본 날짜 (오늘)
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
     const todayString = `${yyyy}-${mm}-${dd}`;
 
-    // 31일 전 날짜 계산
-    const oneWeekAgo = new Date(today);
-    oneWeekAgo.setDate(today.getDate() - 31); // 31일 전
-    const oneWeekAgoString = `${oneWeekAgo.getFullYear()}-${String(oneWeekAgo.getMonth() + 1).padStart(2, '0')}-${String(oneWeekAgo.getDate()).padStart(2, '0')}`;
+    // 날짜 포맷 헬퍼 함수
+    const formatDate = (date) => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    };
 
-    // 시작 날짜와 종료 날짜 기본값 설정
-    const startDateInput = document.getElementById('start-date');
+    // 한 달 전 날짜 계산 (월 단위 계산)
+    const subtractOneMonth = (date) => {
+        let d = new Date(date);
+        d.setMonth(d.getMonth() - 1);
+        return d;
+    };
+
+    // 한 달 후 날짜 계산
+    const addOneMonth = (date) => {
+        let d = new Date(date);
+        d.setMonth(d.getMonth() + 1);
+        return d;
+    };
+
+    // 기본값: 종료 날짜는 오늘, 시작 날짜는 종료 날짜 기준 한 달 전
     const endDateInput = document.getElementById('end-date');
+    const startDateInput = document.getElementById('start-date');
+    endDateInput.value = todayString;
+    startDateInput.value = formatDate(subtractOneMonth(today));
 
-    startDateInput.value = todayString; // 시작 날짜 기본값 (오늘)
-    startDateInput.min = oneWeekAgoString; // 시작 날짜 최소값 (1주일 전)
-    startDateInput.max = todayString; // 시작 날짜 최대값 (오늘)
+    // 초기 allowed range 설정
+    startDateInput.min = formatDate(subtractOneMonth(today));
+    startDateInput.max = endDateInput.value;
+    endDateInput.min = startDateInput.value;
+    endDateInput.max = todayString;
 
-    endDateInput.value = todayString; // 종료 날짜 기본값 (오늘)
-    endDateInput.min = oneWeekAgoString; // 종료 날짜 최소값 (1주일 전)
-    endDateInput.max = todayString; // 종료 날짜 최대값 (오늘)
-
-    // 종료 날짜가 시작 날짜보다 이전으로 설정되지 않도록 제한
+    // 시작 날짜 변경 시 처리: 종료 날짜의 최소는 시작 날짜, 최대는 (시작 날짜 + 한 달) (오늘보다 이후면 오늘로 제한)
     startDateInput.addEventListener('change', () => {
-        if (new Date(startDateInput.value) > new Date(endDateInput.value)) {
-            endDateInput.value = startDateInput.value;
+        let startDate = new Date(startDateInput.value);
+        endDateInput.min = startDateInput.value;
+        let maxEndDate = addOneMonth(startDate);
+        if (maxEndDate > today) {
+            maxEndDate = today;
         }
-        endDateInput.min = startDateInput.value; // 종료 날짜 최소값 동적으로 설정
+        endDateInput.max = formatDate(maxEndDate);
+        if (new Date(endDateInput.value) > maxEndDate) {
+            endDateInput.value = formatDate(maxEndDate);
+        }
     });
 
+    // 종료 날짜 변경 시 처리: 시작 날짜의 최대는 종료 날짜, 최소는 (종료 날짜 - 한 달)
     endDateInput.addEventListener('change', () => {
-        if (new Date(endDateInput.value) < new Date(startDateInput.value)) {
-            startDateInput.value = endDateInput.value;
+        let endDate = new Date(endDateInput.value);
+        startDateInput.max = endDateInput.value;
+        let minStartDate = subtractOneMonth(endDate);
+        startDateInput.min = formatDate(minStartDate);
+        if (new Date(startDateInput.value) < minStartDate) {
+            startDateInput.value = formatDate(minStartDate);
         }
-        startDateInput.max = endDateInput.value; // 시작 날짜 최대값 동적으로 설정
     });
 
-    // 오늘 날짜 계산
+    // 그 외 기존 코드...
     const now = new Date();
-
-    // 로컬 시간 기준 오늘 날짜
     const localYear = now.getFullYear();
     const localMonth = now.getMonth();
     const localDate = now.getDate();
-
-    // UTC 기준 오늘 시작 시간 (00:00:00Z)
     const todayStart = new Date(Date.UTC(localYear, localMonth, localDate, 0, 0, 0)).toISOString();
-
-    // UTC 기준 오늘 종료 시간 (23:59:59Z)
     const todayEnd = new Date(Date.UTC(localYear, localMonth, localDate, 23, 59, 59)).toISOString();
 
     await renderGroupedOrdersToHTML(todayStart, todayEnd, true);
-
-    // 매출 통계 조회 및 렌더링
     await renderSalesStatistics();
 });
+
 
 // 날짜 지정 조회
 document.getElementById('filter-orders-btn').addEventListener('click', async () => {
