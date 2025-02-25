@@ -7,46 +7,7 @@
     <title>커피 메뉴 관리</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://use.fontawesome.com/releases/v5.2.0/js/all.js"></script>
-    <style>
-        @media (max-width: 640px) {
-            /* #orders-table 내의 테이블 헤더 숨김 */
-            #orders-table thead {
-                display: none;
-            }
-            /* #orders-table 관련 요소들을 블록 요소로 변경 */
-            #orders-table,
-            #orders-table tbody,
-            #orders-table tr,
-            #orders-table td {
-                display: block;
-                width: 100%;
-            }
-            /* 각 행에 카드 스타일 적용 */
-            #orders-table tr {
-                margin-bottom: 1rem;
-                border: 1px solid #e5e7eb; /* Tailwind의 border-gray-300 */
-                border-radius: 0.5rem;
-                padding: 0.5rem;
-                background: #fff;
-            }
-            /* 각 셀에 기본 스타일 및 레이블 적용 */
-            #orders-table td {
-                text-align: left;
-                padding: 0.5rem;
-                border: none;
-                position: relative;
-            }
-            /* data-label 속성값을 pseudo-element로 표시 */
-            #orders-table td::before {
-                content: attr(data-label);
-                font-weight: 600;
-                margin-right: 0.5rem;
-                display: inline-block;
-                width: 30%;
-            }
-        }
 
-    </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
 <div class="w-full mx-auto my-10 md:p-8 bg-white shadow-lg rounded-lg">
@@ -363,7 +324,7 @@
                     <div class="flex flex-nowrap gap-4 items-center">
                         <!-- 시작 날짜 -->
                         <div class="flex flex-col">
-                            <label for="start-date" class="text-sm font-semibold text-gray-600">시작 날짜</label>
+                            <!--<label for="start-date" class="text-sm font-semibold text-gray-600">시작 날짜</label>-->
                             <input
                                     type="date"
                                     id="start-date"
@@ -371,14 +332,14 @@
                         </div>
                         <!-- 종료 날짜 -->
                         <div class="flex flex-col">
-                            <label for="end-date" class="text-sm font-semibold text-gray-600">종료 날짜</label>
+                            <!--<label for="end-date" class="text-sm font-semibold text-gray-600">종료 날짜</label>-->
                             <input
                                     type="date"
                                     id="end-date"
                                     class="w-full sm:w-auto border border-gray-300 rounded px-3 py-2 text-sm">
                         </div>
                         <!-- 정렬 옵션 -->
-                        <div class="flex flex-col">
+                        <!--<div class="flex flex-col">
                             <label for="sort-order" class="text-sm font-semibold text-gray-600">정렬</label>
                             <select
                                     id="sort-order"
@@ -386,13 +347,23 @@
                                 <option value="true">오름차순</option>
                                 <option value="false">내림차순</option>
                             </select>
-                        </div>
+                        </div>-->
                         <!-- 조회 버튼 -->
                         <button
                                 id="filter-orders-btn"
                                 class="mt-2 sm:mt-0 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                             조회
                         </button>
+                    </div>
+                    <!-- 날짜 범위 선택 버튼 -->
+                    <div>
+                        <p class="text-sm font-semibold text-gray-600 mb-2">기간</p>
+                        <div class="flex gap-4">
+                            <button type="button" id="btn-today" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded text-sm">당일</button>
+                            <button type="button" id="btn-yesterday" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded text-sm">전일</button>
+                            <button type="button" id="btn-this-month" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded text-sm">당월</button>
+                            <button type="button" id="btn-last-month" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded text-sm">전월</button>
+                        </div>
                     </div>
                 </div>
 

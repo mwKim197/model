@@ -1565,12 +1565,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     await renderSalesStatistics();
 });
 
-
 // 날짜 지정 조회
 document.getElementById('filter-orders-btn').addEventListener('click', async () => {
     const startDateValue = document.getElementById('start-date').value;
     const endDateValue = document.getElementById('end-date').value;
-    const ascending = document.getElementById('sort-order').value === "true";
+    const ascending = true; //document.getElementById('sort-order').value === "true";
 
     if (!startDateValue || !endDateValue) {
         alert('시작 날짜와 종료 날짜를 입력해주세요.');
@@ -1586,6 +1585,60 @@ document.getElementById('filter-orders-btn').addEventListener('click', async () 
     // 주문 데이터 조회 및 렌더링
     await renderGroupedOrdersToHTML(startDateTime, endDateTime, ascending);
 
+});
+
+// 간편 날짜 버튼
+document.addEventListener('DOMContentLoaded', () => {
+    // 날짜 포맷 헬퍼 함수 (YYYY-MM-DD)
+    const formatDate = (date) => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    };
+
+    // input 요소 참조
+    const startDateInput = document.getElementById('start-date');
+    const endDateInput = document.getElementById('end-date');
+
+    // 오늘 날짜 계산
+    const today = new Date();
+    const todayStr = formatDate(today);
+
+    // 기본값: 종료 날짜는 오늘, 시작 날짜는 한 달 전
+    endDateInput.value = todayStr;
+    const oneMonthAgo = new Date(today);
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    startDateInput.value = formatDate(oneMonthAgo);
+
+    // 버튼 이벤트 핸들러: 단순히 input의 value만 업데이트
+    document.getElementById('btn-today').addEventListener('click', () => {
+        startDateInput.value = todayStr;
+        endDateInput.value = todayStr;
+    });
+
+    document.getElementById('btn-yesterday').addEventListener('click', () => {
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = formatDate(yesterday);
+        startDateInput.value = yesterdayStr;
+        endDateInput.value = yesterdayStr;
+    });
+
+    document.getElementById('btn-this-month').addEventListener('click', () => {
+        const firstDayThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        startDateInput.value = formatDate(firstDayThisMonth);
+        endDateInput.value = todayStr;
+    });
+
+    document.getElementById('btn-last-month').addEventListener('click', () => {
+        // 전월: 지난 달의 1일부터 마지막 날까지
+        const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        // 현재 달 0일은 전월의 마지막 날
+        const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+        startDateInput.value = formatDate(firstDayLastMonth);
+        endDateInput.value = formatDate(lastDayLastMonth);
+    });
 });
 
 async function renderSalesStatistics() {
@@ -1658,63 +1711,97 @@ async function renderGroupedOrdersToHTML(startDate, endDate, ascending = true) {
     document.getElementById("summary-card").innerText = totalCard.toLocaleString();
     document.getElementById("summary-total").innerText = totalAmount.toLocaleString();
 
-    // 테이블 생성 (데스크탑용)
-    const table = document.createElement('table');
-    table.id = 'orders-table'; // id 추가
-    table.className = 'table-auto w-full border-collapse border border-gray-300';
+    // 화면 너비에 따라 다른 레이아웃 렌더링
+    if (window.innerWidth < 640) {
 
-    // 테이블 헤더 (데스크탑용; 모바일에서는 미디어쿼리로 숨김)
-    table.innerHTML = `
-        <thead>
-            <tr class="bg-gray-100">
-                <th class="px-4 py-2 border border-gray-300 text-center text-sm font-semibold text-gray-600">순번</th>
-                <th class="px-4 py-2 border border-gray-300 text-center text-sm font-semibold text-gray-600">날짜</th>
-                <th class="px-4 py-2 border border-gray-300 text-left text-sm font-semibold text-gray-600">메뉴</th>
-                <th class="px-4 py-2 border border-gray-300 text-right text-sm font-semibold text-gray-600">포인트</th>
-                <th class="px-4 py-2 border border-gray-300 text-right text-sm font-semibold text-gray-600">카드</th>
-                <th class="px-4 py-2 border border-gray-300 text-right text-sm font-semibold text-gray-600">총 금액</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    `;
-    const tbody = table.querySelector('tbody');
+        // 모바일 카드형 레이아웃: 포인트, 카드 정보는 표시하지 않음
+        container.classList.add("flex", "flex-col");
+        orders.forEach((order, index) => {
+            // 날짜 포맷 조정 ("T" 제거)
+            const formattedTime = order.timestamp.replace('T', ' ').slice(0, 19);
+            const firstMenu = order.menuSummary[0];
+            const additionalMenuCount = order.menuSummary
+                .slice(1)
+                .reduce((sum, menu) => sum + menu.count, 0) + firstMenu.count - 1;
 
-    orders.forEach((order, index) => {
-        // 날짜 포맷 조정 ("T" 제거)
-        const formattedTime = order.timestamp.replace('T', ' ').slice(0, 19);
+            // 카드형 엘리먼트 생성
+            const card = document.createElement('div');
+            card.className = 'border border-gray-300 rounded-lg p-4 mb-4 shadow-sm';
 
-        // 첫 번째 메뉴와 추가 메뉴 개수 계산
-        const firstMenu = order.menuSummary[0];
-        const additionalMenuCount = order.menuSummary
-            .slice(1)
-            .reduce((sum, menu) => sum + menu.count, 0) + firstMenu.count - 1;
+            card.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-semibold text-gray-600">순번: ${index + 1}</span>
+                    <span class="text-sm text-gray-600">${formattedTime}</span>
+                </div>
+                <div class="text-sm text-gray-600">
+                    <strong>메뉴:</strong> ${firstMenu.name} ${additionalMenuCount > 0 ? `<span class="text-blue-600 font-semibold">+${additionalMenuCount}</span>` : ''}
+                </div>
+                <div class="mt-2 text-right text-sm font-semibold text-gray-600">
+                    총 금액: ${order.totalPrice.toLocaleString()}원
+                </div>
+            `;
 
-        const point = order.point || 0;
-        const cardAmt = order.totalPrice - point;
+            // 카드 클릭 시 상세 주문 모달 표시
+            card.addEventListener('click', () => {
+                showOrderDetailsModal(order);
+            });
 
-        // 테이블 행 생성 (각 셀에 data-label 추가)
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td data-label="순번" class="px-4 py-2 border border-gray-300 text-center text-gray-600 text-sm">${index + 1}</td>
-            <td data-label="날짜" class="px-4 py-2 border border-gray-300 text-center text-gray-600 text-sm">${formattedTime}</td>
-            <td data-label="메뉴" class="px-4 py-2 border border-gray-300 text-gray-600 text-sm">
-                ${firstMenu.name} ${additionalMenuCount > 0 ? `<span class="text-blue-600 font-semibold">+${additionalMenuCount}</span>` : ''}
-            </td>
-            <td data-label="포인트" class="px-4 py-2 border border-gray-300 text-right text-gray-600 text-sm">${point.toLocaleString()}원</td>
-            <td data-label="카드" class="px-4 py-2 border border-gray-300 text-right text-gray-600 text-sm">${cardAmt.toLocaleString()}원</td>
-            <td data-label="총 금액" class="px-4 py-2 border border-gray-300 text-right text-gray-600 text-sm">${order.totalPrice.toLocaleString()}원</td>
+            container.appendChild(card);
+        });
+    } else {
+        // 데스크탑 테이블형 레이아웃: 포인트, 카드 정보를 포함함
+        const table = document.createElement('table');
+        table.id = 'orders-table';
+        table.className = 'table-auto w-full border-collapse border border-gray-300';
+
+        table.innerHTML = `
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="px-4 py-2 border border-gray-300 text-center text-sm font-semibold text-gray-600">순번</th>
+                    <th class="px-4 py-2 border border-gray-300 text-center text-sm font-semibold text-gray-600">날짜</th>
+                    <th class="px-4 py-2 border border-gray-300 text-left text-sm font-semibold text-gray-600">메뉴</th>
+                    <th class="px-4 py-2 border border-gray-300 text-right text-sm font-semibold text-gray-600">포인트</th>
+                    <th class="px-4 py-2 border border-gray-300 text-right text-sm font-semibold text-gray-600">카드</th>
+                    <th class="px-4 py-2 border border-gray-300 text-right text-sm font-semibold text-gray-600">총 금액</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
         `;
+        const tbody = table.querySelector('tbody');
 
-        // 행 클릭 시 상세 주문 모달 표시
-        row.addEventListener('click', () => {
-            showOrderDetailsModal(order);
+        orders.forEach((order, index) => {
+            const formattedTime = order.timestamp.replace('T', ' ').slice(0, 19);
+            const firstMenu = order.menuSummary[0];
+            const additionalMenuCount = order.menuSummary
+                .slice(1)
+                .reduce((sum, menu) => sum + menu.count, 0) + firstMenu.count - 1;
+
+            const point = order.point || 0;
+            const cardAmt = order.totalPrice - point;
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td data-label="순번" class="px-4 py-2 border border-gray-300 text-center text-gray-600 text-sm">${index + 1}</td>
+                <td data-label="날짜" class="px-4 py-2 border border-gray-300 text-center text-gray-600 text-sm">${formattedTime}</td>
+                <td data-label="메뉴" class="px-4 py-2 border border-gray-300 text-gray-600 text-sm">
+                    ${firstMenu.name} ${additionalMenuCount > 0 ? `<span class="text-blue-600 font-semibold">+${additionalMenuCount}</span>` : ''}
+                </td>
+                <td data-label="포인트" class="px-4 py-2 border border-gray-300 text-right text-gray-600 text-sm">${point.toLocaleString()}원</td>
+                <td data-label="카드" class="px-4 py-2 border border-gray-300 text-right text-gray-600 text-sm">${cardAmt.toLocaleString()}원</td>
+                <td data-label="총 금액" class="px-4 py-2 border border-gray-300 text-right text-gray-600 text-sm">${order.totalPrice.toLocaleString()}원</td>
+            `;
+
+            row.addEventListener('click', () => {
+                showOrderDetailsModal(order);
+            });
+
+            tbody.appendChild(row);
         });
 
-        tbody.appendChild(row);
-    });
-
-    container.appendChild(table);
+        container.appendChild(table);
+    }
 }
+
 /* [CONTROL] 주문 로그조회 END */
 /* [MILEAGE] 마일리지 조작 START */
 const baseUrl = `${url}`;
@@ -2438,16 +2525,22 @@ document.addEventListener("DOMContentLoaded", () => {
 function showOrderDetailsModal(order) {
     // 모달 컨텐츠 생성
     const modalContent = document.getElementById('modal-content');
+    const totalPrice = order.totalPrice;
+    const point = order.point ? order.point : 0;
+    const card = totalPrice - point;
+    console.log(order);
     modalContent.innerHTML = `
         <p><strong>주문 시간:</strong> ${order.timestamp.replace('T', ' ').slice(0, 19)}</p>
-        <p><strong>총 금액:</strong> ${order.totalPrice.toLocaleString()}원</p>
+        <p><strong>포인트:</strong> ${point.toLocaleString()} P</p>
+        <p><strong>카드:</strong> ${card.toLocaleString()}원</p>
+        <p><strong>총 금액:</strong> ${totalPrice.toLocaleString()}원</p>
         <div>
             <strong>메뉴:</strong>
             <div class="list-disc pl-5">
                 ${order.menuSummary
                     .map(
                         (menu) =>
-                            `<p>${menu.name} (${menu.count}개) - ${menu.price.toLocaleString()}원</p>`
+                            `<p>${menu.name} (${menu.count}개) | ${menu.price.toLocaleString()}원</p>`
                     )
                     .join('')}
             </div>
