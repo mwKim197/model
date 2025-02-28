@@ -685,6 +685,85 @@ const adminDrinkOrder = async (recipe) => {
     }
 }
 
+const adminCupOrder = (recipe) => {
+    try {
+        // 시작 이벤트 전송
+        eventEmitter.emit('order-update', { menu: recipe.name, status: 'processing', message: '관리자가 조작중입니다. 컵이 준비중입니다.' });
+        return new Promise(resolve => {
+            setTimeout(async () => {
+                const result = await Cup.getCupInfo(); // `getSomeData()`는 조회하는 함수입니다.
+                log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵디스펜서 상태 cup: ${recipe.cup}, 컵1(PL)모터ON=${result.plasticCup.motorActive}, 컵2(PA)모터ON=${result.paperCup.motorActive}`);
+                eventEmitter.emit('order-update', { menu: recipe.name, status: 'processing', message: `메뉴를 준비중입니다.` });
+                if (recipe.cup === 'plastic') {
+                    log.info(`menu: ${recipe.name} - [${recipe.menuId}] : GoCupOut, cup: 'plastic'`);
+                    await Cup.getPlasticCupUsage();
+                }
+
+                if (recipe.cup === 'paper') {
+                    log.info(`menu: ${recipe.name} - [${recipe.menuId}] : GoCupOut, cup: 'paper'`);
+                    await Cup.getPaperCupUsage();
+                }
+
+                let stopCup = 0;
+                const checkCondition = async (counter = 0) => {
+                    // 비동기 함수 실행 후 일정 시간 지연
+                    if (counter >= 60) {
+                        log.error('Cup time out 동작 정지 요청을 보냅니다.');
+                        eventEmitter.emit('order-update', {
+                            menu: recipe.name, // 수정: menuName 변수 대신 recipe.name 사용
+                            status: 'completed',
+                            message: "60초 경과로 기계가 초기화되었습니다."
+                        });
+                        await Cup.stopCupMotor();
+                        resolve();
+                        return;
+                    }
+
+                    const result = await Cup.getCupInfo();
+                    log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵디스펜서 상태 cup: ${recipe.cup}, 컵1(PL)모터ON=${result.plasticCup.motorActive}, 컵2(PA)모터ON=${result.paperCup.motorActive} ${counter + 1} / 60`);
+
+                    // 조회한 값이 false 이면 멈추기
+                    if (recipe.cup === "plastic" && result.plasticCup.motorActive === 0 ) {
+                        stopCup++;
+                    }
+                    if (recipe.cup === "paper" && result.paperCup.motorActive === 0) {
+                        stopCup++;
+                    }
+
+                    if ( stopCup >= 2) {
+                        log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵 추출이 완료되었습니다. 동작 정지 요청을 보냅니다.`);
+                        eventEmitter.emit('order-update', {
+                            menu: recipe.name, // 수정: menuName 변수 대신 recipe.name 사용
+                            status: 'completed',
+                            message: '관리자 조작이 완료되었습니다.'
+                        });
+                        await Cup.stopCupMotor();
+                        resolve();
+                        return;
+                    }
+
+                    // 1초 후에 다시 호출
+                    setTimeout(() => checkCondition(counter + 1), 1000);
+                }
+
+                // 상태 확인 함수 호출
+                await checkCondition();
+            }, 1000);
+        });
+
+    } catch (error) {
+        throw error; // 에러를 상위로 전파
+    } finally {
+        menuName = "";
+        // 종료 이벤트 전송 (성공 또는 실패 모두 포함)
+        eventEmitter.emit('order-update', {
+            menu: recipe.name, // 수정: menuName 변수 대신 recipe.name 사용
+            status: 'completed',
+            message: '관리자 조작이 완료되었습니다.'
+        });
+    }
+};
+
 const adminIceOrder = async (recipe) => {
     try {
         // 시작 이벤트 전송
@@ -769,7 +848,7 @@ const adminIceOrder = async (recipe) => {
                         eventEmitter.emit('order-update', {
                             menu: recipe.name, // 수정: menuName 변수 대신 recipe.name 사용
                             status: 'completed',
-                            message: `"120초 경과로 기계가 초기화되었습니다."`
+                            message: "120초 경과로 기계가 초기화되었습니다."
                         });
                         reject(new Error('작업 시간이 초과되었습니다.'));
                         return;
@@ -856,6 +935,7 @@ module.exports = {
     dispenseCoffee,
     useWash,
     adminDrinkOrder,
+    adminCupOrder,
     adminIceOrder,
     adminUseWash
 };

@@ -15,7 +15,7 @@ const {saveMileageToDynamoDB, getMileage, updateMileageInDynamoDB, deleteMileage
 const {saveNoticeToDynamoDB, getNotice, getNoticesByDateRange, updateNotice, deleteNotice, getNoticesByTimestampRange} = require("./utils/getNotice");
 const {downloadAllFromS3WithCache, uploadImageToS3andLocal, deleteImageFromS3andLocal, uploadNoticeImageToS3, deleteNoticeFiles} = require("../s3/utils/image");
 const { getUser, setUser } = require('../../util/store');
-const { dispenseCup, adminIceOrder, adminDrinkOrder} = require("../../services/serialOrderManager");
+const { dispenseCup, adminIceOrder, adminDrinkOrder, adminCupOrder} = require("../../services/serialOrderManager");
 const serialDataManager = require("../../services/serialDataManager");
 const {serialCommCom1} = require("../../serial/serialCommManager");
 const {compare} = require("bcrypt");
@@ -274,7 +274,7 @@ Menu.post('/serial-admin-cup-order', async (req, res) => {
         log.info('Polling is being stopped for admin order.');
         await polling.stopPolling(); // 주문 작업을 시작하기 전에 조회 정지
 
-        await dispenseCup(recipe); // 주문 작업 수행
+        await adminCupOrder(recipe); // 주문 작업 수행
 
         log.info('Polling is being restarted after admin order.');
         await polling.startPolling(); // 주문 작업 이후 폴링 재개
