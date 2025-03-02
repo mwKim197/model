@@ -46,9 +46,14 @@ async function getOrCreateTunnel(tunnelName = "model-app") {
 
         // ✅ 기존 터널 목록 조회
         const listOutput = spawnSync(cloudflaredBin, ["tunnel", "list"], { encoding: "utf8" });
-
         if (listOutput.error) throw listOutput.error;
-        if (listOutput.stderr.toString()) throw new Error(listOutput.stderr.toString());
+
+        const stderr = listOutput.stderr.toString().trim();
+
+        // 단순 경고는 무시
+        if (stderr && !stderr.includes("outdated")) {
+            throw new Error(stderr);
+        }
         const listData = listOutput.stdout.toString();
 
         // ✅ 터널 목록에서 `model-app`의 UUID 추출
@@ -83,7 +88,14 @@ async function getOrCreateTunnel(tunnelName = "model-app") {
 
         // ✅ 생성된 터널의 출력 확인
         if (createProcess.error) throw createProcess.error;
-        if (createProcess.stderr.toString()) throw new Error(createProcess.stderr.toString());
+
+        const stderrProcess = createProcess.stderr.toString().trim();
+
+        // 단순 경고는 무시
+        if (stderrProcess && !stderrProcess.includes("outdated")) {
+            throw new Error(stderrProcess);
+        }
+
         const createOutput = createProcess.stdout.toString();
 
         // ✅ 터널 UUID 추출
