@@ -55,8 +55,12 @@ const startOrder = async (data) => {
 
 // 주문 처리 큐
 const processQueue = async (orderList, menuList) => {
+    let count = orderList.length;
+    let totalCount = orderList.length;
+
     for (const order of orderList) {
         try {
+
             const recipe = menuList.find(menu => menu.menuId === order.menuId);
 
             if (!recipe) {
@@ -65,7 +69,6 @@ const processQueue = async (orderList, menuList) => {
             }
 
             for (let i = 0; i < order.count; i++) {
-
 
                 // 메뉴 명을 넣어준다
                 menuName = recipe.name;
@@ -80,7 +83,8 @@ const processQueue = async (orderList, menuList) => {
                 log.info(`주문 처리 시작 (${i + 1}/${order.count}): ${recipe.name} - [메뉴 ID: ${recipe.menuId}, 주문 ID: ${order.orderId}]`);
                 // 주문 데이터 처리 시작
                 try {
-                    await processOrder(recipe); // 레시피 처리
+                    await processOrder(recipe, count, totalCount); // 레시피 처리
+                    count = count - 1;
                     log.info(`주문 처리 완료 (${i + 1}/${order.count}): ${recipe.name} - [메뉴 ID: ${recipe.menuId}, 주문 ID: ${order.orderId}]`);
                 } catch (error) {
                     log.error(`주문 처리 중 오류 발생 (count ${i + 1}/${order.count}): 메뉴 ID ${recipe.menuId}, 오류: ${error.message}`);
@@ -97,13 +101,13 @@ const processQueue = async (orderList, menuList) => {
 
 
 // 주문 처리
-const processOrder = async (recipe) => {
+const processOrder = async (recipe, count, totalCount) => {
     try {
         log.info("주문처리중 레시피: ", recipe);
         if (recipe.cupYn === 'yes' ) return;
-        if (!recipe.cupYn || recipe.cupYn === 'no' ) await dispenseCup(recipe);
+        if (!recipe.cupYn || recipe.cupYn === 'no' ) await dispenseCup(recipe, count, totalCount);
 
-        if (recipe.iceYn === 'yes') await dispenseIce(recipe);
+        if (recipe.iceYn === 'yes') await dispenseIce(recipe, count, totalCount);
 
         const sortedItems = [...recipe.items].sort((a, b) => a.no - b.no);
         for (const [index, item] of sortedItems.entries()) {
@@ -113,7 +117,7 @@ const processOrder = async (recipe) => {
                 if (index === 0) {
 
                     // 타임아웃 체크
-                    const isStartValid = await checkCupSensor("있음", 3, true);
+                    const isStartValid = await checkCupSensor("있음", 3, true, count, totalCount);
                     if (!isStartValid) {
                         eventEmitter.emit('order-update', {
                             menu: recipe.name, // 수정: menuName 변수 대신 recipe.name 사용
@@ -124,7 +128,7 @@ const processOrder = async (recipe) => {
                         throw new Error(`"120초 경과로 기계가 초기화되었습니다."`);
                     } else {
                         // 화면에 전달하는 메세지
-                        eventEmitter.emit('order-update', { menu: menuName, status: 'drink', message: '맛있는 음료를 만들고 있습니다. 잠시만 기다려주세요.' });
+                        eventEmitter.emit('order-update', { menu: `${menuName} ${count} / ${totalCount}`, status: 'drink', message: `맛있는 음료를 만들고 있습니다. 잠시만 기다려주세요.` });
                     }
                     log.info(`컵 센서 상태 확인 완료: menuId ${recipe.menuId}`);
                 }
@@ -146,7 +150,7 @@ const processOrder = async (recipe) => {
                 }
 
                 if (index === sortedItems.length - 1) {
-                    const isEndValid = await checkCupSensor("없음", 3, true);
+                    const isEndValid = await checkCupSensor("없음", 3, true, count, totalCount);
                     if (!isEndValid) {
                         eventEmitter.emit('order-update', {
                             menu: recipe.name, // 수정: menuName 변수 대신 recipe.name 사용
@@ -173,12 +177,12 @@ const processOrder = async (recipe) => {
 };
 
 // 제조 단계 함수
-const dispenseCup = (recipe) => {
+const dispenseCup = (recipe, count, totalCount) => {
     return new Promise(resolve => {
         setTimeout(async () => {
             const result = await Cup.getCupInfo(); // `getSomeData()`는 조회하는 함수입니다.
             log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵디스펜서 상태 cup: ${recipe.cup}, 컵1(PL)모터ON=${result.plasticCup.motorActive}, 컵2(PA)모터ON=${result.paperCup.motorActive}`);
-            eventEmitter.emit('order-update', { menu: recipe.name, status: 'processing', message: `메뉴를 준비중입니다.` });
+            eventEmitter.emit('order-update', { menu: `${recipe.name} ${count} / ${totalCount}`, status: 'processing', message: `메뉴를 준비중입니다.` });
             if (recipe.cup === 'plastic') {
                 log.info(`menu: ${recipe.name} - [${recipe.menuId}] : GoCupOut, cup: 'plastic'`);
                 await Cup.getPlasticCupUsage();
@@ -227,7 +231,7 @@ const dispenseCup = (recipe) => {
     });
 };
 
-const dispenseIce = (recipe) => {
+const dispenseIce = (recipe, count, totalCount) => {
     return new Promise(async (resolve, reject) => {
         try {
             let totalTime = 0;
@@ -254,10 +258,10 @@ const dispenseIce = (recipe) => {
             log.info('[totalTime] : ', totalTime);
 
             // 화면 노출 메세지
-            eventEmitter.emit('order-update', { menu: menuName, status: 'ice', message: '제빙기에서 얼음을 받아주세요.' });
+            eventEmitter.emit('order-update', { menu: `${menuName} ${count} / ${totalCount}`, status: 'ice', message: `제빙기에서 얼음을 받아주세요.` });
 
             for (let counter = 0; counter < 120; counter++) {
-                eventEmitter.emit('order-update', { menu: menuName, status: 'iceCount', message: '제빙기에서 얼음을 받아주세요.', time: counter });
+                eventEmitter.emit('order-update', { menu: `${menuName} ${count} / ${totalCount}`, status: 'iceCount', message: `제빙기에서 얼음을 받아주세요.`, time: counter });
                 const result = await Ice.getKaiserInfo();
                 const currentHexArray = result.match(/.{1,2}/g); // 2자리씩 끊어서 배열 생성
                 const currentValue = parseInt(currentHexArray[7]); // 16진수 → 10진수 변환
@@ -442,7 +446,7 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
 /*
 *  washChk : true 메세지 노출
 * */
-const checkCupSensor = async (expectedState, threshold, washChk) => {
+const checkCupSensor = async (expectedState, threshold, washChk, count, totalCount) => {
     let stateCount = 0; // 상태 카운터
     for (let counter = 0; counter < 120; counter++) {
         const startTime = Date.now(); // 루프 시작 시간 기록
@@ -452,11 +456,11 @@ const checkCupSensor = async (expectedState, threshold, washChk) => {
 
         // 모달 동작
         if (expectedState === "있음" && washChk ) {
-            eventEmitter.emit('order-update', { menu: menuName, status: 'drinkCount', message: '컵을 음료 투출구에 놓아주세요.', time: counter });
+            eventEmitter.emit('order-update', { menu: `${menuName} ${count} / ${totalCount}`, status: 'drinkCount', message: `컵을 음료 투출구에 놓아주세요.`, time: counter });
         }
 
         if (expectedState === "없음" && washChk ) {
-            eventEmitter.emit('order-update', { menu: menuName, status: 'completedCount', message: '음료가 완성되었습니다. 컵을꺼내주세요.', time: counter });
+            eventEmitter.emit('order-update', { menu: `${menuName} ${count} / ${totalCount}`, status: 'completedCount', message: `음료가 완성되었습니다. 컵을꺼내주세요.`, time: counter });
 
         }
 
