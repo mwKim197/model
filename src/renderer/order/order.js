@@ -22,10 +22,50 @@ let isDataLoaded = false;
 
 // Product Grid
 const productGrid = document.getElementById('productGrid');
-const orderGrid = document.getElementById('orderGrid');
 
 let totalCount = 0;
 let limitCount = 20;
+
+// [START] 60초 카운트 다운 기능추가
+let countdownTimer = null;
+let remainingSeconds = 0; // 초기 0초
+const countdownDisplay = document.getElementById("countDown");
+
+// 타이머 시작
+function startCountdown() {
+    clearCountdown();
+    remainingSeconds = 60; // 초기화
+    updateCountdownDisplay(); // 화면 표시 즉시 업데이트
+
+    countdownTimer = setInterval(() => {
+        remainingSeconds--;
+        updateCountdownDisplay(); // 화면 업데이트
+
+        if (remainingSeconds <= 0) {
+            clearCountdown();
+            location.reload(); // 60초 후 강제 새로고침
+        }
+    }, 1000);
+}
+
+// 타이머 리셋 (버튼 클릭 시마다 호출)
+function resetCountdown() {
+    startCountdown();
+}
+
+// 타이머 완전 종료 (결제 완료 시 호출)
+function clearCountdown() {
+    clearInterval(countdownTimer);
+    countdownTimer = null;
+    remainingSeconds = 0; // 초기 0초
+    updateCountdownDisplay();
+}
+
+// 남은 시간 화면 표시
+function updateCountdownDisplay() {
+    countdownDisplay.innerText = `${remainingSeconds}`;
+}
+// [END] 60초 카운트 다운
 
 // 필터된 제품을 표시하는 함수
 function displayProducts(products) {
@@ -753,6 +793,9 @@ function setupNumberButtons() {
 
     numberButtons.forEach((button) => {
         button.addEventListener("click", () => {
+
+            // 리셋 타이머 초기화
+            resetCountdown();
             const number = button.getAttribute("data-number");
 
             if (type === "number") {
@@ -854,6 +897,11 @@ function updateDynamicContent(contentType, data ,resolve) {
         button.id = id;
         button.innerText = text;
         button.className = className;
+
+        button.addEventListener('click', () => {
+            resetCountdown(); // 버튼 누를 때마다 타이머 리셋
+        });
+
         dynamicButton.appendChild(button);
     }
 
@@ -1314,6 +1362,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 단건 지우기 (Backspace 버튼)
     backspaceBtn.addEventListener("click", () => {
+        resetCountdown(); // 버튼 누를 때마다 타이머 리셋
 
         if (type === "point" && inputTarget.textContent) {
             // 기존 콤마를 제거하고 숫자 처리
@@ -1367,6 +1416,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 전체 삭제 (Clear All 버튼)
     clearAllBtn.addEventListener("click", () => {
+        resetCountdown(); // 버튼 누를 때마다 타이머 리셋
+
         if (type === "point") {
             inputTarget.textContent = "0"; // 입력 초기화
             // 남은 금액 초기화
@@ -1392,6 +1443,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // 카드 결제
 const cardPayment = async (orderAmount, discountAmount) => {
+
+    // 리셋 타이머 종료
+    clearCountdown();
 
     playAudio('../../assets/audio/카드결제를 선택하셨습니다 카드를 단말기에 넣어주세요.mp3');
 
@@ -1432,6 +1486,8 @@ const cardPayment = async (orderAmount, discountAmount) => {
         } else {
             // 결제 실패 처리
             modal.classList.add('hidden');
+            // 결제실패시 60초 카운트다운 시작
+            resetCountdown();
             openAlertModal("결제에 실패하였습니다. 다시 시도해주세요.");
             console.error("결제 실패: ", result.message);
             sendLogToMain('error', `결제 실패: ${result.message}`);
@@ -1440,6 +1496,8 @@ const cardPayment = async (orderAmount, discountAmount) => {
     } catch (error) {
         // 오류 처리
         modal.classList.add('hidden');
+        // 결제오류시 60초 카운트다운 시작
+        resetCountdown();
         openAlertModal("결제 처리 중 오류가 발생했습니다.");
         sendLogToMain('error', `결제 오류: ${error.message}`);
         console.error("결제 오류: ", error.message);
@@ -1452,6 +1510,8 @@ const cardPayment = async (orderAmount, discountAmount) => {
 const ordStart = async (point = 0) => {
     //const orderModal = document.getElementById('orderModal');
 
+    // 리셋 타이머 종료
+    clearCountdown();
     try {
         // 주문 모달 띄우기
         //orderModal.classList.remove('hidden');
@@ -1475,7 +1535,10 @@ const buttonFlags = {};
 // 이벤트 위임을 통해 모든 버튼 처리
 document.getElementById("buttonContainer").addEventListener("click", async (event) => {
     const button = event.target;
-    // [TODO] 여기서 60초 카운트 처리
+
+    // 60초 카운트다운시작
+    startCountdown();
+
     // 특정 클래스(`prevent-double-click`)만 처리
     if (!button.classList.contains("prevent-double-click")) return;
 
