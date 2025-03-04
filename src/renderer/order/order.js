@@ -43,7 +43,8 @@ function startCountdown() {
 
         if (remainingSeconds <= 0) {
             clearCountdown();
-            location.reload(); // 60초 후 강제 새로고침
+            removeAll();
+            closePointModal();
         }
     }, 1000);
 }
@@ -394,6 +395,15 @@ const removeAll = () => {
     checkAndShowEmptyImage();
     closeModal();
 }
+
+// 포인트 모달 닫기
+const closePointModal = () => {
+    const modal = document.getElementById("pointModal");
+    // 입력폼 초기화
+    resetInput();
+    modal.classList.add("hidden"); // 모달 숨기기
+}
+
 
 const confirmModal = document.getElementById('confirmModal');
 const cancelButton = document.getElementById('cancelButton');
@@ -1347,10 +1357,7 @@ function updateDynamicContent(contentType, data ,resolve) {
 
 // 포인트 모달 닫기
 document.getElementById("closeModalBtn").addEventListener("click", () => {
-    const modal = document.getElementById("pointModal");
-    // 입력폼 초기화
-    resetInput();
-    modal.classList.add("hidden"); // 모달 숨기기
+    closePointModal();
 });
 
 // 마일리지 초기화
@@ -1502,6 +1509,7 @@ const cardPayment = async (orderAmount, discountAmount) => {
         sendLogToMain('error', `결제 오류: ${error.message}`);
         console.error("결제 오류: ", error.message);
         removeAllItem(); // 주문 목록삭제
+        checkAndShowEmptyImage();
         return false;
     }
 }
@@ -1521,6 +1529,7 @@ const ordStart = async (point = 0) => {
         }
         await window.electronAPI.setOrder(ordInfo); // 주문 처리
         removeAllItem(); // 주문 목록 삭제
+        checkAndShowEmptyImage();
     } catch (error) {
         console.error("ordStart 에러 발생:", error.message);
         throw error; // 에러를 다시 던져서 상위 호출부에서 롤백 처리 가능
