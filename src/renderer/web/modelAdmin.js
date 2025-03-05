@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (userInfo?.category && Array.isArray(userInfo.category)) {
             populateCategoryOptions(userInfo.category);
             document.getElementById('time-input').value = userInfo.washTime ? userInfo.washTime : 0;
-            document.getElementById('limit-input').value = userInfo.limitCount ? userInfo.limitCount: 20;
+            document.getElementById('limit-input').value = userInfo.limitCount ? userInfo.limitCount: 10;
             document.getElementById('earnMileage').value = userInfo.earnMileage ? userInfo.earnMileage : 0;
             document.getElementById('mileageInput').value = userInfo.mileageNumber ? userInfo.mileageNumber : 0;
             const payType = document.getElementById("payType");

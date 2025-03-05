@@ -18,13 +18,12 @@ let userInfo = {};
 // 현재 재생 중인 오디오 객체
 let currentAudio = null;
 
-let isDataLoaded = false;
-
 // Product Grid
 const productGrid = document.getElementById('productGrid');
 
 let totalCount = 0;
-let limitCount = 20;
+// 최대 잔수 기본 값
+let limitCount = 10;
 
 // [START] 60초 카운트 다운 기능추가
 let countdownTimer = null;
@@ -1721,7 +1720,7 @@ async function fetchData() {
         setVersion(version);
         console.log("version", version);
 
-        limitCount = userInfo.limitCount ? userInfo.limitCount : 20;
+        limitCount = userInfo.limitCount ? userInfo.limitCount : 10;
         // 이미지 받아오기
         await window.electronAPI.downloadAllFromS3WithCache("model-narrow-road", `model/${userInfo.userId}`);
         // 데이터가 올바르게 로드되었는지 확인
