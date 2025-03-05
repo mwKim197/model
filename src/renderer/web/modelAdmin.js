@@ -371,7 +371,8 @@ const createMenuHTML = (menuData, categories) => {
                             id="deleteItemBtn-${menuData.menuId}"
                             class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
                             data-user-id="${menuData.userId}"
-                            data-menu-id="${menuData.menuId}">
+                            data-menu-id="${menuData.menuId}"
+                            data-menu-name="${menuData.name}">
                             삭제
                         </button>
                         <button
@@ -489,35 +490,40 @@ document.addEventListener('click', async (event) => {
     if (event.target.matches('button[id^="deleteItemBtn"]')) {
         const userId = event.target.getAttribute('data-user-id');
         const menuId = event.target.getAttribute('data-menu-id');
+        const menuName = event.target.getAttribute('data-menu-name');
 
         if (userId && menuId) {
-            try {
 
-                // API 요청
-                const response = await fetch(`${url}/delete-menu`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json', // JSON 데이터임을 명시
-                    },
-                    body: JSON.stringify({
-                        userId: userId,
-                        menuId: menuId,
-                    })
-                });
+            if (confirm(`${menuName} 메뉴를 삭제하시겠습니까?`)) {
 
-                const result = await response.json();
-                if (result.success) {
-                    console.log('삭제 성공:', result.data);
-                    alert('삭제 성공');
-                    location.reload();
-                    // 삭제 완료 후 UI 업데이트 로직 추가
-                } else {
-                    console.error('삭제 실패:', result.message);
-                    alert('삭제 실패: ' + result.message);
+                try {
+
+                    // API 요청
+                    const response = await fetch(`${url}/delete-menu`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json', // JSON 데이터임을 명시
+                        },
+                        body: JSON.stringify({
+                            userId: userId,
+                            menuId: menuId,
+                        })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        console.log('삭제 성공:', result.data);
+                        alert('삭제 성공');
+                        location.reload();
+                        // 삭제 완료 후 UI 업데이트 로직 추가
+                    } else {
+                        console.error('삭제 실패:', result.message);
+                        alert('삭제 실패: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('삭제 중 오류:', error);
+                    alert('삭제 중 오류 발생');
                 }
-            } catch (error) {
-                console.error('삭제 중 오류:', error);
-                alert('삭제 중 오류 발생');
             }
         }
     }
@@ -669,14 +675,7 @@ document.getElementById('addItemBtn').addEventListener('click', () => {
 // 삭제 버튼 이벤트 리스너 추가
 document.getElementById('itemContainer').addEventListener('click', (event) => {
     if (event.target.classList.contains('deleteItemBtn')) {
-        const fieldset = event.target.closest('fieldset');
-        fieldset.remove();
-    }
-});
 
-// 삭제 버튼 이벤트 리스너 추가
-document.getElementById('itemContainer').addEventListener('click', (event) => {
-    if (event.target.classList.contains('deleteItemBtn')) {
         const fieldset = event.target.closest('fieldset');
         fieldset.remove();
     }
