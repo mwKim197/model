@@ -3,7 +3,7 @@ const { app, BrowserWindow } = require('electron');
 const serialDataManager  = require('../../services/serialDataManager');
 const Connect = express.Router();
 const log = require('../../logger');
-let { startOrder, useWash, adminUseWash}= require('../../services/serialOrderManager.js');
+let { startOrder, useWash, adminUseWash, extractorHome}= require('../../services/serialOrderManager.js');
 const {serialCommCom1} = require("../../serial/serialCommManager")
 const {signupUser, loginUser, getAllUserIds} = require("../../login");
 const {duplicateMenuData} = require("../../aws/db/utils/getMenu");
@@ -181,5 +181,17 @@ Connect.post('/admin-use-wash',  async (req, res) => {
     }
 });
 
+// 추출기 원점
+Connect.post('/extractor-home',  async (req, res) => {
+    try {
+
+        log.info("추출기 원점");
+        await extractorHome();
+        log.info("추출기 원점 끝");
+        res.json({ success: true, message: '추출기 원점 동작 성공' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 module.exports = Connect;

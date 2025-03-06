@@ -332,6 +332,30 @@ const fetchAndSaveUserInfo = async () => {
     }
 };
 
+// 추출기 원점 함수
+const extractorHome = async () => {
+    try {
+        const response = await fetch(`${url}/extractor-home`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            console.log('Success:', result.message);
+        } else {
+            console.error('Error:', result.message);
+            if (result.error) {
+                console.error('Details:', result.error.message);
+            }
+        }
+    } catch (error) {
+        console.error('Fetch error:', error.message);
+    }
+};
 
 export {
     getUserData,
@@ -349,5 +373,6 @@ export {
     updateUserInfo,
     fetchAndSaveUserInfo,
     requestAppRefresh,
-    requestAppUpdate
+    requestAppUpdate,
+    extractorHome
 };

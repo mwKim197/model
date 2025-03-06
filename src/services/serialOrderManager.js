@@ -1,12 +1,11 @@
 const log = require('../logger');
 const { allProduct } = require("../aws/db/utils/getMenu");
 const {serialCommCom1, serialCommCom3, serialCommCom4 } = require("../serial/serialCommManager");
-const  CupModule = require("../serial/portProcesses/CupModule");
-const  IceModule = require("../serial/portProcesses/IceModule");
-const  OrderModule = require("../serial/portProcesses/OrderModule");
+const CupModule = require("../serial/portProcesses/CupModule");
+const IceModule = require("../serial/portProcesses/IceModule");
+const OrderModule = require("../serial/portProcesses/OrderModule");
 const serialDataManager  = require('./serialDataManager');
 const eventEmitter = require('./events');
-const {convertTimeToHex} = require('../util/numberConvert');
 const Cup = new CupModule(serialCommCom4);
 const Ice = new IceModule(serialCommCom3);
 const Order = new OrderModule(serialCommCom1);
@@ -929,6 +928,16 @@ const adminUseWash = async (data) => {
     eventEmitter.emit('order-update', {status: 'completed', message: '전체 세척 작업 완료.' });
 };
 
+// 추출기 원점
+const extractorHome = async () => {
+    try {
+        log.info("추출기 원점 동작");
+        await Order.extractorHome();
+    } catch (e) {
+        log.error(`추출기 원점 동작중 에러가 발생했습니다. ${e}`);
+    }
+}
+
 // 주문 처리 시작
 processQueue().then();
 
@@ -941,5 +950,6 @@ module.exports = {
     adminDrinkOrder,
     adminCupOrder,
     adminIceOrder,
-    adminUseWash
+    adminUseWash,
+    extractorHome
 };

@@ -67,6 +67,12 @@ class OrderModule {
         return this.sendCommand(command);  // 공통 함수 사용
     }
 
+    // 추출기 원점
+    async extractorHome() {
+        const command = `HOME`;
+        return this.sendCommand(command);  // 공통 함수 사용
+    }
+
     // 공통 명령어 전송 함수
     async sendCommand(command) {
         try {

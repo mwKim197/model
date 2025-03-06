@@ -14,7 +14,8 @@ import {
     requestAppRestart,
     requestAppShutdown,
     updateUserInfo,
-    requestAppUpdate
+    requestAppUpdate,
+    extractorHome
 } from '/renderer/api/menuApi.browser.js';
 
 const urlHost = window.location.hostname;
@@ -1318,6 +1319,7 @@ document.getElementById('syrup5-cleaning').addEventListener('click',async ()=>{ 
 document.getElementById('syrup6-cleaning').addEventListener('click',async ()=>{ await allUserAdminWash("syrup6")});
 document.getElementById('refresh-button').addEventListener('click', requestAppRefresh);
 document.getElementById('update-button').addEventListener('click', requestAppUpdate);
+document.getElementById('extractor-home').addEventListener('click', extractorHome);
 
 // 시간 저장 버튼 클릭
 document.getElementById('schedule-cleaning').addEventListener('click', async () => {
