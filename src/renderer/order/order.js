@@ -138,7 +138,10 @@ function displayProducts(products) {
         // 부모 컨테이너에 추가
         productGrid.appendChild(card);
         // 초기 크기 조정
-        adjustTextSize();
+        // 🔥 글자 크기 개별 조정 호출 (여기서 200px로 고정)
+        const textElement = card.querySelector('.auto-shrink-text');
+        adjustTextSize(textElement, 200);
+
         // 클릭 이벤트 처리 (품절 상태에서는 동작하지 않도록 추가 검증)
         if (!isEmpty) {
             card.addEventListener('click', () => {
@@ -150,22 +153,27 @@ function displayProducts(products) {
     });
 }
 
-function adjustTextSize() {
-    const textElement = document.querySelector('.auto-shrink-text');
-    const parentWidth = textElement.parentElement.offsetWidth; // 부모 요소의 너비
-    const textWidth = textElement.scrollWidth; // 텍스트의 실제 너비
+// 개별적으로 적용 가능한 최종 조정 함수
+function adjustTextSize(textElement, fixedWidth = 200) {
+    let fontSize = 20; // 초기 폰트 크기
+    textElement.style.fontSize = fontSize + "px";
+    textElement.style.display = 'inline-block';
+    textElement.style.transformOrigin = 'left center';
 
-    if (textWidth > parentWidth) {
-        const scale = parentWidth / textWidth; // 부모 너비와 텍스트 너비 비율 계산
-        textElement.style.transform = `scale(${scale})`; // 텍스트 축소
-        textElement.style.transformOrigin = 'center left'; // 축소 기준
+    const textWidth = textElement.scrollWidth;
+
+    if (textWidth > fixedWidth) {
+        const scale = fixedWidth / textWidth;
+        textElement.style.transform = `scale(${scale})`;
     } else {
-        textElement.style.transform = ''; // 기본 크기로 복원
+        textElement.style.transform = '';
     }
 }
 
-// 창 크기 변경 시에도 다시 크기 조정
-window.addEventListener('resize', adjustTextSize);
+// 창 리사이징 시 재조정
+window.addEventListener('resize', () => {
+    document.querySelectorAll('.auto-shrink-text').forEach(el => adjustTextSize(el, 200));
+})
 
 // 가이드 이미지 추가
 function checkAndShowEmptyImage() {
