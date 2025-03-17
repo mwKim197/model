@@ -1708,6 +1708,8 @@ async function renderGroupedOrdersToHTML(startDate, endDate, ascending = true) {
         totalAmount += Number(order.totalPrice) || 0;
     });
 
+    totalCard = totalAmount - totalPoints;
+
     document.getElementById("summary-points").innerText = totalPoints.toLocaleString();
     document.getElementById("summary-card").innerText = totalCard.toLocaleString();
     document.getElementById("summary-total").innerText = totalAmount.toLocaleString();
