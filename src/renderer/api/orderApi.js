@@ -325,7 +325,7 @@ const extractBarcode = (rawData) => {
 };
 
 // 바코드로 페이 요청
-const reqPayproBarcode = async ({ amount, halbu = 0, barcode }) => {
+const reqPayproBarcode = async ( amount, barcode, halbu) => {
     const H7 = '\x07';
     const FS = '\x1C';
 

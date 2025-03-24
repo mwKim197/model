@@ -1525,6 +1525,48 @@ const cardPayment = async (orderAmount, discountAmount) => {
     }
 }
 
+
+const gerBarcode = async () => {
+    // 바코드 조회
+    const res = await window.electronAPI.reqBarcodeHTTP();
+
+    console.log(res);
+}
+
+// 바코드 조회 및 결제
+const barcodePayment = async (orderAmount, discountAmount) => {
+    clearCountdown();
+
+    const totalAmount = orderAmount - discountAmount; // 전체 금액 계산
+    // 바코드 조회
+    const res = await window.electronAPI.reqBarcodeHTTP();
+    if (res) {
+        try {
+            // 0.1초 대기 후 결제 API 호출
+            const result = await new Promise((resolve) => {
+                setTimeout(async () => {
+                    const res= await window.electronAPI.reqPayproBarcode(totalAmount, res);
+                    //const res = {success: true};
+                    resolve(res); // 결제 결과 반환
+                }, 100);
+            });
+
+            // 결제 성공 여부 확인
+            if (result.success) {
+                console.log("바코드결제성공");
+            } else {
+                console.log("바코드결제실패");
+            }
+        } catch (error) {
+            console.log("바코드결제에러");
+            return false;
+        }
+    }
+
+
+
+}
+
 // 주문 시작
 const ordStart = async (point = 0) => {
     //const orderModal = document.getElementById('orderModal');
