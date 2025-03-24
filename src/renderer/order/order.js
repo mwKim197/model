@@ -1527,6 +1527,7 @@ const cardPayment = async (orderAmount, discountAmount) => {
 
 
 const gerBarcode = async () => {
+    console.log("바코드 조회호출");
     // 바코드 조회
     const res = await window.electronAPI.reqBarcodeHTTP();
 
