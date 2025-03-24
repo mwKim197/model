@@ -161,7 +161,7 @@ const reqOrder = async (orderList) => {
             throw new Error(data.error || `HTTP error! Status: ${response.status}`);
         }
 
-        console.log(data);
+        log.info(data);
     } catch (error) {
         sendLogToMain('error', 'ORDER :', error?.message || 'Unknown error', error?.stack || 'No stack trace');
         throw error;
@@ -203,15 +203,15 @@ const adminUseWash = async (data) => {
         const result = await response.json();
 
         if (response.ok) {
-            console.log('Success:', result.message);
+            log.info('Success:', result.message);
         } else {
-            console.error('Error:', result.message);
+            log.error('Error:', result.message);
             if (result.error) {
-                console.error('Details:', result.error.message);
+                log.error('Details:', result.error.message);
             }
         }
     } catch (error) {
-        console.error('Fetch error:', error.message);
+        log.error('Fetch error:', error.message);
     }
 };
 
@@ -230,7 +230,7 @@ const reStartCheck = async (orderList) => {
         if (!response.ok) throw new Error('네트워크 응답 실패');
 
         const data = await response.json();
-        console.log(data);
+        log.info(data);
 
     } catch (error) {
         sendLogToMain('error','RD2: 데이터 가져오기 실패:', error);
@@ -294,7 +294,8 @@ const reqNCData = async (rawData) => {
 // 바코드 조회
 const reqBarcode_HTTP = async () => {
     const H7 = '\x07';
-    let sendbuf = "REQ_BARCODE" + H7 + "1" + H7;
+    const sendraw = "REQ_BARCODE" + H7 + "1" + H7;
+    const sendbuf = make_send_data(sendraw); // 여기서 전문 포맷을 완성
 
     try {
         const response = await fetch("http://127.0.0.1:9188", {
@@ -306,15 +307,15 @@ const reqBarcode_HTTP = async () => {
         });
 
         const data = await response.text();
-        console.log("응답 전문:", data);
+        log.info("응답 전문:", data);
 
         const barcode = extractBarcode(data);
-        console.log("추출된 바코드:", barcode);
+        log.info("추출된 바코드:", barcode);
 
         return { success: true, barcode };
 
     } catch (error) {
-        console.error("바코드 요청 실패:", error);
+        log.error("바코드 요청 실패:", error);
         return { success: false, message: "바코드 요청 실패!" };
     }
 };
@@ -329,7 +330,7 @@ const reqPayproBarcode = async ( amount, barcode, halbu) => {
     const H7 = '\x07';
     const FS = '\x1C';
 
-    const sendbuf =
+    const sendraw  =
         "NICEVCATB" + H7 +
         "0300" + FS +
         "10" + FS +
@@ -350,6 +351,7 @@ const reqPayproBarcode = async ( amount, barcode, halbu) => {
         "" + FS + FS + FS + FS + FS +
         H7;
 
+    const sendbuf = make_send_data(sendraw); // 여기서 전문 포맷을 완성
     try {
         const response = await fetch("http://127.0.0.1:9188", {
             method: "POST",
@@ -360,10 +362,10 @@ const reqPayproBarcode = async ( amount, barcode, halbu) => {
         });
 
         const data = await response.text();
-        console.log("결제 응답:", data);
+        log.info("결제 응답:", data);
         return { success: true, data };
     } catch (error) {
-        console.error("바코드 결제 요청 실패:", error);
+        log.error("바코드 결제 요청 실패:", error);
         return { success: false, message: "바코드 결제 요청 실패!" };
     }
 };
