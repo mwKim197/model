@@ -96,7 +96,6 @@ const reqVCAT_HTTP = async (cost, halbu) => {
                         return { success: false, message: data };
                     }
 
-                    iFlag = '0';
                 } catch (error) {
                     if (sendMsg === "RESTART\u0007" || sendMsg === "NVCATSHUTDOWN\u0007") {
                         // 서버 종료 처리
@@ -292,10 +291,90 @@ const reqNCData = async (rawData) => {
     return {isValid: isValid, parsedData: parsedData};
 }
 
+// 바코드 조회
+const reqBarcode_HTTP = async () => {
+    const H7 = '\x07';
+    let sendbuf = "REQ_BARCODE" + H7 + "1" + H7;
+
+    try {
+        const response = await fetch("http://127.0.0.1:9188", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: encodeURI(sendbuf)
+        });
+
+        const data = await response.text();
+        console.log("응답 전문:", data);
+
+        const barcode = extractBarcode(data);
+        console.log("추출된 바코드:", barcode);
+
+        return { success: true, barcode };
+
+    } catch (error) {
+        console.error("바코드 요청 실패:", error);
+        return { success: false, message: "바코드 요청 실패!" };
+    }
+};
+
+// 바코드 추출
+const extractBarcode = (rawData) => {
+    return rawData.slice(16); // 앞 16자리 제거 → 바코드 번호
+};
+
+// 바코드로 페이 요청
+const reqPayproBarcode = async ({ amount, halbu = 0, barcode }) => {
+    const H7 = '\x07';
+    const FS = '\x1C';
+
+    const sendbuf =
+        "NICEVCATB" + H7 +
+        "0300" + FS +
+        "10" + FS +
+        "L" + FS +
+        amount + FS +
+        0 + FS +
+        0 + FS +
+        halbu + FS +
+        "" + FS +
+        "" + FS +
+        "" + FS +
+        FS + FS +
+        barcode + FS +  // ← 바코드 번호
+        FS + FS + FS + FS + FS +
+        "" + FS +
+        "" + FS +
+        "PRO" + FS +
+        "" + FS + FS + FS + FS + FS +
+        H7;
+
+    try {
+        const response = await fetch("http://127.0.0.1:9188", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: encodeURI(sendbuf)
+        });
+
+        const data = await response.text();
+        console.log("결제 응답:", data);
+        return { success: true, data };
+    } catch (error) {
+        console.error("바코드 결제 요청 실패:", error);
+        return { success: false, message: "바코드 결제 요청 실패!" };
+    }
+};
+
+
 
 module.exports = {
     reqVCAT_HTTP,
     reqOrder,
     useWash,
-    adminUseWash
+    adminUseWash,
+    reqBarcode_HTTP,
+    reqPayproBarcode
 };

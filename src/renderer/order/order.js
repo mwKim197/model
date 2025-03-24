@@ -560,8 +560,10 @@ const payment = async () => {
 
     const orderAmount = price; // 주문 금액
 
-    // 결제 타입 지정
+    // 결제 타입 지정 userInfo.payType == true "마일리지 미사용"
     if (userInfo.payType) {
+
+        // 현제 결제 방식이 마일리지를 제외한 카드 밖에없어서 강제 카드 넣기. 추후 바코드 추가
         payType = ACTIONS.USE_CARD;
     } else {
         response = await pointPayment(orderAmount); // 포인트 모달 띄우기 및 포인트 사용 금액 반환
@@ -702,7 +704,9 @@ const ACTIONS = {
     /*포인트결제*/
     USE_POINTS: "usePoints",
     /*카드결제*/
-    USE_CARD: "useCard"
+    USE_CARD: "useCard",
+    /*바코드 결제*/
+    USE_BARCODE: "useBarcode",
 };
 
 // 포인트 전역 변수
