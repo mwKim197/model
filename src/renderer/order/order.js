@@ -44,6 +44,12 @@ function startCountdown() {
             clearCountdown();
             removeAll();
             closePointModal();
+
+            // 🔥 [추가] 전체메뉴 탭으로 이동
+            const allTab = document.querySelector('.menu-tab[data-category="all"]');
+            if (allTab) {
+                allTab.click(); // 클릭 이벤트 트리거
+            }
         }
     }, 1000);
 }
