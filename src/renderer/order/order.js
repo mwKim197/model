@@ -11,6 +11,9 @@ let rd1Info = {};
 // 메뉴 데이터
 let allProducts = [];
 
+// 커피 메뉴주문 여부
+let hasCoffee;
+
 // 세척여부
 let wash = false;
 let userInfo = {};
@@ -1570,13 +1573,37 @@ const barcodePayment = async (orderAmount, discountAmount) => {
         }
     }
 
+}
 
+// 30분이 지났는지 체크하는 함수
+function isOver30Minutes() {
+    if (!hasCoffee) return false;
 
+    const currentTime = Math.floor(Date.now() / 1000);
+    const elapsed = currentTime - hasCoffee;
+    return elapsed > 1800; // 1800초 = 30분
 }
 
 // 주문 시작
 const ordStart = async (point = 0) => {
     //const orderModal = document.getElementById('orderModal');
+
+    const chkCoffee = orderList.some(menu =>
+        menu.item.some(i => i.type === "coffee")
+    );
+
+    if (chkCoffee) {
+
+        if (isOver30Minutes()) {
+            console.log("30분지남");
+
+            // 커피 세척
+            await coffeeWash();
+        }
+
+        hasCoffee = Math.floor(Date.now() / 1000);
+    }
+
 
     // 리셋 타이머 종료
     clearCountdown();
@@ -1713,6 +1740,17 @@ async function handlerWash() {
             console.log('[INFO] 세척 완료');
         }
     }
+}
+
+// 커피 세척 동작
+async function coffeeWash() {
+    const data = [
+        { "type": "coffee" },
+    ];
+    // 커피 세척 동작 수행
+    await window.electronAPI.adminUseWash(data);
+
+    console.log('[INFO] 커피 세척 완료');
 }
 
 // 자정 시 `wash` 초기화
