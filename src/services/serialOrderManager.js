@@ -54,8 +54,9 @@ const startOrder = async (data) => {
 
 // 주문 처리 큐
 const processQueue = async (orderList, menuList) => {
-    let count = orderList.length;
-    let totalCount = orderList.length;
+    // 주문 수량의 총합을 계산
+    let totalCount = orderList.reduce((acc, order) => acc + order.count, 0);
+    let count = totalCount;
 
     for (const order of orderList) {
         try {
