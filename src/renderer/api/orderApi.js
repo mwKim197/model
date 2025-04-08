@@ -215,6 +215,31 @@ const adminUseWash = async (data) => {
     }
 };
 
+// 커피머신 예열
+const coffeePreheating = async (data) => {
+    try {
+        const response = await fetch(`http://localhost:3142/coffee-preheating`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            log.info('Success:', result.message);
+        } else {
+            log.error('Error:', result.message);
+            if (result.error) {
+                log.error('Details:', result.error.message);
+            }
+        }
+    } catch (error) {
+        log.error('Fetch error:', error.message);
+    }
+};
+
 const reStartCheck = async (orderList) => {
     try {
 
@@ -377,6 +402,7 @@ module.exports = {
     reqOrder,
     useWash,
     adminUseWash,
+    coffeePreheating,
     reqBarcode_HTTP,
     reqPayproBarcode
 };

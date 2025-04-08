@@ -928,6 +928,18 @@ const adminUseWash = async (data) => {
     eventEmitter.emit('order-update', {status: 'completed', message: '전체 세척 작업 완료.' });
 };
 
+// 커피머신 예열
+const coffeePreheating = async () => {
+    eventEmitter.emit('order-update', {
+        status: 'washStart',
+        message: '커피머신 예열중 입니다 잠시만 기다려주세요.'
+    });
+
+    await Order.purifyingCoffee();
+    log.info("커피머신 예열 작업 완료");
+    eventEmitter.emit('order-update', {status: 'completed', message: '커피머신 예열 완료.' });
+}
+
 // 추출기 원점
 const extractorHome = async () => {
     try {
@@ -951,5 +963,6 @@ module.exports = {
     adminCupOrder,
     adminIceOrder,
     adminUseWash,
+    coffeePreheating,
     extractorHome
 };

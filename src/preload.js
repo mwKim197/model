@@ -93,8 +93,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     setOrder: async (orderList) => await orderApi.reqOrder(orderList),
 
     // 전체 세척
-    adminUseWash: async (orderList) => await  orderApi.adminUseWash(orderList),
+    adminUseWash: async (orderList) => await orderApi.adminUseWash(orderList),
 
+    // 커피머신 세척
+    coffeePreheating: async () => await orderApi.coffeePreheating(),
+    
     // S3 이미지 조회 및 캐시 처리
     downloadAllFromS3WithCache: async (bucketName, prefix) =>
         await image.downloadAllFromS3WithCache(bucketName, prefix),

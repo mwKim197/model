@@ -3,7 +3,7 @@ const { app, BrowserWindow } = require('electron');
 const serialDataManager  = require('../../services/serialDataManager');
 const Connect = express.Router();
 const log = require('../../logger');
-let { startOrder, useWash, adminUseWash, extractorHome}= require('../../services/serialOrderManager.js');
+let { startOrder, useWash, adminUseWash, coffeePreheating ,extractorHome}= require('../../services/serialOrderManager.js');
 const {serialCommCom1} = require("../../serial/serialCommManager")
 const {signupUser, loginUser, getAllUserIds} = require("../../login");
 const {duplicateMenuData} = require("../../aws/db/utils/getMenu");
@@ -169,17 +169,32 @@ Connect.post('/order-refresh', (req, res) => {
 // 어드민 세척
 Connect.post('/admin-use-wash',  async (req, res) => {
     try {
-
         log.info("워시 시작");
         const reqBody = req.body;
         log.info("reqBody", reqBody);
-        await adminUseWash(reqBody);
+        await coffeePreheating();
         log.info("워시 끝");
         res.json({ success: true, message: '조회 재개 완료' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+
+
+
+// 커피머신 예열
+Connect.post('/coffee-preheating',  async (req, res) => {
+    try {
+        log.info("예열 시작");
+        await coffeePreheating();
+        log.info("예열 끝");
+        res.json({ success: true, message: '조회 재개 완료' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+
 
 // 추출기 원점
 Connect.post('/extractor-home',  async (req, res) => {

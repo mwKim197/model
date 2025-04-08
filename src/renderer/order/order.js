@@ -14,6 +14,9 @@ let allProducts = [];
 // 커피 메뉴주문 여부
 let hasCoffee;
 
+// 커피 예열 시간 1800초 = 30분
+let preheatingTime = 1800;
+
 // 세척여부
 let wash = false;
 let userInfo = {};
@@ -1581,7 +1584,7 @@ function isOver30Minutes() {
 
     const currentTime = Math.floor(Date.now() / 1000);
     const elapsed = currentTime - hasCoffee;
-    return elapsed > 1800; // 1800초 = 30분
+    return elapsed > preheatingTime; // 1800초 = 30분
 }
 
 // 주문 시작
@@ -1597,8 +1600,8 @@ const ordStart = async (point = 0) => {
         if (isOver30Minutes()) {
             console.log("30분지남");
 
-            // 커피 세척
-            await coffeeWash();
+            // 커피 예열
+            await coffeePreheating();
         }
 
         hasCoffee = Math.floor(Date.now() / 1000);
@@ -1742,15 +1745,12 @@ async function handlerWash() {
     }
 }
 
-// 커피 세척 동작
-async function coffeeWash() {
-    const data = [
-        { "type": "coffee" },
-    ];
-    // 커피 세척 동작 수행
-    await window.electronAPI.adminUseWash(data);
+// 커피 예열 동작
+async function coffeePreheating() {
+    // 커피 예열
+    await window.electronAPI.coffeePreheating();
 
-    console.log('[INFO] 커피 세척 완료');
+    console.log('[INFO] 커피 예열 완료');
 }
 
 // 자정 시 `wash` 초기화
@@ -1819,6 +1819,7 @@ async function fetchData() {
         setVersion(version);
         console.log("version", version);
 
+        preheatingTime = userInfo.preheatingTime ? userInfo.preheatingTime : 1800;
         limitCount = userInfo.limitCount ? userInfo.limitCount : 10;
         // 이미지 받아오기
         await window.electronAPI.downloadAllFromS3WithCache("model-narrow-road", `model/${userInfo.userId}`);
