@@ -876,14 +876,6 @@ const adminUseWash = async (data) => {
             log.info(`어드민 세척 레시피 리스트: ${JSON.stringify(washData)}`);
             for (let i = 0; i < washData.length; i++) {
 
-                if (i === 0) {
-                    // 컵 센서 체크
-                    const isStopValid = await checkCupSensor("없음", 3, false);
-                    if (!isStopValid) {
-                        log.error("컵 센서 상태가 '없음'이 아니어서 세척 작업을 중단합니다.");
-                        return; // 작업 중단
-                    }
-                }
                 const listData = washData[i];
                 eventEmitter.emit('order-update', {
                     status: 'washStart',
