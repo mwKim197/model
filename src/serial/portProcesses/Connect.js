@@ -172,7 +172,7 @@ Connect.post('/admin-use-wash',  async (req, res) => {
         log.info("워시 시작");
         const reqBody = req.body;
         log.info("reqBody", reqBody);
-        await adminUseWash();
+        await adminUseWash(reqBody);
         log.info("워시 끝");
         res.json({ success: true, message: '조회 재개 완료' });
     } catch (err) {
