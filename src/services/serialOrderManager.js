@@ -319,11 +319,6 @@ const dispenseIce = (recipe, count, totalCount) => {
 const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const formatValue = (value) => value.toString().padStart(3, "0");
-            const grinder = (coffee) => {
-                const result = Math.round(coffee * 10);
-                return formatValue(result);
-            };
 
             // RD1 데이터 확인
             await McData.updateSerialData('RD1', 'RD1');
@@ -366,11 +361,6 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
 const dispenseGarucha = (motor, extraction, hotwater) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const formatValue = (value) => value.toString().padStart(3, "0");
-            const grinder = (coffee) => {
-                const result = Math.round(coffee * 10);
-                return formatValue(result);
-            };
 
             // RD1 데이터 확인
             await McData.updateSerialData('RD1', 'RD1');
@@ -407,11 +397,6 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
 const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const formatValue = (value) => value.toString().padStart(3, "0");
-            const grinder = (coffee) => {
-                const result = Math.round(coffee * 10);
-                return formatValue(result);
-            };
 
             // RD1 데이터 확인
             await McData.updateSerialData('RD1', 'RD1');
@@ -884,6 +869,7 @@ const adminIceOrder = async (recipe) => {
  *  */
 const adminUseWash = async (data) => {
     let washData = data.data;  // 세척 데이터
+
     // 세척데이터가 리스트로 들어오면 세척 시작
     if (washData.length > 0) {
         try {
@@ -909,11 +895,13 @@ const adminUseWash = async (data) => {
                     await checkAutoOperationState("정지", 3);
                 }
                 if (listData.type === "garucha") {
-                    await Order.purifyingTae(listData.value1);
+                    await Order.sendTeaCommand(listData.value1, grinder(0), formatValue(100));
+                    await Order.extractTeaPowder();
                     await checkAutoOperationState("정지", 3);
                 }
                 if (listData.type === "syrup") {
-                    await Order.purifyingSyrup(listData.value1);
+                    await Order.setSyrup(listData.value1, grinder(0), formatValue(100),formatValue(0));
+                    await Order.extractSyrup();
                     await checkAutoOperationState("정지", 3);
                 }
                 await new Promise((r) => setTimeout(r, 1000));
@@ -950,6 +938,12 @@ const extractorHome = async () => {
         log.error(`추출기 원점 동작중 에러가 발생했습니다. ${e}`);
     }
 }
+
+const formatValue = (value) => value.toString().padStart(3, "0");
+const grinder = (moter) => {
+    const result = Math.round(moter * 10);
+    return formatValue(result);
+};
 
 // 주문 처리 시작
 processQueue().then();

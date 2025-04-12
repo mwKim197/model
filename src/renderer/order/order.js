@@ -1711,11 +1711,12 @@ function getCurrentHour() {
     return now.getHours(); // 24시간 형식의 현재 시각
 }
 
-// 세척 동작
+// 자동 세척 동작
 async function handlerWash() {
     const currentHour = getCurrentHour();
-    const washTime = userInfo.washTime; // 사용자 세척 시간
+    const washTime = userInfo?.washTime ? userInfo.washTime : 4; // 사용자 세척 시간 기본 4시
 
+    // 자동운전상태 정지 - 커피프로세스 미동작시
     if (rd1Info.autoOperationState === "정지" && !wash) {
         // `washTime`과 현재 시간이 일치하면 세척 실행
         if (parseInt(washTime, 10) === currentHour) {
