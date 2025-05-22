@@ -308,6 +308,10 @@
                                 modalImage.src = '../../assets/basicImage/세척.gif';
                                 audio = new Audio('../../assets/audio/커피머신 세척중입니다 잠시만 기다려주세요.mp3');
                                 break;
+                            case 'preheatingStart':
+                                modalImage.src = '../../assets/basicImage/세척.gif';
+                                audio = new Audio('../../assets/audio/커피머신 예열 중입니다.mp3');
+                                break;
                             case 'generalProduct':
                                 modalImage.src = '../../assets/basicImage/일반상품.gif';
                                 audio = new Audio('../../assets/audio/구매하신 물품을 가져가주세요.mp3');
@@ -326,7 +330,7 @@
                         drinkCallAudio(time, audio);
                     } else {
                         // 음성 재생
-                        if (orderFlow.status === "drink" || orderFlow.status === "ice" ||
+                        if (orderFlow.status === "drink" || orderFlow.status === "ice" || orderFlow.status === "preheatingStart" ||
                             orderFlow.status === "washStart" || orderFlow.status === "generalProduct" && audio) {
                             audio.play().catch((err) => {
                                 console.error('Audio play error:', err);

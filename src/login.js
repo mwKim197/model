@@ -67,18 +67,19 @@ const signupUser = async (userId, password, ipAddress, storeName, tel) => {
         log.info('회원 가입 성공');
         return params;
     } catch (error) {
-        log.error('Error signing up:', error.message);
+        log.error('회원 가입 실패:', error.message);
     }
 };
 
 // 로그인 처리 함수
-const loginUser = async (userId, password) => {
+const loginUser = async (userId, password, ipAddress) => {
     const params = {
         TableName: 'model_user',
         Key: {
             userId: userId,
         },
     };
+    let url;
 
     try {
         const result = await dynamoDB.get(params).promise();
@@ -88,9 +89,24 @@ const loginUser = async (userId, password) => {
             const match = await bcrypt.compare(password, user.password);  // 비밀번호 비교
 
             if (match) {
-                // 로그인 성공 시 사용자 정보를 electron-store에 저장
-                const { default: Store } = await import('electron-store');
-                const store = new Store();
+
+                if (ipAddress) {
+                    log.info('ip 정보 업데이트 처리');
+                    url = await addSubdomainSafely(userId, ipAddress);
+
+                    // 특정 필드만 업데이트하는 방식 사용 (Key와 UpdateExpression 활용)
+                    const updateParams = {
+                        TableName: 'model_user',
+                        Key: { userId: userId },
+                        UpdateExpression: "set ipAddress = :ip, url = :url",
+                        ExpressionAttributeValues: {
+                            ":ip": ipAddress,
+                            ":url": url,
+                        },
+                    };
+
+                    await dynamoDB.update(updateParams).promise();
+                }
 
                 // S3 카운터 DB 데이터 생성
                 await initializeCounter(user.userId);
@@ -106,18 +122,19 @@ const loginUser = async (userId, password) => {
                     url: user.url,
                 });
 
-                const data = getUser();
+                const data = await getUser();
 
                 // 저장된 사용자 정보 확인
                 log.info('스토어 회원 정보 확인:', data);
+                return { success: true, message: '로그인 성공', user: data };
             } else {
-                log.info('페스워드 오류');
+                log.info('패스워드 오류');
             }
         } else {
             log.info('유저 정보 없음');
         }
     } catch (error) {
-        log.error('Error during login:', error.message);
+        log.error('로그인 실패 :', error.message);
     }
 };
 
@@ -130,15 +147,13 @@ const getAllUserIds = async () => {
     try {
         const result = await dynamoDB.scan(params).promise();
         const userIds = result.Items.map(item => item.userId); // userId 배열 생성
-        console.log("[INFO] Fetched userIds:", userIds);
+        log.log("전체 계정 조회 성공:", userIds);
         return userIds;
     } catch (error) {
-        console.error("[ERROR] Failed to fetch userIds:", error.message);
+        log.error("전체 계정 조회실패:", error.message);
         throw error;
     }
 };
-
-
 
 module.exports = {
     signupUser,

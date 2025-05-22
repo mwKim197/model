@@ -479,8 +479,12 @@ Menu.post('/login', async (req, res) => {
         // 사용자 정보 조회
         const user = await getUserById(userId);
         log.info("user : ", user);
+
         // 비밀번호 검증
         const isPasswordValid = await compare(password, user.password);
+        log.info("isPasswordValid : ", password);
+        log.info("isPasswordValid : ", user.password);
+        log.info("isPasswordValid : ", isPasswordValid);
         if (!isPasswordValid) {
             return res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
         }

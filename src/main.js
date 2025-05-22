@@ -1,5 +1,19 @@
-//const express = require('express');
 const { app, BrowserWindow} = require('electron');
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+    app.quit();
+    return;
+}
+
+// ✅ 여기에서 second-instance 핸들러 등록
+app.on('second-instance', () => {
+    const win = BrowserWindow.getAllWindows()[0];
+    if (win) {
+        if (win.isMinimized()) win.restore();
+        win.focus();
+    }
+});
+
 const path = require('path');
 const { createMainWindow } = require('./windows/mainWindow');
 const { setupEventHandlers } = require('./events/eventHandlers');
@@ -10,7 +24,6 @@ const { getBasePath } = require(path.resolve(__dirname, './aws/s3/utils/cacheDir
 const log = require('./logger');
 const fs = require('fs');
 const {setupCloudflare, stopCloudflareTunnel} = require("./cloudflare/cloudflared");
-
 
 // 디렉토리 확인 및 생성
 const basePath = getBasePath(); // getBasePath 함수 호출

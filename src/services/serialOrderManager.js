@@ -19,23 +19,26 @@ const startOrder = async (data) => {
 
         // 주문 데이터 검증
         if (!Array.isArray(data.orderList) || data.orderList.length === 0) {
-            throw new Error("Invalid or empty order data");
+            throw new Error("주문 데이터가 없습니다.");
         }
         let orderData = data.orderList;  // 주문 데이터
 
         // 전체 메뉴 조회
         const menu = await allProduct();
         if (!menu || !menu.Items) {
-            throw new Error("Failed to load menu data");
+            throw new Error("전체 메뉴 조회실패.");
         }
         let menuData = menu.Items;
 
         // 메뉴와 주문 데이터가 정상적으로 로드되었으면 주문 처리 시작
         if (menuData.length > 0) {
-            log.info("주문 제조...");
+            log.info("[START] 주문 제조를 시작합니다!!!");
+            log.info("[START] 주문 제조를 시작합니다!!!");
+            log.info("[START] 주문 제조를 시작합니다!!!");
+
             log.info("주문 목록: ", orderData);
             await processQueue(orderData, menuData).catch((error) => {
-                log.error("Error in startOrder:", error.message);
+                log.error("주문 오류 발생: ", error.message);
                 throw error; // 명시적으로 에러를 다시 던짐
             });
             await useWash(orderData);
@@ -43,7 +46,7 @@ const startOrder = async (data) => {
             log.warn("메뉴, 주문 정보 없음.");
         }
     } catch (error) {
-        log.error("Error in startOrder:", error.message);
+        log.error("주문시작 에러 발생 :", error.message);
         throw error; // 명시적으로 에러를 다시 던짐
     } finally {
         eventEmitter.emit('order-update', {
@@ -102,8 +105,11 @@ const processQueue = async (orderList, menuList) => {
 
 // 주문 처리
 const processOrder = async (recipe, count, totalCount) => {
+    log.info('////////--------------- 주문 요청 --------------------//////');
+    log.info('////////--------------- 주문 요청 --------------------//////');
+    log.info('////////--------------- 주문 요청 --------------------//////');
     try {
-        log.info("주문처리중 레시피: ", recipe);
+        log.info("주문처리 중 레시피: ", recipe);
         if (recipe.cupYn === 'yes' ) return;
         if (!recipe.cupYn || recipe.cupYn === 'no' ) await dispenseCup(recipe, count, totalCount);
 
@@ -171,67 +177,78 @@ const processOrder = async (recipe, count, totalCount) => {
 
         log.info(`제조완료 menu: ${recipe.menuId}`);
     } catch (error) {
-        log.error(`[에러] 메뉴 제조 실패: menuId ${recipe.menuId}, 이유: ${error.message}`);
+        log.error(`메뉴 제조 실패: menuId ${recipe.menuId}, 이유: ${error.message}`);
         throw error; // 상위 호출자로 에러 전파
     }
 };
 
 // 제조 단계 함수
 const dispenseCup = (recipe, count, totalCount) => {
-    return new Promise(resolve => {
+    log.info('////////--------------- 컵 투출 요청 --------------------//////');
+    log.info('////////--------------- 컵 투출 요청 --------------------//////');
+    log.info('////////--------------- 컵 투출 요청 --------------------//////');
+    return new Promise((resolve, reject) => {
         setTimeout(async () => {
-            const result = await Cup.getCupInfo(); // `getSomeData()`는 조회하는 함수입니다.
-            log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵디스펜서 상태 cup: ${recipe.cup}, 컵1(PL)모터ON=${result.plasticCup.motorActive}, 컵2(PA)모터ON=${result.paperCup.motorActive}`);
-            eventEmitter.emit('order-update', { menu: `${recipe.name} ${count} / ${totalCount}`, status: 'processing', message: `메뉴를 준비중입니다.` });
-            if (recipe.cup === 'plastic') {
-                log.info(`menu: ${recipe.name} - [${recipe.menuId}] : GoCupOut, cup: 'plastic'`);
-                await Cup.getPlasticCupUsage();
+            try {
+                const result = await Cup.getCupInfo(); // `getSomeData()`는 조회하는 함수입니다.
+                log.info(`컵 디스펜서 menu: ${recipe.name} - [${recipe.menuId}] : 컵 종류: ${recipe.cup}, 컵1(PL)모터ON=${result.plasticCup.motorActive}, 컵2(PA)모터ON=${result.paperCup.motorActive}`);
+                eventEmitter.emit('order-update', { menu: `${recipe.name} ${count} / ${totalCount}`, status: 'processing', message: `메뉴를 준비중입니다.` });
+                if (recipe.cup === 'plastic') {
+                    log.info(`menu: ${recipe.name} - [${recipe.menuId}] : GoCupOut, cup: 'plastic'`);
+                    await Cup.getPlasticCupUsage();
+                }
+
+                if (recipe.cup === 'paper') {
+                    log.info(`menu: ${recipe.name} - [${recipe.menuId}] : GoCupOut, cup: 'paper'`);
+                    await Cup.getPaperCupUsage();
+                }
+
+                let stopCup = 0;
+                const checkCondition = async (counter = 0) => {
+                    // 비동기 함수 실행 후 일정 시간 지연
+                    if (counter >= 60) {
+                        log.error('컵 시간초과 동작 정지 요청을 보냅니다.');
+                        await Cup.stopCupMotor();
+                        resolve();
+                        return;
+                    }
+
+                    const result = await Cup.getCupInfo();
+                    log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵디스펜서 상태 cup: ${recipe.cup}, 컵1(PL)모터ON=${result.plasticCup.motorActive}, 컵2(PA)모터ON=${result.paperCup.motorActive} ${counter + 1} / 60`);
+
+                    // 조회한 값이 false 이면 멈추기
+                    if (recipe.cup === "plastic" && result.plasticCup.motorActive === 0 ) {
+                        stopCup++;
+                    }
+                    if (recipe.cup === "paper" && result.paperCup.motorActive === 0) {
+                        stopCup++;
+                    }
+
+                    if ( stopCup >= 2) {
+                        log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵 추출이 완료되었습니다. 동작 정지 요청을 보냅니다.`);
+                        await Cup.stopCupMotor();
+                        resolve();
+                        return;
+                    }
+
+                    // 1초 후에 다시 호출
+                    setTimeout(() => checkCondition(counter + 1), 1000);
+                }
+
+                // 상태 확인 함수 호출
+                await checkCondition();
+            } catch (err) {
+                log.error("❌ dispenseCup 중 에러 발생:", err.message);
+                reject(err); // 반드시 reject 해야 상위에서 catch 됨
             }
-
-            if (recipe.cup === 'paper') {
-                log.info(`menu: ${recipe.name} - [${recipe.menuId}] : GoCupOut, cup: 'paper'`);
-                await Cup.getPaperCupUsage();
-            }
-
-            let stopCup = 0;
-            const checkCondition = async (counter = 0) => {
-                // 비동기 함수 실행 후 일정 시간 지연
-                if (counter >= 60) {
-                    log.error('Cup time out 동작 정지 요청을 보냅니다.');
-                    await Cup.stopCupMotor();
-                    resolve();
-                    return;
-                }
-
-                const result = await Cup.getCupInfo();
-                log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵디스펜서 상태 cup: ${recipe.cup}, 컵1(PL)모터ON=${result.plasticCup.motorActive}, 컵2(PA)모터ON=${result.paperCup.motorActive} ${counter + 1} / 60`);
-
-                // 조회한 값이 false 이면 멈추기
-                if (recipe.cup === "plastic" && result.plasticCup.motorActive === 0 ) {
-                    stopCup++;
-                }
-                if (recipe.cup === "paper" && result.paperCup.motorActive === 0) {
-                    stopCup++;
-                }
-
-                if ( stopCup >= 2) {
-                    log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵 추출이 완료되었습니다. 동작 정지 요청을 보냅니다.`);
-                    await Cup.stopCupMotor();
-                    resolve();
-                    return;
-                }
-
-                // 1초 후에 다시 호출
-                setTimeout(() => checkCondition(counter + 1), 1000);
-            }
-
-            // 상태 확인 함수 호출
-            await checkCondition();
         }, 1000);
     });
 };
 
 const dispenseIce = (recipe, count, totalCount) => {
+    log.info('////////--------------- 제빙기 추출 요청 --------------------//////');
+    log.info('////////--------------- 제빙기 추출 요청 --------------------//////');
+    log.info('////////--------------- 제빙기 추출 요청 --------------------//////');
     return new Promise(async (resolve, reject) => {
         try {
             let totalTime = 0;
@@ -255,7 +272,7 @@ const dispenseIce = (recipe, count, totalCount) => {
                 waterTime = waterTime - 2;
             }
             totalTime = Number(recipe.iceTime) + waterTime
-            log.info('[totalTime] : ', totalTime);
+            log.info('[totalTime] 제빙기 카운트 : ', totalTime);
 
             // 화면 노출 메세지
             eventEmitter.emit('order-update', { menu: `${menuName} ${count} / ${totalCount}`, status: 'ice', message: `제빙기에서 얼음을 받아주세요.` });
@@ -266,17 +283,17 @@ const dispenseIce = (recipe, count, totalCount) => {
                 const currentHexArray = result.match(/.{1,2}/g); // 2자리씩 끊어서 배열 생성
                 const currentValue = parseInt(currentHexArray[7]); // 16진수 → 10진수 변환
 
-                log.info(`Current Value (hexArray[7]): ${currentValue}`);
+                log.info(`제빙기 변경값: ${currentValue}`);
 
                 if (!valueChanged) {
                     // 값 변경 전 (처음 값 유지)
                     if (initialValue === null) {
                         // 최초로 값을 설정
                         initialValue = currentValue;
-                        log.info(`Initial Value Detected: ${initialValue}`);
+                        log.info(`제빙기 기본 값: ${initialValue}`);
                     } else if (currentValue === initialValue) {
                         // 같은 값이 유지되는 경우
-                        log.info(`Initial Value 유지 중: ${initialValue}`);
+                        log.info(`제빙기 기본 값 유지 중: ${initialValue}`);
                     } else {
                         // 값이 변경된 경우
                         valueChanged = true; // 변경 플래그 설정
@@ -286,23 +303,23 @@ const dispenseIce = (recipe, count, totalCount) => {
                     }
                 } else {
                     stableTime++;
-                    log.info(`변경된 값 : ${stableTime}/${totalTime}초`);
+                    log.info(`변경된 값 유지 시간: ${stableTime}/${totalTime}초`);
                 }
 
                 // 최소 대기 시간 체크
                 if (minWaitCounter < minWaitTime) {
                     minWaitCounter++;
-                    log.info(`최소 대기 시간 유지 중: ${minWaitCounter}/${minWaitTime}초`);
+                    log.info(`제빙기 최소 대기 시간 유지 중: ${minWaitCounter}/${minWaitTime}초`);
                 } else if (valueChanged && stableTime >= totalTime) {
                     // 최소 대기 시간 충족 후 변경된 값이 totalTime만큼 유지된 경우
-                    log.info('변경된 값이 일정 시간 동안 유지됨. 다음 루틴으로 진행합니다...');
+                    log.info('제빙기 변경된 값이 일정 시간 동안 유지됨. 다음 루틴으로 진행합니다...');
                     resolve(); // 작업 완료로 처리
                     return;
                 }
 
                 if (counter >= 119) {
                     await Ice.sendIceStopPacket();
-                    reject(new Error(`"120초 경과로 기계가 초기화되었습니다."`));
+                    reject(new Error(`"제빙기 120초 경과로 기계가 초기화되었습니다."`));
                     return;
                 }
 
@@ -310,21 +327,23 @@ const dispenseIce = (recipe, count, totalCount) => {
             }
 
         } catch (error) {
-            log.error('dispenseIce 오류:', error.message);
+            log.error('제빙기 추출 오류:', error.message);
             reject(error);
         }
     });
 };
 
 const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
+    log.info('////////--------------- 커피 추출 요청 --------------------//////');
+    log.info('////////--------------- 커피 추출 요청 --------------------//////');
+    log.info('////////--------------- 커피 추출 요청 --------------------//////');
     return new Promise(async (resolve, reject) => {
         try {
 
             // RD1 데이터 확인
             await McData.updateSerialData('RD1', 'RD1');
             const data = McData.getSerialData('RD1');
-            log.info("GET COFFEE INFO ", data);
-            log.info(`coffee set!!!  : ${grinderOne}, ${grinderTwo}, ${extraction}, ${hotWater}`);
+            log.info("커피추출 데이터: ", data);
 
             // Coffee 추출 명령
             await Order.sendCoffeeCommand(
@@ -333,12 +352,12 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
                 formatValue(extraction),
                 formatValue(hotWater)
             );
-            log.info(`coffee 추출 실행`);
+            
             await Order.extractCoffee();
 
             const isCoffee = await checkAutoOperationState("커피", 2);
 
-            // 가루차 동작 확인
+            // 커피 동작 확인
             if (!isCoffee) {
                 await Order.extractCoffee();
             }
@@ -346,11 +365,11 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
             const isStopped = await checkAutoOperationState("정지", 3);
 
             if (isStopped) {
-                log.info(`coffee 추출 완료: ${isStopped}`);
+                log.info(`커피 추출 완료: ${isStopped}`);
                 resolve(); // 성공적으로 종료
             }
         } catch (error) {
-            log.error('dispenseCoffee 오류:', error.message);
+            log.error('커피 추출 오류:', error.message);
             return reject(error); // 상위 호출자로 에러 전파
         }
     });
@@ -359,17 +378,20 @@ const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
 
 
 const dispenseGarucha = (motor, extraction, hotwater) => {
+    log.info('////////---------------가루차 추출 요청 --------------------//////');
+    log.info('////////---------------가루차 추출 요청 --------------------//////');
+    log.info('////////---------------가루차 추출 요청 --------------------//////');
     return new Promise(async (resolve, reject) => {
         try {
 
             // RD1 데이터 확인
             await McData.updateSerialData('RD1', 'RD1');
             const data = McData.getSerialData('RD1');
-            log.info("GET GARUCHA INFO ", JSON.stringify(data));
+            log.info("가루차 추출 데이터: ", JSON.stringify(data));
 
             // Tea 추출 명령
             await Order.sendTeaCommand(motor, grinder(extraction), formatValue(hotwater));
-            log.info(`${motor} Tea 추출 실행`);
+            log.info(`${motor} 번 가루차 추출 실행`);
             await Order.extractTeaPowder();
 
             const isGarucha = await checkAutoOperationState("가루차", 2);
@@ -382,12 +404,12 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
             const isStopped = await checkAutoOperationState("정지", 3);
 
             if (isStopped) {
-                log.info(`Tea 추출 완료: ${isStopped}`);
+                log.info(`가루차 추출 완료: ${isStopped}`);
                 resolve(); // 성공적으로 종료
             }
 
         } catch (error) {
-            log.error('dispenseGarucha 오류:', error.message);
+            log.error('가루차 추출 오류:', error.message);
             return reject(error);
         }
     });
@@ -395,22 +417,25 @@ const dispenseGarucha = (motor, extraction, hotwater) => {
 
 
 const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
+    log.info('////////--------------- 시럽 추출 요청 --------------------//////');
+    log.info('////////--------------- 시럽 추출 요청 --------------------//////');
+    log.info('////////--------------- 시럽 추출 요청 --------------------//////');
     return new Promise(async (resolve, reject) => {
         try {
 
             // RD1 데이터 확인
             await McData.updateSerialData('RD1', 'RD1');
             const data = McData.getSerialData('RD1');
-            log.info("GET SYRUP INFO ", JSON.stringify(data));
+            log.info("시럽 추출 데이터: ", JSON.stringify(data));
 
             // Syrup 추출 명령
             await Order.setSyrup(motor, grinder(extraction), formatValue(hotwater), formatValue(sparkling));
-            log.info(`${motor} Syrup 추출 실행`);
+            log.info(`${motor} 번 시럽 추출 실행`);
             await Order.extractSyrup();
 
             const isSyrup = await checkAutoOperationState("시럽", 2);
 
-            // 가루차 동작 확인
+            // 시럽 동작 확인
             if (!isSyrup) {
                 await Order.extractSyrup();
             }
@@ -418,11 +443,11 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
             const isStopped = await checkAutoOperationState("정지", 3);
 
             if (isStopped) {
-                log.info(`Syrup 추출 완료: ${isStopped}`);
+                log.info(`시럽 추출 완료: ${isStopped}`);
                 resolve(); // 성공적으로 종료
             }
         } catch (error) {
-            log.error('dispenseSyrup 오류:', error.message);
+            log.error('시럽추출 오류:', error.message);
             return reject(error);
         }
     });
@@ -432,12 +457,15 @@ const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
 *  washChk : true 메세지 노출
 * */
 const checkCupSensor = async (expectedState, threshold, washChk, count, totalCount) => {
+    log.info('////////--------------- 컵센서 체크 요청 --------------------//////');
+    log.info('////////--------------- 컵센서 체크 요청 --------------------//////');
+    log.info('////////--------------- 컵센서 체크 요청 --------------------//////');
     let stateCount = 0; // 상태 카운터
     for (let counter = 0; counter < 120; counter++) {
         const startTime = Date.now(); // 루프 시작 시간 기록
         await McData.updateSerialData('RD1', 'RD1');
         const data = McData.getSerialData('RD1');
-        log.info(`컵 센서 time out 여부 ${expectedState} :  ${counter}/ 120`);
+        log.info(`컵 센서 time out 여부: ${expectedState} :  ${counter}/ 120`);
 
         // 모달 동작
         if (expectedState === "있음" && washChk ) {
@@ -451,9 +479,9 @@ const checkCupSensor = async (expectedState, threshold, washChk, count, totalCou
 
         if (data.cupSensor === expectedState) {
             stateCount++;
-            log.info(`Sensor state is '${expectedState}', count: ${stateCount}`);
+            log.info(`컵 센서 여부: '${expectedState}', 횟수: ${stateCount} 회`);
             if (stateCount >= threshold) {
-                log.info(`Sensor state reached '${expectedState}' ${threshold} times. Exiting loop.`);
+                log.info(`컵 센서 여부: '${expectedState}' 상태,  ${threshold} 회 반복 완료.`);
                 return true; // 조건 충족 시 함수 종료
             }
         } else {
@@ -467,7 +495,7 @@ const checkCupSensor = async (expectedState, threshold, washChk, count, totalCou
         }
     }
 
-    log.warn(`Sensor state did not reach '${expectedState}' threshold within timeout.`);
+    log.warn(`센서 타임아웃, 카테고리명 '${expectedState}'.`);
     return false; // 타임아웃 처리
 };
 
@@ -502,12 +530,15 @@ const checkAutoOperationState = async (expectedState, threshold) => {
         }
     }
 
-    log.warn(`Sensor state did not reach '${expectedState}' threshold within timeout.`);
+    log.warn(`머신 동작확인 타임아웃, 카테고리명: '${expectedState}'.`);
     return false; // 타임아웃 처리
 };
 
 
 const useWash = async (data) => {
+    log.info('////////--------------- 세척 요청 --------------------//////');
+    log.info('////////--------------- 세척 요청 --------------------//////');
+    log.info('////////--------------- 세척 요청 --------------------//////');
     let orderData = data;  // 주문 데이터
 
     // 전체 메뉴 조회
@@ -569,6 +600,9 @@ const useWash = async (data) => {
 
 const adminDrinkOrder = async (recipe) => {
     try {
+        log.info('////////--------------- 어드민 음료 요청 --------------------//////');
+        log.info('////////--------------- 어드민 음료 요청 --------------------//////');
+        log.info('////////--------------- 어드민 음료 요청 --------------------//////');
         // 시작 이벤트 전송
         menuName = recipe.name;
         eventEmitter.emit('order-update', { menu: menuName, status: 'processing', message: '관리자가 조작중입니다. 음료가 준비중입니다.' });
@@ -616,11 +650,11 @@ const adminDrinkOrder = async (recipe) => {
                             status: 'completed',
                             message: `"120초 경과로 기계가 초기화되었습니다."`
                         });
-                        log.error(`[에러] 컵 센서 상태가 유효하지 않음 (회수 실패): menuId ${recipe.menuId}`);
+                        log.error(`[어드민] 컵 센서 상태가 유효하지 않음 (회수 실패): menuId ${recipe.menuId}`);
                         throw new Error(`120초 경과로 기계가 초기화되었습니다.`);
                     } else {
-                        log.info(`컵 센서 상태 확인 완료 (회수 성공): menuId ${recipe.menuId}`);
-                        log.info("세척 시작...!");
+                        log.info(`[어드민] 컵 센서 상태 확인 완료 (회수 성공): menuId ${recipe.menuId}`);
+                        log.info("[어드민] 세척 시작...!");
                         eventEmitter.emit('order-update', { status: 'washStart', message: '커피머신 세척중입니다 잠시만 기다려주세요.' });
 
                         // 필터링 및 중복 제거
@@ -634,13 +668,13 @@ const adminDrinkOrder = async (recipe) => {
                                 return unique;
                             }, []);
 
-                        log.info(`전체 세척 레시피 리스트: ${JSON.stringify(combinedList)}`);
+                        log.info(`[어드민] 전체 세척 레시피 리스트: ${JSON.stringify(combinedList)}`);
 
                         for (let i = 0; i < combinedList.length; i++) {
 
                             const listData = combinedList[i];
 
-                            log.info(`전체 세척 실행: ${JSON.stringify(listData)}`);
+                            log.info(`[어드민] 전체 세척 실행: ${JSON.stringify(listData)}`);
 
                             if (listData.type === "garucha") {
                                 await Order.purifyingTae(listData.value1);
@@ -676,67 +710,79 @@ const adminDrinkOrder = async (recipe) => {
 
 const adminCupOrder = (recipe) => {
     try {
+        log.info('////////--------------- 어드민 컵 요청 --------------------//////');
+        log.info('////////--------------- 어드민 컵 요청 --------------------//////');
+        log.info('////////--------------- 어드민 컵 요청 --------------------//////');
         // 시작 이벤트 전송
         eventEmitter.emit('order-update', { menu: recipe.name, status: 'processing', message: '관리자가 조작중입니다. 컵이 준비중입니다.' });
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             setTimeout(async () => {
-                const result = await Cup.getCupInfo(); // `getSomeData()`는 조회하는 함수입니다.
-                log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵디스펜서 상태 cup: ${recipe.cup}, 컵1(PL)모터ON=${result.plasticCup.motorActive}, 컵2(PA)모터ON=${result.paperCup.motorActive}`);
-                eventEmitter.emit('order-update', { menu: recipe.name, status: 'processing', message: `메뉴를 준비중입니다.` });
-                if (recipe.cup === 'plastic') {
-                    log.info(`menu: ${recipe.name} - [${recipe.menuId}] : GoCupOut, cup: 'plastic'`);
-                    await Cup.getPlasticCupUsage();
+                try {
+                    const result = await Cup.getCupInfo(); // `getSomeData()`는 조회하는 함수입니다.
+                    log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵디스펜서 상태 cup: ${recipe.cup}, 컵1(PL)모터ON=${result.plasticCup.motorActive}, 컵2(PA)모터ON=${result.paperCup.motorActive}`);
+                    eventEmitter.emit('order-update', {
+                        menu: recipe.name,
+                        status: 'processing',
+                        message: `메뉴를 준비중입니다.`
+                    });
+                    if (recipe.cup === 'plastic') {
+                        log.info(`menu: ${recipe.name} - [${recipe.menuId}] : GoCupOut, cup: 'plastic'`);
+                        await Cup.getPlasticCupUsage();
+                    }
+
+                    if (recipe.cup === 'paper') {
+                        log.info(`menu: ${recipe.name} - [${recipe.menuId}] : GoCupOut, cup: 'paper'`);
+                        await Cup.getPaperCupUsage();
+                    }
+
+                    let stopCup = 0;
+                    const checkCondition = async (counter = 0) => {
+                        // 비동기 함수 실행 후 일정 시간 지연
+                        if (counter >= 60) {
+                            log.error('[어드민] 어드민 컵 타임아웃 발생. 동작 정지 요청을 보냅니다.');
+                            eventEmitter.emit('order-update', {
+                                menu: recipe.name, // 수정: menuName 변수 대신 recipe.name 사용
+                                status: 'completed',
+                                message: "60초 경과로 기계가 초기화되었습니다."
+                            });
+                            await Cup.stopCupMotor();
+                            resolve();
+                            return;
+                        }
+
+                        const result = await Cup.getCupInfo();
+                        log.info(`[어드민] menu: ${recipe.name} - [${recipe.menuId}] : 컵디스펜서 상태 cup: ${recipe.cup}, 컵1(PL)모터ON=${result.plasticCup.motorActive}, 컵2(PA)모터ON=${result.paperCup.motorActive} ${counter + 1} / 60`);
+
+                        // 조회한 값이 false 이면 멈추기
+                        if (recipe.cup === "plastic" && result.plasticCup.motorActive === 0) {
+                            stopCup++;
+                        }
+                        if (recipe.cup === "paper" && result.paperCup.motorActive === 0) {
+                            stopCup++;
+                        }
+
+                        if (stopCup >= 2) {
+                            log.info(`[어드민] menu: ${recipe.name} - [${recipe.menuId}] : 컵 추출이 완료되었습니다. 동작 정지 요청을 보냅니다.`);
+                            eventEmitter.emit('order-update', {
+                                menu: recipe.name, // 수정: menuName 변수 대신 recipe.name 사용
+                                status: 'completed',
+                                message: '관리자 조작이 완료되었습니다.'
+                            });
+                            await Cup.stopCupMotor();
+                            resolve();
+                            return;
+                        }
+
+                        // 1초 후에 다시 호출
+                        setTimeout(() => checkCondition(counter + 1), 1000);
+                    }
+
+                    // 상태 확인 함수 호출
+                    await checkCondition();
+                } catch (err) {
+                    log.error("❌ dispenseCup 중 에러 발생:", err.message);
+                    reject(err); // 반드시 reject 해야 상위에서 catch 됨
                 }
-
-                if (recipe.cup === 'paper') {
-                    log.info(`menu: ${recipe.name} - [${recipe.menuId}] : GoCupOut, cup: 'paper'`);
-                    await Cup.getPaperCupUsage();
-                }
-
-                let stopCup = 0;
-                const checkCondition = async (counter = 0) => {
-                    // 비동기 함수 실행 후 일정 시간 지연
-                    if (counter >= 60) {
-                        log.error('Cup time out 동작 정지 요청을 보냅니다.');
-                        eventEmitter.emit('order-update', {
-                            menu: recipe.name, // 수정: menuName 변수 대신 recipe.name 사용
-                            status: 'completed',
-                            message: "60초 경과로 기계가 초기화되었습니다."
-                        });
-                        await Cup.stopCupMotor();
-                        resolve();
-                        return;
-                    }
-
-                    const result = await Cup.getCupInfo();
-                    log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵디스펜서 상태 cup: ${recipe.cup}, 컵1(PL)모터ON=${result.plasticCup.motorActive}, 컵2(PA)모터ON=${result.paperCup.motorActive} ${counter + 1} / 60`);
-
-                    // 조회한 값이 false 이면 멈추기
-                    if (recipe.cup === "plastic" && result.plasticCup.motorActive === 0 ) {
-                        stopCup++;
-                    }
-                    if (recipe.cup === "paper" && result.paperCup.motorActive === 0) {
-                        stopCup++;
-                    }
-
-                    if ( stopCup >= 2) {
-                        log.info(`menu: ${recipe.name} - [${recipe.menuId}] : 컵 추출이 완료되었습니다. 동작 정지 요청을 보냅니다.`);
-                        eventEmitter.emit('order-update', {
-                            menu: recipe.name, // 수정: menuName 변수 대신 recipe.name 사용
-                            status: 'completed',
-                            message: '관리자 조작이 완료되었습니다.'
-                        });
-                        await Cup.stopCupMotor();
-                        resolve();
-                        return;
-                    }
-
-                    // 1초 후에 다시 호출
-                    setTimeout(() => checkCondition(counter + 1), 1000);
-                }
-
-                // 상태 확인 함수 호출
-                await checkCondition();
             }, 1000);
         });
 
@@ -755,20 +801,23 @@ const adminCupOrder = (recipe) => {
 
 const adminIceOrder = async (recipe) => {
     try {
+        log.info('////////--------------- 어드민 출빙 요청 --------------------//////');
+        log.info('////////--------------- 어드민 출빙 요청 --------------------//////');
+        log.info('////////--------------- 어드민 출빙 요청 --------------------//////');
         // 시작 이벤트 전송
         eventEmitter.emit('order-update', { menu: recipe.name, status: 'processing', message: '관리자가 조작중입니다. 얼음이 준비중입니다.' });
         return new Promise(async (resolve, reject) => {
             try {
                 let totalTime = 0;
-                log.info(`얼음 세팅 중: ${recipe.iceTime}초, 물 세팅 중: ${recipe.waterTime}초`);
+                log.info(`[어드민] 얼음 세팅 중: ${recipe.iceTime}초, 물 세팅 중: ${recipe.waterTime}초`);
                 await Ice.sendIceTimePacket(recipe.iceTime);
                 await Ice.sendWaterTimePacket(recipe.waterTime);
                 await Ice.sendIceRunPacket();
                 const initialStatus = await Ice.getKaiserInfo();
                 totalTime = initialStatus.match(/.{1,2}/g)[7];
-                log.info(`menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(totalTime)}`);
-                log.info('출빙 요청이 완료되었습니다. 상태를 감시합니다.');
-                log.info('얼음을 받아주세요');
+                log.info(`[어드민] menu: ${recipe.name} - [${recipe.menuId}] : ${JSON.stringify(totalTime)}`);
+                log.info('[어드민] 출빙 요청이 완료되었습니다. 상태를 감시합니다.');
+                log.info('[어드민] 얼음을 받아주세요');
                 let initialValue = null; // 최초 상태값 저장
                 let stableTime = 0; // 변경 후 유지 시간
                 let valueChanged = false; // 값 변경 여부 플래그
@@ -780,7 +829,7 @@ const adminIceOrder = async (recipe) => {
                     waterTime = waterTime - 2;
                 }
                 totalTime = Number(recipe.iceTime) + waterTime
-                log.info('[totalTime] : ', totalTime);
+                log.info('[어드민][totalTime] 제빙기 카운트 : ', totalTime);
 
                 // 화면 노출 메세지
                 eventEmitter.emit('order-update', { menu: menuName, status: 'ice', message: '제빙기에서 얼음을 받아주세요.' });
@@ -791,33 +840,33 @@ const adminIceOrder = async (recipe) => {
                     const currentHexArray = result.match(/.{1,2}/g); // 2자리씩 끊어서 배열 생성
                     const currentValue = parseInt(currentHexArray[7]); // 16진수 → 10진수 변환
 
-                    log.info(`Current Value (hexArray[7]): ${currentValue}`);
+                    log.info(`[어드민] 제빙기 변경값: ${currentValue}`);
 
                     if (!valueChanged) {
                         // 값 변경 전 (처음 값 유지)
                         if (initialValue === null) {
                             // 최초로 값을 설정
                             initialValue = currentValue;
-                            log.info(`Initial Value Detected: ${initialValue}`);
+                            log.info(`[어드민] 제빙기 기본 값: ${initialValue}`);
                         } else if (currentValue === initialValue) {
                             // 같은 값이 유지되는 경우
-                            log.info(`Initial Value 유지 중: ${initialValue}`);
+                            log.info(`[어드민] 제빙기 기본 값 유지 중: ${initialValue}`);
                         } else {
                             // 값이 변경된 경우
                             valueChanged = true; // 변경 플래그 설정
                             stableTime = 0; // 변경 후 유지 시간 초기화
                             initialValue = currentValue; // 새로운 값으로 업데이트
-                            log.info(`값 변경 감지: 새로운 값(${currentValue})으로 전환. 시간 체크 시작.`);
+                            log.info(`[어드민] 값 변경 감지: 새로운 값(${currentValue})으로 전환. 시간 체크 시작.`);
                         }
                     } else {
                         stableTime++;
-                        log.info(`변경된 값 : ${stableTime}/${totalTime}초`);
+                        log.info(`[어드민] 변경된 값 유지 시간: ${stableTime}/${totalTime}초`);
                     }
 
                     // 최소 대기 시간 체크
                     if (minWaitCounter < minWaitTime) {
                         minWaitCounter++;
-                        log.info(`최소 대기 시간 유지 중: ${minWaitCounter}/${minWaitTime}초`);
+                        log.info(`[어드민] 최소 대기 시간 유지 중: ${minWaitCounter}/${minWaitTime}초`);
                     } else if (valueChanged && stableTime >= totalTime) {
                         menuName = "";
                         // 종료 이벤트 전송 (성공 또는 실패 모두 포함)
@@ -827,7 +876,7 @@ const adminIceOrder = async (recipe) => {
                             message: '관리자 조작이 완료되었습니다.'
                         });
                         // 최소 대기 시간 충족 후 변경된 값이 totalTime만큼 유지된 경우
-                        log.info('변경된 값이 일정 시간 동안 유지됨. 다음 루틴으로 진행합니다...');
+                        log.info('[어드민] 변경된 값이 일정 시간 동안 유지됨. 다음 루틴으로 진행합니다...');
                         resolve(); // 작업 완료로 처리
                         return;
                     }
@@ -839,7 +888,7 @@ const adminIceOrder = async (recipe) => {
                             status: 'completed',
                             message: "120초 경과로 기계가 초기화되었습니다."
                         });
-                        reject(new Error('작업 시간이 초과되었습니다.'));
+                        reject(new Error('[어드민] 작업 시간이 초과되었습니다.'));
                         return;
                     }
 
@@ -847,7 +896,7 @@ const adminIceOrder = async (recipe) => {
                 }
 
             } catch (error) {
-                log.error('dispenseIce 오류:', error.message);
+                log.error('[어드민] 제빙기 추출 오류:', error.message);
                 reject(error);
             }
         });
@@ -868,61 +917,88 @@ const adminIceOrder = async (recipe) => {
  *  관리자 세척
  *  */
 const adminUseWash = async (data) => {
+    log.info('////////--------------- 어드민 세척 요청 --------------------//////');
+    log.info('////////--------------- 어드민 세척 요청 --------------------//////');
+    log.info('////////--------------- 어드민 세척 요청 --------------------//////');
     let washData = data.data;  // 세척 데이터
 
     // 세척데이터가 리스트로 들어오면 세척 시작
     if (washData.length > 0) {
-        try {
-            log.info(`어드민 세척 레시피 리스트: ${JSON.stringify(washData)}`);
-            for (let i = 0; i < washData.length; i++) {
 
-                const listData = washData[i];
+        const syrupList = washData.filter(item => item.type === "syrup");
+        const otherList = washData.filter(item => item.type !== "syrup");
+
+        try {
+            log.info(`[어드민] 세척 레시피 리스트: ${JSON.stringify(washData)}`);
+
+            // 1. 커피/가루차 세척 먼저 처리
+            for (let i = 0; i < otherList.length; i++) {
+                const listData = otherList[i];
                 eventEmitter.emit('order-update', {
                     status: 'washStart',
                     message: '[관리자] 커피머신 세척중입니다 잠시만 기다려주세요.'
                 });
-                log.info(`전체 세척 실행: ${JSON.stringify(listData)}`);
+                log.info(`[어드민] 전체 세척 실행: ${JSON.stringify(listData)}`);
+
                 if (listData.type === "coffee") {
                     await Order.purifyingCoffee();
                     await checkAutoOperationState("정지", 3);
                 }
                 if (listData.type === "garucha") {
-                    await Order.sendTeaCommand(listData.value1, grinder(0), formatValue(100));
-                    await Order.extractTeaPowder();
+                    await Order.purifyingTae(listData.value1);
                     await checkAutoOperationState("정지", 3);
                 }
-                if (listData.type === "syrup") {
-                    await Order.setSyrup(listData.value1, grinder(0), formatValue(100),formatValue(0));
-                    await Order.extractSyrup();
-                    await checkAutoOperationState("정지", 3);
-                }
+
                 await new Promise((r) => setTimeout(r, 1000));
             }
+
+            // 2. 시럽 세척만 따로 3회 반복
+            for (let round = 0; round < 3; round++) {
+                log.info(`[어드민] 시럽 세척 ${round + 1}회차 시작`);
+                for (const syrup of syrupList) {
+                    eventEmitter.emit('order-update', {
+                        status: 'washStart',
+                        message: `[관리자] 시럽(${syrup.value1}) 세척중입니다.`
+                    });
+                    await Order.purifyingSyrup(syrup.value1);
+                    await checkAutoOperationState("정지", 10);
+                    await new Promise((r) => setTimeout(r, 2000));
+                }
+            }
+
         } catch (e) {
-            log.error(`세척중 에러가 발생했습니다. ${e}`);
-            eventEmitter.emit('order-update', {status: 'completed', message: '전체 세척 작업 완료.' });
+            log.error(`[어드민] 세척중 에러가 발생했습니다. ${e}`);
+            eventEmitter.emit('order-update', { status: 'completed', message: '전체 세척 작업 완료.' });
         }
     } else {
         log.warn("[세척] 메뉴 데이터가 없습니다.");
     }
-    log.info("전체 세척 작업 완료");
-    eventEmitter.emit('order-update', {status: 'completed', message: '전체 세척 작업 완료.' });
+    log.info("[어드민] 전체 세척 작업 완료");
+    eventEmitter.emit('order-update', { status: 'completed', message: '전체 세척 작업 완료.' });
 };
 
 // 커피머신 예열
 const coffeePreheating = async () => {
     eventEmitter.emit('order-update', {
-        status: 'washStart',
-        message: '커피머신 예열중 입니다 잠시만 기다려주세요.'
+        status: 'preheatingStart',
+        message: '커피머신 예열중 입니다.'
     });
 
     await Order.purifyingCoffee();
+    await checkAutoOperationState("정지", 3);
+
     log.info("커피머신 예열 작업 완료");
-    eventEmitter.emit('order-update', {status: 'completed', message: '커피머신 예열 완료.' });
+    eventEmitter.emit('order-update', {
+        status: 'completed',
+        message: '커피머신 예열 완료.'
+    });
 }
 
 // 추출기 원점
 const extractorHome = async () => {
+    log.info('////////--------------- 어드민 추출기 원점 요청 --------------------//////');
+    log.info('////////--------------- 어드민 추출기 원점 요청 --------------------//////');
+    log.info('////////--------------- 어드민 추출기 원점 요청 --------------------//////');
     try {
         log.info("추출기 원점 동작");
         await Order.extractorHome();

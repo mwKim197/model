@@ -51,13 +51,25 @@ function startCountdown() {
             removeAll();
             closePointModal();
 
-            // 🔥 [추가] 전체메뉴 탭으로 이동
             const allTab = document.querySelector('.menu-tab[data-category="all"]');
             if (allTab) {
-                allTab.click(); // 클릭 이벤트 트리거
+                activateTab(allTab); // ← 우리가 직접 만든 함수로 호출
             }
         }
     }, 1000);
+}
+
+function activateTab(tab) {
+    // 활성화된 탭 변경
+    document.querySelector('.menu-tab.active')?.classList.remove('active');
+    tab.classList.add('active');
+
+    const category = tab.getAttribute('data-category');
+    const filteredProducts = category === 'all'
+        ? allProducts
+        : allProducts.filter(product => product.category === category);
+
+    displayProducts(filteredProducts);
 }
 
 // 타이머 리셋 (버튼 클릭 시마다 호출)
@@ -1605,6 +1617,8 @@ const ordStart = async (point = 0) => {
         }
 
         hasCoffee = Math.floor(Date.now() / 1000);
+
+
     }
 
 

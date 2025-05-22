@@ -3,41 +3,52 @@ const log = require("../../logger");
 
 const setUserInfo = async (userInfo) => {
     try {
-        const response = await fetch('http://narrowroad-model.com:3142/set-user-info',{method: 'POST',
+        const response = await fetch('https://api.narrowroad-model.com/model_new_store', {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(userInfo)});
-        if (!response.ok) {
-            throw new Error(`Network response was not ok: ${response.statusText}`);
-        }
+            body: JSON.stringify(userInfo)
+        });
 
         const data = await response.json();
-        log.info(data);
-        return data;
+
+        log.info("응답 status:", response.status);
+        log.info("응답 data:", data);
+
+        return { status: response.status, data }; // ✅ status와 data 모두 리턴
     } catch (error) {
         log.error(error);
+        throw error;
     }
-}
+};
 
 const setUserLogin = async (userInfo) => {
     try {
-        const response = await fetch(`http://localhost:3142/set-user-login`,{method: 'POST',
+        const response = await fetch(`http://localhost:3142/set-user-login`, {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(userInfo)});
-        if (!response.ok) {
-            throw new Error(`Network response was not ok: ${response.statusText}`);
+            body: JSON.stringify(userInfo)
+        });
+
+        const data = await response.json(); // ★ 무조건 JSON 먼저 읽는다
+        log.info('서버 응답:', data);
+
+        if (!response.ok || !data.success) {
+            // 서버가 success: false를 보내거나, HTTP 자체가 실패해도
+            const errorMessage = data.message || response.statusText || '로그인 실패';
+            throw new Error(errorMessage);
         }
 
-        const data = await response.json();
-        log.info(data);
         return data;
     } catch (error) {
-        log.error(error);
+        log.error('setUserLogin error:', error);
+        throw error;
     }
-}
+};
+
 // 유저 id 전체조회
 const getAllUserIds = async () => {
     try {

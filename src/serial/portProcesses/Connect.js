@@ -10,7 +10,7 @@ const {duplicateMenuData} = require("../../aws/db/utils/getMenu");
 const {getSerialData} = require("../../services/serialPolling");
 const {saveOrdersToDynamoDB} = require("../../aws/db/utils/getPayment");
 const {getMainWindow} = require('../../windows/mainWindow');
-const {checkForUpdatesManually} = require("../../updater");
+
 // MC 머신 Data - SerialPolling 인스턴스 생성
 const polling = new serialDataManager(serialCommCom1);
 
@@ -30,8 +30,14 @@ Connect.post('/start-order', async (req, res) => {
         // list 받음 -> 메뉴판에 있는 데이터 불러서 조합 시작!
         res.json({ success: true, message: '주문 완료' });
     } catch (err) {
-        log.error("ORDER ERROR:", err); // 서버 로그 추가
-        res.status(500).json({ success: false, error: err.message || 'Unknown server error' });
+        const message = err instanceof Error ? err.message : JSON.stringify(err);
+        const stack = err instanceof Error ? err.stack : '';
+
+        log.error("ORDER ERROR:", message, stack);
+        res.status(500).json({
+            success: false,
+            error: message || 'Unknown server error'
+        });
     }
 });
 
@@ -50,15 +56,21 @@ Connect.post('/set-user-info', async(req, res) => {
 });
 
 // 회원 로그인
-Connect.post('/set-user-login', async(req, res) => {
+Connect.post('/set-user-login', async (req, res) => {
     try {
         const userInfo = req.body;
         console.log("set-user-login", userInfo);
-        const result = await loginUser(userInfo.userId, userInfo.userId).then();
-        console.log(result);
-        res.json({ success: true, message: '로그인 완료.' });
+
+        const result = await loginUser(userInfo.userId, userInfo.password, userInfo.ipAddress);
+
+        if (result.success) {
+            res.json({ success: true, message: result.message, user: result.user });
+        } else {
+            res.status(400).json({ success: false, message: result.message });
+        }
     } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
+        console.error('set-user-login error:', err);
+        res.status(500).json({ success: false, message: '서버 오류', error: err.message });
     }
 });
 
@@ -180,8 +192,6 @@ Connect.post('/admin-use-wash',  async (req, res) => {
     }
 });
 
-
-
 // 커피머신 예열
 Connect.post('/coffee-preheating',  async (req, res) => {
     try {
@@ -194,8 +204,6 @@ Connect.post('/coffee-preheating',  async (req, res) => {
     }
 });
 
-
-
 // 추출기 원점
 Connect.post('/extractor-home',  async (req, res) => {
     try {
@@ -207,6 +215,10 @@ Connect.post('/extractor-home',  async (req, res) => {
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
+});
+
+Connect.get('/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 module.exports = Connect;

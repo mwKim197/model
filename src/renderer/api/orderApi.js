@@ -153,7 +153,6 @@ const reqOrder = async (orderList) => {
             },
             body: JSON.stringify(orderList),
         });
-        if (!response.ok) throw new Error('네트워크 응답 실패');
 
         const data = await response.json();
 
@@ -163,7 +162,11 @@ const reqOrder = async (orderList) => {
 
         log.info(data);
     } catch (error) {
-        sendLogToMain('error', 'ORDER :', error?.message || 'Unknown error', error?.stack || 'No stack trace');
+        log.error("❌ 주문 요청 중 에러:", error); // 실제 error 구조 확인
+
+        const errMsg = error instanceof Error ? error.message : JSON.stringify(error);
+        const errStack = error instanceof Error ? error.stack : '';
+        sendLogToMain('error', `ORDER : ${errMsg}\n${errStack}`);
         throw error;
     }
 }
@@ -185,7 +188,7 @@ const useWash = async (orderList) => {
         sendLogToMain('info',`워시 성공 - ${JSON.stringify(data)}`);
 
     } catch (error) {
-        sendLogToMain('error','워시 실패:', error);
+        sendLogToMain('error',`워시 실패: ${error instanceof Error ? error.message : JSON.stringify(error)}`);
     }
 }
 

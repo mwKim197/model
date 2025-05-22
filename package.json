@@ -1,6 +1,6 @@
 {
   "name": "model",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "main": "src/main.js",
   "scripts": {
     "start": "npx tailwindcss build src/styles/tailwind.css -o src/styles/output.css && set NODE_ENV=development && electron .",
@@ -56,7 +56,7 @@
   "dependencies": {
     "aws-cli": "^0.0.2",
     "aws-sdk": "^2.1692.0",
-    "axios": "^1.7.9",
+    "axios": "1.8.2",
     "bcrypt": "^5.1.1",
     "call-bind-apply-helpers": "^1.0.1",
     "cors": "^2.8.5",
