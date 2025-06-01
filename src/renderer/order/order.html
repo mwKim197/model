@@ -80,7 +80,8 @@
         </div>
     </div>
 
-    <div id="pointModal" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50 hidden">
+    <!--포인트 모달-->
+    <div id="pointModal" class="fixed inset-0 flex items-center justify-center z-[998] hidden">
         <div class="bg-white rounded-lg shadow-lg p-6 w-[1100px] h-[800px]">
             <!-- 모달 헤더 -->
             <div class="flex justify-between items-center mb-4">
@@ -136,8 +137,11 @@
         </div>
     </div>
 
+    <!--전체 모달 딤-->
+    <div id="globalDim" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[997] hidden"></div>
+
     <!-- 카드결제모달 -->
-    <div id="modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999] hidden">
+    <div id="modal" class="fixed inset-0 flex items-center justify-center z-[999] hidden">
         <div class="bg-white p-5 rounded-lg shadow-lg w-[600px] h-[600px] relative">
             <div class="m-5 text-3xl fixed justify-center">
                 <span class="text-red-600">신용카드</span>
@@ -152,7 +156,7 @@
         </div>
     </div>
 
-    <div id="orderModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999] hidden">
+    <div id="orderModal" class="fixed inset-0 flex items-center justify-center z-[999] bg-black bg-opacity-50 hidden">
         <div class="bg-white p-5 rounded-3xl shadow-lg w-[1100px] h-[700px] relative flex flex-col">
             <!-- modalMenu와 modalCount를 묶는 flex 컨테이너 -->
             <div class="relative flex items-center text-3xl font-bold mt-4 mb-4">
@@ -174,7 +178,7 @@
         </div>
     </div>
 
-    <div id="confirmModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 hidden">
+    <div id="confirmModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999] hidden">
         <div class="bg-white rounded-lg shadow-lg w-[500px] h-[200px] p-1 relative">
             <h2 class="text-3xl font-bold mt-6 mb-6 text-center">모든 주문을 삭제하시겠습니까?</h2>
             <div class="absolute bottom-4 left-0 right-0 flex justify-center space-x-4">
@@ -188,7 +192,7 @@
         </div>
     </div>
 
-    <div id="alertModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 hidden">
+    <div id="alertModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999] hidden">
         <div class="bg-white rounded-lg shadow-lg w-[600px] h-[200px] p-1 relative">
             <!-- 동적으로 텍스트를 변경할 요소 -->
             <h2 id="alertModalText" class="text-3xl font-bold mt-6 mb-6 text-center">모든 주문이 삭제되었습니다.</h2>
@@ -235,6 +239,7 @@
                     const modalText = document.getElementById('modalText');
                     const modalImage = document.getElementById('modalImage'); // 이미지 요소
                     const modalCount = document.getElementById('modalCount'); // 카운트를 표시할 요소
+                    const globalDim = document.getElementById('globalDim'); // 모달 딤
                     let audio;
                     let time;
 
@@ -243,6 +248,7 @@
                         modalImage.src = '../../assets/basicImage/white.png';
                         modalText.innerText = '';
                         orderModal.classList.add('hidden');
+                        globalDim.classList.add('hidden');
                         return; // 종료
                     }
 
@@ -253,6 +259,7 @@
                     if (orderFlow.message) {
                         modalImage.src = '../../assets/basicImage/white.png';
                         orderModal.classList.remove('hidden'); // 모달 표시
+                        globalDim.classList.remove('hidden'); // 모달딤 표시
 
                         if(orderFlow.status === 'drink' || orderFlow.status === 'ice' ||
                             orderFlow.status === 'iceCount' || orderFlow.status === 'drinkCount' ||
@@ -277,6 +284,7 @@
                             setTimeout(() => {
                                 modalImage.src = '../../assets/basicImage/white.png';
                                 orderModal.classList.add('hidden'); // 메시지가 없으면 모달 숨김
+                                globalDim.classList.add('hidden'); // 모달딤 숨김
                             } , 3000)
                         }
 
@@ -320,6 +328,7 @@
                     } else {
                         modalImage.src = '../../assets/basicImage/white.png';
                         orderModal.classList.add('hidden'); // 메시지가 없으면 모달 숨김
+                        globalDim.classList.add('hidden'); // 모달딤 숨김
                     }
 
                     if (time > 0 && orderFlow.status === "iceCount") {

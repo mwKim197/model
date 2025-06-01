@@ -55,6 +55,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
         }
     },
 
+    // 마지막 세척 날짜 가져오기
+    getLastWashDate: () => ipcRenderer.invoke('get-last-wash-date'),
+
+    // 마지막 세척 날짜 저장하기
+    setLastWashDate: (value) => ipcRenderer.invoke('set-last-wash-date', value),
+
     // Main Process로부터 데이터 가져오기
     getUserData: async () => {
         try {
@@ -97,6 +103,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // 커피머신 세척
     coffeePreheating: async () => await orderApi.coffeePreheating(),
+
+    // 머신 재시작
+    requestAppRestart: async () => await orderApi.requestAppRestart(),
     
     // S3 이미지 조회 및 캐시 처리
     downloadAllFromS3WithCache: async (bucketName, prefix) =>

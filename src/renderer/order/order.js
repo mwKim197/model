@@ -5,6 +5,12 @@ function sendLogToMain (level, message) {
 // 주문리스트
 let orderList = [];
 
+// 결제 중복 터치 방지
+let isPaying = false;
+
+// 결제 버튼 타임아웃
+let paymentTimeout = null;
+
 // polling 된 RD1 데이터
 let rd1Info = {};
 
@@ -17,8 +23,6 @@ let hasCoffee;
 // 커피 예열 시간 1800초 = 30분
 let preheatingTime = 1800;
 
-// 세척여부
-let wash = false;
 let userInfo = {};
 
 // 현재 재생 중인 오디오 객체
@@ -430,9 +434,13 @@ const removeAll = () => {
 // 포인트 모달 닫기
 const closePointModal = () => {
     const modal = document.getElementById("pointModal");
+    const globalDim = document.getElementById('globalDim');
+
     // 입력폼 초기화
     resetInput();
     modal.classList.add("hidden"); // 모달 숨기기
+    globalDim.classList.add("hidden"); // 딤 숨기기
+    isPaying = false;
 }
 
 
@@ -533,13 +541,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 결제
 document.getElementById('payment').addEventListener('click', async () => {
+    const globalDim = document.getElementById('globalDim');
 
     if (orderList.length === 0) {
         return openAlertModal("상품을 선택해 주세요");
     }
-    
-    // 통합 결제
-    await payment();
+
+    if (isPaying) return; // 중복 클릭 방지
+    isPaying = true;
+
+    globalDim.classList.remove('hidden'); // ✅ UI 잠금 시작
+
+    try {
+        await payment(); // 💳 + 제조 프로세스 포함
+        console.log('✅ 결제 및 제조 요청 완료');
+
+        // ✅ 제조가 끝날 때까지 잠금 유지하고 싶으면 아래 timeout 설정
+        setTimeout(() => {
+            isPaying = false;
+            globalDim.classList.add('hidden');
+        }, 3 * 1000); // 예: 3초 후 해제
+
+    } catch (e) {
+        console.error('[ERROR] 결제 실패:', e);
+        openAlertModal("결제 실패: 다시 시도해 주세요");
+
+        isPaying = false;
+        globalDim.classList.add('hidden'); // ❗ 실패 시도 UI 해제 필요
+    }
 });
 
 // 세자리 콤마 숫자로 변경
@@ -709,7 +738,7 @@ const payment = async () => {
             console.error("결제 중 오류 발생:", error.message);
         }
     } else {
-        console.log("포인트 결제가 사용되지 않았습니다.");
+        console.error("포인트 결제가 사용되지 않았습니다.");
         sendLogToMain('error', `포인트 결제가 사용되지 않았습니다.`);
     }
 
@@ -752,11 +781,13 @@ const pointPayment = (orderAmount) => {
         playAudio('../../assets/audio/포인트를 적립 혹은 사용하시겠습니까.mp3');
 
         const modal = document.getElementById("pointModal");
+        const globalDim = document.getElementById('globalDim');
         inputCount = userInfo.mileageNumber ? userInfo.mileageNumber : 12; // 입력 제한 초기화
         usePoint = 0; //
         totalAmt = orderAmount;
         isPhone = userInfo.isPhone // 휴대폰 여부
         modal.classList.remove("hidden"); // 모달 열기
+        globalDim.classList.remove("hidden"); // 딤 열기
         updateDynamicContent("pointInput", orderAmount ,resolve);
     });
 };
@@ -919,6 +950,7 @@ function updateDynamicContent(contentType, data ,resolve) {
     const dynamicContent = document.getElementById("dynamicContent");
     const dynamicButton = document.getElementById('dynamicButton');
     const modal = document.getElementById("pointModal");
+    const globalDim = document.getElementById('globalDim'); // 모달 딤
 
     // 현재 상태를 스택에 저장
     if (stateStack.length === 0 || stateStack[stateStack.length - 1] !== contentType) {
@@ -998,6 +1030,8 @@ function updateDynamicContent(contentType, data ,resolve) {
                 if (pointNumberCheck) {
                     if (pointNumberCheck.data.exists) {
                         modal.classList.add("hidden"); // 모달 닫기
+                        globalDim.classList.add("hidden"); // 모달딤 닫기
+
                         const data = pointNumberCheck.data;
                         resolve({success: true, action: ACTIONS.IMMEDIATE_PAYMENT, point: data.uniqueMileageNo, discountAmount: 0}); // 확인 시 resolve 호출
                     } else {
@@ -1083,6 +1117,7 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         document.getElementById("exit").addEventListener("click", () => {
             modal.classList.add("hidden"); // 모달닫기
+            globalDim.classList.add("hidden"); // 모달딤 닫기
             // 통합결제 취소
             resolve({success: true, action: ACTIONS.EXIT});
         });
@@ -1159,6 +1194,8 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         document.getElementById("exit").addEventListener("click", () => {
             modal.classList.add("hidden"); // 모달닫기
+            globalDim.classList.add("hidden"); // 모달딤 닫기
+
             // 통합결제 취소
             resolve({success: true, action: ACTIONS.EXIT});
         });
@@ -1182,6 +1219,7 @@ function updateDynamicContent(contentType, data ,resolve) {
                 // 포인트 결제,사용할포인트번호, 사용포인트
                 resolve({success: true, action: ACTIONS.USE_POINTS, point: pointNo, discountAmount: usePoint }); // 포인트 사용 금액 반환
                 modal.classList.add("hidden"); // 모달 닫기
+
             } else {
                 playAudio('../../assets/audio/사용할 금액을 입력후 결제를 눌러주세요.mp3');
             }
@@ -1200,6 +1238,7 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         document.getElementById("exit").addEventListener("click", () => {
             modal.classList.add("hidden"); // 모달닫기
+            globalDim.classList.add("hidden"); // 모달딤 닫기
             // 통합결제 취소
             resolve({success: true, action: ACTIONS.EXIT});
         });
@@ -1254,6 +1293,7 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         document.getElementById("exit").addEventListener("click", () => {
             modal.classList.add("hidden"); // 모달닫기
+            globalDim.classList.add("hidden"); // 모달딤 닫기
             // 통합결제 취소
             resolve({success: true, action: ACTIONS.EXIT});
         });
@@ -1306,6 +1346,7 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         document.getElementById("exit").addEventListener("click", () => {
             modal.classList.add("hidden"); // 모달닫기
+            globalDim.classList.add("hidden"); // 모달딤 닫기
 
             // 등록 취소
             resolve({success: true, action: ACTIONS.EXIT});
@@ -1601,8 +1642,8 @@ function isOver30Minutes() {
 
 // 주문 시작
 const ordStart = async (point = 0) => {
-    //const orderModal = document.getElementById('orderModal');
 
+    /* [TODO]커피 예열 임시 제거 겨울까지 테스트이후 다시 프로세스 정리후 적용예정 2025-05-30
     const chkCoffee = orderList.some(menu =>
         menu.item.some(i => i.type === "coffee")
     );
@@ -1618,15 +1659,13 @@ const ordStart = async (point = 0) => {
 
         hasCoffee = Math.floor(Date.now() / 1000);
 
-
     }
-
+    */
 
     // 리셋 타이머 종료
     clearCountdown();
     try {
-        // 주문 모달 띄우기
-        //orderModal.classList.remove('hidden');
+
         const ordInfo = {
             point: point,
             orderList: orderList
@@ -1725,17 +1764,21 @@ function getCurrentHour() {
     return now.getHours(); // 24시간 형식의 현재 시각
 }
 
+
 // 자동 세척 동작
 async function handlerWash() {
     const currentHour = getCurrentHour();
     const washTime = userInfo?.washTime ? userInfo.washTime : 4; // 사용자 세척 시간 기본 4시
+    const today = new Date().toISOString().split('T')[0];
+    const lastWash = await window.electronAPI.getLastWashDate();
 
-    // 자동운전상태 정지 - 커피프로세스 미동작시
-    if (rd1Info.autoOperationState === "정지" && !wash) {
+    // 자동운전상태 정지 - 커피 프로세스 미동작시, 자동세척 오늘 실행된적 없을시, 화면 터치 시간 0일시(터치 동작 없을시)
+    if (rd1Info.autoOperationState === "정지" && lastWash !== today && remainingSeconds === 0) {
+
         // `washTime`과 현재 시간이 일치하면 세척 실행
         if (parseInt(washTime, 10) === currentHour) {
-            console.log(`[INFO] ${washTime}시에 세척 동작 시작.`);
-
+            console.log(`[INFO] 🧼 오늘 세척 아직 안함. 세척 시작 시간 ${washTime}시`);
+            await window.electronAPI.setLastWashDate(today); // ✅ 기록 저장
             const data = [
                 { "type": "coffee" },
                 { "type": "garucha", "value1": "1" },
@@ -1754,7 +1797,9 @@ async function handlerWash() {
             // 전체 세척 동작 수행
             await window.electronAPI.adminUseWash(data);
 
-            wash = true; // 세척 완료 후 반복 실행 방지 플래그 설정
+            // 머신 재시작
+            await window.electronAPI.requestAppRestart();
+
             console.log('[INFO] 세척 완료');
         }
     }
@@ -1768,21 +1813,8 @@ async function coffeePreheating() {
     console.log('[INFO] 커피 예열 완료');
 }
 
-// 자정 시 `wash` 초기화
-function resetWashFlag() {
-    const now = new Date();
-    const msUntilMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0) - now;
-
-    setTimeout(() => {
-        wash = false;
-        console.log('[INFO] 세척 플래그 초기화 완료');
-        resetWashFlag(); // 다음 자정에도 플래그를 초기화하도록 스케줄링
-    }, msUntilMidnight);
-}
-
 // 세척 확인 스케줄링
 setInterval(handlerWash, 1000 * 60 * 5); // 5분 간격으로 세척 확인
-resetWashFlag(); // 자정에 플래그 초기화 스케줄링
 
 // 매장명, 비상연락쳐 업데이트
 function updateStoreInfo() {

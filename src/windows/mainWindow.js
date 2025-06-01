@@ -11,6 +11,17 @@ async function createMainWindow() {
     if (!store.has('user')) {
         store.set('user', { userId: false });
     }
+
+    // 마지막 세척 날짜 조회
+    ipcMain.handle('get-last-wash-date', () => {
+        return store.get('lastWashDate');
+    });
+
+    // 세척 날짜 세팅
+    ipcMain.handle('set-last-wash-date', (_event, value) => {
+        store.set('lastWashDate', value);
+    });
+
     // 6. Renderer와 데이터 통신
     ipcMain.handle('get-user-data', () => {
         return store.get('user'); // Electron Store에서 사용자 데이터 반환

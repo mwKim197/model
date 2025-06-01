@@ -219,7 +219,7 @@ const adminUseWash = async (data) => {
 };
 
 // 커피머신 예열
-const coffeePreheating = async (data) => {
+const coffeePreheating = async () => {
     try {
         const response = await fetch(`http://localhost:3142/coffee-preheating`, {
             method: 'POST',
@@ -242,6 +242,26 @@ const coffeePreheating = async (data) => {
         log.error('Fetch error:', error.message);
     }
 };
+
+// 프로그램 재시작 API 호출 함수
+const requestAppRestart = async () => {
+    try {
+        const response = await fetch(`http://localhost:3142/restart-app`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        const result = await response.json();
+        if (result.success) {
+            alert('재부팅 요청 성공');
+            console.log('재부팅 요청 성공:', result.message);
+        } else {
+            console.error('재부팅 요청 실패:', result.message);
+        }
+    } catch (error) {
+        console.error('재부팅 요청 중 오류 발생:', error);
+    }
+}
+
 
 const reStartCheck = async (orderList) => {
     try {
@@ -407,5 +427,6 @@ module.exports = {
     adminUseWash,
     coffeePreheating,
     reqBarcode_HTTP,
-    reqPayproBarcode
+    reqPayproBarcode,
+    requestAppRestart
 };
