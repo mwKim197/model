@@ -102,7 +102,6 @@ const processQueue = async (orderList, menuList) => {
     }
 };
 
-
 // 주문 처리
 const processOrder = async (recipe, count, totalCount) => {
     log.info('////////--------------- 주문 요청 --------------------//////');
@@ -111,9 +110,14 @@ const processOrder = async (recipe, count, totalCount) => {
     try {
         log.info("주문처리 중 레시피: ", recipe);
         if (recipe.cupYn === 'yes' ) return;
-        if (!recipe.cupYn || recipe.cupYn === 'no' ) await dispenseCup(recipe, count, totalCount);
 
-        if (recipe.iceYn === 'yes') await dispenseIce(recipe, count, totalCount);
+        if (!recipe.cupYn || recipe.cupYn === 'no') {
+            await retry(dispenseCup, [recipe, count, totalCount], 1, '컵 투출');
+        }
+
+        if (recipe.iceYn === 'yes') {
+            await retry(dispenseIce, [recipe, count, totalCount], 1, '얼음 투출');
+        }
 
         const sortedItems = [...recipe.items].sort((a, b) => a.no - b.no);
         for (const [index, item] of sortedItems.entries()) {
@@ -142,16 +146,13 @@ const processOrder = async (recipe, count, totalCount) => {
                 // 각 타입별 작업 처리
                 switch (item.type) {
                     case 'coffee':
-                        await dispenseCoffee(item.value1, item.value2, item.value3, item.value4);
+                        await retry(dispenseCoffee, [item.value1, item.value2, item.value3, item.value4], 1, '커피 추출');
                         break;
                     case 'garucha':
-                        await dispenseGarucha(item.value1, item.value2, item.value3);
+                        await retry(dispenseGarucha, [item.value1, item.value2, item.value3], 1, '가루차 투출');
                         break;
                     case 'syrup':
-                        await dispenseSyrup(item.value1, item.value2, item.value3, item.value4);
-                        break;
-                    default:
-                        log.warn(`아이템 타입을 찾을 수 없습니다.: ${item.type}`);
+                        await retry(dispenseSyrup, [item.value1, item.value2, item.value3, item.value4], 1, '시럽 투출');
                         break;
                 }
 
@@ -179,6 +180,19 @@ const processOrder = async (recipe, count, totalCount) => {
     } catch (error) {
         log.error(`메뉴 제조 실패: menuId ${recipe.menuId}, 이유: ${error.message}`);
         throw error; // 상위 호출자로 에러 전파
+    }
+};
+
+// 에러 발생시 재시도
+const retry = async (fn, args = [], retryCount = 1, label = '작업') => {
+    for (let attempt = 0; attempt <= retryCount; attempt++) {
+        try {
+            if (attempt > 0) console.warn(`[RETRY] ${label} 재시도 ${attempt}회`);
+            return await fn(...args);
+        } catch (err) {
+            console.error(`[ERROR] ${label} 실패: ${err.message}`);
+            if (attempt === retryCount) throw new Error(`${label} 재시도 실패`);
+        }
     }
 };
 
