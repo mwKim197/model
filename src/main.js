@@ -72,7 +72,7 @@ async function initializeApp() {
                     };
 
                     axios.post(
-                      "https://api.narrowroad-model.com/model_admin_machine?func=upsert-machine",
+                      "https://api.narrowroad-model.com/model_machine_registry",
                       machineInfo,
                       {
                           headers: {
