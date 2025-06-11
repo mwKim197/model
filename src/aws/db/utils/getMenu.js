@@ -61,7 +61,7 @@ const swapNoAndAddProduct = async (data) => {
         }
 
         // 3. 신규 아이템 추가
-        const newMenuId = await getCounterValue(user.userId); // 새 menuId 생성
+        const newMenuId = await getCounterValue(user.userId); // img등록된 순번 저장
         const addParams = {
             TableName: 'model_menu',
             Item: {

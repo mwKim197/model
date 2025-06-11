@@ -64,7 +64,7 @@ async function initializeApp() {
 
                     // ✅ Lambda 호출 (에러는 무시하고 로그만 찍음)
                     const machineInfo = {
-                        machineId: userData.userId,
+                        userId: userData.userId,
                         version: app.getVersion(),
                         hostName: userData.storeName,
                         tunnelUrl: `https://${userData.userId}.nw-api.org`,
