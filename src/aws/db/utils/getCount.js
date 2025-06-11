@@ -50,7 +50,7 @@ const incrementCounter = async (userId) => {
 // 예시로 userId 'test_user1'에 대해 카운터 증가
 //incrementCounter('test_user1');
 
-// 해당 카운터의 현제 값 반환
+// 해당 카운터의 현재 값 반환
 const getCounterValue = async (userId) => {
     const params = {
         TableName: 'model_counter',

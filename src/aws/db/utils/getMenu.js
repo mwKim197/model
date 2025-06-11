@@ -16,6 +16,7 @@ const processUserAndProduct = async () => {
     }
 }
 processUserAndProduct().then();
+
 // 순번 적용 등록
 const swapNoAndAddProduct = async (data) => {
     try {
@@ -307,6 +308,7 @@ const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
     }
 };
 
+// [TODO] 현재미사용
 const addProduct = async (data) => {
     try {
         // 1. 현재 테이블에서 `no`의 최대 값 가져오기
@@ -332,7 +334,7 @@ const addProduct = async (data) => {
     }
 };
 
-// 현재 userId에 대한 no의 최대값을 조회
+//[TODO] 현재미사용 userId에 대한 no의 최대값을 조회
 const getMaxNo = async (userId) => {
     const params = {
         TableName: 'model_menu',
@@ -522,7 +524,7 @@ const deleteProduct = async (userId, menuId) => {
     }
 };
 
-// 아이템 수정
+//[TODO] 현재 미사용 아이템 수정
 const replaceProduct = async (userId, menuId, newData) => {
     const params = {
         TableName: 'model_menu',
@@ -542,6 +544,7 @@ const replaceProduct = async (userId, menuId, newData) => {
     }
 };
 
+// menuId 로 상품조회
 async function getMenuById(menuId) {
     const params = {
         TableName: 'model_menu', // DynamoDB 테이블 이름

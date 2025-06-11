@@ -217,6 +217,7 @@ Connect.post('/extractor-home',  async (req, res) => {
     }
 });
 
+// 헬스체크
 Connect.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });

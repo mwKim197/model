@@ -564,6 +564,7 @@ document.getElementById('payment').addEventListener('click', async () => {
 
     } catch (e) {
         console.error('[ERROR] 결제 실패:', e);
+        sendLogToMain('error', `결제 실패: ${JSON.stringify(e)}`);
         openAlertModal("결제 실패: 다시 시도해 주세요");
 
         isPaying = false;
@@ -635,6 +636,7 @@ const payment = async () => {
         if (payEnd) {
             await ordStart(); // 주문 시작
         } else {
+            sendLogToMain('error', `카드 결제가 실패했습니다.`);
             console.error("카드 결제가 실패했습니다.");
         }
     }

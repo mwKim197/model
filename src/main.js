@@ -1,3 +1,5 @@
+import axios from "axios";
+
 const { app, BrowserWindow} = require('electron');
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
@@ -5,7 +7,7 @@ if (!gotTheLock) {
     return;
 }
 
-// ✅ 여기에서 second-instance 핸들러 등록
+// ✅ 여기에서 second-instance 핸들러 등록(2중 실행 방지)
 app.on('second-instance', () => {
     const win = BrowserWindow.getAllWindows()[0];
     if (win) {
@@ -60,8 +62,29 @@ async function initializeApp() {
                 if (userData && userData.userId) {
                     await setupCloudflare(userData.userId);
                     log.info("✅ Cloudflare Tunnel 설정 완료");
-                } else {
-                    log.warn("⚠️ userData.userId가 없습니다. Cloudflare 설정을 건너뜁니다.");
+
+                    // ✅ Lambda 호출 (에러는 무시하고 로그만 찍음)
+                    const machineInfo = {
+                        machineId: userData.userId,
+                        version: app.getVersion(),
+                        hostName: userData.storeName,
+                        tunnelUrl: `https://${userData.userId}.nw-api.org`,
+                        portUrl: `http://${userData.userId}.narrowroad-model.com:3142`
+                    };
+
+                    axios.post(
+                      "https://api.narrowroad-model.com/model_admin_machine?func=upsert-machine",
+                      machineInfo,
+                      {
+                          headers: {
+                              "Content-Type": "application/json"
+                          }
+                      }
+                    ).then((res) => {
+                        log.info("✅ Lambda 머신 등록 성공:", res.data);
+                    }).catch((err) => {
+                        log.error("❌ Lambda 머신 등록 실패:", err.message);
+                    });
                 }
             } catch (error) {
                 log.error("❌ userData 가져오기 실패:", error.message);

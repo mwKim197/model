@@ -488,7 +488,6 @@ const checkCupSensor = async (expectedState, threshold, washChk, count, totalCou
 
         if (expectedState === "없음" && washChk ) {
             eventEmitter.emit('order-update', { menu: `${menuName} ${count} / ${totalCount}`, status: 'completedCount', message: `음료가 완성되었습니다. 컵을꺼내주세요.`, time: counter });
-
         }
 
         if (data.cupSensor === expectedState) {
