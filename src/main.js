@@ -1,5 +1,3 @@
-import axios from "axios";
-
 const { app, BrowserWindow} = require('electron');
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
@@ -16,6 +14,7 @@ app.on('second-instance', () => {
     }
 });
 
+const axios = require("axios");
 const path = require('path');
 const { createMainWindow } = require('./windows/mainWindow');
 const { setupEventHandlers } = require('./events/eventHandlers');
