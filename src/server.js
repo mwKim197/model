@@ -23,9 +23,14 @@ log.info(`App Path: ${appPath}`);
 
 // CORS 설정
 app.use(cors({
-    origin: ['http://localhost:3142', /^http:\/\/.*\.narrowroad-model\.com:3142$/],
+    origin: [
+        'http://localhost:5174',                         // 개발용
+        'https://modelzero.kr',                          // 운영 사이트
+        /^https:\/\/.*\.nw-api\.org$/,                   // Cloudflare Tunnel 도메인 (머신)
+        /^http:\/\/.*\.narrowroad-model\.com:3142$/      // 포트 포워딩 도메인 (머신)
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 // Middleware

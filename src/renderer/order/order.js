@@ -407,9 +407,21 @@ const alertModalText = document.getElementById('alertModalText');
 const okButton = document.getElementById('okButton');
 
 // 모달 열기 함수
-const openAlertModal = (text) => {
-    alertModalText.innerText = text; // 텍스트 설정
-    alertModal.classList.remove('hidden'); // 모달 열기
+const openAlertModal = (text, type = "info") => {
+    alertModalText.innerText = text;
+
+    // 기존 색 제거
+    alertModalText.classList.remove("text-red-600", "text-green-600", "text-black-900");
+
+    if (type === "error") {
+        alertModalText.classList.add("text-red-600");
+    } else if (type === "success") {
+        alertModalText.classList.add("text-green-600");
+    } else if (type === "info") {
+        alertModalText.classList.add("text-black-900");
+    }
+
+    alertModal.classList.remove('hidden');
 };
 
 // 모달 닫기
@@ -565,7 +577,10 @@ document.getElementById('payment').addEventListener('click', async () => {
     } catch (e) {
         console.error('[ERROR] 결제 실패:', e);
         sendLogToMain('error', `결제 실패: ${JSON.stringify(e)}`);
-        openAlertModal("결제 실패: 다시 시도해 주세요");
+
+        // ✅ 에러 메시지를 알림에 사용
+        const message = e?.message || "결제 실패: 다시 시도해 주세요";
+        openAlertModal(message, "error");
 
         isPaying = false;
         globalDim.classList.add('hidden'); // ❗ 실패 시도 UI 해제 필요
@@ -1147,7 +1162,7 @@ function updateDynamicContent(contentType, data ,resolve) {
                         openAlertModal("페스워드 조회에 실패하였습니다.");
                     }
                 } catch (e) {
-                    openAlertModal("에러가 발생했습니다. 관리자에게 문의하세요.");
+                    openAlertModal("에러가 발생했습니다. 관리자에게 문의하세요.", "error");
                 }
 
             } else {
@@ -1423,7 +1438,7 @@ function updateDynamicContent(contentType, data ,resolve) {
                     );
                 } catch (e) {
                     console.error("예외 발생:", e);
-                    openAlertModal("에러가 발생했습니다. 관리자에게 문의하세요.");
+                    openAlertModal("에러가 발생했습니다. 관리자에게 문의하세요.", "error");
                 }
             } else {
                 openAlertModal(`마일리지 패스워드는 ${passwordCount} 자리 입니다.`);
@@ -1573,7 +1588,7 @@ const cardPayment = async (orderAmount, discountAmount) => {
             modal.classList.add('hidden');
             // 결제실패시 60초 카운트다운 시작
             resetCountdown();
-            openAlertModal("결제에 실패하였습니다. 다시 시도해주세요.");
+            openAlertModal("결제에 실패하였습니다. 다시 시도해주세요.", "error");
             console.error("결제 실패: ", result.message);
             sendLogToMain('error', `결제 실패: ${result.message}`);
             return false;
@@ -1583,7 +1598,7 @@ const cardPayment = async (orderAmount, discountAmount) => {
         modal.classList.add('hidden');
         // 결제오류시 60초 카운트다운 시작
         resetCountdown();
-        openAlertModal("결제 처리 중 오류가 발생했습니다.");
+        openAlertModal("결제 처리 중 오류가 발생했습니다.", "error");
         sendLogToMain('error', `결제 오류: ${error.message}`);
         console.error("결제 오류: ", error.message);
         removeAllItem(); // 주문 목록삭제

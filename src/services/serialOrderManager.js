@@ -112,11 +112,11 @@ const processOrder = async (recipe, count, totalCount) => {
         if (recipe.cupYn === 'yes' ) return;
 
         if (!recipe.cupYn || recipe.cupYn === 'no') {
-            await retry(dispenseCup, [recipe, count, totalCount], 1, '컵 투출');
+            await retry(dispenseCup, [recipe, count, totalCount], 10, '컵 투출');
         }
 
         if (recipe.iceYn === 'yes') {
-            await retry(dispenseIce, [recipe, count, totalCount], 1, '얼음 투출');
+            await retry(dispenseIce, [recipe, count, totalCount], 10, '얼음 투출');
         }
 
         const sortedItems = [...recipe.items].sort((a, b) => a.no - b.no);
@@ -146,13 +146,13 @@ const processOrder = async (recipe, count, totalCount) => {
                 // 각 타입별 작업 처리
                 switch (item.type) {
                     case 'coffee':
-                        await retry(dispenseCoffee, [item.value1, item.value2, item.value3, item.value4], 1, '커피 추출');
+                        await retry(dispenseCoffee, [item.value1, item.value2, item.value3, item.value4], 10, '커피 추출');
                         break;
                     case 'garucha':
-                        await retry(dispenseGarucha, [item.value1, item.value2, item.value3], 1, '가루차 투출');
+                        await retry(dispenseGarucha, [item.value1, item.value2, item.value3], 10, '가루차 투출');
                         break;
                     case 'syrup':
-                        await retry(dispenseSyrup, [item.value1, item.value2, item.value3, item.value4], 1, '시럽 투출');
+                        await retry(dispenseSyrup, [item.value1, item.value2, item.value3, item.value4], 10, '시럽 투출');
                         break;
                 }
 

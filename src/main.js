@@ -72,7 +72,7 @@ async function initializeApp() {
                     };
 
                     axios.post(
-                      "https://api.narrowroad-model.com/model_machine_registry",
+                      "https://api.narrowroad-model.com/model_machine_registry?func=register-machine",
                       machineInfo,
                       {
                           headers: {
