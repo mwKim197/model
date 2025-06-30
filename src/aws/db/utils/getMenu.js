@@ -115,18 +115,17 @@ const updateMenuAndAdjustNo = async (updatedData, isNew = false) => {
     const userId = user.userId;
 
     try {
-        // 1. 테이블 전체에서 현재 `userId`의 데이터 스캔
-        const scanParams = {
+        const queryParams = {
             TableName: "model_menu",
-            FilterExpression: "userId = :userId",
+            KeyConditionExpression: "userId = :userId",
             ExpressionAttributeValues: {
                 ":userId": userId,
             },
         };
 
-        const existingItemsResult = await dynamoDB.scan(scanParams).promise();
-        const existingItems = existingItemsResult.Items || [];
-
+        const result = await dynamoDB.query(queryParams).promise();
+        const existingItems = result.Items || [];
+        
         // 2. 기존 아이템에서 변경 전 `menuId`의 현재 `no` 값 찾기
         const currentItem = existingItems.find((item) => item.menuId === menuId);
 
@@ -549,8 +548,8 @@ async function getMenuById(menuId) {
     const params = {
         TableName: 'model_menu', // DynamoDB 테이블 이름
         Key: {
-            userId: user.userId, // 파티션 키
-            menuId: menuId, // 정렬 키
+            userId: String(user.userId),   // 문자열 강제 변환
+            menuId: Number(menuId),         // 숫자 강제 변환
         },
     };
 
