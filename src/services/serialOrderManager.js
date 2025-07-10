@@ -38,7 +38,6 @@ const startOrder = async (data) => {
 
             log.info("주문 목록: ", orderData);
             await processQueue(orderData, menuData).catch((error) => {
-                log.error("주문 오류 발생: ", error.message);
                 throw error; // 명시적으로 에러를 다시 던짐
             });
             await useWash(orderData);
@@ -116,7 +115,7 @@ const processOrder = async (recipe, count, totalCount) => {
         }
 
         if (recipe.iceYn === 'yes') {
-            await retry(dispenseIce, [recipe, count, totalCount], 10, '얼음 투출');
+            await dispenseIce(recipe, count, totalCount);
         }
 
         const sortedItems = [...recipe.items].sort((a, b) => a.no - b.no);
@@ -187,10 +186,10 @@ const processOrder = async (recipe, count, totalCount) => {
 const retry = async (fn, args = [], retryCount = 1, label = '작업') => {
     for (let attempt = 0; attempt <= retryCount; attempt++) {
         try {
-            if (attempt > 0) console.warn(`[RETRY] ${label} 재시도 ${attempt}회`);
+            log.warn(`[RETRY] ${label} 시도 ${attempt + 1}/${retryCount + 1}`);
             return await fn(...args);
         } catch (err) {
-            console.error(`[ERROR] ${label} 실패: ${err.message}`);
+            log.error(`[ERROR] ${label} 실패: ${err.message}`);
             if (attempt === retryCount) throw new Error(`${label} 재시도 실패`);
         }
     }
@@ -347,130 +346,111 @@ const dispenseIce = (recipe, count, totalCount) => {
     });
 };
 
-const dispenseCoffee = (grinderOne, grinderTwo, extraction, hotWater) => {
+const dispenseCoffee = async (grinderOne, grinderTwo, extraction, hotWater) => {
     log.info('////////--------------- 커피 추출 요청 --------------------//////');
     log.info('////////--------------- 커피 추출 요청 --------------------//////');
     log.info('////////--------------- 커피 추출 요청 --------------------//////');
-    return new Promise(async (resolve, reject) => {
-        try {
 
-            // RD1 데이터 확인
-            await McData.updateSerialData('RD1', 'RD1');
-            const data = McData.getSerialData('RD1');
-            log.info("커피추출 데이터: ", data);
+    // RD1 데이터 확인
+    await McData.updateSerialData('RD1', 'RD1');
+    const data = McData.getSerialData('RD1');
+    log.info("커피추출 데이터: ", JSON.stringify(data));
 
-            // Coffee 추출 명령
-            await Order.sendCoffeeCommand(
-                grinder(grinderOne),
-                grinder(grinderTwo),
-                formatValue(extraction),
-                formatValue(hotWater)
-            );
-            
-            await Order.extractCoffee();
+    // Coffee 추출 명령
+    await Order.sendCoffeeCommand(
+        grinder(grinderOne),
+        grinder(grinderTwo),
+        formatValue(extraction),
+        formatValue(hotWater)
+    );
 
-            const isCoffee = await checkAutoOperationState("커피", 2);
+    await Order.extractCoffee();
 
-            // 커피 동작 확인
-            if (!isCoffee) {
-                await Order.extractCoffee();
-            }
+    const isCoffee = await checkAutoOperationState("커피", 2);
 
-            const isStopped = await checkAutoOperationState("정지", 3);
+    // 커피 동작 확인
+    if (!isCoffee) {
+        log.error(`커피 동작 감지 실패`);
+        throw new Error(`커피 동작 감지 실패`);
+    }
 
-            if (isStopped) {
-                log.info(`커피 추출 완료: ${isStopped}`);
-                resolve(); // 성공적으로 종료
-            }
-        } catch (error) {
-            log.error('커피 추출 오류:', error.message);
-            return reject(error); // 상위 호출자로 에러 전파
-        }
-    });
+    const isStopped = await checkAutoOperationState("정지", 3);
+
+    if (!isStopped) {
+        log.error(`커피 정지 상태 감지 실패`);
+        throw new Error(`커피 정지 상태 감지 실패`);
+    }
+
+    log.info(`커피 추출 완료`);
 };
 
-
-
-const dispenseGarucha = (motor, extraction, hotwater) => {
+const dispenseGarucha = async (motor, extraction, hotwater) => {
     log.info('////////---------------가루차 추출 요청 --------------------//////');
     log.info('////////---------------가루차 추출 요청 --------------------//////');
     log.info('////////---------------가루차 추출 요청 --------------------//////');
-    return new Promise(async (resolve, reject) => {
-        try {
 
-            // RD1 데이터 확인
-            await McData.updateSerialData('RD1', 'RD1');
-            const data = McData.getSerialData('RD1');
-            log.info("가루차 추출 데이터: ", JSON.stringify(data));
+    // RD1 데이터 확인
+    await McData.updateSerialData('RD1', 'RD1');
+    const data = McData.getSerialData('RD1');
+    log.info("가루차 추출 데이터: ", JSON.stringify(data));
 
-            // Tea 추출 명령
-            await Order.sendTeaCommand(motor, grinder(extraction), formatValue(hotwater));
-            log.info(`${motor} 번 가루차 추출 실행`);
-            await Order.extractTeaPowder();
+    // Tea 추출 명령
+    await Order.sendTeaCommand(motor, grinder(extraction), formatValue(hotwater));
+    log.info(`${motor} 번 가루차 추출 실행`);
+    await Order.extractTeaPowder();
 
-            const isGarucha = await checkAutoOperationState("가루차", 2);
+    const isGarucha = await checkAutoOperationState("가루차", 2);
+    if (!isGarucha) {
+        log.error(`가루차 동작 감지 실패 → 가루차 넘버: ${motor}`);
+        throw new Error(`가루차 동작 감지 실패: 가루차 넘버 ${motor}`);
+    }
 
-            // 가루차 동작 확인
-            if (!isGarucha) {
-                await Order.extractTeaPowder();
-            }
+    const isStopped = await checkAutoOperationState("정지", 3);
+    if (!isStopped) {
+        log.error(`가루차 정지 상태 감지 실패`);
+        throw new Error(`가루차 정지 상태 감지 실패: 가루차 넘버 ${motor}`);
+    }
 
-            const isStopped = await checkAutoOperationState("정지", 3);
-
-            if (isStopped) {
-                log.info(`가루차 추출 완료: ${isStopped}`);
-                resolve(); // 성공적으로 종료
-            }
-
-        } catch (error) {
-            log.error('가루차 추출 오류:', error.message);
-            return reject(error);
-        }
-    });
+    log.info(`가루차 추출 완료`);
 };
 
-
-const dispenseSyrup = (motor, extraction, hotwater, sparkling) => {
+const dispenseSyrup = async (motor, extraction, hotwater, sparkling) => {
     log.info('////////--------------- 시럽 추출 요청 --------------------//////');
     log.info('////////--------------- 시럽 추출 요청 --------------------//////');
     log.info('////////--------------- 시럽 추출 요청 --------------------//////');
-    return new Promise(async (resolve, reject) => {
-        try {
 
-            // RD1 데이터 확인
-            await McData.updateSerialData('RD1', 'RD1');
-            const data = McData.getSerialData('RD1');
-            log.info("시럽 추출 데이터: ", JSON.stringify(data));
+    // RD1 데이터 확인
+    await McData.updateSerialData('RD1', 'RD1');
+    const data = McData.getSerialData('RD1');
+    log.info("시럽 추출 데이터: ", JSON.stringify(data));
 
-            // Syrup 추출 명령
-            await Order.setSyrup(motor, grinder(extraction), formatValue(hotwater), formatValue(sparkling));
-            log.info(`${motor} 번 시럽 추출 실행`);
-            await Order.extractSyrup();
+    // Syrup 추출 명령
+    await Order.setSyrup(motor, grinder(extraction), formatValue(hotwater), formatValue(sparkling));
+    log.info(`${motor} 번 시럽 추출 실행`);
+    await Order.extractSyrup();
 
-            const isSyrup = await checkAutoOperationState("시럽", 2);
+    const isSyrup = await checkAutoOperationState("시럽", 2);
 
-            // 시럽 동작 확인
-            if (!isSyrup) {
-                await Order.extractSyrup();
-            }
+    // 시럽 동작 확인
+    if (!isSyrup) {
+        log.error(`시럽 동작 감지 실패 → 가루차 넘버: ${motor}`);
+        throw new Error(`시럽 동작 감지 실패: 가루차 넘버 ${motor}`);
+    }
 
-            const isStopped = await checkAutoOperationState("정지", 3);
+    const isStopped = await checkAutoOperationState("정지", 3);
 
-            if (isStopped) {
-                log.info(`시럽 추출 완료: ${isStopped}`);
-                resolve(); // 성공적으로 종료
-            }
-        } catch (error) {
-            log.error('시럽추출 오류:', error.message);
-            return reject(error);
-        }
-    });
+    if (!isStopped) {
+        log.error(`시럽 정지 상태 감지 실패`);
+        throw new Error(`시럽 정지 상태 감지 실패: 가루차 넘버 ${motor}`);
+    }
+
+    log.info(`시럽 추출 완료`);
 };
 
 /*
 *  washChk : true 메세지 노출
 * */
-const checkCupSensor = async (expectedState, threshold, washChk, count, totalCount) => {
+const checkCupSensor = async (expectedState, threshold, washChk, count, totalCount, admin = false) => {
     log.info('////////--------------- 컵센서 체크 요청 --------------------//////');
     log.info('////////--------------- 컵센서 체크 요청 --------------------//////');
     log.info('////////--------------- 컵센서 체크 요청 --------------------//////');
@@ -481,9 +461,18 @@ const checkCupSensor = async (expectedState, threshold, washChk, count, totalCou
         const data = McData.getSerialData('RD1');
         log.info(`컵 센서 time out 여부: ${expectedState} :  ${counter}/ 120`);
 
+        if (admin && expectedState === "있음" && washChk) {
+            eventEmitter.emit('order-update', { menu: `${menuName}`, status: 'drinkCount', message: `컵을 음료 투출구에 놓아주세요.`, time: counter });
+        }
+
         // 모달 동작
-        if (expectedState === "있음" && washChk ) {
-            eventEmitter.emit('order-update', { menu: `${menuName} ${count} / ${totalCount}`, status: 'drinkCount', message: `컵을 음료 투출구에 놓아주세요.`, time: counter });
+        if (expectedState === "있음" && washChk) {
+            if (count && totalCount) {
+                eventEmitter.emit('order-update', { menu: `${menuName} ${count} / ${totalCount}`, status: 'drinkCount', message: `컵을 음료 투출구에 놓아주세요.`, time: counter });
+            } else {
+                eventEmitter.emit('order-update', { menu: `${menuName}`, status: 'drinkCount', message: `컵을 음료 투출구에 놓아주세요.`, time: counter });
+            }
+
         }
 
         if (expectedState === "없음" && washChk ) {
@@ -512,31 +501,49 @@ const checkCupSensor = async (expectedState, threshold, washChk, count, totalCou
     return false; // 타임아웃 처리
 };
 
+// 머신 동작 체크
 const checkAutoOperationState = async (expectedState, threshold) => {
     let stateCount = 0; // 상태 카운터
+    const initialFailTimeout = 3000; // ✅ 초기 실패 감지 시간(ms)
+    const startTimeOverall = Date.now();
+
+    const fastFailCategories = ['커피', '시럽', '가루차']; // ✅ 빠른 실패 감지할 카테고리
 
     for (let counter = 0; counter < 1200; counter++) {
-        const startTime = Date.now(); // 루프 시작 시간 기록
+        const loopStartTime = Date.now();
 
         await McData.updateSerialData('RD1', 'RD1');
         const data = McData.getSerialData('RD1');
+        console.log(`머신상태: ${data.autoOperationState} `);
 
         if (data.autoOperationState === expectedState) {
             stateCount++;
-            // 로그 출력
+            // ✅ 로그 출력
             if ((counter % 10) === 0) {
                 log.info(`자동운전 동작상태: '${expectedState}', count: ${stateCount}`);
             }
+
             if (stateCount >= threshold) {
                 log.info(`자동운전 동작상태: '${expectedState}' ${threshold} 회 END.`);
                 return true; // 조건 충족 시 함수 종료
             }
+
         } else {
             stateCount = 0; // 상태가 맞지 않으면 카운터 초기화
         }
 
+        // ✅ 초기 실패 감지 (특정 category만)
+        if (
+            fastFailCategories.includes(expectedState) && // ✅ category가 fastFail 대상인지 체크
+            (Date.now() - startTimeOverall) >= initialFailTimeout &&
+            stateCount === 0
+        ) {
+            log.warn(`빠른 실패: '${expectedState}' 상태 ${initialFailTimeout / 1000}s 안에 감지 못함`);
+            return false;
+        }
+
         // 루프 실행 시간 측정
-        const elapsedTime = Date.now() - startTime;
+        const elapsedTime = Date.now() - loopStartTime;
         const remainingTime = 100 - elapsedTime; // 남은 시간 계산
         if (remainingTime > 0) {
             await new Promise((r) => setTimeout(r, remainingTime));

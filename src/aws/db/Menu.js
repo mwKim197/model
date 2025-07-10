@@ -325,12 +325,10 @@ Menu.post('/serial-admin-drink-order', async (req, res) => {
             });
         }
 
-        log.info('serial-admin-drink-order.');
         await polling.stopPolling(); // 주문 작업을 시작하기 전에 조회 정지
 
         await adminDrinkOrder(recipe); // 주문 작업 수행
 
-        log.info('Polling is being restarted after admin order.');
         await polling.startPolling(); // 주문 작업 이후 폴링 재개
 
         res.status(200).json({

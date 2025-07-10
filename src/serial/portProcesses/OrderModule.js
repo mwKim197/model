@@ -74,7 +74,7 @@ class OrderModule {
     }
 
     // 공통 명령어 전송 함수
-    async sendCommand(command) {
+    /*async sendCommand(command) {
         try {
             log.info(`Sending command: ${command}`);
 
@@ -86,6 +86,30 @@ class OrderModule {
         } catch (err) {
             log.error(`Error sending command: ${err.message}`);
             throw new Error(`Error sending command: ${err.message}`);
+        }
+    }*/
+
+    // 공통 명령어 전송 함수
+    async sendCommand(command, timeoutMs = 10000) { // 기본 타임아웃 10초
+        try {
+            log.info(`재조 명령 : ${command}`);
+
+            // 타임아웃 처리 Promise
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error(`타임아웃처리 ${timeoutMs / 1000}s: ${command}`)), timeoutMs)
+            );
+
+            // 명령어 전송 및 응답 받기
+            const responsePromise = this.serialCommCom1.writeCommand(command);
+
+            // 응답 또는 타임아웃 중 먼저 도착한 것 반환
+            const data = await Promise.race([responsePromise, timeoutPromise]);
+
+            log.info('제조 명령 응답:', data);  // 시리얼 응답 로그
+            return data;
+        } catch (err) {
+            log.error(`에러 발생 명령: ${err.message}`);
+            throw new Error(`에러 발생 명령: ${err.message}`);
         }
     }
 }

@@ -17,7 +17,7 @@ const polling = new serialDataManager(serialCommCom1);
 // 주문 요청 처리 엔드포인트
 Connect.post('/start-order', async (req, res) => {
     try {
-        log.info("Order process started, polling stopped");
+        log.info("[주문시작] - 폴링조회 정지");
 
         await polling.stopPolling(); // 주문 작업을 시작하기 전에 조회 정지
         const reqBody = req.body;
@@ -33,7 +33,30 @@ Connect.post('/start-order', async (req, res) => {
         const message = err instanceof Error ? err.message : JSON.stringify(err);
         const stack = err instanceof Error ? err.stack : '';
 
-        log.error("ORDER ERROR:", message, stack);
+        log.error("주문 에러:", message, stack);
+        res.status(500).json({
+            success: false,
+            error: message || 'Unknown server error'
+        });
+    }
+});
+
+// 어드민 주문 엔드포인트
+Connect.post('/admin-order', async (req, res) => {
+    try {
+        log.info("[어드민] - 폴링조회 정지");
+        await polling.stopPolling(); // 주문 작업을 시작하기 전에 조회 정지
+        const reqBody = req.body;
+        log.info("주문 데이터 확인: ", JSON.stringify(reqBody));
+        await startOrder(reqBody);
+        await polling.startPolling(serialCommCom1, 10000).then(); // 주문 작업이 끝난 후 조회 재개
+        // list 받음 -> 메뉴판에 있는 데이터 불러서 조합 시작!
+        res.json({ success: true, message: '주문 완료' });
+    } catch (err) {
+        const message = err instanceof Error ? err.message : JSON.stringify(err);
+        const stack = err instanceof Error ? err.stack : '';
+
+        log.error("주문 에러:", message, stack);
         res.status(500).json({
             success: false,
             error: message || 'Unknown server error'

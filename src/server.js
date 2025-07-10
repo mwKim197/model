@@ -18,6 +18,10 @@ const server = createServer(app);
 
 const isDevelopment = (process.env.NODE_ENV || '').trim().toLowerCase() === 'development';
 const appPath = isDevelopment ? path.resolve(process.cwd()) : process.resourcesPath;
+
+const { app: electronApp } = require('electron');
+const LOG_DIR = path.join(electronApp.getPath('appData'), 'model', 'logs');
+
 log.info(`NODE_ENV: "${process.env.NODE_ENV}"`); // 값 출력
 log.info(`App Path: ${appPath}`);
 
@@ -89,6 +93,37 @@ app.post('/electon-update', (req, res) => {
     log.info("✅ API를 통해 프로그램 업데이트 실행");
     checkForUpdatesManually(); // Electron에서 업데이트 체크 실행
     res.json({ message: "업데이트 확인 요청됨" });
+});
+
+// 모든 로그 파일 목록 반환
+app.get('/logs', (req, res) => {
+    fs.readdir(LOG_DIR, (err, files) => {
+        if (err) {
+            log.error('❌ 로그 디렉토리 읽기 실패:', err);
+            return res.status(500).json({ error: '로그 디렉토리 읽기 실패' });
+        }
+        res.json(files);
+    });
+});
+
+// 특정 로그 파일 다운로드
+app.get('/logs/:filename', (req, res) => {
+    const fileName = req.params.filename;
+    const filePath = path.join(LOG_DIR, fileName);
+
+    if (!fs.existsSync(filePath)) {
+        log.error(`❌ 요청한 로그 파일 없음: ${fileName}`);
+        return res.status(404).json({ error: '파일을 찾을 수 없습니다.' });
+    }
+
+    res.download(filePath, (err) => {
+        if (err) {
+            log.error(`❌ 로그 파일 다운로드 실패: ${fileName}`, err);
+            res.status(500).json({ error: '파일 다운로드 실패' });
+        } else {
+            log.info(`✅ 로그 파일 다운로드 완료: ${fileName}`);
+        }
+    });
 });
 
 // Keep-Alive 설정 추가

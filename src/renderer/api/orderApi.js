@@ -26,7 +26,6 @@ const ensureUserDataInitialized = async () => {
     }
 };
 
-
 /**결제 요청
  * */
 const reqVCAT_HTTP = async (cost, halbu) => {
@@ -54,12 +53,9 @@ const reqVCAT_HTTP = async (cost, halbu) => {
                 });
 
                 const data = await response.text();
-
-                log.info(data);
                 // 성공 여부 확인 (예: "SUCCESS"가 성공 메시지라고 가정)
                 if (data === "SUCCESS") {
                     log.info("결제 성공: " + data);
-
                     return { success: true, message: data };
                 } else {
                     log.error("결제 실패: " + data);
@@ -86,14 +82,14 @@ const reqVCAT_HTTP = async (cost, halbu) => {
                     const data = await response.text();
 
                     const responseData = await reqNCData(data);
-                    log.info(responseData);
+
                     // 성공 여부 확인 (예: "SUCCESS"가 성공 메시지라고 가정)
                     if (responseData.isValid) {
-                        log.info("결제 성공: " + data);
-                        return { success: true, message: data };
+                        sendLogToMain("info", `카드 결제 성공: ${JSON.stringify(data)}`);
+                        return { success: true, message: responseData };
                     } else {
-                        log.error("결제 실패: " + data);
-                        return { success: false, message: data };
+                        sendLogToMain("error", `카드 결제 실패: ${JSON.stringify(data)}`);
+                        return { success: false, message: responseData };
                     }
 
                 } catch (error) {
@@ -160,9 +156,8 @@ const reqOrder = async (orderList) => {
             throw new Error(data.error || `HTTP error! Status: ${response.status}`);
         }
 
-        log.info(data);
+        sendLogToMain('info', `ORDER : ${data}`);
     } catch (error) {
-        log.error("❌ 주문 요청 중 에러:", error); // 실제 error 구조 확인
 
         const errMsg = error instanceof Error ? error.message : JSON.stringify(error);
         const errStack = error instanceof Error ? error.stack : '';

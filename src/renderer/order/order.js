@@ -636,6 +636,7 @@ const payment = async () => {
         payType = ACTIONS.USE_CARD;
     } else {
         response = await pointPayment(orderAmount); // 포인트 모달 띄우기 및 포인트 사용 금액 반환
+        sendLogToMain('info', `포인트 : ${JSON.stringify(response)}`);
         payType = response.action;
 
         // 결제 취소
@@ -648,8 +649,8 @@ const payment = async () => {
         // 포인트 없을 경우 바로 카드결제
         const payEnd = await cardPayment(orderAmount, 0);
 
-        if (payEnd) {
-            await ordStart(); // 주문 시작
+        if (payEnd.success) {
+            await ordStart(0, payEnd.cardInfo); // 주문 시작
         } else {
             sendLogToMain('error', `카드 결제가 실패했습니다.`);
             console.error("카드 결제가 실패했습니다.");
@@ -664,12 +665,12 @@ const payment = async () => {
             sendLogToMain('info', `적립 마일리지번호: ${response.point}`);
             const payEnd = await cardPayment(orderAmount, 0);
 
-            if (payEnd) {
+            if (payEnd.success) {
                 sendLogToMain('info', `마일리지 적립 실행 - 번호: ${response.point}, 결제금액: ${orderAmount}, 적립률 : ${earnRate}`);
                 await addMileage(response.point, orderAmount, earnRate);
                 
                 try {
-                    await ordStart(); // 주문 시작
+                    await ordStart(0, payEnd.cardInfo, response.pointData); // 주문 시작
                 } catch (e) {
                     // 주문에러발생시 마일리치 롤백
                     sendLogToMain('error', `마일리지 적립 롤백 (주문 에러)- 번호: ${response.point}, 결제금액: ${orderAmount}, 적립률 : ${earnRate}`);
@@ -684,8 +685,8 @@ const payment = async () => {
             // 포인트 없을 경우 바로 카드결제
             const payEnd = await cardPayment(orderAmount, 0);
 
-            if (payEnd) {
-                await ordStart(); // 주문 시작
+            if (payEnd.success) {
+                await ordStart(0, payEnd.cardInfo); // 주문 시작
             } else {
                 console.error("카드 결제가 실패했습니다.");
             }
@@ -705,7 +706,7 @@ const payment = async () => {
                     sendLogToMain('info', `포인트 잔액 카드결제 - 적립 마일리지번호: ${response.point}`);
                     const payEnd = await cardPayment(orderAmount, response.discountAmount);
 
-                    if (payEnd) {
+                    if (payEnd.success) {
                         // 포인트 결제 시도
                         sendLogToMain('info', `포인트 결제 실행 - 번호: ${response.point}, 결제금액: ${orderAmount}, 사용포인트 : ${response.discountAmount}`);
                         const pointResult = await useMileage(response.point, orderAmount, response.discountAmount);
@@ -722,7 +723,7 @@ const payment = async () => {
                         await addMileage(response.point, totalAmount, earnRate);
 
                         try {
-                            await ordStart(response.discountAmount); // 주문 시작
+                            await ordStart(response.discountAmount, payEnd.cardInfo, response.pointData); // 주문 시작
                         } catch (e) {
                             // 주문에러발생시 마일리치 롤백
                             sendLogToMain('error', `마일리지 적립 롤백 (주문 에러)- 번호: ${response.point}, 결제금액: ${orderAmount}, 적립률 : ${earnRate}`);
@@ -746,7 +747,7 @@ const payment = async () => {
 
                     console.log("포인트 결제 성공:", response.discountAmount);
                     sendLogToMain('info', `포인트 전액결제완료 - 결제포인트: ${response.discountAmount}`);
-                    await ordStart(response.discountAmount); // 주문 시작
+                    await ordStart(response.discountAmount, null, response.pointData); // 주문 시작
                 }
             }
 
@@ -1234,7 +1235,7 @@ function updateDynamicContent(contentType, data ,resolve) {
 
             if (usePoint > 0) {
                 // 포인트 결제,사용할포인트번호, 사용포인트
-                resolve({success: true, action: ACTIONS.USE_POINTS, point: pointNo, discountAmount: usePoint }); // 포인트 사용 금액 반환
+                resolve({success: true, action: ACTIONS.USE_POINTS, point: pointNo, discountAmount: usePoint, pointData: pointData}); // 포인트 사용 금액 반환
                 modal.classList.add("hidden"); // 모달 닫기
 
             } else {
@@ -1567,6 +1568,7 @@ const cardPayment = async (orderAmount, discountAmount) => {
             setTimeout(async () => {
                 const res = await window.electronAPI.reqVcatHttp(totalAmount);
                 //const res = {success: true};
+                sendLogToMain('info', `카드 결제 성공`);
                 resolve(res); // 결제 결과 반환
             }, 100);
         });
@@ -1574,14 +1576,35 @@ const cardPayment = async (orderAmount, discountAmount) => {
 
         // 결제 성공 여부 확인
         if (result.success) {
+            const cardInfoRaw = result.message; // 전체 카드결제 데이터
+            const parsed = cardInfoRaw.parsedData;
+
+            const getValue = (key) => parsed.find((item) => item.name === key)?.value || "";
+
+            const cardInfo = {
+                approvalNo: getValue("승인번호"),                // 승인번호
+                approvalDateTime: formatDate(getValue("승인일시")), // 승인일시 변환
+                issuerName: getValue("발급사명"),                 // 카드사명
+                acquirerName: getValue("매입사명"),               // 매입사명
+                cardBin: getValue("카드Bin"),                     // 카드 BIN
+                amount: parseInt(getValue("거래금액"), 10),       // 결제금액
+                responseMessage: getValue("응답메시지"),          // 응답메시지
+            };
+
+            sendLogToMain('info', `💳 최종 카드 정보: ${JSON.stringify(cardInfo)}`);
             sendLogToMain('info', `결제 성공 - 결제 금액:  ${totalAmount}`);
             sendLogToMain('info', `주문 목록 ${JSON.stringify(orderList)}`);
+            sendLogToMain('info', `결제 카드 정보: ${JSON.stringify(cardInfo)}`);
+
             // 모달 닫기
             modal.classList.add('hidden');
 
             playAudio('../../assets/audio/결제가 완료되었습니다 카드를 꺼내주세요.mp3');
 
-            return true;
+            return {
+                success: true,
+                cardInfo,  // ✅ 카드 정보도 함께 반환
+            };
 
         } else {
             // 결제 실패 처리
@@ -1589,8 +1612,7 @@ const cardPayment = async (orderAmount, discountAmount) => {
             // 결제실패시 60초 카운트다운 시작
             resetCountdown();
             openAlertModal("결제에 실패하였습니다. 다시 시도해주세요.", "error");
-            console.error("결제 실패: ", result.message);
-            sendLogToMain('error', `결제 실패: ${result.message}`);
+            sendLogToMain('error', `카드 결제 실패: ${result.message}`);
             return false;
         }
     } catch (error) {
@@ -1599,14 +1621,12 @@ const cardPayment = async (orderAmount, discountAmount) => {
         // 결제오류시 60초 카운트다운 시작
         resetCountdown();
         openAlertModal("결제 처리 중 오류가 발생했습니다.", "error");
-        sendLogToMain('error', `결제 오류: ${error.message}`);
-        console.error("결제 오류: ", error.message);
+        sendLogToMain('error', `카드 결제 오류: ${error.message}`);
         removeAllItem(); // 주문 목록삭제
         checkAndShowEmptyImage();
         return false;
     }
 }
-
 
 const gerBarcode = async () => {
     console.log("바코드 조회호출");
@@ -1658,7 +1678,7 @@ function isOver30Minutes() {
 }
 
 // 주문 시작
-const ordStart = async (point = 0) => {
+const ordStart = async (point = 0, payInfo, pointData) => {
 
     /* [TODO]커피 예열 임시 제거 겨울까지 테스트이후 다시 프로세스 정리후 적용예정 2025-05-30
     const chkCoffee = orderList.some(menu =>
@@ -1685,13 +1705,30 @@ const ordStart = async (point = 0) => {
 
         const ordInfo = {
             point: point,
-            orderList: orderList
+            orderList: orderList,
+            payInfo,
+            pointData,
         }
         await window.electronAPI.setOrder(ordInfo); // 주문 처리
         removeAllItem(); // 주문 목록 삭제
         checkAndShowEmptyImage();
+
+        const allTab = document.querySelector('.menu-tab[data-category="all"]');
+
+        if (allTab) {
+            activateTab(allTab); // ← 우리가 직접 만든 함수로 호출
+        }
     } catch (error) {
         console.error("ordStart 에러 발생:", error.message);
+
+        removeAllItem(); // 주문 목록 삭제
+        checkAndShowEmptyImage();
+
+        const allTab = document.querySelector('.menu-tab[data-category="all"]');
+
+        if (allTab) {
+            activateTab(allTab); // ← 우리가 직접 만든 함수로 호출
+        }
         throw error; // 에러를 다시 던져서 상위 호출부에서 롤백 처리 가능
     }
 };
@@ -1729,6 +1766,18 @@ document.getElementById("buttonContainer").addEventListener("click", async (even
         button.disabled = false; // 버튼 활성화
     }
 });
+
+// 카드 승인일자 날짜포멧
+function formatDate(yyMMddHHmmss) {
+    if (!yyMMddHHmmss || yyMMddHHmmss.length !== 12) return "";
+    const year = "20" + yyMMddHHmmss.slice(0, 2);
+    const month = yyMMddHHmmss.slice(2, 4);
+    const day = yyMMddHHmmss.slice(4, 6);
+    const hour = yyMMddHHmmss.slice(6, 8);
+    const minute = yyMMddHHmmss.slice(8, 10);
+    const second = yyMMddHHmmss.slice(10, 12);
+    return `${year}-${month}-${day}T${hour}:${minute}:${second}`;
+}
 
 function getCurrentFormattedTime() {
     const now = new Date();
