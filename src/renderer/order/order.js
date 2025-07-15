@@ -28,6 +28,9 @@ let userInfo = {};
 // 현재 재생 중인 오디오 객체
 let currentAudio = null;
 
+// user 데이터에저장되어있는 이미지 불러오기
+let iconImage = "";
+
 // Product Grid
 const productGrid = document.getElementById('productGrid');
 
@@ -207,14 +210,13 @@ window.addEventListener('resize', () => {
 function checkAndShowEmptyImage() {
     const orderGrid = document.getElementById('orderGrid');
 
+    const gridImg = iconImage ? iconImage : "../../assets/basicImage/가이드.png";
     // 빈 상태인지 확인
-    if (orderGrid.children.length === 0) {
-        orderGrid.innerHTML = `
-            <div class="empty-image flex items-center justify-center h-full">
-                <img src="../../assets/basicImage/가이드.png" alt="No items available" class="w-96 h-auto" />
-            </div>
-        `;
-    }
+    orderGrid.innerHTML = `
+        <div class="empty-image flex items-center justify-center h-full">
+            <img src=${gridImg} alt="No items available" class="w-96 h-auto" />
+        </div>
+    `;
 }
 
 // 아이템 등록
@@ -1693,9 +1695,7 @@ const ordStart = async (point = 0, payInfo, pointData) => {
             // 커피 예열
             await coffeePreheating();
         }
-
         hasCoffee = Math.floor(Date.now() / 1000);
-
     }
     */
 
@@ -1930,8 +1930,23 @@ async function fetchData() {
         userInfo = await window.electronAPI.getUserInfo();
         const version = await window.electronAPI.getVersion();
         setVersion(version);
-        console.log("version", version);
+        
+        // 로고 세팅
+        const userLogo = document.getElementById('userLogo');
+        if (userInfo.logoUrl) {
+            userLogo.innerHTML = `
+                <div class="flex items-center justify-center pt-4 pb-2 mb-4">
+                    <img src=${userInfo.logoUrl} alt="logo" class="w-48" />
+                </div> 
+            `;
+        }
+        
+        // 아이콘이미지 세팅
+        iconImage = userInfo?.iconUrl;
+        // 아이콘 이미지 호출
+        checkAndShowEmptyImage();
 
+        console.log("version", version);
         preheatingTime = userInfo.preheatingTime ? userInfo.preheatingTime : 1800;
         limitCount = userInfo.limitCount ? userInfo.limitCount : 10;
         // 이미지 받아오기
