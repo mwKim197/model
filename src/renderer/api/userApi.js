@@ -99,5 +99,22 @@ const setMenuAllUpdate = async (sourceUserId, targetUserId) => {
     }
 };
 
+// 유저정보 config 업로드
+const fetchAndSaveUserInfo = async () => {
+    try {
+        const response = await fetch(`http://localhost:3142/fetch-and-save-user`);
+        const result = await response.json();
 
-module.exports = {setUserInfo, setUserLogin, getAllUserIds, setMenuAllUpdate};
+        if (response.ok) {
+            console.log('사용자 정보 조회 및 저장 성공:', result.data);
+        } else {
+            console.error('사용자 정보 조회 실패:', result.message);
+        }
+    } catch (error) {
+        console.error('사용자 정보 조회 및 저장 중 오류 발생:', error.message);
+    }
+};
+
+
+
+module.exports = {setUserInfo, setUserLogin, getAllUserIds, setMenuAllUpdate, fetchAndSaveUserInfo};

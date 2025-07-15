@@ -1949,6 +1949,10 @@ async function fetchData() {
         console.log("version", version);
         preheatingTime = userInfo.preheatingTime ? userInfo.preheatingTime : 1800;
         limitCount = userInfo.limitCount ? userInfo.limitCount : 10;
+
+        // config 업데이트
+        await window.electronAPI.fetchAndSaveUserInfo();
+
         // 이미지 받아오기
         await window.electronAPI.downloadAllFromS3WithCache("model-narrow-road", `model/${userInfo.userId}`);
         // 데이터가 올바르게 로드되었는지 확인

@@ -141,5 +141,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     //마일리지 트렌젝션
     updateMileageAndLogHistory: async (mileageNo, totalAmt, pointsToAdd, type, note) => await mileageApi.updateMileageAndLogHistory(mileageNo, totalAmt, pointsToAdd, type, note),
 
+    // 유저 DATA config 업데이트
+    fetchAndSaveUserInfo: async () => await userApi.fetchAndSaveUserInfo()
 });
 

@@ -573,7 +573,6 @@ const fetchIceInfo = async () => {
     }
 }
 
-
 module.exports = {
     getUserInfo,
     getMenuInfo,
