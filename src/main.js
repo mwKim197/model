@@ -24,7 +24,7 @@ const { setupPortForwarding } = require('./services/portForwarding');
 const { getBasePath } = require(path.resolve(__dirname, './aws/s3/utils/cacheDirManager'));
 const log = require('./logger');
 const fs = require('fs');
-const {setupCloudflare, stopCloudflareTunnel} = require("./cloudflare/cloudflared");
+const {setupCloudflare, stopCloudflareTunnel, checkTunnelHealth} = require("./cloudflare/cloudflared");
 
 // 디렉토리 확인 및 생성
 const basePath = getBasePath(); // getBasePath 함수 호출
@@ -60,6 +60,7 @@ async function initializeApp() {
                 // ✅ Cloudflared 설정 실행
                 if (userData && userData.userId) {
                     await setupCloudflare(userData.userId);
+                    setInterval(() => checkTunnelHealth(userData.userId), 60000);
                     log.info("✅ Cloudflare Tunnel 설정 완료");
 
                     // ✅ Lambda 호출 (에러는 무시하고 로그만 찍음)
@@ -79,8 +80,9 @@ async function initializeApp() {
                               "Content-Type": "application/json"
                           }
                       }
-                    ).then((res) => {
+                    ).then(async (res) => {
                         log.info("✅ Lambda 머신 등록 성공:", res.data);
+                        await postMachineHealthCheck();
                     }).catch((err) => {
                         log.error("❌ Lambda 머신 등록 실패:", err.message);
                     });
@@ -89,6 +91,31 @@ async function initializeApp() {
                 log.error("❌ userData 가져오기 실패:", error.message);
             }
         });
+
+        // 머신헬스체크
+        const postMachineHealthCheck = async () => {
+            try {
+                const res = await axios.post(
+                    "https://api.narrowroad-model.com/model_machine_health_check",
+                    {}, // 👈 body 필요 없으니 빈 객체
+                    {
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+
+                log.info(`✅ 머신 헬스체크 성공 - status: ${res.status}, data: ${res.data}`  );
+                return { status: res.status, data: res.data };
+            } catch (error) {
+                if (error.response) {
+                    log.error(`❌ 머신 헬스체크 실패 - status: ${error.response.status}`, error.response.data);
+                } else {
+                    log.error("❌ 머신 헬스체크 요청 중 오류:", error.message);
+                }
+                throw error;
+            }
+        };
 
         // 5. Serial Polling 시작
         serialPolling.start();
@@ -155,6 +182,7 @@ app.whenReady().then(() => {
 
 // ✅ Cloudflare 종료 처리
 app.on('before-quit', () => {
+    log.info("⚠️ Electron 종료 → Cloudflare Tunnel도 같이 종료");
     serialPolling.stop();
     stopCloudflareTunnel(); // ✅ Cloudflare 종료
 });

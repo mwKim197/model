@@ -166,6 +166,24 @@ async function restartCloudflareTunnel() {
     await new Promise(resolve => setTimeout(resolve, 2000));
 }
 
+//터널 api 검사해서 죽었을경우 터널 재실행
+async function checkTunnelHealth(userId) {
+    try {
+        // 내부 API 체크
+        const localRes = await fetch('http://localhost:3142/health', { timeout: 3000 });
+        if (!localRes.ok) throw new Error("Local API unhealthy");
+
+        // 외부 API 체크
+        const externalRes = await fetch(`https://${userId}.nw-api.org/health`, { timeout: 5000 });
+        if (!externalRes.ok) throw new Error("External API unhealthy");
+
+    } catch (e) {
+        log.warn(`⚠️ Healthcheck 실패 (${e.message}) → 터널 재시작`);
+        await restartCloudflareTunnel();
+        await startCloudflareTunnel();
+    }
+}
+
 // ✅ Cloudflare Tunnel 실행 함수
 function startCloudflareTunnel() {
 
@@ -229,14 +247,21 @@ async function generateConfigYml(tunnelUUID, url) {
 credentials-file: ${credentialsFile}
 origincert: ${certFile}
 
+originRequest:
+  connectTimeout: 600s         # 연결 대기 최대 10분
+  tcpKeepAlive: 600s           # TCP keepalive도 10분
+  noHappyEyeballs: true        # IPv4/IPv6 fallback 비활성화
+  disableChunkedEncoding: true # Content-Length로 긴 응답 지원
+
 ingress:
   - hostname: ${url}
     service: http://localhost:3142
   - service: http_status:404
-  
+
 warp-routing:
   enabled: true
 `;
+
         fs.writeFileSync(configFile, configContent);
         log.info(`✅ config.yml 생성 완료: ${url} 에서 접속 가능`);
     } catch (error) {
@@ -244,4 +269,4 @@ warp-routing:
     }
 }
 
-module.exports = { setupCloudflare, isCloudflareRunning, stopCloudflareTunnel };
+module.exports = { setupCloudflare, isCloudflareRunning, stopCloudflareTunnel, checkTunnelHealth };

@@ -23,6 +23,8 @@ const setUserInfo = async (userInfo) => {
     }
 };
 
+
+
 const setUserLogin = async (userInfo) => {
     try {
         const response = await fetch(`http://localhost:3142/set-user-login`, {
@@ -115,6 +117,27 @@ const fetchAndSaveUserInfo = async () => {
     }
 };
 
+const postMachineHealthCheck = async (userInfo) => {
+    try {
+        const response = await fetch('https://api.narrowroad-model.com/model_machine_health_check', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            log.info("응답 status:", response.status);
+            log.info("응답 data:", data);
+        }
+        return { status: response.status, data }; // ✅ status와 data 모두 리턴
+    } catch (error) {
+        log.error(error);
+        throw error;
+    }
+};
 
 
-module.exports = {setUserInfo, setUserLogin, getAllUserIds, setMenuAllUpdate, fetchAndSaveUserInfo};
+
+module.exports = {setUserInfo, setUserLogin, getAllUserIds, setMenuAllUpdate, fetchAndSaveUserInfo, postMachineHealthCheck};

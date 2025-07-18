@@ -212,11 +212,13 @@ function checkAndShowEmptyImage() {
 
     const gridImg = iconImage ? iconImage : "../../assets/basicImage/가이드.png";
     // 빈 상태인지 확인
-    orderGrid.innerHTML = `
-        <div class="empty-image flex items-center justify-center h-full">
-            <img src=${gridImg} alt="No items available" class="w-96 h-auto" />
-        </div>
-    `;
+    if (orderGrid.children.length === 0) {
+        orderGrid.innerHTML = `
+            <div class="empty-image flex items-center justify-center h-full">
+                <img src=${gridImg} alt="No items available" class="w-96 h-auto" />
+            </div>
+        `;
+    }
 }
 
 // 아이템 등록
@@ -1924,7 +1926,8 @@ function setVersion(version) {
 async function fetchData() {
     try {
         const basePath = await window.electronAPI.getBasePath();
-
+        // config 업데이트
+        await window.electronAPI.fetchAndSaveUserInfo();
         const allData = await window.electronAPI.getMenuInfoAll();
         sendLogToMain('info', `전체 메뉴:  ${JSON.stringify(allData)}`);
         userInfo = await window.electronAPI.getUserInfo();
@@ -1949,9 +1952,6 @@ async function fetchData() {
         console.log("version", version);
         preheatingTime = userInfo.preheatingTime ? userInfo.preheatingTime : 1800;
         limitCount = userInfo.limitCount ? userInfo.limitCount : 10;
-
-        // config 업데이트
-        await window.electronAPI.fetchAndSaveUserInfo();
 
         // 이미지 받아오기
         await window.electronAPI.downloadAllFromS3WithCache("model-narrow-road", `model/${userInfo.userId}`);
