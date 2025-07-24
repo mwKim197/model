@@ -215,7 +215,7 @@ function checkAndShowEmptyImage() {
     if (orderGrid.children.length === 0) {
         orderGrid.innerHTML = `
             <div class="empty-image flex items-center justify-center h-full">
-                <img src=${gridImg} alt="No items available" class="w-96 h-auto" />
+                <img src="${gridImg}" alt="No items available" class="w-96 h-auto" />
             </div>
         `;
     }
@@ -1936,10 +1936,10 @@ async function fetchData() {
         
         // 로고 세팅
         const userLogo = document.getElementById('userLogo');
-        if (userInfo.logoUrl) {
+        if (userInfo?.logoUrl) {
             userLogo.innerHTML = `
                 <div class="flex items-center justify-center pt-4 pb-2 mb-4">
-                    <img src=${userInfo.logoUrl} alt="logo" class="w-48" />
+                    <img src="${userInfo.logoUrl}" alt="logo" class="w-48" />
                 </div> 
             `;
         }
