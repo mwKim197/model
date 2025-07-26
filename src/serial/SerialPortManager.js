@@ -183,7 +183,7 @@ class SerialPortManager {
                     } else {
                         reject(new Error('응답 없음'));
                     }
-                }, 300); // 0.3초 대기 (환경에 따라 조정 가능)
+                }, 200); // 0.2초 대기 (환경에 따라 조정 가능)
             });
         });
     }

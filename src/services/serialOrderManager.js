@@ -654,6 +654,12 @@ const adminDrinkOrder = async (recipe) => {
                         await dispenseGarucha(item.value1, item.value2, item.value3);
                         break;
                     case 'syrup':
+
+                        if (parseFloat(item.value1) === 4) {
+                            item.value1 = 5;
+                        } else if (parseFloat(item.value1) === 5) {
+                            item.value1 = 6;
+                        }
                         await dispenseSyrup(item.value1, item.value2, item.value3, item.value4);
                         break;
                     default:
@@ -979,9 +985,15 @@ const adminUseWash = async (data) => {
             for (let round = 0; round < 3; round++) {
                 log.info(`[어드민] 시럽 세척 ${round + 1}회차 시작`);
                 for (const syrup of syrupList) {
+                    let number = syrup.value1;
+                    if (parseFloat(syrup.value1) === 5) {
+                        number = 4;
+                    } if (parseFloat(syrup.value1) === 6) {
+                        number = 5;
+                    }
                     eventEmitter.emit('order-update', {
                         status: 'washStart',
-                        message: `[관리자] 시럽(${syrup.value1}) 세척중입니다.`
+                        message: `[관리자] 시럽(${number}) 세척중입니다.`
                     });
                     await Order.purifyingSyrup(syrup.value1);
                     await checkAutoOperationState("정지", 10);
