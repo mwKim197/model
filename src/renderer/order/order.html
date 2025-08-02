@@ -142,6 +142,22 @@
     <!--전체 모달 딤-->
     <div id="globalDim" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[997] hidden"></div>
 
+    <!-- 쿠폰결제모달 -->
+    <div id="couponModal" class="fixed inset-0 flex items-center justify-center z-[999] hidden">
+        <div class="bg-white p-5 rounded-lg shadow-lg w-[600px] h-[600px] relative">
+            <div class="m-5 text-3xl fixed justify-center">
+                <span>바코드 또는 QR코드를 단말기에 스캔해주세요</span>
+            </div>
+            <img src="../../assets/basicImage/barcode.gif" alt="barcode" />
+            <div class="absolute bottom-10 right-5 text-gray-800">
+                <p id="couponOrderAmount"    class="text-right">주문금액: W 0,000원</p>
+                <p id="couponDiscountAmount" class="text-right">할인금액: W 0,000원</p>
+                <p id="couponTotalAmount"    class="text-2xl text-right font-bold">전체금액: W 0,000원</p>
+            </div>
+        </div>
+    </div>
+
+
     <!-- 카드결제모달 -->
     <div id="modal" class="fixed inset-0 flex items-center justify-center z-[999] hidden">
         <div class="bg-white p-5 rounded-lg shadow-lg w-[600px] h-[600px] relative">

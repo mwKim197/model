@@ -338,24 +338,29 @@ const reqNCData = async (rawData) => {
 const reqBarcode_HTTP = async () => {
     const H7 = '\x07';
     const sendraw = "REQ_BARCODE" + H7 + "1" + H7;
-    const sendbuf = make_send_data(sendraw); // 여기서 전문 포맷을 완성
+    const sendbuf = make_send_data(sendraw);
 
     try {
         const response = await fetch("http://127.0.0.1:9188", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: encodeURI(sendbuf)
         });
 
         const data = await response.text();
         log.info("응답 전문:", data);
 
+        // 바코드 추출
         const barcode = extractBarcode(data);
         log.info("추출된 바코드:", barcode);
 
-        return { success: true, barcode };
+        // ✅ 공통 데이터 구조
+        return {
+            success: true,
+            raw: data,           // 전문 원본
+            barcode: barcode,    // 바코드 문자열
+            timestamp: Date.now()
+        };
 
     } catch (error) {
         log.error("바코드 요청 실패:", error);
@@ -368,50 +373,63 @@ const extractBarcode = (rawData) => {
     return rawData.slice(16); // 앞 16자리 제거 → 바코드 번호
 };
 
-// 바코드로 페이 요청
-const reqPayproBarcode = async ( amount, barcode, halbu) => {
-    const H7 = '\x07';
-    const FS = '\x1C';
+// 바코드 결제
+const reqPayproBarcode = async (amount, halbu = "00") => {
+    // 1️⃣ 바코드 먼저 조회
+    const barcodeData = await reqBarcode_HTTP();
+    if (!barcodeData.success) return barcodeData; // 실패 시 그대로 반환
 
-    const sendraw  =
-        "NICEVCATB" + H7 +
-        "0300" + FS +
-        "10" + FS +
-        "L" + FS +
-        amount + FS +
-        0 + FS +
-        0 + FS +
-        halbu + FS +
-        "" + FS +
-        "" + FS +
-        "" + FS +
-        FS + FS +
-        barcode + FS +  // ← 바코드 번호
-        FS + FS + FS + FS + FS +
-        "" + FS +
-        "" + FS +
-        "PRO" + FS +
-        "" + FS + FS + FS + FS + FS +
-        H7;
+    // 2️⃣ 결제 전문 생성
+    const sendraw = buildBarcodeRequest(amount, barcodeData.barcode, halbu);
+    const sendbuf = make_send_data(sendraw);
+    console.log("sendbuf:", sendbuf);
 
-    const sendbuf = make_send_data(sendraw); // 여기서 전문 포맷을 완성
+    // 3️⃣ 결제 요청
     try {
         const response = await fetch("http://127.0.0.1:9188", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: encodeURI(sendbuf)
         });
 
         const data = await response.text();
         log.info("결제 응답:", data);
-        return { success: true, data };
+
+        return {
+            success: true,
+            raw: data,
+            barcode: barcodeData.barcode,
+            amount: amount
+        };
+
     } catch (error) {
         log.error("바코드 결제 요청 실패:", error);
         return { success: false, message: "바코드 결제 요청 실패!" };
     }
 };
+
+// 바코드 결제 전문 생성
+function buildBarcodeRequest(amount, barcode, halbu = "00") {
+    const H7 = '\x07';
+    const FS = '\x1C';
+
+    const amtStr = String(amount || 0);
+    const halbuStr = (typeof halbu === "number" || typeof halbu === "string")
+        ? String(halbu).padStart(2, "0") // 1 → "01"
+        : "00";
+    const barcodeStr = String(barcode || "");
+
+    const fields = [
+        "0300","10","L",amtStr,"0","0",halbuStr,
+        "", "", "", "", "",      // 빈 필드 5개
+        barcodeStr,
+        "", "", "", "", "",      // 빈 필드 5개
+        "PRO",
+        "", "", "", "", ""       // 마지막 빈 필드 5개
+    ];
+
+    return "NICEVCATB" + H7 + fields.join(FS) + H7;
+}
 
 
 

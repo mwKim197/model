@@ -636,7 +636,7 @@ const payment = async () => {
     // 결제 타입 지정 userInfo.payType == true "마일리지 미사용"
     if (userInfo.payType) {
 
-        // 현제 결제 방식이 마일리지를 제외한 카드 밖에없어서 강제 카드 넣기. 추후 바코드 추가
+        // 현재 결제 방식이 마일리지를 제외한 카드 밖에없어서 강제 카드 넣기. 추후 바코드 추가
         payType = ACTIONS.USE_CARD;
     } else {
         response = await pointPayment(orderAmount); // 포인트 모달 띄우기 및 포인트 사용 금액 반환
@@ -1641,35 +1641,31 @@ const gerBarcode = async () => {
 }
 
 // 바코드 조회 및 결제
-const barcodePayment = async (orderAmount, discountAmount) => {
+const barcodePayment = async (orderAmount, discountAmount = 0) => {
     clearCountdown();
 
     const totalAmount = orderAmount - discountAmount; // 전체 금액 계산
-    // 바코드 조회
-    const res = await window.electronAPI.reqBarcodeHTTP();
-    if (res) {
-        try {
-            // 0.1초 대기 후 결제 API 호출
-            const result = await new Promise((resolve) => {
-                setTimeout(async () => {
-                    const res= await window.electronAPI.reqPayproBarcode(totalAmount, res);
-                    //const res = {success: true};
-                    resolve(res); // 결제 결과 반환
-                }, 100);
-            });
 
-            // 결제 성공 여부 확인
-            if (result.success) {
-                console.log("바코드결제성공");
-            } else {
-                console.log("바코드결제실패");
-            }
-        } catch (error) {
-            console.log("바코드결제에러");
-            return false;
+    try {
+        // 0.1초 대기 후 결제 API 호출
+        const result = await new Promise((resolve) => {
+            setTimeout(async () => {
+                const result= await window.electronAPI.reqPayproBarcode(totalAmount);
+                //const res = {success: true};
+                resolve(result); // 결제 결과 반환
+            }, 100);
+        });
+
+        // 결제 성공 여부 확인
+        if (result.success) {
+            console.log("바코드결제성공");
+        } else {
+            console.log("바코드결제실패");
         }
+    } catch (error) {
+        console.log("바코드결제에러");
+        return false;
     }
-
 }
 
 // 30분이 지났는지 체크하는 함수
