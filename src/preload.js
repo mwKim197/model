@@ -89,11 +89,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // 결제처리
     reqVcatHttp: async (price) => await orderApi.reqVCAT_HTTP(price, '00'),
 
-    // 바코드 조회
+    // 바코드 스캔
     reqBarcodeHTTP: async () => await orderApi.reqBarcode_HTTP(),
 
+    // 쿠폰 조회
+    getCoupon: async (code) => await orderApi.getCoupon(code),
+
     // 바코드 결제처리
-    reqPayproBarcode: async (price, barcode) => await orderApi.reqPayproBarcode(price, barcode, '00'),
+    reqPayproBarcode: async (price, barcode) => await orderApi.reqPayproBarcode(price, '00'),
 
     // 주문 처리
     setOrder: async (orderList) => await orderApi.reqOrder(orderList),

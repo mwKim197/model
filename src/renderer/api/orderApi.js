@@ -373,6 +373,30 @@ const extractBarcode = (rawData) => {
     return rawData.slice(16); // 앞 16자리 제거 → 바코드 번호
 };
 
+// 쿠폰 조회
+const getCoupon = async (couponCode) => {
+    await ensureUserDataInitialized();
+
+    if (!couponCode || !couponCode.trim()) {
+        return { success: false, message: "쿠폰번호를 입력해주세요." };
+    }
+    const url = `https://api.narrowroad-model.com/model_coupon?func=getCouponOne&userId=${encodeURIComponent(userData.userId)}&couponCode=${encodeURIComponent(couponCode)}`;
+
+    const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "조회 실패");
+    }
+
+    return await res.json();
+};
+
 // 바코드 결제
 const reqPayproBarcode = async (amount, halbu = "00") => {
     // 1️⃣ 바코드 먼저 조회
@@ -382,7 +406,6 @@ const reqPayproBarcode = async (amount, halbu = "00") => {
     // 2️⃣ 결제 전문 생성
     const sendraw = buildBarcodeRequest(amount, barcodeData.barcode, halbu);
     const sendbuf = make_send_data(sendraw);
-    console.log("sendbuf:", sendbuf);
 
     // 3️⃣ 결제 요청
     try {
@@ -440,6 +463,7 @@ module.exports = {
     adminUseWash,
     coffeePreheating,
     reqBarcode_HTTP,
+    getCoupon,
     reqPayproBarcode,
     requestAppRestart
 };
