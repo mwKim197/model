@@ -373,29 +373,51 @@ const extractBarcode = (rawData) => {
     return rawData.slice(16); // 앞 16자리 제거 → 바코드 번호
 };
 
-// 쿠폰 조회
+// 쿠폰 조회 (메인/프리로드 쪽에서 사용 가정)
 const getCoupon = async (couponCode) => {
     await ensureUserDataInitialized();
 
     if (!couponCode || !couponCode.trim()) {
-        return { success: false, message: "쿠폰번호를 입력해주세요." };
-    }
-    const url = `https://api.narrowroad-model.com/model_coupon?func=getCouponOne&userId=${encodeURIComponent(userData.userId)}&couponCode=${encodeURIComponent(couponCode)}`;
-
-    const res = await fetch(url, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    });
-
-    if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "조회 실패");
+        // 항상 래핑해서 반환
+        return {
+            statusCode: 400,
+            body: JSON.stringify({
+                code: "INVALID_PARAMETER",
+                message: "쿠폰번호를 입력해주세요."
+            })
+        };
     }
 
-    return await res.json();
+    const url =
+        `https://api.narrowroad-model.com/model_coupon?func=getCouponOne` +
+        `&userId=${encodeURIComponent(userData.userId)}` +
+        `&couponCode=${encodeURIComponent(couponCode)}`;
+
+    try {
+        const res = await fetch(url, {
+            method: "GET",
+            // GET은 Content-Type 불필요하지만 있어도 무해
+            headers: { "Content-Type": "application/json" }
+        });
+
+        // fetch는 4xx/5xx에서도 throw 안 하므로 여기서 항상 결과를 래핑해서 돌려줌
+        const text = await res.text(); // 문자열 보장
+        return {
+            statusCode: res.status,
+            body: text || "{}"
+        };
+    } catch (e) {
+        // 네트워크/IPC 오류도 throw하지 말고 래핑해서 반환
+        return {
+            statusCode: 0,
+            body: JSON.stringify({
+                code: "IPC_ERROR",
+                message: e?.message || "쿠폰 조회 중 내부 통신 오류"
+            })
+        };
+    }
 };
+
 
 // 바코드 결제
 const reqPayproBarcode = async (amount, halbu = "00") => {

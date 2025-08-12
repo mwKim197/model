@@ -463,22 +463,26 @@ const confirmModal = document.getElementById('confirmModal');
 const cancelButton = document.getElementById('cancelButton');
 const confirmButton = document.getElementById('confirmButton');
 
-function openModal(message) {
-    return new Promise((resolve, reject) => {
+function openModal(message, onConfirm, onCancel) {
+    return new Promise((resolve) => {
         const modalMessage = confirmModal.querySelector('h2');
         modalMessage.innerHTML = message;
         confirmModal.classList.remove('hidden');
 
         confirmButton.onclick = () => {
             closeModal();
-            resolve(true);  // 확인
+            if (typeof onConfirm === "function") onConfirm();
+            resolve(true);
         };
+
         cancelButton.onclick = () => {
             closeModal();
-            resolve(false); // 취소
+            if (typeof onCancel === "function") onCancel();
+            resolve(false);
         };
     });
 }
+
 // confirm 모달
 
 // 모달 닫기 함수
@@ -525,6 +529,11 @@ function openModalPromise(message) {
 // ✅ 포인트 입력 모달도 Promise로
 async function showPointModal() {
     return await updateDynamicContent2("pointInput", {});
+}
+
+// ✅ 쿠폰 입력 모달도 Promise로
+async function showCouponModal() {
+    return await updateDynamicContent2("couponInput", {});
 }
 
 function removeAllItem() {
@@ -578,7 +587,8 @@ document.getElementById('payment').addEventListener('click', async () => {
     globalDim.classList.remove('hidden'); // ✅ UI 잠금 시작
 
     try {
-        await payment(); // 💳 + 제조 프로세스 포함
+        //await payment(); // 💳 + 제조 프로세스 포함
+        await totalPayment(); // 💳 + 제조 프로세스 포함
         console.log('✅ 결제 및 제조 요청 완료');
 
         // ✅ 제조가 끝날 때까지 잠금 유지하고 싶으면 아래 timeout 설정
@@ -644,8 +654,29 @@ const calculateTotalPayment = (orderList) => {
     return total;
 };
 //----------------쿠폰결제 금액계산-------------------//
+//----------------쿠폰사용처라 -------------------//
+function collectUsedCoupons(orderList) {
+    const map = new Map(); // couponId 기준 dedupe
+    for (const order of (orderList || [])) {
+        const { usedCoupons = [], orderId, menuId } = order;
+        for (const c of usedCoupons) {
+            if (!c?.couponId) continue;
+            if (!map.has(c.couponId)) {
+                map.set(c.couponId, {
+                    couponId: c.couponId,
+                    couponCode: c.couponCode,
+                    orderId,
+                    menuId,
+                });
+            }
+        }
+    }
+    return Array.from(map.values());
+}
+//----------------쿠폰사용처라 -------------------//
 //-----------------통합결제--------------------//
 const totalPayment = async () => {
+
     // 리셋 타이머 종료
     clearCountdown();
     let earnRate = userInfo.earnMileage; // 적립률
@@ -653,8 +684,10 @@ const totalPayment = async () => {
     let response = 0;
 
     const orderAmount = calculateTotalPayment(orderList);
+    if (orderAmount <= 0) {
 
-    if (orderAmount === 0) {
+
+        console.log("주문목록; ", orderList);
         await ordStart();
         return;
     }
@@ -668,6 +701,11 @@ const totalPayment = async () => {
     const payBarcode = document.getElementById('payBarcode');
     const payPoint = document.getElementById('payPoint');
     const payCoupon = document.getElementById('payCoupon');
+
+    payCard.onclick = payBarcode.onclick = payPoint.onclick = payCoupon.onclick = null;
+    const closeBtn = document.getElementById("totalPayCloseModalBtn");
+    closeBtn.onclick = null;
+    closeBtn.onclick = () => { modal.classList.add('hidden'); resetCountdown(); };
 
     payCard.onclick = async () => {
         modal.classList.add('hidden');
@@ -683,12 +721,12 @@ const totalPayment = async () => {
         // 호출부
         const wantMileage = await openModalPromise("마일리지를 적립하시겠습니까?");
         if (wantMileage) {
-            const mileageDone = await showPointModal(); // ✅ Promise 대기
-            sendLogToMain('info', `마일리지 적립 실행 - 번호: ${mileageDone.point}, 결제금액: ${orderAmount}, 적립률 : ${earnRate}`);
-            await addMileage(mileageDone.point, orderAmount, earnRate);
+            const mileageDone = await showPointModal(); // pointInput 플로우
+            if (mileageDone?.success && mileageDone.action === ACTIONS.ACCUMULATION_COMPLETED) {
+                sendLogToMain('info', `마일리지 적립 실행 - 번호: ${mileageDone.point}, 결제금액: ${orderAmount}, 적립률 : ${earnRate}`);
+                await addMileage(mileageDone.point, orderAmount, earnRate);
+            }
         }
-
-        // ✅ 결제 후 주문 시작
         await ordStart(0, payEnd.cardInfo);
     };
 
@@ -704,17 +742,15 @@ const totalPayment = async () => {
 
     };
     payCoupon.onclick = async () => {
-        // 통합결제 모달 닫기
-        modal.classList.add('hidden');
-        await openCouponInputModal();
-    };
+        modal.classList.add('hidden');                // 통합결제 모달 닫고
+        const result = await showCouponModal();       // updateDynamicContent2("couponInput")
 
-    // 통합결제 모달 닫기
-    document.getElementById("totalPayCloseModalBtn").addEventListener("click", () => {
-        modal.classList.add('hidden');
-        // 타이머 다시시작
-        resetCountdown();
-    });
+        if (result?.action === ACTIONS.COUPON_APPLIED) {
+            openAlertModal("쿠폰을 적용했습니다.");
+        }
+
+        await totalPayment();                       // 다시 결제 모달 열기
+    };
 }
 //-----------------통합결제--------------------//
 //-----------------쿠폰조회--------------------//
@@ -742,9 +778,9 @@ const openCouponInputModal = async () => {
             return;
         }
 
-        const couponResult = await getBarcodeApi(couponCode);
-        if (!couponResult.item) {
-            openAlertModal(couponResult.message || "쿠폰 조회 실패", "error");
+        const result = await getBarcodeApi(couponCode);
+        if (!result.ok || !result.item) {
+            openAlertModal(result.message || "쿠폰 조회 실패", "error");
             return;
         }
 
@@ -822,9 +858,31 @@ const getBarcodeScanModal = async () => {
 };
 //-----------------바코드스캔--------------------//
 //-----------------바코드조회--------------------//
+// 공통 헬퍼 (non-throw)
 const getBarcodeApi = async (barcode) => {
-    const result = await window.electronAPI.getCoupon(barcode);
-    return result;
+    try {
+        const res = await window.electronAPI.getCoupon(barcode);
+        const statusCode = Number(res?.statusCode) || 0;
+
+        let body = {};
+        try {
+            body = typeof res?.body === 'string' ? JSON.parse(res.body) : (res?.body || {});
+        } catch (_) {
+            body = {};
+        }
+
+        const ok = statusCode >= 200 && statusCode < 300;
+        // body는 { item, code, message, ... } 가정
+        return { ok, statusCode, ...body };
+    } catch (err) {
+        // IPC 자체가 실패했을 때도 throw 하지 말고 실패 구조 리턴
+        return {
+            ok: false,
+            statusCode: 0,
+            code: 'IPC_ERROR',
+            message: err?.message || '쿠폰 조회 중 내부 통신 오류'
+        };
+    }
 };
 //-----------------바코드조회--------------------//
 
@@ -992,6 +1050,8 @@ const ACTIONS = {
     USE_BARCODE: "useBarcode",
     /*적립완료*/
     ACCUMULATION_COMPLETED: "accumulationCompleted",
+    /* 쿠폰 적용 완료*/
+    COUPON_APPLIED: "coupunApplied",
 };
 
 // 포인트 전역 변수
@@ -1105,7 +1165,14 @@ function setupNumberButtons() {
             // 리셋 타이머 초기화
             resetCountdown();
             const number = button.getAttribute("data-number");
-
+            if (type === "coupon") {
+                if (inputValue.length < 6) {
+                    inputValue += number; // 입력된 값에 추가
+                    updateInputDisplay();
+                } else {
+                    openAlertModal(`6 자리까지만 입력 가능합니다.`);
+                }
+            }
             if (type === "number") {
                 if (inputValue.length < 12) {
                     inputValue += number; // 입력된 값에 추가
@@ -1169,7 +1236,7 @@ function resetInput() {
     phoneIndex = 0; // 현재 입력할 위치
     inputValue = "";  // 저장된 입력 값 초기화
 
-    if (type === "number" || type === "password") {
+    if (type === "number" || type === "password" || type === "coupon") {
         const inputDisplay = document.getElementById("inputDisplay");
         inputDisplay.textContent = ""; // 화면에서도 삭제
     }
@@ -1234,13 +1301,13 @@ function updateDynamicContent(contentType, data ,resolve) {
         removeAllButtons();
 
         // 버튼 설정
-        addButton("addPointBtn", "적립하기", "bg-blue-500 text-white py-3 text-3xl rounded-lg  hover:bg-blue-600 w-full");
+/*        addButton("addPointBtn", "적립하기", "bg-blue-500 text-white py-3 text-3xl rounded-lg  hover:bg-blue-600 w-full");*/
         addButton("usePointBtn", "사용하기", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
         addButton("joinPointBtn", "등록하기", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
-        addButton("immediatePaymentBtn", "바로결제", "bg-gray-400 text-white py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48");
+        /*addButton("immediatePaymentBtn", "바로결제", "bg-gray-400 text-white py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48");*/
 
         // 포인트 적립버튼
-        document.getElementById("addPointBtn").addEventListener("click", async () => {
+        /*document.getElementById("addPointBtn").addEventListener("click", async () => {
             let mileageInfo = {mileageNo: inputValue, tel: ""};
             // 휴대폰일경우 inputValue 휴대폰번호로 변경
             if (isPhone) {
@@ -1274,7 +1341,7 @@ function updateDynamicContent(contentType, data ,resolve) {
             } else {
                 openAlertModal(`마일리지 번호는 4~12 자리 입니다.`);
             }
-        });
+        });*/
 
         // 포인트 사용버튼
         document.getElementById("usePointBtn").addEventListener("click", async () => {
@@ -1327,12 +1394,12 @@ function updateDynamicContent(contentType, data ,resolve) {
         });
 
         // 즉시결제 포인트 적립 X
-        document.getElementById("immediatePaymentBtn").addEventListener("click", () => {
+        /*document.getElementById("immediatePaymentBtn").addEventListener("click", () => {
             // 즉시결제 포인트적립 X
             resolve({ success: true, action: ACTIONS.IMMEDIATE_PAYMENT, discountAmount: 0  }); // 결과 전달
 
             modal.classList.add("hidden"); // 모달 닫기
-        });
+        });*/
 
     } else if (contentType === "passwordInput") {
 
@@ -1669,18 +1736,25 @@ function updateDynamicContent2(contentType, data = {}) {
         const dynamicButton = document.getElementById('dynamicButton');
         const modal = document.getElementById("pointModal"); // ✅ 수정 완료
         const globalDim = document.getElementById('globalDim'); // 모달 딤
+        const closeBtn = document.getElementById("closeModalBtn"); // ⬅️ 추가
 
-        console.log("updateDynamicContent2 호출됨:", contentType);
-        let resolved = false; // resolve 중복 방지
-
+        let resolved = false;
         function safeResolve(result) {
             if (resolved) return;
             resolved = true;
             modal.classList.add("hidden");
-            globalDim.classList.add("hidden");
+            globalDim?.classList.add("hidden");
             resolve(result);
+            isPaying = false; // 필요 시 여기서 해제
         }
 
+        // ✅ 닫기 버튼은 항상 EXIT로 resolve하도록 (외부 closePointModal 호출 금지)
+        closeBtn.onclick = () => safeResolve({ success: true, action: ACTIONS.EXIT });
+
+        modal.classList.remove("hidden");
+        globalDim?.classList.remove("hidden");
+        dynamicButton.innerHTML = "";
+        
         // 버튼 이벤트 초기화
         function clearButtons() {
             dynamicButton.innerHTML = "";
@@ -1701,6 +1775,7 @@ function updateDynamicContent2(contentType, data = {}) {
         // ✅ 모달 열기
         modal.classList.remove("hidden");
         globalDim.classList.remove("hidden");
+
 
         // ----- 단계별 화면 처리 -----
         if (contentType === "pointInput") {
@@ -1827,15 +1902,83 @@ function updateDynamicContent2(contentType, data = {}) {
                     () => safeResolve({ success: true, action: ACTIONS.EXIT })
                 );
             });
+        } else if (contentType === "couponInput") {
+            // 기존 유저 적립 단계
+            resetInput();
+            type = "coupon";
+            dynamicContent.innerHTML = createPhoneInputTemplate("쿠폰 바코드 스캔 및 쿠폰 번호 입력");
+            dynamicContent.innerHTML = createInputTemplate("쿠폰사용");
+            clearButtons();
+
+            // 바코드 스캔 버튼
+            addButton("scanBarcodeBtn", "바코드스캔", "bg-red-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full", async () => {
+                const barcodeScan = await getBarcodeScanModal();
+                inputValue = barcodeScan || ""; // 입력된 값에 추가
+                updateInputDisplay();
+            });
+
+            addButton("useBarCodeBtn", "사용하기", "bg-blue-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full", async () => {
+                const couponCode = inputValue.trim();
+                if (!couponCode) return openAlertModal("쿠폰 번호를 입력하세요.", "error");
+
+                // 안전망
+                let couponResult;
+                try {
+                    couponResult = await getBarcodeApi(couponCode);
+                } catch (e) {
+                    openAlertModal(e?.message || "쿠폰 조회 실패(예외)", "error");
+                    return;
+                }
+                console.log("couponResult: ", couponResult);
+                if (!couponResult.ok || !couponResult.item) {
+                    openAlertModal(couponResult.message || "해당 쿠폰을 찾을 수 없습니다.", "error");
+                    return;
+                }
+
+                const couponItem = couponResult.item;
+                const menuId = parseInt(couponItem.menuId, 10);
+
+                const matchedOrder = orderList.find(order => {
+                    if (order.menuId !== menuId) return false;
+
+                    const used = order.couponUsed || 0;
+                    if (used >= order.count) return false;
+
+                    const alreadyUsed = (order.usedCoupons || [])
+                        .some(c => c.couponId === couponItem.couponId);
+
+                    if (alreadyUsed) {
+                        openAlertModal("이미 사용한 쿠폰입니다.", "error");
+                        return false;
+                    }
+                    return true;
+                });
+
+                if (!matchedOrder) {
+                    openAlertModal("이 쿠폰을 적용할 수 있는 주문이 없거나 이미 모두 사용되었습니다.", "error");
+                    return;
+                }
+
+                matchedOrder.couponUsed = (matchedOrder.couponUsed || 0) + 1;
+                matchedOrder.usedCoupons = matchedOrder.usedCoupons || [];
+                matchedOrder.usedCoupons.push({
+                    couponId: couponItem.couponId,
+                    couponCode: couponItem.couponCode,
+                });
+
+                openAlertModal(`${couponItem.title} 쿠폰을 적용했습니다.`, "success");
+                safeResolve({ success: true, action: ACTIONS.COUPON_APPLIED });
+            });
         }
+
     });
 }
 
 
-// 포인트 모달 닫기
-document.getElementById("closeModalBtn").addEventListener("click", () => {
+//[TODO] 임시제거 포인트 모달 닫기
+/*document.getElementById("closeModalBtn").addEventListener("click", () => {
     closePointModal();
-});
+});*/
 
 // 마일리지 초기화
 document.addEventListener("DOMContentLoaded", () => {
@@ -1887,6 +2030,13 @@ document.addEventListener("DOMContentLoaded", () => {
             if (inputValue.length > 0) {
                 inputValue = inputValue.slice(0, -1); // 내부 변수에서도 마지막 문자 삭제
                 inputDisplay.textContent = "*".repeat(inputValue.length); // 비밀번호 입력 시 * 로 표시; // 화면에서도 삭제
+            }
+        } else if (type === "coupon") {
+            const inputDisplay = document.getElementById("inputDisplay");
+
+            if (inputValue.length > 0) {
+                inputValue = inputValue.slice(0, -1); // 내부 변수에서도 마지막 문자 삭제
+                inputDisplay.textContent = inputValue; // 화면에서도 삭제
             }
         } else {
             const inputDisplay = document.getElementById("inputDisplay");
