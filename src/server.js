@@ -15,15 +15,31 @@ const { getBasePath } = require('./aws/s3/utils/cacheDirManager');
 const {checkForUpdatesManually} = require("./updater");
 const app = express();
 const server = createServer(app);
-
 const isDevelopment = (process.env.NODE_ENV || '').trim().toLowerCase() === 'development';
 const appPath = isDevelopment ? path.resolve(process.cwd()) : process.resourcesPath;
-
 const { app: electronApp } = require('electron');
+const {getUser} = require("./util/store");
 const LOG_DIR = path.join(electronApp.getPath('appData'), 'model', 'logs');
+
+const BARCODE_API_BASE = 'https://api.narrowroad-model.com/model_barcode_scan';
 
 log.info(`NODE_ENV: "${process.env.NODE_ENV}"`); // 값 출력
 log.info(`App Path: ${appPath}`);
+
+let user;
+
+const processUserAndProduct = async () => {
+    // 사용자 정보 가져오기
+    user = await getUser();
+
+    if (user) {
+        log.info('[STORE]User Info:', user);
+    } else {
+        log.error('[STORE]No user found in store.');
+
+    }
+}
+processUserAndProduct().then();
 
 // CORS 설정
 app.use(cors({
@@ -126,6 +142,78 @@ app.get('/logs/:filename', (req, res) => {
     });
 });
 
+
+let mainWindow; // main에서 주입받도록 설계
+
+function setMainWindow(win) {
+    mainWindow = win;
+}
+
+// ✅ 렌더러에서 코드 실행 도우미 (타임아웃 포함)
+function execInRenderer(jsCode, { timeout = 15000 } = {}) {
+    if (!mainWindow || mainWindow.webContents.isDestroyed()) {
+        return Promise.reject(new Error('mainWindow가 준비되지 않았습니다.'));
+    }
+    return Promise.race([
+        mainWindow.webContents.executeJavaScript(jsCode, true),
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Renderer 응답 타임아웃')), timeout)
+        ),
+    ]);
+}
+
+// 예시: 바코드 스캔 API (원하면 다른 라우터 파일에서도 execInRenderer 재사용 가능)
+app.post('/call-barcode', async (req, res) => {
+    try {
+        // 1) 바코드 스캔 (렌더러에서 대기 -> 결과 반환)
+        const result = await execInRenderer(`(async () => {
+      return await window.electronAPI.reqBarcodeHTTP();
+    })()`, { timeout: 20000 });
+
+        if (!result || !result.barcode) {
+            // 사용자 취소/미입력 등
+            return res.status(204).send();
+        }
+
+        const { barcode } = result;  // ⬅️ 여기서 꺼내기
+
+        // 2) userId 확보 (요청 바디 > 로컬 스토어)
+        let { userId } = req.body || {};
+        if (!userId && typeof getUser === 'function') {
+            try {
+                const localUser = await getUser(); // 구현에 따라 sync/async
+                userId = localUser?.userId;
+            } catch (_) {}
+        }
+        if (!userId) {
+            return res.status(400).json({ success: false, message: 'userId가 필요합니다.' });
+        }
+
+        // 3) Lambda 저장 호출 (POST ?func=barcode-save)
+        const saveUrl = `${BARCODE_API_BASE}?func=barcode-save`;
+        const resp = await fetch(saveUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ userId, code: barcode })
+        }).catch((e) => {
+            throw e;
+        })
+
+        if (!resp.ok) {
+            const text = await resp.text().catch(() => '');
+            return res.status(502).json({ success: false, message: `Lambda ${resp.status}`, detail: text });
+        }
+
+        const data = await resp.json();
+        return res.json({ success: true, barcode, savedAt: data?.scanAt ?? null });
+
+    } catch (e) {
+        return res.status(500).json({ success: false, message: e.message });
+    }
+});
+
 // Keep-Alive 설정 추가
 server.keepAliveTimeout = 300000; // 5분
 server.headersTimeout = 310000;  // Keep-Alive 타임아웃보다 약간 길게 설정
@@ -137,4 +225,4 @@ async function start() {
     });
 }
 
-module.exports = { start };
+module.exports = { start, setMainWindow };

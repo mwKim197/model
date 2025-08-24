@@ -18,7 +18,7 @@ const axios = require("axios");
 const path = require('path');
 const { createMainWindow } = require('./windows/mainWindow');
 const { setupEventHandlers } = require('./events/eventHandlers');
-const server = require('./server');
+const server  = require('./server');
 const serialPolling = require('./services/serialPolling');
 const { setupPortForwarding } = require('./services/portForwarding');
 const { getBasePath } = require(path.resolve(__dirname, './aws/s3/utils/cacheDirManager'));
@@ -91,6 +91,8 @@ async function initializeApp() {
                 log.error("❌ userData 가져오기 실패:", error.message);
             }
         });
+
+        server.setMainWindow(mainWindow);
 
         // 머신헬스체크
         const postMachineHealthCheck = async () => {

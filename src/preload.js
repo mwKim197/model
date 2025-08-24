@@ -3,9 +3,14 @@ const userApi = require('./renderer/api/userApi');
 const menuApi = require('./renderer/api/menuApi');
 const orderApi = require('./renderer/api/orderApi');
 const mileageApi = require('./renderer/api/mileageApi');
+const {SmTCatAgentClient} = require('./renderer/api/vcatApi');
+
 const image = require('./aws/s3/utils/image');
 const fs = require("fs");
 const path = require("path");
+
+// 인스턴스 한 번만 생성해두기
+const wsClient = new SmTCatAgentClient({ logger: console });
 
 let NODE_SERVER_URL = '';
 
@@ -145,6 +150,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     updateMileageAndLogHistory: async (mileageNo, totalAmt, pointsToAdd, type, note) => await mileageApi.updateMileageAndLogHistory(mileageNo, totalAmt, pointsToAdd, type, note),
 
     // 유저 DATA config 업데이트
-    fetchAndSaveUserInfo: async () => await userApi.fetchAndSaveUserInfo()
+    fetchAndSaveUserInfo: async () => await userApi.fetchAndSaveUserInfo(),
+
+    // ✅ 새 WebSocket 방식
+    reqVcatWebSocket: async (price) => {
+
+        return wsClient.tradeCreditApprove({
+            amount: String(price),
+            tax: "0",
+            installment: "00",
+            sign: "3",
+        });
+    },
+
 });
 

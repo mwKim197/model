@@ -585,6 +585,8 @@ document.getElementById('payment').addEventListener('click', async () => {
     isPaying = true;
 
     globalDim.classList.remove('hidden'); // ✅ UI 잠금 시작
+    // 주문시작전 세션초기화
+    startPaymentSession(null, 0);
 
     try {
         //await payment(); // 💳 + 제조 프로세스 포함
@@ -675,20 +677,134 @@ function collectUsedCoupons(orderList) {
 }
 //----------------쿠폰사용처라 -------------------//
 //-----------------통합결제--------------------//
-const totalPayment = async () => {
+// 결제 세션
+const paymentSession = {
+    orderId: null,
+    orderAmount: 0,    // 원 주문금액(포인트/쿠폰 적용 전)
+    totalDiscount: 0,  // 포인트/쿠폰 누적 할인
+    usePointList: [],  // [{ uniqueMileageNo, usedAmount, pointData }]
+    reset() {
+        this.orderId = null;
+        this.orderAmount = 0;
+        this.totalDiscount = 0;
+        this.usePointList = [];
+    }
+};
+
+// 주문 시작 전에 세션 초기화
+function startPaymentSession(orderId, orderAmount) {
+    paymentSession.reset();
+    paymentSession.orderId = orderId;
+    paymentSession.orderAmount = Number(orderAmount) || 0;
+}
+
+// 포인트 누적
+function accumulatePointUsage(resp) {
+    if (!resp?.success || resp.action !== 'usePoints') return;
+    const used = Number(resp.discountAmount) || 0;
+
+    paymentSession.totalDiscount += used;
+    paymentSession.usePointList.push({
+        uniqueMileageNo: resp.pointData?.uniqueMileageNo ?? resp.point,
+        usedAmount: used,
+        pointData: resp.pointData ?? null,
+    });
+}
+
+// 세션포인트(마일리지) 사용처리
+async function commitPointUsages() {
+    if (!paymentSession.usePointList.length) return { success: true, committed: 0 };
+
+    const results = [];
+
+    for (const u of paymentSession.usePointList) {
+        const mileageNo = u.pointData?.mileageNo || u.point || u.uniqueMileageNo;
+        const totalAmtNum = u.pointData?.totalAmt || 0;
+        const usedAmount = u.usedAmount;
+
+        try {
+            const res = await useMileage(mileageNo, totalAmtNum, usedAmount);
+            results.push({ ok: true, mileageNo, usedAmount, res });
+        } catch (err) {
+            results.push({ ok: false, mileageNo, usedAmount, error: err });
+        }
+    }
+
+    const failed = results.filter(r => !r.ok);
+    if (failed.length > 0) {
+        console.error("포인트 커밋 실패", failed);
+        throw new Error(`포인트 커밋 실패: ${failed.length}/${results.length}`);
+    }
+
+    return { success: true, committed: results.length };
+}
+
+// 세션 포인트(마일리지) 사용 롤벡처리
+async function rollbackPointUsages(reason = 'ORDER_FAIL') {
+    if (!paymentSession.usePointList.length) return { success: true, rolledBack: 0 };
+
+    const results = await Promise.all(
+        paymentSession.usePointList.map(async (u, idx) => {
+            const mileageNo   = u.pointData?.mileageNo || u.point || u.uniqueMileageNo;
+            const usedAmount  = Number(u.usedAmount) || 0;
+            const totalAmtNum = u.pointData?.totalAmt || 0;
+
+            try {
+                const res = await rollbackUseMileage(mileageNo, usedAmount, totalAmtNum, reason);
+                return { ok: true, mileageNo, usedAmount, res };
+            } catch (e) {
+                return { ok: false, mileageNo, usedAmount, error: e, index: idx };
+            }
+        })
+    );
+
+    const failed = results.filter(r => !r.ok);
+    if (failed.length) {
+        console.error('[ROLLBACK POINTS] 일부 실패', failed);
+        throw new Error(`포인트 롤백 실패: ${failed.length}/${results.length}`);
+    }
+    return { success: true, rolledBack: results.length };
+}
+
+const totalPayment = async (data) => {
 
     // 리셋 타이머 종료
     clearCountdown();
     let earnRate = userInfo.earnMileage; // 적립률
     let payType; // 결제 타입 기본값 포인트 결제
-    let response = 0;
+    let response;
 
-    const orderAmount = calculateTotalPayment(orderList);
+    if (data?.action === 'usePoints') {
+        accumulatePointUsage(data);
+    }
+
+
+    const orderAmount = Math.max(
+        0,
+        Number(calculateTotalPayment(orderList, 0)) - paymentSession.totalDiscount
+    );
+
     if (orderAmount <= 0) {
 
-
-        console.log("주문목록; ", orderList);
-        await ordStart();
+        try {
+            // 포인트 사용 내역 커밋
+            await commitPointUsages();
+        } catch (e) {
+            sendLogToMain('error', `포인트 커밋 실패: ${e.message}`);
+            openAlertModal('포인트 사용 처리에 실패했습니다. 관리자에게 문의해 주세요.');
+            return;
+        }
+        // 카드 적립 없음 → 바로 주문 시작
+        try {
+            await ordStart();
+        } catch (e) {
+            // 포인트 롤벡처리
+            try { await rollbackPointUsages('ORDER_FAIL'); } catch (re) {
+                sendLogToMain('error', `포인트 롤백 실패: ${re.message}`);
+            }
+            throw e;
+        }
+        paymentSession.reset();
         return;
     }
 
@@ -735,8 +851,10 @@ const totalPayment = async () => {
         modal.classList.add('hidden');
 
         response = await pointPayment(orderAmount); // 포인트 모달 띄우기 및 포인트 사용 금액 반환
+
         sendLogToMain('info', `포인트 : ${JSON.stringify(response)}`);
         payType = response.action;
+        await totalPayment(response);
     };
     payBarcode.onclick = async () => {
 
@@ -1249,21 +1367,20 @@ function updateDynamicContent(contentType, data ,resolve) {
     const dynamicButton = document.getElementById('dynamicButton');
     const modal = document.getElementById("pointModal");
     const globalDim = document.getElementById('globalDim'); // 모달 딤
+    const closeBtn       = document.getElementById("closeModalBtn");
+
+    // 닫기 버튼 이벤트 연결
+    if (closeBtn) {
+        closeBtn.onclick = () => {
+            modal.classList.add("hidden");
+            globalDim?.classList.add("hidden");
+            resolve?.({ success: true, action: ACTIONS.EXIT });
+        };
+    }
 
     // 현재 상태를 스택에 저장
     if (stateStack.length === 0 || stateStack[stateStack.length - 1] !== contentType) {
         stateStack.push(contentType);
-    }
-
-    // 뒤로가기 함수
-    function goBack() {
-        if (stateStack.length > 1) {
-            stateStack.pop(); // 현재 상태를 제거
-            const previousState = stateStack[stateStack.length - 1]; // 이전 상태 가져오기
-            updateDynamicContent(previousState); // 이전 상태로 복원
-        } else {
-            console.warn("더 이상 뒤로 갈 상태가 없습니다.");
-        }
     }
 
     // 버튼 추가 함수
@@ -1301,47 +1418,8 @@ function updateDynamicContent(contentType, data ,resolve) {
         removeAllButtons();
 
         // 버튼 설정
-/*        addButton("addPointBtn", "적립하기", "bg-blue-500 text-white py-3 text-3xl rounded-lg  hover:bg-blue-600 w-full");*/
         addButton("usePointBtn", "사용하기", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
         addButton("joinPointBtn", "등록하기", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
-        /*addButton("immediatePaymentBtn", "바로결제", "bg-gray-400 text-white py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48");*/
-
-        // 포인트 적립버튼
-        /*document.getElementById("addPointBtn").addEventListener("click", async () => {
-            let mileageInfo = {mileageNo: inputValue, tel: ""};
-            // 휴대폰일경우 inputValue 휴대폰번호로 변경
-            if (isPhone) {
-                inputValue = "010" + phoneValues.join(""); // 전화번호 배열 to String
-                const regex = new RegExp(`^\\d{11}$`);
-
-                // 입력값 검증
-                if (!regex.test(inputValue)) {
-                    openAlertModal(`번호는 11 자리 숫자여야 합니다.`);
-                    return;
-                }
-                mileageInfo = {mileageNo: "", tel: inputValue};
-            }
-
-            if (inputValue.length >= 4 && inputValue.length <= 12) {
-
-                const pointNumberCheck = await window.electronAPI.checkMileageExists(mileageInfo);
-                if (pointNumberCheck) {
-                    if (pointNumberCheck.data.exists) {
-                        modal.classList.add("hidden"); // 모달 닫기
-                        globalDim.classList.add("hidden"); // 모달딤 닫기
-
-                        const data = pointNumberCheck.data;
-                        resolve({success: true, action: ACTIONS.IMMEDIATE_PAYMENT, point: data.uniqueMileageNo, discountAmount: 0}); // 확인 시 resolve 호출
-                    } else {
-                        openAlertModal("등록되지 않은 번호입니다.");
-                    }
-                } else {
-                    openAlertModal("유저정보 조회에 실패하였습니다.");
-                }
-            } else {
-                openAlertModal(`마일리지 번호는 4~12 자리 입니다.`);
-            }
-        });*/
 
         // 포인트 사용버튼
         document.getElementById("usePointBtn").addEventListener("click", async () => {
@@ -1392,14 +1470,6 @@ function updateDynamicContent(contentType, data ,resolve) {
             }
 
         });
-
-        // 즉시결제 포인트 적립 X
-        /*document.getElementById("immediatePaymentBtn").addEventListener("click", () => {
-            // 즉시결제 포인트적립 X
-            resolve({ success: true, action: ACTIONS.IMMEDIATE_PAYMENT, discountAmount: 0  }); // 결과 전달
-
-            modal.classList.add("hidden"); // 모달 닫기
-        });*/
 
     } else if (contentType === "passwordInput") {
 
@@ -1729,6 +1799,7 @@ function updateDynamicContent(contentType, data ,resolve) {
     }
 }
 
+
 // 동적 콘텐츠 가입,적립만 가능
 function updateDynamicContent2(contentType, data = {}) {
     return new Promise((resolve) => {
@@ -1736,20 +1807,33 @@ function updateDynamicContent2(contentType, data = {}) {
         const dynamicButton = document.getElementById('dynamicButton');
         const modal = document.getElementById("pointModal"); // ✅ 수정 완료
         const globalDim = document.getElementById('globalDim'); // 모달 딤
-        const closeBtn = document.getElementById("closeModalBtn"); // ⬅️ 추가
 
         let resolved = false;
+        const aborter = new AbortController();
+
         function safeResolve(result) {
             if (resolved) return;
             resolved = true;
-            modal.classList.add("hidden");
+            modal?.classList.add("hidden");
             globalDim?.classList.add("hidden");
+            aborter.abort();                 // ✅ 이 턴에서 붙인 모든 리스너 정리
             resolve(result);
-            isPaying = false; // 필요 시 여기서 해제
+            isPaying = false;
         }
 
-        // ✅ 닫기 버튼은 항상 EXIT로 resolve하도록 (외부 closePointModal 호출 금지)
-        closeBtn.onclick = () => safeResolve({ success: true, action: ACTIONS.EXIT });
+        // ✅ 닫기 버튼: 전역 위임 1개만
+        document.addEventListener(
+            "click",
+            (e) => {
+                const closeBtn = e.target?.closest?.("#closeModalBtn");
+
+                if (!closeBtn) return;
+                e.preventDefault();
+                safeResolve({ success: true, action: ACTIONS.EXIT });
+            },
+            { signal: aborter.signal, capture: true }
+        );
+
 
         modal.classList.remove("hidden");
         globalDim?.classList.remove("hidden");
@@ -2099,7 +2183,11 @@ const cardPayment = async (orderAmount, discountAmount) => {
         // 0.1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {
             setTimeout(async () => {
-                const res = await window.electronAPI.reqVcatHttp(totalAmount);
+                //const res = await window.electronAPI.reqVcatHttp(totalAmount);
+
+                const res = await window.electronAPI.reqVcatWebSocket(totalAmount);
+                sendLogToMain('info', res);
+                console.log("res", res);
                 //const res = {success: true};
                 sendLogToMain('info', `카드 결제 성공`);
                 resolve(res); // 결제 결과 반환

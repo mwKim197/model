@@ -19,6 +19,12 @@ const initializeUserData = async () => {
     }
 };
 
+ipcRenderer.on("callBarcode", async (event, data) => {
+    const barcode = await reqBarcode_HTTP();
+    console.log(barcode);
+});
+
+
 // 초기화 완료 후 호출 가능하도록 보장
 const ensureUserDataInitialized = async () => {
     if (!userData) {
