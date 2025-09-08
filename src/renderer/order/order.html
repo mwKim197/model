@@ -84,7 +84,7 @@
 
     <!-- 결제 선택 모달 -->
     <div id="totalPayModel"  class="fixed inset-0 flex items-center justify-center z-[997] hidden bg-black bg-opacity-50">
-        <div class="bg-white p-2 rounded-lg shadow-lg w-[760px] h-[400px] relative flex flex-col items-center justify-start">
+        <div class="bg-white p-2 rounded-lg shadow-lg w-[90%] h-[90%] relative flex flex-col items-center justify-start">
 
             <!-- 상단 안내 문구 -->
             <div class="flex w-[98%] items-center mb-4 border-b pb-2 relative">
@@ -99,11 +99,74 @@
                 </button>
             </div>
 
+            <div class="flex flex-col items-center justify-center w-full h-full">
+                <!-- 본문 70/30 레이아웃 -->
+                <div id="totalPayContent" class="flex w-full h-full px-4 gap-6">
+                    <!-- 좌측: 주문 목록 (70%) -->
+                    <div class="basis-[70%] bg-gray-50 rounded-xl p-4 overflow-auto">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-xl font-bold">주문 내역</h3>
+                            <div id="orderTotal" class="text-lg font-semibold"></div>
+                        </div>
+
+                        <!-- 테이블 헤더 -->
+                        <div class="grid grid-cols-12 px-2 py-2 text-sm text-gray-500 border-b">
+                            <div class="col-span-7">메뉴명</div>
+                            <div class="col-span-2 text-center">수량</div>
+                            <div class="col-span-3 text-right">금액</div>
+                        </div>
+
+                        <!-- 주문 항목 렌더 영역 -->
+                        <div id="orderList"></div>
+                    </div>
+
+                    <!-- 우측: 할인/적용금액 (30%) -->
+                    <div class="basis-[30%] bg-gray-50 rounded-xl p-4 flex flex-col gap-4">
+                        <!-- 쿠폰 할인 -->
+                        <section>
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-semibold text-lg">쿠폰 할인</h4>
+                                <span id="couponTotal" class="text-sm text-gray-600"></span>
+                            </div>
+                            <div id="couponList" class="mt-2 space-y-1 text-sm text-gray-700">
+                                <div class="text-gray-400">적용된 쿠폰이 없습니다.</div>
+                            </div>
+                        </section>
+
+                        <!-- 마일리지 할인 -->
+                        <section class="pt-2 border-t">
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-semibold text-lg">마일리지 할인</h4>
+                                <span id="mileageAmount" class="text-sm text-gray-600"></span>
+                            </div>
+
+                            <!-- 필요 시 입력/변경 가능한 UI (옵션) -->
+                            <!-- <input id="mileageInput" type="number" class="mt-2 w-full border rounded px-2 py-1" placeholder="마일리지 금액 입력" /> -->
+                        </section>
+
+                        <!-- 적용금액 -->
+                        <section class="pt-2 border-t">
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-semibold text-lg">적용금액</h4>
+                                <span id="appliedAmount" class="text-base font-bold"></span>
+                            </div>
+                        </section>
+
+                        <!-- 남은 결제금액 -->
+                        <section class="mt-auto pt-3 border-t">
+                            <div class="text-sm text-gray-500 mb-1">남은 결제금액</div>
+                            <div id="remainAmount" class="text-2xl font-extrabold tracking-tight"></div>
+                        </section>
+                    </div>
+                </div>
+
+            </div>
+
             <!-- 결제 방식 버튼 영역 (가로 배치) -->
             <div class="flex gap-6 justify-center mt-10 w-full">
 
                 <!-- 카드결제 -->
-                <div id="payCard" class="flex flex-col items-center justify-between border rounded-2xl w-[155px] h-[200px] p-4 hover:shadow-lg cursor-pointer">
+                <div id="payCard" class="flex flex-col items-center justify-between border rounded-2xl w-[200px] h-[300px] p-4 hover:shadow-lg cursor-pointer">
                     <img src="../../assets/basicImage/icon_card.png" alt="카드결제" class="w-16 h-12 mt-2"/>
                     <div class="text-lg font-bold mt-3">카드결제</div>
                     <div class="text-sm text-gray-500 text-center mt-1 leading-5">
@@ -112,7 +175,7 @@
                 </div>
 
                 <!-- 바코드/QR결제 -->
-                <div id="payBarcode" class="flex flex-col items-center justify-between border rounded-2xl w-[155px] h-[200px] p-4 hover:shadow-lg cursor-pointer">
+                <div id="payBarcode" class="hidden flex flex-col items-center justify-between border rounded-2xl w-[200px] h-[300px] p-4 hover:shadow-lg cursor-pointer">
                     <img src="../../assets/basicImage/icon_kakao.png" alt="바코드결제" class="w-16 h-12 mt-2"/>
                     <div class="text-lg font-bold mt-3">바코드/QR결제</div>
                     <div class="text-sm text-gray-500 text-center mt-1 leading-5">
@@ -121,7 +184,7 @@
                 </div>
 
                 <!-- 마일리지 -->
-                <div id="payPoint" class="flex flex-col items-center justify-between border rounded-2xl w-[155px] h-[200px] p-4 hover:shadow-lg cursor-pointer">
+                <div id="payPoint" class="hidden flex flex-col items-center justify-between border rounded-2xl w-[200px] h-[300px] p-4 hover:shadow-lg cursor-pointer">
                     <img src="../../assets/basicImage/icon_star.png" alt="마일리지" class="w-16 h-12 mt-2"/>
                     <div class="text-lg font-bold mt-3">마일리지</div>
                     <div class="text-sm text-gray-500 text-center mt-1 leading-5">
@@ -130,7 +193,7 @@
                 </div>
 
                 <!-- 쿠폰결제 -->
-                <div id="payCoupon" class="flex flex-col items-center justify-between border rounded-2xl w-[155px] h-[200px] p-4 hover:shadow-lg cursor-pointer">
+                <div id="payCoupon" class="hidden flex flex-col items-center justify-between border rounded-2xl w-[200px] h-[300px] p-4 hover:shadow-lg cursor-pointer">
                     <img src="../../assets/basicImage/icon_coupon.png" alt="쿠폰결제" class="w-16 h-12 mt-2"/>
                     <div class="text-lg font-bold mt-3">쿠폰결제</div>
                     <div class="text-sm text-gray-500 text-center mt-1 leading-5">

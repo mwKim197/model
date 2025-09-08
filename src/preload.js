@@ -3,7 +3,8 @@ const userApi = require('./renderer/api/userApi');
 const menuApi = require('./renderer/api/menuApi');
 const orderApi = require('./renderer/api/orderApi');
 const mileageApi = require('./renderer/api/mileageApi');
-const {SmTCatAgentClient} = require('./renderer/api/vcatApi');
+const {SmTCatAgentClient} = require('./vcat/vcat');
+const { createVcatService } = require('./renderer/api/vcatApi'); // ⬅️ 새 파일
 
 const image = require('./aws/s3/utils/image');
 const fs = require("fs");
@@ -40,6 +41,17 @@ function registerIpcListener(channel, callback) {
     // 리스너 제거 함수 반환
     return () => ipcRenderer.removeListener(channel, listener);
 }
+
+// vcat 서비스 인스턴스(WS + 플로우)
+const vcat = createVcatService({
+    wsUrl: 'ws://127.0.0.1:8000',
+    channel: 'SMTCatAgent_WEB_SAMPLE',
+    keyType: 'VNUMBER',
+    returnShape: 'compat',
+    // 쿠폰 API 베이스를 런타임에 주입
+    couponApiBase: () => NODE_SERVER_URL, // 문자열도 OK, 함수도 OK 하려면 위 구현을 살짝 수정
+});
+
 
 // contextBridge로 안전하게 API 노출
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -153,7 +165,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     fetchAndSaveUserInfo: async () => await userApi.fetchAndSaveUserInfo(),
 
     // ✅ 새 WebSocket 방식
-    reqVcatWebSocket: async (price) => {
+    /*reqVcatWebSocket: async (price) => {
 
         return wsClient.tradeCreditApprove({
             amount: String(price),
@@ -161,6 +173,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
             installment: "00",
             sign: "3",
         });
+    },*/
+
+    // 기존 WS 그대로 유지
+    reqVcatWebSocket: async (price) => vcat.reqVcatWebSocket(price),
+
+    // 새 분기 API
+    runVcatFlow: async (opts) => {
+        // couponApiBase를 동적으로 쓰고 싶다면, createVcatService에서 문자열 대신
+        // 함수 허용하도록 바꾸고 여기서 vcat.redeemCouponWithBarcode 호출 전 resolve 하도록 해도 됩니다.
+        return vcat.runVcatFlow({ ...opts });
     },
 
 });

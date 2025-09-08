@@ -813,10 +813,36 @@ const totalPayment = async (data) => {
     // 열기
     modal.classList.remove('hidden');
 
+    // ✅ 본문 렌더(좌70/우30) — orderList, paymentSession 사용
+    renderTotalPayContent(modal, orderList, paymentSession);
+
+
     const payCard = document.getElementById('payCard');
     const payBarcode = document.getElementById('payBarcode');
     const payPoint = document.getElementById('payPoint');
     const payCoupon = document.getElementById('payCoupon');
+
+
+    // 바코드 fasle 일때만안보이기
+    if (userInfo?.barcode !== false) {
+        payBarcode.classList.remove("hidden");
+    } else {
+        payBarcode.classList.add("hidden");
+    }
+
+    // 마일리지 fasle 일때만안보이기
+    if (userInfo.mileage !== false) {
+        payPoint.classList.remove("hidden");
+    } else {
+        payPoint.classList.add("hidden");
+    }
+
+    // 쿠폰 fasle 일때만안보이기
+    if (userInfo.coupon !== false) {
+        payCoupon.classList.remove("hidden");
+    } else {
+        payCoupon.classList.add("hidden");
+    }
 
     payCard.onclick = payBarcode.onclick = payPoint.onclick = payCoupon.onclick = null;
     const closeBtn = document.getElementById("totalPayCloseModalBtn");
@@ -857,7 +883,27 @@ const totalPayment = async (data) => {
         await totalPayment(response);
     };
     payBarcode.onclick = async () => {
+        modal.classList.add('hidden');
+        sendLogToMain('info', `바코드 결제 시작`);
 
+        const payEnd = await barcodePayment(orderAmount, 0);
+
+        if (!payEnd.success) {
+            sendLogToMain('error', `바코드 결제 실패`);
+            return;
+        }
+
+        // 호출부
+        const wantMileage = await openModalPromise("마일리지를 적립하시겠습니까?");
+        if (wantMileage) {
+            const mileageDone = await showPointModal(); // pointInput 플로우
+            if (mileageDone?.success && mileageDone.action === ACTIONS.ACCUMULATION_COMPLETED) {
+                sendLogToMain('info', `마일리지 적립 실행 - 번호: ${mileageDone.point}, 결제금액: ${orderAmount}, 적립률 : ${earnRate}`);
+                await addMileage(mileageDone.point, orderAmount, earnRate);
+            }
+        }
+        await ordStart(0, payEnd.cardInfo);
+  
     };
     payCoupon.onclick = async () => {
         modal.classList.add('hidden');                // 통합결제 모달 닫고
@@ -870,6 +916,164 @@ const totalPayment = async (data) => {
         await totalPayment();                       // 다시 결제 모달 열기
     };
 }
+
+// 마일리지 사용 합계 추출 (usePointList 우선)
+function getMileageUsed(ps) {
+    if (Array.isArray(ps?.usePointList)) {
+        return ps.usePointList.reduce((s, it) => s + (Number(it.usedAmount) || 0), 0);
+    }
+    return Number(ps?.mileageUsed ?? ps?.pointUsed ?? 0);
+}
+
+// 모달 결제 START
+// 통화 포맷 (₩ 1,000 같은 형태)
+const KRW = new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' });
+const asWon = n => KRW.format(Math.max(0, Math.round(Number(n) || 0)));
+
+function calcOrderTotal(list) {
+    return (list ?? []).reduce((sum, o) => {
+        const price = Number(o.price) || 0;
+        const cnt = Number(o.count) || 0;
+        return sum + price * cnt;
+    }, 0);
+}
+
+/**
+ * 통합결제 모달 내부(본문) 구성 & 렌더링
+ * - 좌: 주문 목록(name, count, price)
+ * - 우: 쿠폰 할인(메뉴+수량), 마일리지 할인(금액), 적용금액, 남은 결제금액
+ *
+ * paymentSession 가질 수 있는 값(관례):
+ *  - totalDiscount: 총 할인(쿠폰+마일리지)
+ *  - mileageUsed(또는 pointUsed): 마일리지 사용 금액
+ *  - couponItems: [{menuId, name, count, discount}]  // 선택(있으면 사용)
+ *  - couponMenuIds: [menuId, ...]                    // 선택(없으면 전체할인 가정)
+ */
+function renderTotalPayContent(modalEl, orderList, paymentSession) {
+    // 모달 본문 컨테이너(네가 넣어둔 “메뉴 데이터 넣기” 영역)를 찾아서 교체
+    const bodyHost = modalEl.querySelector('.flex.flex-col.items-center.justify-center.w-full.h-full');
+    if (!bodyHost) return;
+
+    // ------ 데이터 준비 ------
+    const orderTotal = calcOrderTotal(orderList);
+    const mileageUsed = getMileageUsed(paymentSession);
+
+    // 쿠폰 할인 파트: 우선순위
+    // 1) couponItems 배열이 있으면 거기 discount 합산
+    // 2) 없고 couponMenuIds 있으면 해당 메뉴 “전액 할인” 가정(필요시 부분할인으로 바꿔)
+    let couponTotal = 0;
+    let couponLines = [];
+
+    if (Array.isArray(paymentSession?.couponItems) && paymentSession.couponItems.length > 0) {
+        couponLines = paymentSession.couponItems.map(ci => ({
+            name: ci.name,
+            count: ci.count,
+            discount: Number(ci.discount) || 0,
+        }));
+        couponTotal = couponLines.reduce((s, r) => s + r.discount, 0);
+    } else if (Array.isArray(paymentSession?.couponMenuIds) && paymentSession.couponMenuIds.length > 0) {
+        const set = new Set(paymentSession.couponMenuIds);
+        couponLines = (orderList ?? [])
+            .filter(o => set.has(o.menuId))
+            .map(o => {
+                const discount = (Number(o.price) || 0) * (Number(o.count) || 0); // 전액 할인 가정
+                return { name: o.name, count: o.count, discount };
+            });
+        couponTotal = couponLines.reduce((s, r) => s + r.discount, 0);
+    } else if (couponTotal === 0 && Number(paymentSession?.totalDiscount) > 0) {
+        const derived = Number(paymentSession.totalDiscount) - mileageUsed;
+        if (derived > 0) {
+            couponTotal = derived;
+            // couponLines는 비워둠(합계만 헤더에 표시)
+        }
+    } else {
+        couponLines = []; // 적용된 쿠폰 없음
+        couponTotal = 0;
+    }
+
+    // 총 할인은 paymentSession.totalDiscount를 신뢰하되,
+    // 없으면 couponTotal + mileageUsed로 계산
+    const totalDiscount = Number(paymentSession?.totalDiscount ?? (couponTotal + mileageUsed)) || 0;
+
+    // 적용금액 & 남은 결제금액 (네 로직과 맞추기 위해 동일 값 사용)
+    const appliedAmount = Math.max(0, orderTotal - totalDiscount);
+    const remainAmount  = appliedAmount;
+
+    // ------ 마크업 그리기 ------
+    bodyHost.innerHTML = `
+    <div id="totalPayContent" class="flex w-full h-full px-4 gap-6">
+      <!-- 좌측: 주문 목록 (70%) -->
+      <div class="basis-[70%] bg-gray-50 rounded-xl p-4 overflow-auto">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-xl font-bold">주문 내역</h3>
+          <div id="orderTotal" class="text-lg font-semibold">${asWon(orderTotal)}</div>
+        </div>
+
+        <div class="grid grid-cols-12 px-2 py-2 text-sm text-gray-500 border-b">
+          <div class="col-span-7">메뉴명</div>
+          <div class="col-span-2 text-center">수량</div>
+          <div class="col-span-3 text-right">금액</div>
+        </div>
+        <div id="orderListView"></div>
+      </div>
+
+      <!-- 우측: 할인/적용금액 (30%) -->
+      <div class="basis-[30%] bg-gray-50 rounded-xl p-4 flex flex-col gap-4">
+        <section>
+          <div class="flex items-center justify-between">
+            <h4 class="font-semibold text-lg">쿠폰 할인</h4>
+            <span id="couponTotal" class="text-sm text-gray-600">${couponTotal > 0 ? '-' + asWon(couponTotal) : ''}</span>
+          </div>
+          <div id="couponList" class="mt-2 space-y-1 text-sm text-gray-700">
+            ${couponLines.length === 0
+        ? `<div class="text-gray-400">적용된 쿠폰이 없습니다.</div>`
+        : couponLines.map(r => `
+                  <div class="flex items-center justify-between">
+                    <div class="truncate pr-2">• ${r.name} <span class="text-gray-500">x ${r.count}</span></div>
+                    <div class="text-right text-gray-600">-${asWon(r.discount)}</div>
+                  </div>
+                `).join('')}
+          </div>
+        </section>
+
+        <section class="pt-2 border-t">
+          <div class="flex items-center justify-between">
+            <h4 class="font-semibold text-lg">마일리지 할인</h4>
+            <span id="mileageAmount" class="text-sm text-gray-600">${mileageUsed > 0 ? '-' + asWon(mileageUsed) : ''}</span>
+          </div>
+        </section>
+
+        <section class="pt-2 border-t">
+          <div class="flex items-center justify-between">
+            <h4 class="font-semibold text-lg">적용금액</h4>
+            <span id="appliedAmount" class="text-base font-bold">${asWon(appliedAmount)}</span>
+          </div>
+        </section>
+
+        <section class="mt-auto pt-3 border-t">
+          <div class="text-sm text-gray-500 mb-1">남은 결제금액</div>
+          <div id="remainAmount" class="text-2xl font-extrabold tracking-tight">${asWon(remainAmount)}</div>
+        </section>
+      </div>
+    </div>
+  `;
+
+    // 주문 목록 렌더
+    const listHost = bodyHost.querySelector('#orderListView');
+    (orderList ?? []).forEach(o => {
+        const priceLine = (Number(o.price) || 0) * (Number(o.count) || 0);
+        const row = document.createElement('div');
+        row.className = 'grid grid-cols-12 px-2 py-3 border-b items-center';
+        row.innerHTML = `
+      <div class="col-span-7 font-medium">${o.name}</div>
+      <div class="col-span-2 text-center">${o.count}</div>
+      <div class="col-span-3 text-right font-semibold">${asWon(priceLine)}</div>
+    `;
+        listHost.appendChild(row);
+    });
+}
+
+// 모달결제 END
 //-----------------통합결제--------------------//
 //-----------------쿠폰조회--------------------//
 const openCouponInputModal = async () => {
@@ -2183,9 +2387,12 @@ const cardPayment = async (orderAmount, discountAmount) => {
         // 0.1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {
             setTimeout(async () => {
-                //const res = await window.electronAPI.reqVcatHttp(totalAmount);
+                let res = await window.electronAPI.reqVcatHttp(totalAmount);
 
-                const res = await window.electronAPI.reqVcatWebSocket(totalAmount);
+                if (userInfo?.vcat) {
+                    res = await window.electronAPI.reqVcatWebSocket(totalAmount);
+                }
+
                 sendLogToMain('info', res);
                 console.log("res", res);
                 //const res = {success: true};
@@ -2250,10 +2457,10 @@ const cardPayment = async (orderAmount, discountAmount) => {
 }
 
 const getBarcode = async () => {
-    console.log("바코드 조회호출");
-    // 바코드 조회
-    const res = await window.electronAPI.reqBarcodeHTTP();
 
+    // 바코드 조회
+    // nvcat const res = await window.electronAPI.reqBarcodeHTTP();
+    const res = await window.electronAPI.runVcatFlow(); // vcat
     console.log(res);
     return res;
 }
@@ -2268,7 +2475,7 @@ const barcodePayment = async (orderAmount, discountAmount = 0) => {
         // 0.1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {
             setTimeout(async () => {
-                const result= await window.electronAPI.reqPayproBarcode(totalAmount);
+                const result= await window.electronAPI.runVcatFlow("APP_CARD", totalAmount);
                 //const res = {success: true};
                 resolve(result); // 결제 결과 반환
             }, 100);
