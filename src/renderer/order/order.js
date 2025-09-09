@@ -2387,10 +2387,12 @@ const cardPayment = async (orderAmount, discountAmount) => {
         // 0.1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {
             setTimeout(async () => {
-                let res = await window.electronAPI.reqVcatHttp(totalAmount);
+                let res;
 
                 if (userInfo?.vcat) {
                     res = await window.electronAPI.reqVcatWebSocket(totalAmount);
+                } else {
+                    res = await window.electronAPI.reqVcatHttp(totalAmount);
                 }
 
                 sendLogToMain('info', res);

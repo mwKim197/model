@@ -35,7 +35,7 @@ function isDuplicateBarcode(barcode, msWindow = 3000) {
 // ----- 후속 처리(앱카드 승인 / 쿠폰 사용) 기본 구현 -----
 // 필요하면 외부 콜백으로 갈아끼울 수 있도록 옵션화
 async function defaultApproveAppCardWithBarcode({ amount, barcode, orderId }) {
-    const resp = await fetch('http://127.0.0.1:9188/barcode-approve', {
+    const resp = await fetch('http://127.0.0.1:13855/barcode-approve', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ func: 'REQ_BARCODE_APPROVE', amount, barcode, orderId, installment: '00' }),
     });
@@ -57,16 +57,12 @@ async function defaultRedeemCouponWithBarcode({ barcode, orderId, userId, storeI
 
 // ----- 서비스 팩토리 -----
 function createVcatService({
-                               wsUrl = 'ws://127.0.0.1:8000',
+                               wsUrl = 'ws://127.0.0.1:13855',
                                channel = 'SMTCatAgent_WEB_SAMPLE',
                                keyType = 'VNUMBER',
                                returnShape = 'compat',
                                logger = console,
 
-                               // 후속 처리 커스터마이즈 포인트(선택)
-                               approveAppCardWithBarcode = defaultApproveAppCardWithBarcode,
-                               redeemCouponWithBarcode = defaultRedeemCouponWithBarcode,
-                               couponApiBase = 'https://api.yourdomain.com', // 필요시 preload에서 NODE_SERVER_URL 주입
                            } = {}) {
     const client = new SmTCatAgentClient({ wsUrl, channel, keyType, returnShape, logger });
 

@@ -286,7 +286,7 @@
 
 // ----- 바코드 후속 처리: 앱카드 승인 / 쿠폰 사용 -----
     async function approveAppCardWithBarcode({ amount, barcode, orderId }) {
-        const resp = await fetch('http://127.0.0.1:9188/barcode-approve', {
+        const resp = await fetch('http://127.0.0.1:13855/barcode-approve', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
