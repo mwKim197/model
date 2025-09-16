@@ -903,7 +903,7 @@ const totalPayment = async (data) => {
             }
         }
         await ordStart(0, payEnd.cardInfo);
-  
+
     };
     payCoupon.onclick = async () => {
         modal.classList.add('hidden');                // 통합결제 모달 닫고
@@ -1223,10 +1223,10 @@ const payment = async () => {
 
     // 결제 타입 지정 userInfo.payType == true "마일리지 미사용"
     if (userInfo.payType) {
+
         // 현재 결제 방식이 마일리지를 제외한 카드 밖에없어서 강제 카드 넣기. 추후 바코드 추가
         payType = ACTIONS.USE_CARD;
     } else {
-
         response = await pointPayment(orderAmount); // 포인트 모달 띄우기 및 포인트 사용 금액 반환
         sendLogToMain('info', `포인트 : ${JSON.stringify(response)}`);
         payType = response.action;
@@ -1566,6 +1566,7 @@ function resetInput() {
 
 let stateStack = []; // 상태 스택
 
+// 동적 콘텐츠 업데이트 함수
 function updateDynamicContent(contentType, data ,resolve) {
     const dynamicContent = document.getElementById("dynamicContent");
     const dynamicButton = document.getElementById('dynamicButton');
@@ -1585,6 +1586,17 @@ function updateDynamicContent(contentType, data ,resolve) {
     // 현재 상태를 스택에 저장
     if (stateStack.length === 0 || stateStack[stateStack.length - 1] !== contentType) {
         stateStack.push(contentType);
+    }
+
+    // 뒤로가기 함수
+    function goBack() {
+        if (stateStack.length > 1) {
+            stateStack.pop(); // 현재 상태를 제거
+            const previousState = stateStack[stateStack.length - 1]; // 이전 상태 가져오기
+            updateDynamicContent(previousState); // 이전 상태로 복원
+        } else {
+            console.warn("더 이상 뒤로 갈 상태가 없습니다.");
+        }
     }
 
     // 버튼 추가 함수
@@ -1622,8 +1634,47 @@ function updateDynamicContent(contentType, data ,resolve) {
         removeAllButtons();
 
         // 버튼 설정
+        addButton("addPointBtn", "적립하기", "bg-blue-500 text-white py-3 text-3xl rounded-lg  hover:bg-blue-600 w-full");
         addButton("usePointBtn", "사용하기", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
         addButton("joinPointBtn", "등록하기", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
+        addButton("immediatePaymentBtn", "바로결제", "bg-gray-400 text-white py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48");
+
+        // 포인트 적립버튼
+        document.getElementById("addPointBtn").addEventListener("click", async () => {
+            let mileageInfo = {mileageNo: inputValue, tel: ""};
+            // 휴대폰일경우 inputValue 휴대폰번호로 변경
+            if (isPhone) {
+                inputValue = "010" + phoneValues.join(""); // 전화번호 배열 to String
+                const regex = new RegExp(`^\\d{11}$`);
+
+                // 입력값 검증
+                if (!regex.test(inputValue)) {
+                    openAlertModal(`번호는 11 자리 숫자여야 합니다.`);
+                    return;
+                }
+                mileageInfo = {mileageNo: "", tel: inputValue};
+            }
+
+            if (inputValue.length >= 4 && inputValue.length <= 12) {
+
+                const pointNumberCheck = await window.electronAPI.checkMileageExists(mileageInfo);
+                if (pointNumberCheck) {
+                    if (pointNumberCheck.data.exists) {
+                        modal.classList.add("hidden"); // 모달 닫기
+                        globalDim.classList.add("hidden"); // 모달딤 닫기
+
+                        const data = pointNumberCheck.data;
+                        resolve({success: true, action: ACTIONS.IMMEDIATE_PAYMENT, point: data.uniqueMileageNo, discountAmount: 0}); // 확인 시 resolve 호출
+                    } else {
+                        openAlertModal("등록되지 않은 번호입니다.");
+                    }
+                } else {
+                    openAlertModal("유저정보 조회에 실패하였습니다.");
+                }
+            } else {
+                openAlertModal(`마일리지 번호는 4~12 자리 입니다.`);
+            }
+        });
 
         // 포인트 사용버튼
         document.getElementById("usePointBtn").addEventListener("click", async () => {
@@ -1675,6 +1726,14 @@ function updateDynamicContent(contentType, data ,resolve) {
 
         });
 
+        // 즉시결제 포인트 적립 X
+        document.getElementById("immediatePaymentBtn").addEventListener("click", () => {
+            // 즉시결제 포인트적립 X
+            resolve({ success: true, action: ACTIONS.IMMEDIATE_PAYMENT, discountAmount: 0  }); // 결과 전달
+
+            modal.classList.add("hidden"); // 모달 닫기
+        });
+
     } else if (contentType === "passwordInput") {
 
         playAudio('../../assets/audio/비밀번호 4자리를 입력해주세요.mp3');
@@ -1723,7 +1782,7 @@ function updateDynamicContent(contentType, data ,resolve) {
             } else {
                 openAlertModal(`마일리지 페스워드 번호는 ${passwordCount} 자리 입니다.`);
             }
-
+            
         });
 
     } else if (contentType === "usePoints") {
@@ -2042,7 +2101,7 @@ function updateDynamicContent2(contentType, data = {}) {
         modal.classList.remove("hidden");
         globalDim?.classList.remove("hidden");
         dynamicButton.innerHTML = "";
-        
+
         // 버튼 이벤트 초기화
         function clearButtons() {
             dynamicButton.innerHTML = "";
@@ -2387,16 +2446,7 @@ const cardPayment = async (orderAmount, discountAmount) => {
         // 0.1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {
             setTimeout(async () => {
-                let res;
-
-                if (userInfo?.vcat) {
-                    res = await window.electronAPI.reqVcatWebSocket(totalAmount);
-                } else {
-                    res = await window.electronAPI.reqVcatHttp(totalAmount);
-                }
-
-                sendLogToMain('info', res);
-                console.log("res", res);
+                const res = await window.electronAPI.reqVcatHttp(totalAmount);
                 //const res = {success: true};
                 sendLogToMain('info', `카드 결제 성공`);
                 resolve(res); // 결제 결과 반환
@@ -2441,8 +2491,8 @@ const cardPayment = async (orderAmount, discountAmount) => {
             modal.classList.add('hidden');
             // 결제실패시 60초 카운트다운 시작
             resetCountdown();
-            openAlertModal("결제에 실패하였습니다. 다시 시도해주세요.", "error");
-            sendLogToMain('error', `카드 결제 실패: ${result.message}`);
+            openAlertModal(`결제에 실패하였습니다. 다시 시도해주세요.`, "error");
+            sendLogToMain('error', `카드 결제 실패: ${JSON.stringify(result)}`);
             return false;
         }
     } catch (error) {
