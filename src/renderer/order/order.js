@@ -2446,9 +2446,18 @@ const cardPayment = async (orderAmount, discountAmount) => {
         // 0.1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {
             setTimeout(async () => {
-                const res = await window.electronAPI.reqVcatHttp(totalAmount);
+                let res;
+
+                if (userInfo?.vcat) {
+                    console.log("VCAT");
+                    res = await window.electronAPI.reqVcatWebSocket(totalAmount);
+                } else {
+                    console.log("NVCAT");
+                    res = await window.electronAPI.reqVcatHttp(totalAmount);
+                }
+                sendLogToMain('info', `카드 결제 요청 성공 결과: ${JSON.stringify(res)}`);
+                console.log("res", res);
                 //const res = {success: true};
-                sendLogToMain('info', `카드 결제 성공`);
                 resolve(res); // 결제 결과 반환
             }, 100);
         });

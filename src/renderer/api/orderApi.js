@@ -32,8 +32,7 @@ const ensureUserDataInitialized = async () => {
     }
 };
 
-/**결제 요청
- * */
+/**결제 요청 */
 const reqVCAT_HTTP = async (cost, halbu) => {
     let sendMsg;
     let FS = '\x1C';
