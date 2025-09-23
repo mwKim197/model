@@ -556,39 +556,46 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // 결제
-document.getElementById('payment').addEventListener('click', async () => {
+async function startPayment() {
     const globalDim = document.getElementById('globalDim');
 
-    if (orderList.length === 0) {
-        return openAlertModal("상품을 선택해 주세요");
+    if (!Array.isArray(orderList) || orderList.length === 0) {
+        openAlertModal && openAlertModal("상품을 선택해 주세요");
+        return { ok: false, reason: 'EMPTY_ORDER' };
     }
+    if (isPaying) return { ok: false, reason: 'ALREADY_PAYING' };
 
-    if (isPaying) return; // 중복 클릭 방지
     isPaying = true;
-
-    globalDim.classList.remove('hidden'); // ✅ UI 잠금 시작
+    globalDim && globalDim.classList.remove('hidden'); // 🔒 UI 잠금
 
     try {
-        await payment(); // 💳 + 제조 프로세스 포함
+        await payment(); // 💳 + 제조 프로세스 포함(네 기존 함수)
+
         console.log('✅ 결제 및 제조 요청 완료');
 
-        // ✅ 제조가 끝날 때까지 잠금 유지하고 싶으면 아래 timeout 설정
+        // 제조 완료까지 잠금 유지하고 싶으면 타임아웃/신호에 맞춰 해제
         setTimeout(() => {
             isPaying = false;
-            globalDim.classList.add('hidden');
-        }, 3 * 1000); // 예: 3초 후 해제
+            globalDim && globalDim.classList.add('hidden'); // 🔓 UI 해제
+        }, 3 * 1000);
 
+        return { ok: true };
     } catch (e) {
         console.error('[ERROR] 결제 실패:', e);
-        sendLogToMain('error', `결제 실패: ${JSON.stringify(e)}`);
+        sendLogToMain && sendLogToMain('error', `결제 실패: ${JSON.stringify(e)}`);
 
-        // ✅ 에러 메시지를 알림에 사용
-        const message = e?.message || "결제 실패: 다시 시도해 주세요";
-        openAlertModal(message, "error");
+        const message = (e && e.message) || "결제 실패: 다시 시도해 주세요";
+        openAlertModal && openAlertModal(message, "error");
 
         isPaying = false;
-        globalDim.classList.add('hidden'); // ❗ 실패 시도 UI 해제 필요
+        globalDim && globalDim.classList.add('hidden');
+        return { ok: false, reason: 'PAYMENT_ERROR', error: message };
     }
+}
+
+// 결제 이벤트
+document.getElementById('payment').addEventListener('click', async () => {
+    await startPayment();
 });
 
 // 세자리 콤마 숫자로 변경
@@ -1919,6 +1926,116 @@ function setVersion(version) {
     document.getElementById('version').textContent = "v" + version;
 }
 
+///////////////////// 음성호출 API /////////////////////
+// 🔧 이름 정규화: 소문자, 공백/특수문자 제거, 괄호 제거
+function normalizeName(s) {
+    return String(s || "")
+        .toLowerCase()
+        .replace(/\s+/g, "")
+        .replace(/[\(\)\[\]\{\}]/g, "")     // 괄호류 제거
+        .replace(/[^\w가-힣]/g, "");        // 영문/숫자/한글만 남김
+}
+
+// 🔎 간단한 매칭 스코어: 완전일치 > 시작일치 > 포함
+function nameScore(productName, q) {
+    const n = normalizeName(productName);
+    if (n === q) return 100;
+    if (n.startsWith(q)) return 80;
+    if (n.includes(q)) return 60;
+    return 0;
+}
+
+// ✅ allProducts에서 이름으로 최적 후보 1개 찾기 (품절 아닌 것 우선)
+function findProductByName(name) {
+    const q = normalizeName(name);
+    if (!q) return null;
+
+    const candidates = (allProducts || [])
+        .filter(p => p && p.name)
+        .map(p => ({ p, s: nameScore(p.name, q) }))
+        .filter(x => x.s > 0)
+        // 스코어 내림차순, 품절(no) 우선
+        .sort((a, b) => (b.s - a.s) || ((a.p.empty === 'yes') - (b.p.empty === 'yes')));
+
+    return candidates.length ? candidates[0].p : null;
+}
+
+// 2) menuId + 수량으로 담기 (한 번에 증가/생성)
+async function addItemToOrderWithQty(menuId, qty = 1) {
+    qty = parseInt(qty, 10);
+    if (!qty || qty < 1) return;
+
+    // 현재 총 갯수 제한 체크
+    const currentTotal = (typeof totalCount === 'number')
+        ? totalCount
+        : (orderList || []).reduce((sum, o) => sum + (o.count || 1), 0);
+    if (typeof limitCount === 'number' && currentTotal + qty > limitCount) {
+        return openAlertModal && openAlertModal(`${limitCount}개 이상 주문 할 수 없습니다.`);
+    }
+
+    const product = (allProducts || []).find(p => p.menuId === menuId);
+    if (!product) {
+        console.error(`Product not found for menuId: ${menuId}`);
+        return;
+    }
+    if (product.empty === 'yes') {
+        return openAlertModal && openAlertModal(`"${product.name}" 는 품절입니다.`);
+    }
+
+    // 이미 담겨 있으면 수량만 한번에 증가
+    let existingOrder = orderList.find(o => o.menuId === product.menuId);
+    if (existingOrder) {
+        existingOrder.count = (existingOrder.count || 1) + qty;
+
+        // UI 갱신
+        const orderItem = document.querySelector(`[data-order-id="${existingOrder.orderId}"]`);
+        if (orderItem) {
+            const quantitySpan = orderItem.querySelector('.quantity');
+            const itemTotalElement = orderItem.querySelector('.item-total');
+            if (quantitySpan) quantitySpan.textContent = existingOrder.count;
+            const unitPrice = Number(existingOrder.price ?? product.price ?? 0);
+            if (itemTotalElement) itemTotalElement.textContent = (existingOrder.count * unitPrice).toLocaleString();
+        }
+        updateOrderSummary && updateOrderSummary();
+        return;
+    }
+
+    // 없으면 1개 생성 후, qty>1이면 바로 원하는 수량으로 맞춰줌
+    await addItemToOrder(menuId); // 네 기존 함수 그대로 재사용 (UI 생성/오디오 등)
+    if (qty > 1) {
+        existingOrder = orderList.find(o => o.menuId === product.menuId);
+        if (existingOrder) {
+            existingOrder.count = qty;
+            const orderItem = document.querySelector(`[data-order-id="${existingOrder.orderId}"]`);
+            if (orderItem) {
+                const quantitySpan = orderItem.querySelector('.quantity');
+                const itemTotalElement = orderItem.querySelector('.item-total');
+                if (quantitySpan) quantitySpan.textContent = qty;
+                const unitPrice = Number(existingOrder.price ?? product.price ?? 0);
+                if (itemTotalElement) itemTotalElement.textContent = (qty * unitPrice).toLocaleString();
+            }
+            updateOrderSummary && updateOrderSummary();
+        }
+    }
+}
+
+// 3) "메뉴명 + 수량"으로 담기
+async function addItemByMenuName(menuName, qty = 1) {
+    const product = findProductByName(menuName);
+    if (!product) {
+        openAlertModal && openAlertModal(`"${menuName}" 상품을 찾지 못했습니다.`);
+        return false;
+    }
+    if (product.empty === 'yes') {
+        openAlertModal && openAlertModal(`"${product.name}" 는 품절입니다.`);
+        return false;
+    }
+    await addItemToOrderWithQty(product.menuId, qty);
+    return true;
+}
+
+
+///////////////////// 음성호출 API /////////////////////
 async function fetchData() {
     try {
         const basePath = await window.electronAPI.getBasePath();
