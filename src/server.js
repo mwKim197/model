@@ -15,6 +15,7 @@ const { getBasePath } = require('./aws/s3/utils/cacheDirManager');
 const {checkForUpdatesManually} = require("./updater");
 const app = express();
 const server = createServer(app);
+const { getMainWindow } = require('./windows/mainWindow');
 
 const isDevelopment = (process.env.NODE_ENV || '').trim().toLowerCase() === 'development';
 const appPath = isDevelopment ? path.resolve(process.cwd()) : process.resourcesPath;
@@ -125,6 +126,29 @@ app.get('/logs/:filename', (req, res) => {
         }
     });
 });
+
+////////////////////////원격화면조작//////////////////
+// 메뉴 추가 API
+app.post('/order/add-item', (req, res) => {
+    const { menuName, qty } = req.body;
+    const win = getMainWindow();
+    if (win && !win.isDestroyed()) {
+        win.webContents.send("order-add-item", { menuName, qty });
+        return res.json({ success: true, action: "add-item", menuName, qty });
+    }
+    res.status(500).json({ success: false, error: "mainWindow 없음" });
+});
+
+// 결제 시작 API
+app.post('/order/start-payment', (req, res) => {
+    const win = getMainWindow();
+    if (win && !win.isDestroyed()) {
+        win.webContents.send("order-start-payment", {});
+        return res.json({ success: true, action: "start-payment" });
+    }
+    res.status(500).json({ success: false, error: "mainWindow 없음" });
+});
+////////////////////////원격화면조작//////////////////
 
 // Keep-Alive 설정 추가
 server.keepAliveTimeout = 300000; // 5분

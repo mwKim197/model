@@ -2034,6 +2034,17 @@ async function addItemByMenuName(menuName, qty = 1) {
     return true;
 }
 
+// 서버에서 메뉴 추가 호출
+window.electronAPI.on("order-add-item", async (data) => {
+    console.log("👉 서버에서 addItemByMenuName 호출 요청:", data);
+    await addItemByMenuName(data.menuName, data.qty || 1);
+});
+
+// 서버에서 결제 시작 호출
+window.electronAPI.on("order-start-payment", async () => {
+    console.log("👉 서버에서 startPayment 호출 요청");
+    await startPayment();
+});
 
 ///////////////////// 음성호출 API /////////////////////
 async function fetchData() {

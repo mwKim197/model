@@ -38,6 +38,11 @@ function registerIpcListener(channel, callback) {
 
 // contextBridge로 안전하게 API 노출
 contextBridge.exposeInMainWorld('electronAPI', {
+
+    // 함수 직접 호출
+    on: (channel, callback) => {
+        ipcRenderer.on(channel, (_, data) => callback(data));
+    },
     // 서버 URL 반환
     getNodeServerUrl: async () => {
         if (!NODE_SERVER_URL) {
