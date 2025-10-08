@@ -1573,17 +1573,24 @@ const cardPayment = async (orderAmount, discountAmount) => {
 
     // 열기
     modal.classList.remove('hidden');
+
     try {
         // 0.1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {
             setTimeout(async () => {
-                const res = await window.electronAPI.reqVcatHttp(totalAmount);
+                let res;
+
+                if (userInfo?.vcat) {
+                    res = await window.electronAPI.reqVcatWebSocket(totalAmount);
+                } else {
+                    res = await window.electronAPI.reqVcatHttp(totalAmount);
+                }
+
                 //const res = {success: true};
                 sendLogToMain('info', `카드 결제 성공`);
                 resolve(res); // 결제 결과 반환
             }, 100);
         });
-
 
         // 결제 성공 여부 확인
         if (result.success) {
@@ -1622,8 +1629,8 @@ const cardPayment = async (orderAmount, discountAmount) => {
             modal.classList.add('hidden');
             // 결제실패시 60초 카운트다운 시작
             resetCountdown();
-            openAlertModal("결제에 실패하였습니다. 다시 시도해주세요.", "error");
-            sendLogToMain('error', `카드 결제 실패: ${result.message}`);
+            openAlertModal(`결제에 실패하였습니다. 다시 시도해주세요.`, "error");
+            sendLogToMain('error', `카드 결제 실패: ${JSON.stringify(result)}`);
             return false;
         }
     } catch (error) {
