@@ -60,6 +60,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     on: (channel, callback) => {
         ipcRenderer.on(channel, (_, data) => callback(data));
     },
+
+    send: (channel, data) => {
+    ipcRenderer.send(channel, data);
+    },
+
     // 서버 URL 반환
     getNodeServerUrl: async () => {
         if (!NODE_SERVER_URL) {

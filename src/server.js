@@ -20,6 +20,8 @@ const { getMainWindow } = require('./windows/mainWindow');
 const isDevelopment = (process.env.NODE_ENV || '').trim().toLowerCase() === 'development';
 const appPath = isDevelopment ? path.resolve(process.cwd()) : process.resourcesPath;
 const { app: electronApp } = require('electron');
+const { ipcMain } = require('electron');
+
 const {getUser} = require("./util/store");
 const LOG_DIR = path.join(electronApp.getPath('appData'), 'model', 'logs');
 
@@ -187,8 +189,46 @@ function execInRenderer(jsCode, { timeout = 15000 } = {}) {
     ]);
 }
 
-// 예시: 바코드 스캔 API (원하면 다른 라우터 파일에서도 execInRenderer 재사용 가능)
+// 심코드 바코드 스캔 API
 app.post('/call-barcode', async (req, res) => {
+    try {
+        const window = getMainWindow(); // BrowserWindow 객체 가져오기
+        if (!window) return res.status(500).send("화면이 실행되지않았습니다.");
+
+        // 렌더러에 스캔 요청
+        window.webContents.send("order-barcode-scan");
+
+        // 렌더러에서 "barcode-scanned" 이벤트를 기다림
+        const barcode = await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error("Timeout")), 20000);
+
+            ipcMain.once("barcode-scanned", (_, data) => {
+                clearTimeout(timeout);
+                resolve(data.barcode);
+            });
+        });
+
+        console.log("✅ 스캔 결과:", barcode);
+
+        // 3️⃣ Lambda 호출
+        const saveUrl = `${BARCODE_API_BASE}?func=barcode-save`;
+        const resp = await fetch(saveUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: user, code: barcode })
+        });
+
+        const data = await resp.json();
+        return res.json({ success: true, barcode, savedAt: data?.scanAt ?? null });
+
+    } catch (e) {
+        console.error("❌ 바코드 처리 오류:", e);
+        return res.status(500).json({ success: false, message: e.message });
+    }
+});
+
+// NVCAT 바코드 스캔 API
+/*app.post('/call-barcode', async (req, res) => {
     try {
         // 1) 바코드 스캔 (렌더러에서 대기 -> 결과 반환)
         const result = await execInRenderer(`(async () => {
@@ -237,7 +277,7 @@ app.post('/call-barcode', async (req, res) => {
     } catch (e) {
         return res.status(500).json({ success: false, message: e.message });
     }
-});
+});*/
 
 // Keep-Alive 설정 추가
 server.keepAliveTimeout = 300000; // 5분

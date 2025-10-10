@@ -591,8 +591,6 @@ async function startPayment() {
     startPaymentSession(null, 0);
 
     try {
-        await payment(); // 💳 + 제조 프로세스 포함(네 기존 함수)
-
         //await payment(); // 💳 + 제조 프로세스 포함
         await totalPayment(); // 💳 + 제조 프로세스 포함
         console.log('✅ 결제 및 제조 요청 완료');
@@ -2472,7 +2470,7 @@ const cardPayment = async (orderAmount, discountAmount) => {
         // 0.1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {
             setTimeout(async () => {
-                /*let res;
+                let res;
 
                 if (userInfo?.vcat) {
                     console.log("VCAT");
@@ -2482,8 +2480,8 @@ const cardPayment = async (orderAmount, discountAmount) => {
                     res = await window.electronAPI.reqVcatHttp(totalAmount);
                 }
                 sendLogToMain('info', `카드 결제 요청 성공 결과: ${JSON.stringify(res)}`);
-                console.log("res", res);*/
-                const res = {success: true};
+                console.log("res", res);
+
                 resolve(res); // 결제 결과 반환
             }, 100);
         });
@@ -2491,13 +2489,13 @@ const cardPayment = async (orderAmount, discountAmount) => {
 
         // 결제 성공 여부 확인
         if (result.success) {
-            const cardInfo = {};
-            /*const cardInfoRaw = result.message; // 전체 카드결제 데이터
+            let cardInfo = {};
+            const cardInfoRaw = result.message; // 전체 카드결제 데이터
             const parsed = cardInfoRaw.parsedData;
 
             const getValue = (key) => parsed.find((item) => item.name === key)?.value || "";
 
-            const cardInfo = {
+            cardInfo = {
                 approvalNo: getValue("승인번호"),                // 승인번호
                 approvalDateTime: formatDate(getValue("승인일시")), // 승인일시 변환
                 issuerName: getValue("발급사명"),                 // 카드사명
@@ -2510,7 +2508,7 @@ const cardPayment = async (orderAmount, discountAmount) => {
             sendLogToMain('info', `💳 최종 카드 정보: ${JSON.stringify(cardInfo)}`);
             sendLogToMain('info', `결제 성공 - 결제 금액:  ${totalAmount}`);
             sendLogToMain('info', `주문 목록 ${JSON.stringify(orderList)}`);
-            sendLogToMain('info', `결제 카드 정보: ${JSON.stringify(cardInfo)}`);*/
+            sendLogToMain('info', `결제 카드 정보: ${JSON.stringify(cardInfo)}`);
 
             // 모달 닫기
             modal.classList.add('hidden');
@@ -2547,8 +2545,8 @@ const cardPayment = async (orderAmount, discountAmount) => {
 const getBarcode = async () => {
 
     // 바코드 조회
-    // nvcat const res = await window.electronAPI.reqBarcodeHTTP();
-    const res = await window.electronAPI.runVcatFlow(); // vcat
+    const res = await window.electronAPI.reqBarcodeHTTP(); // nvcat
+    // vcat const res = await window.electronAPI.runVcatFlow();
     console.log(res);
     return res;
 }
@@ -2953,6 +2951,86 @@ window.electronAPI.on("order-start-payment", async () => {
 });
 
 ///////////////////// 음성호출 API /////////////////////
+///////////////////// 바코드 스캔 //////////////////////
+// 바코드 입력 버퍼
+let barcodeBuffer = "";
+let lastTime = Date.now();
+let isRemoteScanActive = false; // ✅ 서버 스캔 모드 플래그
+
+// 바코드 입력 이벤트 등록
+document.addEventListener("keydown", (e) => {
+
+    // 서버 스캔 모드일 때는 handleBarcode 무시
+    if (isRemoteScanActive) return;
+
+    const now = Date.now();
+
+    // 입력 속도 판별 (사람 타이핑 vs 스캐너)
+    if (now - lastTime > 50) barcodeBuffer = "";
+
+    if (e.key === "Enter") {
+        const code = barcodeBuffer.trim();
+        if (code) handleBarcode(code);
+        barcodeBuffer = "";
+    } else if (/^[0-9a-zA-Z]$/.test(e.key)) {
+        barcodeBuffer += e.key;
+    }
+
+    lastTime = now;
+});
+
+// 바코드 처리 함수
+async function handleBarcode(code) {
+    console.log("📦 바코드 스캔됨:", code);
+
+    const product = allProducts.find(p => p.barcode === code);
+
+    if (!product) {
+        openAlertModal && openAlertModal(`등록되지 않은 바코드입니다: ${code}`);
+        console.warn("해당 바코드 상품 없음:", code);
+        return;
+    }
+
+    if (product.empty === "yes") {
+        openAlertModal && openAlertModal(`"${product.name}" 는 품절입니다.`);
+        return;
+    }
+
+    // 기존 addItemToOrderWithQty() 재사용
+    await addItemToOrderWithQty(product.menuId, 1);
+}
+
+window.electronAPI.on("order-barcode-scan", async () => {
+    console.log("📡 서버에서 바코드 스캔 요청 수신");
+
+    // 🔒 서버 스캔 중에는 로컬 handleBarcode 비활성화
+    isRemoteScanActive = true;
+
+    let buffer = "";
+    let lastTime = Date.now();
+
+    const handler = (e) => {
+        const now = Date.now();
+        if (now - lastTime > 50) buffer = "";
+
+        if (e.key === "Enter") {
+            const code = buffer.trim();
+            document.removeEventListener("keydown", handler);
+            console.log("✅ 바코드 스캔 완료:", code);
+
+            // main.js 로 전송
+            window.electronAPI.send("barcode-scanned", { barcode: code });
+        } else if (/^[0-9a-zA-Z]$/.test(e.key)) {
+            buffer += e.key;
+        }
+
+        lastTime = now;
+    };
+
+    document.addEventListener("keydown", handler);
+});
+
+///////////////////// 바코드 스캔 //////////////////////
 async function fetchData() {
     try {
         const basePath = await window.electronAPI.getBasePath();
