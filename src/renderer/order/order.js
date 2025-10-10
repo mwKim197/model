@@ -1021,36 +1021,36 @@ function renderTotalPayContent(modalEl, orderList, paymentSession) {
 
     // 적용금액 & 남은 결제금액 (네 로직과 맞추기 위해 동일 값 사용)
     const appliedAmount = Math.max(0, orderTotal - totalDiscount);
-    const remainAmount  = appliedAmount;
-
     // ------ 마크업 그리기 ------
     bodyHost.innerHTML = `
     <div id="totalPayContent" class="flex w-full h-full px-4 gap-6">
       <!-- 좌측: 주문 목록 (70%) -->
-      <div class="basis-[70%] bg-gray-50 rounded-xl p-4 overflow-auto">
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-xl font-bold">주문 내역</h3>
-          <div id="orderTotal" class="text-lg font-semibold">${asWon(orderTotal)}</div>
-        </div>
-
-        <div class="grid grid-cols-12 px-2 py-2 text-sm text-gray-500 border-b">
-          <div class="col-span-7">메뉴명</div>
-          <div class="col-span-2 text-center">수량</div>
-          <div class="col-span-3 text-right">금액</div>
-        </div>
-        <div id="orderListView"></div>
+      <div class="basis-[70%] bg-gray-50 rounded-xl p-4 flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-2xl font-bold">주문 내역</h3>
+          </div>
+        
+          <div class="grid grid-cols-12 px-2 py-2 text-xl text-gray-500 border-b">
+            <div class="col-span-7">메뉴명</div>
+            <div class="col-span-2 text-center">수량</div>
+            <div class="col-span-3 text-right">금액</div>
+          </div>
+        
+          <!-- 여기만 스크롤 -->
+          <div id="orderListView" class="flex-1 text-xl overflow-auto mt-2 pr-2 scroll-smooth scrollbar-hide" style="max-height: 240px">
+          </div>
       </div>
 
       <!-- 우측: 할인/적용금액 (30%) -->
       <div class="basis-[30%] bg-gray-50 rounded-xl p-4 flex flex-col gap-4">
-        <section>
+        <section class="pb-24">
           <div class="flex items-center justify-between">
-            <h4 class="font-semibold text-lg">쿠폰 할인</h4>
-            <span id="couponTotal" class="text-sm text-gray-600">${couponTotal > 0 ? '-' + asWon(couponTotal) : ''}</span>
+            <h4 class="font-semibold text-2xl">쿠폰 할인</h4>
+            <span id="couponTotal" class="text-xl text-gray-600">${couponTotal > 0 ? '-' + asWon(couponTotal) : ''}</span>
           </div>
-          <div id="couponList" class="mt-2 space-y-1 text-sm text-gray-700">
+          <div id="couponList" class="mt-2 space-y-1 text-gray-700">
             ${couponLines.length === 0
-        ? `<div class="text-gray-400">적용된 쿠폰이 없습니다.</div>`
+        ? `<div class="text-xl text-gray-400">적용된 쿠폰이 없습니다.</div>`
         : couponLines.map(r => `
                   <div class="flex items-center justify-between">
                     <div class="truncate pr-2">• ${r.name} <span class="text-gray-500">x ${r.count}</span></div>
@@ -1061,22 +1061,14 @@ function renderTotalPayContent(modalEl, orderList, paymentSession) {
         </section>
 
         <section class="pt-2 border-t">
-          <div class="flex items-center justify-between">
-            <h4 class="font-semibold text-lg">마일리지 할인</h4>
-            <span id="mileageAmount" class="text-sm text-gray-600">${mileageUsed > 0 ? '-' + asWon(mileageUsed) : ''}</span>
+          <div class="flex items-center justify-between text-2xl">
+            <h4 class="font-semibold">마일리지 할인</h4>
+            <span id="mileageAmount" class="text-gray-600">${mileageUsed > 0 ? '-' + asWon(mileageUsed) : ''}</span>
           </div>
         </section>
-
-        <section class="pt-2 border-t">
-          <div class="flex items-center justify-between">
-            <h4 class="font-semibold text-lg">적용금액</h4>
-            <span id="appliedAmount" class="text-base font-bold">${asWon(appliedAmount)}</span>
-          </div>
-        </section>
-
         <section class="mt-auto pt-3 border-t">
-          <div class="text-sm text-gray-500 mb-1">남은 결제금액</div>
-          <div id="remainAmount" class="text-2xl font-extrabold tracking-tight">${asWon(remainAmount)}</div>
+          <div class="text-2xl text-gray-500 mb-1">총 결제금액</div>
+          <div id="remainAmount" class="text-5xl font-extrabold tracking-tight text-right">${asWon(appliedAmount)}</div>
         </section>
       </div>
     </div>
@@ -2561,7 +2553,7 @@ const barcodePayment = async (orderAmount, discountAmount = 0) => {
         // 0.1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {
             setTimeout(async () => {
-                const result= await window.electronAPI.runVcatFlow("APP_CARD", totalAmount);
+                const result= await window.electronAPI.reqPayproBarcode(totalAmount);
                 //const res = {success: true};
                 resolve(result); // 결제 결과 반환
             }, 100);
