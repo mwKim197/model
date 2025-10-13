@@ -584,15 +584,13 @@ async function startPayment() {
     if (isPaying) return { ok: false, reason: 'ALREADY_PAYING' };
 
     isPaying = true;
-    globalDim && globalDim.classList.remove('hidden'); // 🔒 UI 잠금
 
-    globalDim.classList.remove('hidden'); // ✅ UI 잠금 시작
     // 주문시작전 세션초기화
     startPaymentSession(null, 0);
 
     try {
-        //await payment(); // 💳 + 제조 프로세스 포함
-        await totalPayment(); // 💳 + 제조 프로세스 포함
+        await payment(); // 💳 + 제조 프로세스 포함
+        //await totalPayment(); // 💳 + 제조 프로세스 포함
         console.log('✅ 결제 및 제조 요청 완료');
 
         // 제조 완료까지 잠금 유지하고 싶으면 타임아웃/신호에 맞춰 해제
@@ -885,14 +883,14 @@ const totalPayment = async (data) => {
         }
 
         // 호출부
-        const wantMileage = await openModalPromise("마일리지를 적립하시겠습니까?");
+       /* const wantMileage = await openModalPromise("마일리지를 적립하시겠습니까?");
         if (wantMileage) {
             const mileageDone = await showPointModal(); // pointInput 플로우
             if (mileageDone?.success && mileageDone.action === ACTIONS.ACCUMULATION_COMPLETED) {
                 sendLogToMain('info', `마일리지 적립 실행 - 번호: ${mileageDone.point}, 결제금액: ${orderAmount}, 적립률 : ${earnRate}`);
                 await addMileage(mileageDone.point, orderAmount, earnRate);
             }
-        }
+        }*/
         await ordStart(0, payEnd.cardInfo);
     };
 
@@ -1019,7 +1017,7 @@ function renderTotalPayContent(modalEl, orderList, paymentSession) {
     // 없으면 couponTotal + mileageUsed로 계산
     const totalDiscount = Number(paymentSession?.totalDiscount ?? (couponTotal + mileageUsed)) || 0;
 
-    // 적용금액 & 남은 결제금액 (네 로직과 맞추기 위해 동일 값 사용)
+    // 적용금액 & 남은 결제금액
     const appliedAmount = Math.max(0, orderTotal - totalDiscount);
     // ------ 마크업 그리기 ------
     bodyHost.innerHTML = `
@@ -1427,7 +1425,7 @@ function createInputTemplate(title = "", count = 4) {
     digitCount = count;
     return `
         <div class="h-32 flex flex-col items-center w-full">
-            ${title ? `<p class="text-2xl text-center mb-4">${title}</p>` : ""}
+            ${title ? `<p class="text-5xl text-center mb-4">${title}</p>` : ""}
         </div>
         <div class="h-12 flex justify-center items-center w-full">
         <div class="relative w-[425px] h-[60px] flex flex-col justify-center">
@@ -1443,9 +1441,9 @@ function createInputTemplate(title = "", count = 4) {
 function createPhoneInputTemplate(title) {
     return `
         <div class="h-32 text-center">
-            ${title ? `<p class="text-2xl text-center mb-4">${title}</p>` : ""}
+            ${title ? `<p class="text-5xl text-center mb-4">${title}</p>` : ""}
         </div>
-        <div class="h-12 flex justify-center items-center">
+        <div class="mt-7 h-4 flex justify-center items-center">
             <div class="flex gap-2">
                 <!-- 첫 번째 입력칸 (010 고정) -->
                 <div class="relative flex items-center">
@@ -1640,23 +1638,22 @@ function updateDynamicContent(contentType, data ,resolve) {
     if (contentType === "pointInput") {
         if (isPhone) {
             type = "phone";
-            dynamicContent.innerHTML = createPhoneInputTemplate("마일리지 사용 휴대전화 번호 입력");
         } else {
             type = "number";
-            dynamicContent.innerHTML = createInputTemplate(`마일리지 번호 입력 ${inputCount} 자리`, inputCount);
         }
+        dynamicContent.innerHTML = createPhoneInputTemplate("포인트 적립 혹은 사용");
 
         totalAmt = data;
         removeAllButtons();
 
         // 버튼 설정
-        //addButton("addPointBtn", "적립하기", "bg-blue-500 text-white py-3 text-3xl rounded-lg  hover:bg-blue-600 w-full");
+        addButton("addPointBtn", "적립하기", "bg-blue-500 text-white py-3 text-3xl rounded-lg  hover:bg-blue-600 w-full");
         addButton("usePointBtn", "사용하기", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
         addButton("joinPointBtn", "등록하기", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
         addButton("immediatePaymentBtn", "바로결제", "bg-gray-400 text-white py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48");
 
         // 포인트 적립버튼
-        /*document.getElementById("addPointBtn").addEventListener("click", async () => {
+        document.getElementById("addPointBtn").addEventListener("click", async () => {
             let mileageInfo = {mileageNo: inputValue, tel: ""};
             // 휴대폰일경우 inputValue 휴대폰번호로 변경
             if (isPhone) {
@@ -1690,7 +1687,7 @@ function updateDynamicContent(contentType, data ,resolve) {
             } else {
                 openAlertModal(`마일리지 번호는 4~12 자리 입니다.`);
             }
-        });*/
+        });
 
         // 포인트 사용버튼
         document.getElementById("usePointBtn").addEventListener("click", async () => {
@@ -2455,8 +2452,10 @@ const cardPayment = async (orderAmount, discountAmount) => {
 
     // 모달
     const modal = document.getElementById('modal');
+    const globalDim = document.getElementById('globalDim');
 
     // 열기
+    globalDim.classList.remove('hidden');
     modal.classList.remove('hidden');
     try {
         // 0.1초 대기 후 결제 API 호출
@@ -2504,7 +2503,7 @@ const cardPayment = async (orderAmount, discountAmount) => {
 
             // 모달 닫기
             modal.classList.add('hidden');
-
+            globalDim.classList.add('hidden');
             playAudio('../../assets/audio/결제가 완료되었습니다 카드를 꺼내주세요.mp3');
 
             return {
@@ -2515,6 +2514,7 @@ const cardPayment = async (orderAmount, discountAmount) => {
         } else {
             // 결제 실패 처리
             modal.classList.add('hidden');
+            globalDim.classList.add('hidden');
             // 결제실패시 60초 카운트다운 시작
             resetCountdown();
             openAlertModal(`결제에 실패하였습니다. 다시 시도해주세요.`, "error");
@@ -2524,6 +2524,7 @@ const cardPayment = async (orderAmount, discountAmount) => {
     } catch (error) {
         // 오류 처리
         modal.classList.add('hidden');
+        globalDim.classList.add('hidden');
         // 결제오류시 60초 카운트다운 시작
         resetCountdown();
         openAlertModal("결제 처리 중 오류가 발생했습니다.", "error");
@@ -2548,7 +2549,12 @@ const barcodePayment = async (orderAmount, discountAmount = 0) => {
     clearCountdown();
 
     const totalAmount = orderAmount - discountAmount; // 전체 금액 계산
+    const barcodeModal = document.getElementById('barcodeModal');
+    const globalDim = document.getElementById('globalDim');
 
+    // 열기
+    globalDim.classList.remove('hidden');
+    barcodeModal.classList.remove('hidden');
     try {
         // 0.1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {
@@ -2561,11 +2567,17 @@ const barcodePayment = async (orderAmount, discountAmount = 0) => {
 
         // 결제 성공 여부 확인
         if (result.success) {
+            barcodeModal.classList.add('hidden');
+            globalDim.classList.add('hidden');
             console.log("바코드결제성공");
         } else {
+            barcodeModal.classList.add('hidden');
+            globalDim.classList.add('hidden');
             console.log("바코드결제실패");
         }
     } catch (error) {
+        barcodeModal.classList.add('hidden');
+        globalDim.classList.add('hidden');
         console.log("바코드결제에러");
         return false;
     }

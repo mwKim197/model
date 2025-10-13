@@ -215,7 +215,7 @@ app.post('/call-barcode', async (req, res) => {
         const resp = await fetch(saveUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId: user, code: barcode })
+            body: JSON.stringify({ userId: user.userId, code: barcode })
         });
 
         const data = await resp.json();
