@@ -108,7 +108,7 @@ const fetchAndSaveUserInfo = async () => {
         const result = await response.json();
 
         if (response.ok) {
-            console.log('사용자 정보 조회 및 저장 성공:', result.data);
+            console.log('사용자 정보 조회 및 저장 성공');
         } else {
             console.error('사용자 정보 조회 실패:', result.message);
         }

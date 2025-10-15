@@ -12,7 +12,7 @@ function sendLogToMain(level, message) {
 const initializeUserData = async () => {
     try {
         userData = await ipcRenderer.invoke('get-user-data'); // 메인 프로세스에서 데이터 가져오기
-        console.log('유저 정보 조회 완료:', userData);
+        console.log('유저 정보 조회 완료');
         return true;
     } catch (error) {
         console.error('유저 정보 조회 실패:', error);
@@ -97,7 +97,7 @@ const getUserMenuInfoAll = async (userId) => {
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
         }
-        console.log("getMenuInfoAll ", userData);
+
         const data = await response.json();
         log.info(data);
         sendLogToMain('info','MENU-ALL: ', data);  // 디버깅용 콘솔
@@ -124,7 +124,7 @@ const getMenuInfoAll = async () => {
         if (!response.ok) {
             throw new Error(`Network response was not ok: ${response.statusText}`);
         }
-        console.log("getMenuInfoAll ", userData);
+
         const data = await response.json();
         log.info(data);
         sendLogToMain('info','MENU-ALL: ', data);  // 디버깅용 콘솔
