@@ -46,7 +46,7 @@ const countdownDisplay = document.getElementById("countDown");
 // 타이머 시작
 function startCountdown() {
     clearCountdown();
-    remainingSeconds = 60; // 초기화
+    remainingSeconds = 62; // 초기화
     updateCountdownDisplay(); // 화면 표시 즉시 업데이트
 
     countdownTimer = setInterval(() => {
