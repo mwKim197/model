@@ -122,6 +122,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // 쿠폰 조회
     getCoupon: async (code) => await orderApi.getCoupon(code),
 
+    // 쿠폰 사용처리
+    useCoupon: async (code) => await orderApi.useCoupon(code),
+
     // 바코드 결제처리
     reqPayproBarcode: async (price, barcode) => await orderApi.reqPayproBarcode(price, '00'),
 

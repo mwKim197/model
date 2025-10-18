@@ -490,47 +490,6 @@ const closeModal = () => {
     confirmModal.classList.add('hidden'); // 모달 숨기기
 };
 
-// ✅ 확인/취소 모달을 Promise로
-function openModalPromise(message) {
-    return new Promise((resolve) => {
-        const confirmModal = document.getElementById('confirmModal');
-        const confirmButton = document.getElementById('confirmButton');
-        const cancelButton = document.getElementById('cancelButton');
-
-        if (!confirmModal || !confirmButton || !cancelButton) {
-            console.error("모달 요소를 찾을 수 없습니다.");
-            resolve(false);
-            return;
-        }
-
-        // 메시지 설정
-        const modalMessage = confirmModal.querySelector('h2');
-        modalMessage.innerHTML = message;
-        confirmModal.classList.remove('hidden');
-
-        // 기존 이벤트 제거
-        confirmButton.replaceWith(confirmButton.cloneNode(true));
-        cancelButton.replaceWith(cancelButton.cloneNode(true));
-
-        const updatedConfirmButton = document.getElementById('confirmButton');
-        const updatedCancelButton = document.getElementById('cancelButton');
-
-        updatedConfirmButton.onclick = () => {
-            confirmModal.classList.add('hidden');
-            resolve(true);  // ✅ 확인 시 true
-        };
-        updatedCancelButton.onclick = () => {
-            confirmModal.classList.add('hidden');
-            resolve(false); // ✅ 취소 시 false
-        };
-    });
-}
-
-// ✅ 포인트 입력 모달도 Promise로
-async function showPointModal() {
-    return await updateDynamicContent2("pointInput", {});
-}
-
 // ✅ 쿠폰 입력 모달도 Promise로
 async function showCouponModal() {
     return await updateDynamicContent2("couponInput", {});
@@ -596,8 +555,13 @@ async function startPayment() {
         // 제조 완료까지 잠금 유지하고 싶으면 타임아웃/신호에 맞춰 해제
         setTimeout(() => {
             isPaying = false;
-            globalDim && globalDim.classList.add('hidden'); // 🔓 UI 해제
-        }, 3 * 1000);
+            const anyModalOpen = document.querySelectorAll('#pointModal:not(.hidden), #alertModal:not(.hidden)').length > 0;
+            if (!anyModalOpen) {
+                globalDim.classList.add('hidden');
+            } else {
+                console.log('⚠️ 다른 모달이 열려 있어서 globalDim 유지');
+            }
+        }, 3000);
 
         return { ok: true };
     } catch (e) {
@@ -865,6 +829,23 @@ async function handleMileageEarn(orderAmount, userInfo) {
     }
 }
 
+// 공통 쿠폰 사용함수
+async function handleUseCoupons(orderList) {
+    const coupons = collectUsedCoupons(orderList);
+    if (coupons.length === 0) {
+        sendLogToMain('error', `사용할 쿠폰이 없습니다.`);
+        return;
+    }
+
+    const result = await useCouponApi(coupons);
+
+    if (result.ok) {
+        sendLogToMain('info', `${result.message}`);
+    } else {
+        sendLogToMain('error', `${result.message}`);
+    }
+}
+
 // 마일리지 사용 초기화 처리
 function resetMileageUsage() {
     const couponDiscount = paymentSession.couponTotal || 0;
@@ -954,6 +935,9 @@ const totalPayment = async (data) => {
         }
 
         try {
+            // 쿠폰사용함수
+            await handleUseCoupons(orderList);
+
             await ordStart();
         } catch (e) {
             try {
@@ -1023,6 +1007,9 @@ const totalPayment = async (data) => {
         // 마일리지 적립 처리
         await handleMileageEarn(orderAmount, userInfo);
 
+        // 쿠폰사용함수
+        await handleUseCoupons(orderList);
+
         await ordStart(0, payEnd.cardInfo);
     };
 
@@ -1039,6 +1026,9 @@ const totalPayment = async (data) => {
 
         // 마일리지 적립 처리
         await handleMileageEarn(orderAmount, userInfo);
+
+        // 쿠폰사용함수
+        await handleUseCoupons(orderList);
 
         await ordStart(0, payEnd.cardInfo);
 
@@ -1235,7 +1225,7 @@ const openCouponInputModal = async () => {
             return;
         }
 
-        const result = await getBarcodeApi(couponCode);
+        const result = await getCouponApi(couponCode);
         if (!result.ok || !result.item) {
             openAlertModal(result.message || "쿠폰 조회 실패", "error");
             return;
@@ -1314,34 +1304,108 @@ const getBarcodeScanModal = async () => {
     }
 };
 //-----------------바코드스캔--------------------//
-//-----------------바코드조회--------------------//
-// 공통 헬퍼 (non-throw)
-const getBarcodeApi = async (barcode) => {
+//-----------------쿠폰조회--------------------//
+// ✅ 공통 헬퍼 (non-throw) - 쿠폰 조회 + 사용여부 판단
+const getCouponApi = async (barcode) => {
     try {
         const res = await window.electronAPI.getCoupon(barcode);
         const statusCode = Number(res?.statusCode) || 0;
 
         let body = {};
         try {
-            body = typeof res?.body === 'string' ? JSON.parse(res.body) : (res?.body || {});
+            body =
+                typeof res?.body === "string"
+                    ? JSON.parse(res.body)
+                    : res?.body || {};
         } catch (_) {
             body = {};
         }
 
         const ok = statusCode >= 200 && statusCode < 300;
-        // body는 { item, code, message, ... } 가정
-        return { ok, statusCode, ...body };
+
+        // ✅ 1) 서버 통신 실패한 경우
+        if (!ok) {
+            return {
+                ok: false,
+                statusCode,
+                code: body?.code || "COUPON_ERROR",
+                message:
+                    body?.message ||
+                    "쿠폰을 조회하는 중 오류가 발생했습니다.",
+            };
+        }
+
+        // ✅ 2) 쿠폰 데이터 자체 없음
+        if (!body?.item) {
+            return {
+                ok: false,
+                statusCode,
+                code: "COUPON_NOT_FOUND",
+                message: "해당 쿠폰을 찾을 수 없습니다.",
+            };
+        }
+
+        // ✅ 3) count가 0이면 이미 사용된 쿠폰으로 간주
+        if (Number(body.item.count) <= 0) {
+            return {
+                ok: false,
+                statusCode: 200, // 조회는 성공이지만 사용불가
+                code: "COUPON_ALREADY_USED",
+                message: "이미 사용된 쿠폰입니다.",
+                item: body.item,
+            };
+        }
+
+        // ✅ 4) 유효한 쿠폰 (count > 0)
+        return {
+            ok: true,
+            statusCode,
+            code: "COUPON_VALID",
+            message: "사용 가능한 쿠폰입니다.",
+            item: body.item,
+        };
     } catch (err) {
-        // IPC 자체가 실패했을 때도 throw 하지 말고 실패 구조 리턴
+        // ✅ IPC 통신 실패 등
         return {
             ok: false,
             statusCode: 0,
-            code: 'IPC_ERROR',
-            message: err?.message || '쿠폰 조회 중 내부 통신 오류'
+            code: "IPC_ERROR",
+            message: err?.message || "쿠폰 조회 중 내부 통신 오류",
         };
     }
 };
 //-----------------바코드조회--------------------//
+//-----------------바코드사용--------------------//
+// ✅ 쿠폰 사용 API (non-throw, getCouponApi와 동일한 구조)
+const useCouponApi = async (couponArray) => {
+    try {
+        // ✅ electron preload → main → Lambda 호출
+        const res = await window.electronAPI.useCoupon(couponArray);
+        const statusCode = Number(res?.statusCode) || 0;
+
+        let body = {};
+        try {
+            body = typeof res?.body === 'string'
+                ? JSON.parse(res.body)
+                : (res?.body || {});
+        } catch (_) {
+            body = {};
+        }
+
+        const ok = statusCode >= 200 && statusCode < 300;
+        // body는 { success, message, updatedCount, failedList, ... } 구조
+        return { ok, statusCode, ...body };
+    } catch (err) {
+        // IPC 오류 포함 — 절대 throw 안 함
+        return {
+            ok: false,
+            statusCode: 0,
+            code: "IPC_ERROR",
+            message: err?.message || "쿠폰 사용 중 내부 통신 오류"
+        };
+    }
+};
+//-----------------바코드사용--------------------//
 
 // 통합 결제
 const payment = async () => {
@@ -2203,10 +2267,13 @@ function updateDynamicContent2(contentType, data = {}) {
         const dynamicButton = document.getElementById('dynamicButton');
         const modal = document.getElementById("pointModal"); // ✅ 수정 완료
         const globalDim = document.getElementById('globalDim'); // 모달 딤
-        isPhone = userInfo.isPhone // 휴대폰 여부
 
         let resolved = false;
         const aborter = new AbortController();
+
+        modal.classList.remove("hidden");
+        globalDim?.classList.remove("hidden");
+        dynamicButton.innerHTML = "";
 
         function safeResolve(result) {
             if (resolved) return;
@@ -2231,11 +2298,6 @@ function updateDynamicContent2(contentType, data = {}) {
             { signal: aborter.signal, capture: true }
         );
 
-
-        modal.classList.remove("hidden");
-        globalDim?.classList.remove("hidden");
-        dynamicButton.innerHTML = "";
-
         // 버튼 이벤트 초기화
         function clearButtons() {
             dynamicButton.innerHTML = "";
@@ -2253,137 +2315,8 @@ function updateDynamicContent2(contentType, data = {}) {
             dynamicButton.appendChild(btn);
         }
 
-        // ✅ 모달 열기
-        modal.classList.remove("hidden");
-        globalDim.classList.remove("hidden");
-
-
         // ----- 단계별 화면 처리 -----
-        if (contentType === "pointInput") {
-            // 기존 유저 적립 단계
-            resetInput();
-            if (isPhone) {
-                type = "phone";
-                dynamicContent.innerHTML = createPhoneInputTemplate("마일리지 사용 휴대전화 번호 입력");
-            } else {
-                type = "number";
-                dynamicContent.innerHTML = createInputTemplate(`마일리지 번호 입력 ${inputCount} 자리`, inputCount);
-            }
-
-            totalAmt = data.totalAmt || 0;
-            clearButtons();
-
-            // 적립 버튼
-            addButton("addPointBtn", "적립하기", "bg-blue-500 text-white py-3 text-3xl rounded-lg hover:bg-blue-600 w-full", async () => {
-                let mileageInfo = { mileageNo: inputValue, tel: "" };
-
-                if (isPhone) {
-                    inputValue = "010" + phoneValues.join("");
-                    if (!/^\d{11}$/.test(inputValue)) {
-                        return openAlertModal(`번호는 11 자리 숫자여야 합니다.`);
-                    }
-                    mileageInfo = { mileageNo: "", tel: inputValue };
-                }
-
-                if (inputValue.length < 4 || inputValue.length > 12) {
-                    return openAlertModal(`마일리지 번호는 4~12 자리 입니다.`);
-                }
-
-                const pointNumberCheck = await window.electronAPI.checkMileageExists(mileageInfo);
-                if (!pointNumberCheck) return openAlertModal("유저정보 조회에 실패하였습니다.");
-
-                if (pointNumberCheck.data.exists) {
-                    safeResolve({ success: true, action: ACTIONS.ACCUMULATION_COMPLETED, point: pointNumberCheck.data.uniqueMileageNo, discountAmount: 0 });
-                } else {
-                    openAlertModal("등록되지 않은 번호입니다.");
-                }
-            });
-
-            // 가입 버튼
-            addButton("joinPointBtn", "등록하기", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full", () => {
-                updateDynamicContent2("joinPoints", data).then(resolve);
-            });
-
-        } else if (contentType === "joinPoints") {
-            // 신규 가입 단계
-            resetInput();
-            type = "number";
-            dynamicContent.innerHTML = createInputTemplate(`마일리지 가입 번호 입력 ${inputCount} 자리`, inputCount);
-            clearButtons();
-
-            addButton("exit", "취소하기", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full", () => {
-                safeResolve({ success: true, action: ACTIONS.EXIT });
-            });
-
-            addButton("addPhone", "전화번호입력", "bg-gray-400 py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48", async () => {
-                if (inputValue.length !== inputCount || !new RegExp(`^\\d{${inputCount}}$`).test(inputValue)) {
-                    return openAlertModal(`번호는 ${inputCount}자리 숫자여야 합니다.`);
-                }
-
-                const mileageInfo = { mileageNo: inputValue, tel: "" };
-                const pointNumberCheck = await window.electronAPI.checkMileageExists(mileageInfo);
-
-                if (!pointNumberCheck) return openAlertModal("유저정보 조회에 실패하였습니다.");
-                if (pointNumberCheck.data.exists) return openAlertModal("이미 등록된 유저입니다.");
-
-                updateDynamicContent2("addPhone", inputValue).then(resolve);
-            });
-
-        } else if (contentType === "addPhone") {
-            resetInput();
-            type = "phone";
-            dynamicContent.innerHTML = createPhoneInputTemplate("마일리지 등록 휴대전화 번호 입력");
-            clearButtons();
-
-            addButton("exit", "등록취소", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full", () => {
-                safeResolve({ success: true, action: ACTIONS.EXIT });
-            });
-
-            addButton("addPassword", "비밀번호입력", "bg-gray-400 py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48", async () => {
-                const phoneNumber = "010" + phoneValues.join("");
-                if (!/^\d{11}$/.test(phoneNumber)) {
-                    return openAlertModal(`번호는 11자리 숫자여야 합니다.`);
-                }
-
-                const mileageInfo = { mileageNo: "", tel: phoneNumber };
-                const pointNumberCheck = await window.electronAPI.checkMileageExists(mileageInfo);
-
-                if (!pointNumberCheck) return openAlertModal("유저정보 조회에 실패하였습니다.");
-                if (pointNumberCheck.data.exists) return openAlertModal("이미 등록된 유저입니다.");
-
-                updateDynamicContent2("addPassword", { mileageNo: data || phoneNumber, tel: phoneNumber }).then(resolve);
-            });
-
-        } else if (contentType === "addPassword") {
-            type = "password";
-            dynamicContent.innerHTML = createInputTemplate("비밀번호 등록", passwordCount);
-            clearButtons();
-
-            addButton("exit", "등록취소", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full", () => {
-                safeResolve({ success: true, action: ACTIONS.EXIT });
-            });
-
-            addButton("addPoint", "마일리지등록", "bg-gray-400 py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48", async () => {
-                if (inputValue.length !== passwordCount || !new RegExp(`^\\d{${passwordCount}}$`).test(inputValue)) {
-                    return openAlertModal(`비밀번호는 정확히 ${passwordCount}자리 숫자여야 합니다.`);
-                }
-
-                const mileageData = { ...data, password: inputValue };
-                const addPoint = await window.electronAPI?.saveMileageToDynamoDB?.(mileageData);
-
-                if (!addPoint || !addPoint.success || !addPoint.data?.uniqueMileageNo) {
-                    return openAlertModal("마일리지 등록에 실패하였습니다.");
-                }
-
-                playAudio('../../assets/audio/가입이 완료되었습니다 확인버튼을눌러주세요.mp3');
-
-                openModal(
-                    "마일리지 등록이 완료되었습니다.<br>즉시 결제하시겠습니까?",
-                    () => safeResolve({ success: true, action: ACTIONS.IMMEDIATE_PAYMENT, point: addPoint.data.uniqueMileageNo }),
-                    () => safeResolve({ success: true, action: ACTIONS.EXIT })
-                );
-            });
-        } else if (contentType === "couponInput") {
+        if (contentType === "couponInput") {
             // 기존 유저 적립 단계
             resetInput();
             type = "coupon";
@@ -2405,12 +2338,12 @@ function updateDynamicContent2(contentType, data = {}) {
                 // 안전망
                 let couponResult;
                 try {
-                    couponResult = await getBarcodeApi(couponCode);
+                    couponResult = await getCouponApi(couponCode);
                 } catch (e) {
                     openAlertModal(e?.message || "쿠폰 조회 실패(예외)", "error");
                     return;
                 }
-                console.log("couponResult: ", couponResult);
+
                 if (!couponResult.ok || !couponResult.item) {
                     openAlertModal(couponResult.message || "해당 쿠폰을 찾을 수 없습니다.", "error");
                     return;
@@ -3156,6 +3089,23 @@ window.electronAPI.on("order-barcode-scan", async () => {
 
     document.addEventListener("keydown", handler);
 });
+
+
+const globalDim = document.getElementById("globalDim");
+
+const observer = new MutationObserver((mutations) => {
+    mutations.forEach((m) => {
+        if (m.type === "attributes" && m.attributeName === "class") {
+            const hidden = globalDim.classList.contains("hidden");
+            if (hidden) {
+                console.log(`🔍 globalDim 상태 변경됨 → hidden=${hidden}`, globalDim.className);
+                console.trace(); // 호출 경로 추적
+            }
+        }
+    });
+});
+
+observer.observe(globalDim, { attributes: true });
 
 ///////////////////// 바코드 스캔 //////////////////////
 async function fetchData() {

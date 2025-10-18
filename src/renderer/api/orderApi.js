@@ -423,6 +423,49 @@ const getCoupon = async (couponCode) => {
     }
 };
 
+// ✅ 쿠폰 사용 (여러 개 동시 처리)
+const useCoupon = async (couponArray) => {
+    await ensureUserDataInitialized();
+
+    // ✅ 유효성 검사
+    if (!Array.isArray(couponArray) || couponArray.length === 0) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify({
+                code: "INVALID_PARAMETER",
+                message: "사용할 쿠폰을 선택해주세요."
+            })
+        };
+    }
+
+    const url = "https://api.narrowroad-model.com/model_coupon?func=useCoupon";
+
+    try {
+        const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                userId: userData.userId,
+                coupons: couponArray
+            })
+        });
+
+        const text = await res.text(); // 항상 문자열
+        return {
+            statusCode: res.status,
+            body: text || "{}"
+        };
+    } catch (e) {
+        return {
+            statusCode: 0,
+            body: JSON.stringify({
+                code: "IPC_ERROR",
+                message: e?.message || "쿠폰 사용 중 내부 통신 오류가 발생했습니다."
+            })
+        };
+    }
+};
+
 
 // 바코드 결제
 const reqPayproBarcode = async (amount, halbu = "00") => {
@@ -491,6 +534,7 @@ module.exports = {
     coffeePreheating,
     reqBarcode_HTTP,
     getCoupon,
+    useCoupon,
     reqPayproBarcode,
     requestAppRestart
 };
