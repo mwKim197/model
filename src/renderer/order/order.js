@@ -412,7 +412,8 @@ const okButton = document.getElementById('okButton');
 
 // 모달 열기 함수
 const openAlertModal = (text, type = "info") => {
-    alertModalText.innerText = text;
+    // 줄바꿈(\n)을 <br>로 변환
+    alertModalText.innerHTML = text.replace(/\n/g, "<br>");
 
     // 기존 색 제거
     alertModalText.classList.remove("text-red-600", "text-green-600", "text-black-900");
@@ -492,6 +493,7 @@ const closeModal = () => {
 
 // ✅ 쿠폰 입력 모달도 Promise로
 async function showCouponModal() {
+    playAudio('../../assets/audio/쿠폰번호를 입력 하시거나 바코드스캔을 눌러 쿠폰을 스캔 해주세요.m4a');
     return await updateDynamicContent2("couponInput", {});
 }
 
@@ -771,7 +773,7 @@ async function commitPointUsage() {
     }
 
     const u = paymentSession.usePoint;
-    const mileageNo = u.pointData?.mileageNo || u.point || u.uniqueMileageNo;
+    const mileageNo = u.uniqueMileageNo;
     const totalAmtNum = u.pointData?.totalAmt || 0;
     const usedAmount = u.usedAmount;
 
@@ -818,7 +820,6 @@ async function handleMileageEarn(orderAmount, userInfo) {
     try {
         sendLogToMain('info', ` 마일리지 적립 실행 - 번호: ${uniqueMileageNo}, 금액: ${orderAmount}, 적립률: ${earnRate}%`);
 
-        // addMileage(mileageNo, orderAmount, earnRate)
         const res = await addMileage(uniqueMileageNo, orderAmount, earnRate);
 
         console.log("✅ 마일리지 적립 완료:", res);
@@ -881,6 +882,8 @@ const totalPayment = async (data) => {
     // 리셋 타이머 종료
     clearCountdown();
     let response;
+
+    playAudio('../../assets/audio/결제 방식을 선택 해주세요.m4a');
 
     // ------------------------------
     // ① 주문 총액 계산 (쿠폰 적용 전)
@@ -981,7 +984,7 @@ const totalPayment = async (data) => {
     }
 
     // 쿠폰 fasle 일때만안보이기
-    if (userInfo.coupon !== false && paymentSession.earnPoint === null) {
+    if (userInfo.coupon !== false && paymentSession.earnPoint === null && paymentSession.usePoint === null) {
         payCoupon.classList.remove("hidden");
     } else {
         payCoupon.classList.add("hidden");
@@ -1001,6 +1004,7 @@ const totalPayment = async (data) => {
 
         if (!payEnd.success) {
             sendLogToMain('error', `카드 결제 실패`);
+            await totalPayment();
             return;
         }
 
@@ -1019,8 +1023,10 @@ const totalPayment = async (data) => {
 
         const payEnd = await barcodePayment(orderAmount, 0);
 
-        if (!payEnd.success) {
+        // ✅ 결과 객체가 없거나 success가 false면 실패 처리
+        if (!payEnd || !payEnd.success) {
             sendLogToMain('error', `바코드 결제 실패`);
+            await totalPayment(); // 다시 결제 절차로 복귀
             return;
         }
 
@@ -1200,94 +1206,17 @@ function renderTotalPayContent(modalEl, orderList, paymentSession) {
 
 // 모달결제 END
 //-----------------통합결제--------------------//
-//-----------------쿠폰조회--------------------//
-const openCouponInputModal = async () => {
-    const modal = document.getElementById('couponInputModal');
-    modal.classList.remove('hidden');
-
-    const barcodeInput = document.getElementById("couponNumberInput");
-    document.getElementById("couponBarcodeBtn").onclick = null;
-    document.getElementById("couponCheckBtn").onclick = null;
-    document.getElementById("closeCouponInputModal").onclick = null;
-    barcodeInput.value = "";
-
-    // 바코드 스캔
-    document.getElementById("couponBarcodeBtn").onclick = async () => {
-        const barcodeScan = await getBarcodeScanModal();
-        barcodeInput.value = barcodeScan || "";
-    };
-
-    // 쿠폰 조회 및 즉시 적용
-    document.getElementById("couponCheckBtn").onclick = async () => {
-        const couponCode = barcodeInput.value.trim();
-        if (!couponCode) {
-            openAlertModal("쿠폰 번호를 입력하세요.", "error");
-            return;
-        }
-
-        const result = await getCouponApi(couponCode);
-        if (!result.ok || !result.item) {
-            openAlertModal(result.message || "쿠폰 조회 실패", "error");
-            return;
-        }
-
-        const couponItem = couponResult.item;
-        const menuId = parseInt(couponItem.menuId, 10);
-
-        // 적용 가능한 주문 찾기 (쿠폰 사용 가능 여부 체크)
-        const matchedOrder = orderList.find(order => {
-            if (order.menuId !== menuId) return false;
-
-            // 아직 사용 가능한 쿠폰 슬롯 있는지
-            const used = order.couponUsed || 0;
-            if (used >= order.count) return false;
-
-            // 중복 쿠폰 방지
-            const alreadyUsed = (order.usedCoupons || [])
-                .some(coupon => coupon.couponId === couponItem.couponId);
-
-            if (alreadyUsed) {
-                openAlertModal("이미 사용한 쿠폰입니다.", "error");
-                return;
-            }
-
-            return true;
-        });
-
-        if (!matchedOrder) {
-            openAlertModal("이 쿠폰을 적용할 수 있는 주문이 없거나 이미 모두 사용되었습니다.", "error");
-            return;
-        }
-
-        // count는 그대로 두고 couponUsed만 증가
-        matchedOrder.couponUsed = (matchedOrder.couponUsed || 0) + 1;
-        matchedOrder.usedCoupons = matchedOrder.usedCoupons || [];
-        matchedOrder.usedCoupons.push({
-            couponId: couponItem.couponId,  // ✅ 이걸 메인으로 사용
-            couponCode: couponItem.couponCode, // 선택(로그용)
-        });
-
-        // 모달 닫기
-        modal.classList.add('hidden');
-        openAlertModal(`${couponItem.title} 쿠폰을 적용했습니다.`, "success");
-
-        // 결제모듈열기
-        totalPayment();
-    };
-
-    // 닫기
-    document.getElementById("closeCouponInputModal").onclick = () => {
-        modal.classList.add('hidden');
-        // 결제모듈열기
-        totalPayment();
-    };
-};
-//-----------------쿠폰조회--------------------//
 //-----------------바코드스캔--------------------//
 const getBarcodeScanModal = async () => {
     const modal = document.getElementById('barcodeModal');
+    const barcodeModalCloseBtn = document.getElementById('barcodeModalCloseBtn');
     modal.classList.remove('hidden'); // 모달 열기
 
+    barcodeModalCloseBtn.onclick = () => {
+        stopBarcode();
+        modal.classList.add('hidden');
+    };
+    playAudio('../../assets/audio/바코드 또는 큐알코드를 단말기에 스캔 해주세요.m4a');
     try {
         const result = await getBarcode(); // 바코드 읽기 대기
 
@@ -1832,10 +1761,9 @@ function updateDynamicContent(contentType, data ,resolve) {
         removeAllButtons();
 
         // 버튼 설정
-        addButton("addPointBtn", "적립하기", "bg-blue-500 text-white py-3 text-3xl rounded-lg  hover:bg-blue-600 w-full");
-        addButton("usePointBtn", "사용하기", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
-        addButton("joinPointBtn", "등록하기", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
-        addButton("immediatePaymentBtn", "바로결제", "bg-gray-400 text-white py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48");
+        addButton("joinPointBtn", "신규등록", "bg-yellow-400 py-3 text-3xl rounded-lg hover:bg-yellow-500 w-full");
+        addButton("addPointBtn", "적립하기", "bg-gray-200 py-3 text-3xl rounded-lg  hover:bg-gray-300 w-full");
+        addButton("usePointBtn", "사용하기", "bg-blue-500 text-white py-3 text-3xl rounded-lg hover:bg-blue-600 w-full h-48");
 
         // 포인트 적립버튼
         document.getElementById("addPointBtn").addEventListener("click", async () => {
@@ -1924,12 +1852,12 @@ function updateDynamicContent(contentType, data ,resolve) {
         });
 
         // 즉시결제 포인트 적립 X
-        document.getElementById("immediatePaymentBtn").addEventListener("click", () => {
+        /*document.getElementById("immediatePaymentBtn").addEventListener("click", () => {
             // 즉시결제 포인트적립 X
             resolve({ success: true, action: ACTIONS.IMMEDIATE_PAYMENT, discountAmount: 0  }); // 결과 전달
 
             modal.classList.add("hidden"); // 모달 닫기
-        });
+        });*/
 
     } else if (contentType === "passwordInput") {
 
@@ -2038,7 +1966,7 @@ function updateDynamicContent(contentType, data ,resolve) {
             }
         });
 
-        addButton("pointPaymentBtn", "포인트결제", "bg-gray-400 text-white py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48");
+        addButton("pointPaymentBtn", "포인트사용", "bg-gray-400 text-white py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48");
         document.getElementById("pointPaymentBtn").addEventListener("click", () => {
             // 포인트 포멧 to number
             const usePoint = cleanNumber(inputTarget.innerText);
@@ -2265,7 +2193,7 @@ function updateDynamicContent2(contentType, data = {}) {
     return new Promise((resolve) => {
         const dynamicContent = document.getElementById("dynamicContent");
         const dynamicButton = document.getElementById('dynamicButton');
-        const modal = document.getElementById("pointModal"); // ✅ 수정 완료
+        const modal = document.getElementById("pointModal");
         const globalDim = document.getElementById('globalDim'); // 모달 딤
 
         let resolved = false;
@@ -2369,7 +2297,7 @@ function updateDynamicContent2(contentType, data = {}) {
                 });
 
                 if (!matchedOrder) {
-                    openAlertModal("이 쿠폰을 적용할 수 있는 주문이 없거나 이미 모두 사용되었습니다.", "error");
+                    openAlertModal("적용 가능한 주문이 없거나\n 이미 사용된 쿠폰입니다.", "error");
                     return;
                 }
 
@@ -2590,13 +2518,20 @@ const cardPayment = async (orderAmount, discountAmount) => {
 }
 
 const getBarcode = async () => {
-
     // 바코드 조회
     const res = await window.electronAPI.reqBarcodeHTTP(); // nvcat
     // vcat const res = await window.electronAPI.runVcatFlow();
     console.log(res);
     return res;
 }
+
+const stopBarcode = async () => {
+    // 바코드 스캔취소
+    const res = await window.electronAPI.stopBarcode_HTTP(); // nvcat
+    console.log(res);
+    return res;
+}
+
 
 // 바코드 조회 및 결제
 const barcodePayment = async (orderAmount, discountAmount = 0) => {
@@ -2605,10 +2540,19 @@ const barcodePayment = async (orderAmount, discountAmount = 0) => {
     const totalAmount = orderAmount - discountAmount; // 전체 금액 계산
     const barcodeModal = document.getElementById('barcodeModal');
     const globalDim = document.getElementById('globalDim');
+    const barcodeModalCloseBtn = document.getElementById('barcodeModalCloseBtn');
 
     // 열기
     globalDim.classList.remove('hidden');
     barcodeModal.classList.remove('hidden');
+
+    barcodeModalCloseBtn.onclick = () => {
+        stopBarcode();
+        barcodeModal.classList.add('hidden');
+    };
+
+    playAudio('../../assets/audio/바코드 또는 큐알코드를 단말기에 스캔 해주세요.m4a');
+
     try {
         // 0.1초 대기 후 결제 API 호출
         const result = await new Promise((resolve) => {

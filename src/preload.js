@@ -119,6 +119,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // 바코드 스캔
     reqBarcodeHTTP: async () => await orderApi.reqBarcode_HTTP(),
 
+    // 바코드 스캔 종료
+    stopBarcode_HTTP: async () => await orderApi.stopBarcode_HTTP(),
+
     // 쿠폰 조회
     getCoupon: async (code) => await orderApi.getCoupon(code),
 

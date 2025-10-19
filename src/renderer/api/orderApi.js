@@ -346,7 +346,7 @@ const reqBarcode_HTTP = async () => {
     const sendbuf = make_send_data(sendraw);
 
     try {
-        const response = await fetch("http://127.0.0.1:9188", {
+        const response = await fetch("http://127.0.0.1:9189", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: encodeURI(sendbuf)
@@ -370,6 +370,39 @@ const reqBarcode_HTTP = async () => {
     } catch (error) {
         log.error("바코드 요청 실패:", error);
         return { success: false, message: "바코드 요청 실패!" };
+    }
+};
+
+// 바코드 조회 중단
+const stopBarcode_HTTP = async () => {
+    const sendraw = "REQ_STOP";
+    const sendbuf = make_send_data(sendraw);
+    console.log("실제 문자열:", sendbuf);
+    console.log("문자 수:", sendbuf.length);
+    console.log("바이트 수:", new TextEncoder().encode(sendbuf).length);
+
+    const encoded = encodeURI(sendbuf);
+    console.log("인코딩 후 문자수:", encoded.length);
+
+    try {
+        const response = await fetch("http://127.0.0.1:9189", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: sendbuf
+        });
+
+        const data = await response.text();
+        log.info("바코드 중단 응답:", data);
+
+        return {
+            success: true,
+            raw: data,
+            timestamp: Date.now()
+        };
+
+    } catch (error) {
+        log.error("바코드 중단 요청 실패:", error);
+        return { success: false, message: "바코드 중단 요청 실패!" };
     }
 };
 
@@ -533,6 +566,7 @@ module.exports = {
     adminUseWash,
     coffeePreheating,
     reqBarcode_HTTP,
+    stopBarcode_HTTP,
     getCoupon,
     useCoupon,
     reqPayproBarcode,
