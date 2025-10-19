@@ -883,8 +883,6 @@ const totalPayment = async (data) => {
     clearCountdown();
     let response;
 
-    playAudio('../../assets/audio/결제 방식을 선택 해주세요.m4a');
-
     // ------------------------------
     // ① 주문 총액 계산 (쿠폰 적용 전)
     // ------------------------------
@@ -959,6 +957,8 @@ const totalPayment = async (data) => {
     const modal = document.getElementById('totalPayModel');
     // 열기
     modal.classList.remove('hidden');
+
+    playAudio('../../assets/audio/결제 방식을 선택 해주세요.m4a');
 
     // ✅ 본문 렌더(좌70/우30) — orderList, paymentSession 사용
     renderTotalPayContent(modal, orderList, paymentSession);
@@ -1869,7 +1869,7 @@ function updateDynamicContent(contentType, data ,resolve) {
         removeAllButtons();
 
         addButton("exit", "사용취소", "bg-gray-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full");
-        addButton("usePointBtn", "사용하기", "bg-gray-400 text-white py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48");
+        addButton("usePointBtn", "사용하기", "bg-blue-500 text-white py-3 text-3xl rounded-lg hover:bg-blue-600 w-full h-48");
 
         document.getElementById("exit").addEventListener("click", () => {
             modal.classList.add("hidden"); // 모달닫기
@@ -1894,18 +1894,18 @@ function updateDynamicContent(contentType, data ,resolve) {
                             const pointData = {...pointPasswordCheck.data, ...data, totalAmt: totalAmt};
                             updateDynamicContent("usePoints", pointData ,resolve);
                         } else {
-                            openAlertModal("페스워드가 틀렸습니다.");
+                            openAlertModal("패스워드가 틀렸습니다.");
                         }
 
                     } else {
-                        openAlertModal("페스워드 조회에 실패하였습니다.");
+                        openAlertModal("패스워드 조회에 실패하였습니다.");
                     }
                 } catch (e) {
                     openAlertModal("에러가 발생했습니다. 관리자에게 문의하세요.", "error");
                 }
 
             } else {
-                openAlertModal(`마일리지 페스워드 번호는 ${passwordCount} 자리 입니다.`);
+                openAlertModal(`마일리지 패스워드 번호는 ${passwordCount} 자리 입니다.`);
             }
             
         });
@@ -1966,7 +1966,7 @@ function updateDynamicContent(contentType, data ,resolve) {
             }
         });
 
-        addButton("pointPaymentBtn", "포인트사용", "bg-gray-400 text-white py-3 text-3xl rounded-lg hover:bg-gray-500 w-full h-48");
+        addButton("pointPaymentBtn", "포인트 사용", "bg-blue-500 text-white py-3 text-3xl rounded-lg hover:bg-blue-600 w-full h-48");
         document.getElementById("pointPaymentBtn").addEventListener("click", () => {
             // 포인트 포멧 to number
             const usePoint = cleanNumber(inputTarget.innerText);
@@ -2253,13 +2253,13 @@ function updateDynamicContent2(contentType, data = {}) {
             clearButtons();
 
             // 바코드 스캔 버튼
-            addButton("scanBarcodeBtn", "바코드스캔", "bg-red-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full", async () => {
+            addButton("scanBarcodeBtn", "바코드스캔", "bg-red-400 py-3 text-3xl rounded-lg hover:bg-red-500 w-full", async () => {
                 const barcodeScan = await getBarcodeScanModal();
                 inputValue = barcodeScan || ""; // 입력된 값에 추가
                 updateInputDisplay();
             });
 
-            addButton("useBarCodeBtn", "사용하기", "bg-blue-200 py-3 text-3xl rounded-lg hover:bg-gray-300 w-full", async () => {
+            addButton("useBarCodeBtn", "사용하기", "bg-blue-500 py-3 text-3xl rounded-lg hover:bg-blue-600 w-full", async () => {
                 const couponCode = inputValue.trim();
                 if (!couponCode) return openAlertModal("쿠폰 번호를 입력하세요.", "error");
 

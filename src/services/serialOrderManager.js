@@ -111,10 +111,18 @@ const processOrder = async (recipe, count, totalCount) => {
         if (recipe.cupYn === 'yes' ) return;
 
         if (!recipe.cupYn || recipe.cupYn === 'no') {
-            await retry(dispenseCup, [recipe, count, totalCount], 10, '컵 투출');
-        }
+            if (recipe.iceYn === 'yes') {
+                // 컵 + 얼음 동시 동작
+                await Promise.all([
+                    retry(dispenseCup, [recipe, count, totalCount], 10, '컵 투출'),
+                    dispenseIce(recipe, count, totalCount)
+                ]);
+            } else {
 
-        if (recipe.iceYn === 'yes') {
+                await retry(dispenseCup, [recipe, count, totalCount], 10, '컵 투출');
+            }
+        } else if (recipe.iceYn === 'yes') {
+            // 컵 없이 얼음만
             await dispenseIce(recipe, count, totalCount);
         }
 
@@ -277,7 +285,7 @@ const dispenseIce = (recipe, count, totalCount) => {
             let initialValue = null; // 최초 상태값 저장
             let stableTime = 0; // 변경 후 유지 시간
             let valueChanged = false; // 값 변경 여부 플래그
-            let minWaitTime = 7; // 최소 대기 시간 설정
+            let minWaitTime = 10; // 최소 대기 시간 설정
             let minWaitCounter = 0; // 최소 대기 시간 카운터
 
             let waterTime = Number(recipe.waterTime);
@@ -287,16 +295,32 @@ const dispenseIce = (recipe, count, totalCount) => {
             totalTime = Number(recipe.iceTime) + waterTime
             log.info('[totalTime] 제빙기 카운트 : ', totalTime);
 
-            // 화면 노출 메세지
-            eventEmitter.emit('order-update', { menu: `${menuName} ${count} / ${totalCount}`, status: 'ice', message: `제빙기에서 얼음을 받아주세요.` });
+            // 화면 노출 메세지 (3초 뒤 한 번만 표시)
+            setTimeout(() => {
+                eventEmitter.emit('order-update', {
+                    menu: `${menuName} ${count} / ${totalCount}`,
+                    status: 'ice',
+                    message: `제빙기에서 얼음을 받아주세요.`
+                });
+            }, 3000);
 
-            for (let counter = 0; counter < 120; counter++) {
-                eventEmitter.emit('order-update', { menu: `${menuName} ${count} / ${totalCount}`, status: 'iceCount', message: `제빙기에서 얼음을 받아주세요.`, time: counter });
+            for (let counter = 0; counter < 123; counter++) {
                 const result = await Ice.getKaiserInfo();
                 const currentHexArray = result.match(/.{1,2}/g); // 2자리씩 끊어서 배열 생성
                 const currentValue = parseInt(currentHexArray[7]); // 16진수 → 10진수 변환
 
                 log.info(`제빙기 변경값: ${currentValue}`);
+
+                // --- 앞의 3초 동안은 화면에 안보냄 (컵 모달 유지) ---
+                if (counter >= 3) {
+                    const displayTime = counter - 3; // 화면에는 0~119까지만 보이게
+                    eventEmitter.emit('order-update', {
+                        menu: `${menuName} ${count} / ${totalCount}`,
+                        status: 'iceCount',
+                        message: `제빙기에서 얼음을 받아주세요.`,
+                        time: displayTime
+                    });
+                }
 
                 if (!valueChanged) {
                     // 값 변경 전 (처음 값 유지)
@@ -330,9 +354,10 @@ const dispenseIce = (recipe, count, totalCount) => {
                     return;
                 }
 
-                if (counter >= 119) {
+                // 120초 제한 기준은 여전히 counter 123으로
+                if (counter >= 122) {
                     await Ice.sendIceStopPacket();
-                    reject(new Error(`"제빙기 120초 경과로 기계가 초기화되었습니다."`));
+                    reject(new Error(`"제빙기 123초 경과로 기계가 초기화되었습니다."`));
                     return;
                 }
 
