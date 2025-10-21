@@ -49,7 +49,7 @@ const reqVCAT_HTTP = async (cost, halbu) => {
             sendbuf = make_send_data(sendMsg);
 
             try {
-                const response = await fetch("http://127.0.0.1:9189", {
+                const response = await fetch("http://127.0.0.1:9188", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/x-www-form-urlencoded"
@@ -346,7 +346,7 @@ const reqBarcode_HTTP = async () => {
     const sendbuf = make_send_data(sendraw);
 
     try {
-        const response = await fetch("http://127.0.0.1:9189", {
+        const response = await fetch("http://127.0.0.1:9188", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: encodeURI(sendbuf)
@@ -373,36 +373,45 @@ const reqBarcode_HTTP = async () => {
     }
 };
 
+async function stopVariantD() {
+    const s = make_send_data("REQ_STOP");
+    const bytes = new TextEncoder().encode(s);
+    try {
+        const response = await fetch("http://127.0.0.1:9188", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/octet-stream",
+            },
+            body: bytes,
+        });
+
+        const text = await response.text();
+        log.info("[D] 응답:", text);
+        return { ok: true, text };
+    } catch (err) {
+        log.error("[D] 실패:", err);
+        return { ok: false };
+    }
+}
+
 // 바코드 조회 중단
 const stopBarcode_HTTP = async () => {
     const sendraw = "REQ_STOP";
-    const sendbuf = make_send_data(sendraw);
-    console.log("실제 문자열:", sendbuf);
-    console.log("문자 수:", sendbuf.length);
-    console.log("바이트 수:", new TextEncoder().encode(sendbuf).length);
-
-    const encoded = encodeURI(sendbuf);
-    console.log("인코딩 후 문자수:", encoded.length);
+    const sendbuf = make_send_data(sendraw); // "0020VCAT    0008REQ_STOP"
 
     try {
-        const response = await fetch("http://127.0.0.1:9189", {
+        const res = await fetch("http://127.0.0.1:9189", {
             method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: sendbuf
+            headers: {
+                "Content-Type": "text/plain;charset=UTF-8",
+            },
+            body: sendbuf, // ❗ encodeURI 제거
         });
 
-        const data = await response.text();
-        log.info("바코드 중단 응답:", data);
-
-        return {
-            success: true,
-            raw: data,
-            timestamp: Date.now()
-        };
-
-    } catch (error) {
-        log.error("바코드 중단 요청 실패:", error);
-        return { success: false, message: "바코드 중단 요청 실패!" };
+        const data = await res.text();
+        log.info("✅ 바코드 중단 응답:", data);
+    } catch (e) {
+        log.error("❌ 실패:", e);
     }
 };
 

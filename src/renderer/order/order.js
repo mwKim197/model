@@ -451,7 +451,7 @@ const removeAll = () => {
 // 포인트 모달 닫기
 const closePointModal = () => {
     const modal = document.getElementById("pointModal");
-    const globalDim = document.getElementById('globalDim');
+    //const globalDim = document.getElementById('globalDim');
 
     // 입력폼 초기화
     resetInput();
@@ -536,7 +536,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 결제
 async function startPayment() {
-    const globalDim = document.getElementById('globalDim');
+   //const globalDim = document.getElementById('globalDim');
 
     if (!Array.isArray(orderList) || orderList.length === 0) {
         openAlertModal && openAlertModal("상품을 선택해 주세요");
@@ -557,7 +557,7 @@ async function startPayment() {
         // 제조 완료까지 잠금 유지하고 싶으면 타임아웃/신호에 맞춰 해제
         setTimeout(() => {
             isPaying = false;
-            const anyModalOpen = document.querySelectorAll('#pointModal:not(.hidden), #alertModal:not(.hidden)').length > 0;
+            const anyModalOpen = document.querySelectorAll('#dynamicContent:not(.hidden), #pointModal:not(.hidden), #alertModal:not(.hidden)').length > 0;
             if (!anyModalOpen) {
                 globalDim.classList.add('hidden');
             } else {
@@ -991,7 +991,7 @@ const totalPayment = async (data) => {
     }
 
     payCard.onclick = payBarcode.onclick = payPoint.onclick = payCoupon.onclick = null;
-    const globalDim = document.getElementById('globalDim');
+    //const globalDim = document.getElementById('globalDim');
     const closeBtn = document.getElementById("totalPayCloseModalBtn");
     closeBtn.onclick = null;
     closeBtn.onclick = () => { modal.classList.add('hidden'); resetCountdown(); globalDim.classList.add('hidden'); };
@@ -1523,7 +1523,7 @@ const pointPayment = (orderAmount) => {
         playAudio('../../assets/audio/포인트를 적립 혹은 사용하시겠습니까.mp3');
 
         const modal = document.getElementById("pointModal");
-        const globalDim = document.getElementById('globalDim');
+       // const globalDim = document.getElementById('globalDim');
         inputCount = userInfo.mileageNumber ? userInfo.mileageNumber : 12; // 입력 제한 초기화
         usePoint = 0; //
         totalAmt = orderAmount;
@@ -1699,7 +1699,7 @@ function updateDynamicContent(contentType, data ,resolve) {
     const dynamicContent = document.getElementById("dynamicContent");
     const dynamicButton = document.getElementById('dynamicButton');
     const modal = document.getElementById("pointModal");
-    const globalDim = document.getElementById('globalDim'); // 모달 딤
+    //const globalDim = document.getElementById('globalDim'); // 모달 딤
     const closeBtn       = document.getElementById("closeModalBtn");
 
     // 닫기 버튼 이벤트 연결
@@ -2194,7 +2194,7 @@ function updateDynamicContent2(contentType, data = {}) {
         const dynamicContent = document.getElementById("dynamicContent");
         const dynamicButton = document.getElementById('dynamicButton');
         const modal = document.getElementById("pointModal");
-        const globalDim = document.getElementById('globalDim'); // 모달 딤
+       // const globalDim = document.getElementById('globalDim'); // 모달 딤
 
         let resolved = false;
         const aborter = new AbortController();
@@ -2253,13 +2253,13 @@ function updateDynamicContent2(contentType, data = {}) {
             clearButtons();
 
             // 바코드 스캔 버튼
-            addButton("scanBarcodeBtn", "바코드스캔", "bg-red-400 py-3 text-3xl rounded-lg hover:bg-red-500 w-full", async () => {
+            addButton("scanBarcodeBtn", "바코드스캔", "bg-red-400 py-3 text-white text-3xl rounded-lg hover:bg-red-500 w-full", async () => {
                 const barcodeScan = await getBarcodeScanModal();
                 inputValue = barcodeScan || ""; // 입력된 값에 추가
                 updateInputDisplay();
             });
 
-            addButton("useBarCodeBtn", "사용하기", "bg-blue-500 py-3 text-3xl rounded-lg hover:bg-blue-600 w-full", async () => {
+            addButton("useBarCodeBtn", "사용하기", "bg-blue-500 py-3 text-white text-3xl rounded-lg hover:bg-blue-600 w-full", async () => {
                 const couponCode = inputValue.trim();
                 if (!couponCode) return openAlertModal("쿠폰 번호를 입력하세요.", "error");
 
@@ -2434,7 +2434,7 @@ const cardPayment = async (orderAmount, discountAmount) => {
 
     // 모달
     const modal = document.getElementById('modal');
-    const globalDim = document.getElementById('globalDim');
+    //const globalDim = document.getElementById('globalDim');
 
     // 열기
     globalDim.classList.remove('hidden');
@@ -2539,7 +2539,7 @@ const barcodePayment = async (orderAmount, discountAmount = 0) => {
 
     const totalAmount = orderAmount - discountAmount; // 전체 금액 계산
     const barcodeModal = document.getElementById('barcodeModal');
-    const globalDim = document.getElementById('globalDim');
+    //const globalDim = document.getElementById('globalDim');
     const barcodeModalCloseBtn = document.getElementById('barcodeModalCloseBtn');
 
     // 열기
