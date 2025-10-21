@@ -373,27 +373,6 @@ const reqBarcode_HTTP = async () => {
     }
 };
 
-async function stopVariantD() {
-    const s = make_send_data("REQ_STOP");
-    const bytes = new TextEncoder().encode(s);
-    try {
-        const response = await fetch("http://127.0.0.1:9188", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/octet-stream",
-            },
-            body: bytes,
-        });
-
-        const text = await response.text();
-        log.info("[D] 응답:", text);
-        return { ok: true, text };
-    } catch (err) {
-        log.error("[D] 실패:", err);
-        return { ok: false };
-    }
-}
-
 // 바코드 조회 중단
 const stopBarcode_HTTP = async () => {
     const sendraw = "REQ_STOP";
@@ -509,39 +488,133 @@ const useCoupon = async (couponArray) => {
 };
 
 
+
+
 // 바코드 결제
 const reqPayproBarcode = async (amount, halbu = "00") => {
     // 1️⃣ 바코드 먼저 조회
     const barcodeData = await reqBarcode_HTTP();
-    if (!barcodeData.success) return barcodeData; // 실패 시 그대로 반환
+    if (!barcodeData.success) return barcodeData;
 
-    // 2️⃣ 결제 전문 생성
-    const sendraw = buildBarcodeRequest(amount, barcodeData.barcode, halbu);
-    const sendbuf = make_send_data(sendraw);
+    const barcode = barcodeData.barcode;
 
-    // 3️⃣ 결제 요청
-    try {
-        const response = await fetch("http://127.0.0.1:9188", {
+    // 2️⃣ 카카오페이 여부 판별 (앞자리 28로 시작)
+    const isKakaoPay = barcode.startsWith("28");
+
+    if (isKakaoPay) {
+        sendLogToMain("info", "카카오페이 바코드 감지됨");
+
+        // ✅ 2-1. 승인인증 (KKS)
+        const authRaw = buildKakaoAuthRequest(amount, barcode, halbu);
+        const authBuf = make_send_data(authRaw);
+        const authRes = await fetch("http://127.0.0.1:9188", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: encodeURI(sendbuf)
+            body: encodeURI(authBuf),
         });
 
-        const data = await response.text();
-        log.info("결제 응답:", data);
+        const authData = await authRes.text();
+        const authParsed = await reqNCData(authData);
+        sendLogToMain("info", `카카오 승인인증 응답: ${JSON.stringify(authParsed)}`);
 
-        return {
-            success: true,
-            raw: data,
-            barcode: barcodeData.barcode,
-            amount: amount
-        };
+        if (!authParsed.isValid) {
+            sendLogToMain("error", "카카오 승인인증 실패");
+            return { success: false, message: "카카오페이 승인인증 실패" };
+        }
 
-    } catch (error) {
-        log.error("바코드 결제 요청 실패:", error);
-        return { success: false, message: "바코드 결제 요청 실패!" };
+        // ✅ 2-2. 머니승인 (MONY)
+        const moneyRaw = buildKakaoMoneyRequest(amount, barcode, halbu);
+        const moneyBuf = make_send_data(moneyRaw);
+        const moneyRes = await fetch("http://127.0.0.1:9188", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: encodeURI(moneyBuf),
+        });
+
+        const moneyData = await moneyRes.text();
+        const moneyParsed = await reqNCData(moneyData);
+        sendLogToMain("info", `카카오 머니승인 응답: ${JSON.stringify(moneyParsed)}`);
+
+        if (moneyParsed.isValid) {
+            return { success: true, message: moneyParsed };
+        } else {
+            return { success: false, message: "카카오페이 머니승인 실패" };
+        }
+
+    } else {
+        // ✅ 일반 바코드 결제
+        const sendraw = buildBarcodeRequest(amount, barcode, halbu);
+        const sendbuf = make_send_data(sendraw);
+
+        try {
+            const response = await fetch("http://127.0.0.1:9188", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: encodeURI(sendbuf)
+            });
+
+            const data = await response.text();
+            const responseData = await reqNCData(data);
+            sendLogToMain("info", `일반 바코드 결제 응답: ${JSON.stringify(responseData)}`);
+
+            if (responseData.isValid) {
+                return { success: true, message: responseData };
+            } else {
+                return { success: false, message: "일반 바코드 결제 실패" };
+            }
+        } catch (error) {
+            sendLogToMain("error", `바코드 결제 요청 실패: ${error}`);
+            return { success: false, message: "바코드 결제 요청 실패!" };
+        }
     }
 };
+
+
+// 1️⃣ 카카오 승인인증 전문
+function buildKakaoAuthRequest(amount, barcode, halbu = "00") {
+    const H7 = '\x07';
+    const FS = '\x1C';
+    const amtStr = String(amount || 0); // ✅ 패딩 제거 (12자리 금지)
+    const halbuStr = String(halbu ?? "00").padStart(2, "0");
+    const barcodeStr = String(barcode || "");
+
+    const fields = [
+        "0300", "10", "L", amtStr, "0", "0", halbuStr,
+        "", "", "", "", "",      // 빈 필드 5개
+        barcodeStr,
+        "", "", "", "", "","",      // 빈 필드 6개
+        "KKS",                   // ✅ 카카오 승인인증
+        "", "", "", "", "",""       // 마지막 6개 빈 필드
+    ];
+
+    return "NICEVCATB" + H7 + fields.join(FS) + H7;
+}
+
+// 2️⃣ 카카오 머니 승인 전문
+function buildKakaoMoneyRequest(amount, barcode, halbu = "00") {
+    const H7 = '\x07';
+    const FS = '\x1C';
+
+    // ✅ 카카오머니 승인에서는 패딩 금지
+    const amtStr = String(amount || 0);
+    const halbuStr = String(halbu ?? "00").padStart(2, "0");
+    const barcodeStr = String(barcode || "");
+
+    const fields = [
+        "0300", "10", "L", amtStr, "0", "0", halbuStr,
+        "", "", "", "", "",               // 빈 필드 5개
+        barcodeStr,
+        "", "", "", "", "",               // 빈 필드 5개
+        "MONY         ",                  // ✅ 'MONY' + 공백 포함
+        "KKE",                            // ✅ VAN 구분코드
+        "", "", "",                       // 빈 필드 3개
+        "KKE000001004",                   // ✅ VAN 거래ID
+        "", ""                            // ✅ 마지막 2개 빈 필드
+    ];
+
+    return "NICEVCATB" + H7 + fields.join(FS) + H7;
+}
+
 
 // 바코드 결제 전문 생성
 function buildBarcodeRequest(amount, barcode, halbu = "00") {

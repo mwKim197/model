@@ -939,7 +939,7 @@ const totalPayment = async (data) => {
             // 쿠폰사용함수
             await handleUseCoupons(orderList);
 
-            await ordStart();
+            await ordStart(mileageUsed);
         } catch (e) {
             try {
                 await rollbackPointUsage('ORDER_FAIL');
@@ -2562,16 +2562,18 @@ const barcodePayment = async (orderAmount, discountAmount = 0) => {
                 resolve(result); // 결제 결과 반환
             }, 100);
         });
+        sendLogToMain('info',`barcodePayment 시작지점: ${JSON.stringify(result)}` );
 
         // 결제 성공 여부 확인
         if (result.success) {
             barcodeModal.classList.add('hidden');
             globalDim.classList.add('hidden');
-            console.log("바코드결제성공");
+            return result;
         } else {
             barcodeModal.classList.add('hidden');
             globalDim.classList.add('hidden');
             console.log("바코드결제실패");
+            return result;
         }
     } catch (error) {
         barcodeModal.classList.add('hidden');
