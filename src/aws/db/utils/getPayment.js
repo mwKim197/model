@@ -63,6 +63,10 @@ const saveOrdersToDynamoDB = async (order) => {
             params.Item.pointData = order.pointData;
         }
 
+        // totalPayInfo 있으면 추가
+        if (order.totalPayInfo) {
+            params.Item.totalPayInfo = order.totalPayInfo;
+        }
 
         // 데이터 저장
         await dynamoDB.put(params).promise();

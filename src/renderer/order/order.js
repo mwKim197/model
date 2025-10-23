@@ -451,7 +451,6 @@ const removeAll = () => {
 // 포인트 모달 닫기
 const closePointModal = () => {
     const modal = document.getElementById("pointModal");
-    //const globalDim = document.getElementById('globalDim');
 
     // 입력폼 초기화
     resetInput();
@@ -536,7 +535,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 결제
 async function startPayment() {
-   //const globalDim = document.getElementById('globalDim');
 
     if (!Array.isArray(orderList) || orderList.length === 0) {
         openAlertModal && openAlertModal("상품을 선택해 주세요");
@@ -668,16 +666,55 @@ function calculateOrderTotals(orderList = []) {
 // 세션에 쿠폰사용금액반영
 function applyCouponFromOrders(orderList) {
     const { totalAmount, couponDiscount, couponLines } = calculateOrderTotals(orderList);
-
     paymentSession.orderAmount = totalAmount;
-    paymentSession.couponItems = couponLines.filter(c => c.discount > 0); // 할인된 항목만
+    paymentSession.couponItems = couponLines.filter(c => c.discount > 0);
     paymentSession.couponTotal = couponDiscount;
 
-    // 전체 할인(포인트 + 쿠폰)
     const mileageUsed = getMileageUsed(paymentSession);
     paymentSession.totalDiscount = couponDiscount + mileageUsed;
 
-    console.log(`쿠폰 할인 ${couponDiscount}원 적용 (총 주문금액 ${totalAmount}원)`);
+    sendLogToMain('info', `쿠폰 할인 ${couponDiscount}원 적용 (총 주문금액 ${totalAmount}원)`);
+
+    // totalPayInfo 초기화
+    if (!Array.isArray(paymentSession.totalPayInfo)) {
+        paymentSession.totalPayInfo = [];
+    }
+
+    // ✅ 중복 방지용 Set
+    const seenCoupons = new Set(
+        paymentSession.totalPayInfo
+            .flatMap(p => p.coupons?.map(c => c.couponId) || [])
+    );
+
+    // ✅ 쿠폰 1개당 totalPayInfo 1개 생성
+    orderList.forEach(order => {
+        order.usedCoupons?.forEach(coupon => {
+            // 이미 등록된 쿠폰은 무시
+            if (seenCoupons.has(coupon.couponId)) return;
+            seenCoupons.add(coupon.couponId);
+
+            paymentSession.totalPayInfo.push({
+                method: "쿠폰",
+                items: [
+                    {
+                        name: order.name,
+                        discount: order.price
+                    }
+                ],
+                coupons: [
+                    {
+                        couponId: coupon.couponId,
+                        couponCode: coupon.couponCode,
+                        orderId: order.orderId,
+                        name: order.name,
+                        userId: order.userId,
+                        menuId: order.menuId,
+                        price: order.price
+                    }
+                ]
+            });
+        });
+    });
 }
 
 //----------------쿠폰결제 금액계산-------------------//
@@ -707,10 +744,11 @@ const paymentSession = {
     orderId: null,
     orderAmount: 0,       // 원 주문금액 (할인 전)
     totalDiscount: 0,     // 총 할인 (포인트 + 쿠폰)
-    usePoint: null,       // ✅ 포인트 사용 단건 { uniqueMileageNo, usedAmount, pointData }
-    earnPoint: null,      // ✅ 적립 단건 { uniqueMileageNo, createdAt }
+    usePoint: null,       // 포인트 사용 단건 { uniqueMileageNo, usedAmount, pointData }
+    earnPoint: null,      // 적립 단건 { uniqueMileageNo, createdAt }
+    totalPayInfo: null,
 
-    // ✅ 쿠폰 관련
+    // 쿠폰 관련
     couponItems: [],      // [{ name, count, discount }]  — 개별 쿠폰
     couponMenuIds: [],    // [menuId1, menuId2, ...]      — 전액할인 메뉴 ID
     couponTotal: 0,       // 총 쿠폰 할인금액 (derived 합산)
@@ -722,6 +760,7 @@ const paymentSession = {
         this.totalDiscount = 0;
         this.usePoint = null;
         this.earnPoint = null;
+        this.totalPayInfo = null;
 
         // 쿠폰 관련 초기화
         this.couponItems = [];
@@ -939,7 +978,7 @@ const totalPayment = async (data) => {
             // 쿠폰사용함수
             await handleUseCoupons(orderList);
 
-            await ordStart(mileageUsed);
+            await ordStart(mileageUsed, null, data, paymentSession.totalPayInfo);
         } catch (e) {
             try {
                 await rollbackPointUsage('ORDER_FAIL');
@@ -991,7 +1030,7 @@ const totalPayment = async (data) => {
     }
 
     payCard.onclick = payBarcode.onclick = payPoint.onclick = payCoupon.onclick = null;
-    //const globalDim = document.getElementById('globalDim');
+
     const closeBtn = document.getElementById("totalPayCloseModalBtn");
     closeBtn.onclick = null;
     closeBtn.onclick = () => { modal.classList.add('hidden'); resetCountdown(); globalDim.classList.add('hidden'); };
@@ -1014,7 +1053,13 @@ const totalPayment = async (data) => {
         // 쿠폰사용함수
         await handleUseCoupons(orderList);
 
-        await ordStart(0, payEnd.cardInfo);
+        // 기존 결제 리스트에 카드 결제 추가
+        paymentSession.totalPayInfo.push({
+            method: "카드",
+            ...payEnd.cardInfo,  // 카드 승인정보 그대로 확장
+        });
+
+        await ordStart(0, payEnd.cardInfo, null, paymentSession.totalPayInfo);
     };
 
     payBarcode.onclick = async () => {
@@ -1030,14 +1075,42 @@ const totalPayment = async (data) => {
             return;
         }
 
+        const payData = payEnd.message.parsedData;
+        const get = (key) => payData.find(f => f.name === key)?.value?.trim() || "";
+
+        const payInfo = {
+            method: get("발급사명") || "카카오페이머니", // 결제수단
+            approvalNo: get("승인번호"),
+            amount: String(Number(get("거래금액") || "0")),
+            cardBin: get("카드Bin"),
+            approvedAt: get("승인일시"),
+            message: get("응답메시지"),
+            catId: get("승인CATID"),
+            posTraceNo: get("전문관리번호"),
+            uniqueNo: get("거래고유번호"),
+        };
+
+        // ✅ totalPayInfo가 없으면 초기화
+        if (!Array.isArray(paymentSession.totalPayInfo)) {
+            paymentSession.totalPayInfo = [];
+        }
+
+        // ✅ 기존 결제 리스트에 바코드 결제 추가
+        paymentSession.totalPayInfo.push({
+            method: "바코드QR",
+            ...payInfo, // 바로 확장
+        });
+
+        sendLogToMain("info", `[바코드 결제] ${JSON.stringify(payInfo)}`);
+        sendLogToMain("info", `[totalPayInfo 누적] ${JSON.stringify(paymentSession.totalPayInfo)}`);
+
         // 마일리지 적립 처리
         await handleMileageEarn(orderAmount, userInfo);
 
         // 쿠폰사용함수
         await handleUseCoupons(orderList);
 
-        await ordStart(0, payEnd.cardInfo);
-
+        await ordStart(0, payInfo, null, paymentSession.totalPayInfo);
     };
 
     payPoint.onclick = async () => {
@@ -1047,6 +1120,23 @@ const totalPayment = async (data) => {
         resetMileageUsage();
 
         response = await pointPayment(paymentSession.orderAmount);
+
+        if (!Array.isArray(paymentSession.totalPayInfo)) {
+            paymentSession.totalPayInfo = [];
+        }
+
+        const p = response.pointData || {};
+
+        paymentSession.totalPayInfo.push({
+            method: "마일리지",
+            mileageNo: p.mileageNo,
+            tel: p.tel,
+            uniqueMileageNo: p.uniqueMileageNo,
+            usedAmount: response.discountAmount ?? 0,
+            remainAmount: p.totalAmt ?? 0,
+            pointBalance: p.points ?? 0,
+        });
+
         sendLogToMain('info', `포인트 : ${JSON.stringify(response)}`);
 
         await totalPayment(response); // 다시 실행
@@ -1699,7 +1789,6 @@ function updateDynamicContent(contentType, data ,resolve) {
     const dynamicContent = document.getElementById("dynamicContent");
     const dynamicButton = document.getElementById('dynamicButton');
     const modal = document.getElementById("pointModal");
-    //const globalDim = document.getElementById('globalDim'); // 모달 딤
     const closeBtn       = document.getElementById("closeModalBtn");
 
     // 닫기 버튼 이벤트 연결
@@ -2434,7 +2523,6 @@ const cardPayment = async (orderAmount, discountAmount) => {
 
     // 모달
     const modal = document.getElementById('modal');
-    //const globalDim = document.getElementById('globalDim');
 
     // 열기
     globalDim.classList.remove('hidden');
@@ -2532,14 +2620,12 @@ const stopBarcode = async () => {
     return res;
 }
 
-
 // 바코드 조회 및 결제
 const barcodePayment = async (orderAmount, discountAmount = 0) => {
     clearCountdown();
 
     const totalAmount = orderAmount - discountAmount; // 전체 금액 계산
     const barcodeModal = document.getElementById('barcodeModal');
-    //const globalDim = document.getElementById('globalDim');
     const barcodeModalCloseBtn = document.getElementById('barcodeModalCloseBtn');
 
     // 열기
@@ -2593,7 +2679,7 @@ function isOver30Minutes() {
 }
 
 // 주문 시작
-const ordStart = async (point = 0, payInfo, pointData) => {
+const ordStart = async (point = 0, payInfo, pointData, totalPayInfo) => {
 
     /* [TODO]커피 예열 임시 제거 겨울까지 테스트이후 다시 프로세스 정리후 적용예정 2025-05-30
     const chkCoffee = orderList.some(menu =>
@@ -2621,6 +2707,7 @@ const ordStart = async (point = 0, payInfo, pointData) => {
             orderList: orderList,
             payInfo,
             pointData,
+            totalPayInfo,
         }
         await window.electronAPI.setOrder(ordInfo); // 주문 처리
         removeAllItem(); // 주문 목록 삭제
