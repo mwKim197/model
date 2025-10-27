@@ -746,7 +746,7 @@ const paymentSession = {
     totalDiscount: 0,     // 총 할인 (포인트 + 쿠폰)
     usePoint: null,       // 포인트 사용 단건 { uniqueMileageNo, usedAmount, pointData }
     earnPoint: null,      // 적립 단건 { uniqueMileageNo, createdAt }
-    totalPayInfo: null,
+    totalPayInfo: [],
 
     // 쿠폰 관련
     couponItems: [],      // [{ name, count, discount }]  — 개별 쿠폰
@@ -760,7 +760,7 @@ const paymentSession = {
         this.totalDiscount = 0;
         this.usePoint = null;
         this.earnPoint = null;
-        this.totalPayInfo = null;
+        this.totalPayInfo = [];
 
         // 쿠폰 관련 초기화
         this.couponItems = [];
@@ -774,6 +774,12 @@ function startPaymentSession(orderId, orderAmount) {
     paymentSession.reset();
     paymentSession.orderId = orderId;
     paymentSession.orderAmount = Number(orderAmount) || 0;
+
+    orderList = orderList.map(order => {
+        // coupon 관련 필드 삭제
+        const {couponUsed, usedCoupons, ...rest} = order;
+        return rest;
+    });
 }
 
 // ✅ 포인트(마일리지) 단건 누적 처리
@@ -1016,14 +1022,14 @@ const totalPayment = async (data) => {
     }
 
     // 마일리지 fasle 일때만안보이기
-    if (userInfo.mileage !== false && paymentSession.earnPoint === null) {
+    if (userInfo.payType !== true && paymentSession.earnPoint === null) {
         payPoint.classList.remove("hidden");
     } else {
         payPoint.classList.add("hidden");
     }
 
     // 쿠폰 fasle 일때만안보이기
-    if (userInfo.coupon !== false && paymentSession.earnPoint === null && paymentSession.usePoint === null) {
+    if (userInfo.coupon !== true && paymentSession.earnPoint === null && paymentSession.usePoint === null) {
         payCoupon.classList.remove("hidden");
     } else {
         payCoupon.classList.add("hidden");
@@ -1033,7 +1039,13 @@ const totalPayment = async (data) => {
 
     const closeBtn = document.getElementById("totalPayCloseModalBtn");
     closeBtn.onclick = null;
-    closeBtn.onclick = () => { modal.classList.add('hidden'); resetCountdown(); globalDim.classList.add('hidden'); };
+    closeBtn.onclick = () => {
+        modal.classList.add('hidden');
+        resetCountdown();
+        globalDim.classList.add('hidden');
+
+        // 세션초기화, orderList coupon 사용초기화
+    };
 
     payCard.onclick = async () => {
         modal.classList.add('hidden');
@@ -2370,7 +2382,7 @@ function updateDynamicContent2(contentType, data = {}) {
                 const menuId = parseInt(couponItem.menuId, 10);
 
                 const matchedOrder = orderList.find(order => {
-                    if (order.menuId !== menuId) return false;
+                    if (parseInt(order.menuId, 10) !== menuId) return false;
 
                     const used = order.couponUsed || 0;
                     if (used >= order.count) return false;
