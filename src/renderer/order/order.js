@@ -1092,6 +1092,7 @@ const totalPayment = async (data) => {
 
         const payInfo = {
             method: get("발급사명") || "카카오페이머니", // 결제수단
+            payName: get("발급사명") || "카카오페이머니", // 결제수단
             approvalNo: get("승인번호"),
             amount: String(Number(get("거래금액") || "0")),
             cardBin: get("카드Bin"),
@@ -1109,8 +1110,8 @@ const totalPayment = async (data) => {
 
         // ✅ 기존 결제 리스트에 바코드 결제 추가
         paymentSession.totalPayInfo.push({
-            method: "바코드QR",
             ...payInfo, // 바로 확장
+            method: "바코드QR",
         });
 
         sendLogToMain("info", `[바코드 결제] ${JSON.stringify(payInfo)}`);
