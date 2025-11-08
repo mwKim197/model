@@ -100,7 +100,6 @@ const getUserMenuInfoAll = async (userId) => {
 
         const data = await response.json();
         log.info(data);
-        sendLogToMain('info','MENU-ALL: ', data);  // 디버깅용 콘솔
         return data;
     } catch (error) {
         sendLogToMain('error','Error fetching menu info:', error);
@@ -127,7 +126,7 @@ const getMenuInfoAll = async () => {
 
         const data = await response.json();
         log.info(data);
-        sendLogToMain('info','MENU-ALL: ', data);  // 디버깅용 콘솔
+        //sendLogToMain('info','MENU-ALL: ', data);  // 디버깅용 콘솔
         return data;
     } catch (error) {
         sendLogToMain('error','Error fetching menu info:', error);

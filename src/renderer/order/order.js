@@ -1220,7 +1220,7 @@ function renderTotalPayContent(modalEl, orderList, paymentSession) {
     if (Array.isArray(paymentSession?.couponItems) && paymentSession.couponItems.length > 0) {
         couponLines = paymentSession.couponItems.map(ci => ({
             name: ci.name,
-            count: ci.count,
+            count: ci.couponUsed,
             discount: Number(ci.discount) || 0,
         }));
     } else if (Array.isArray(paymentSession?.couponMenuIds) && paymentSession.couponMenuIds.length > 0) {
@@ -1233,6 +1233,8 @@ function renderTotalPayContent(modalEl, orderList, paymentSession) {
                 discount: (Number(o.price) || 0) * (Number(o.count) || 0), // 전액할인
             }));
     }
+
+    console.log("couponLines:", couponLines);
 
     // ------------------------------
     // ③ 결제금액 계산 (쿠폰 → 포인트 순서)
@@ -3160,7 +3162,6 @@ async function fetchData() {
         // config 업데이트
         await window.electronAPI.fetchAndSaveUserInfo();
         const allData = await window.electronAPI.getMenuInfoAll();
-        sendLogToMain('info', `전체 메뉴:  ${JSON.stringify(allData)}`);
         userInfo = await window.electronAPI.getUserInfo();
         const version = await window.electronAPI.getVersion();
         setVersion(version);
