@@ -1082,8 +1082,24 @@ const totalPayment = async (data) => {
 
         // ✅ 결과 객체가 없거나 success가 false면 실패 처리
         if (!payEnd || !payEnd.success) {
-            sendLogToMain('error', `바코드 결제 실패`);
-            await totalPayment(); // 다시 결제 절차로 복귀
+            const failMsg = payEnd?.message || '바코드 결제에 실패했습니다.';
+
+            // 🔔 사용자에게 알림 표시
+            openAlertModal(failMsg, 'error');
+            sendLogToMain('error', `바코드 결제 실패: ${failMsg}`);
+
+            // 기존 okButton 클릭 이벤트 제거 (중복 방지)
+            okButton.replaceWith(okButton.cloneNode(true));
+
+            // 새로 정의된 okButton 가져오기
+            const newOkButton = document.getElementById('okButton');
+
+            // ✅ 알럿 닫은 후 totalPayment로 복귀
+            newOkButton.onclick = async () => {
+                closeAlertModal();
+                await totalPayment();
+            };
+
             return;
         }
 
@@ -2663,23 +2679,24 @@ const barcodePayment = async (orderAmount, discountAmount = 0) => {
                 resolve(result); // 결제 결과 반환
             }, 100);
         });
-        sendLogToMain('info',`barcodePayment 시작지점: ${JSON.stringify(result)}` );
+
 
         // 결제 성공 여부 확인
         if (result.success) {
             barcodeModal.classList.add('hidden');
             globalDim.classList.add('hidden');
+            sendLogToMain('info',`barcodePayment 시작지점: 바코드결제성공` );
             return result;
         } else {
             barcodeModal.classList.add('hidden');
             globalDim.classList.add('hidden');
-            console.log("바코드결제실패");
+            sendLogToMain('error',`barcodePayment 시작지점: 바코드결제실패` );
             return result;
         }
     } catch (error) {
         barcodeModal.classList.add('hidden');
         globalDim.classList.add('hidden');
-        console.log("바코드결제에러");
+        sendLogToMain('error',`barcodePayment 시작지점: 바코드결제에러` );
         return false;
     }
 }

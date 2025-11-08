@@ -48,7 +48,7 @@ const getUserInfo = async () => {
         }
 
         const data = await response.json();
-        sendLogToMain('info','SCF: ', data);  // 디버깅용 콘솔
+
         return data;
     } catch (error) {
         sendLogToMain('error','Error fetching menu info:', error);

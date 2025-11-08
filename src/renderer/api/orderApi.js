@@ -494,12 +494,30 @@ const useCoupon = async (couponArray) => {
 const reqPayproBarcode = async (amount, halbu = "00") => {
     // 1️⃣ 바코드 먼저 조회
     const barcodeData = await reqBarcode_HTTP();
+
     if (!barcodeData.success) return barcodeData;
 
     const barcode = barcodeData.barcode;
 
-    // 2️⃣ 카카오페이 여부 판별 (앞자리 28로 시작)
+    sendLogToMain("info", `추출된바코드: ${barcode}`);
+    
+    // 2️⃣ 결제수단 구분
     const isKakaoPay = barcode.startsWith("28");
+    const isOnlyNumbers = /^[0-9]+$/.test(barcode);
+    const isNaverPay = barcode.startsWith("hQV") || barcode.startsWith("hQVC") || barcode.startsWith("hQVE");
+    const isQRType = !isOnlyNumbers && !isKakaoPay;
+
+    // 3️⃣ 네이버페이 QR 필터링
+    if (isNaverPay) {
+        sendLogToMain("error", "네이버페이 QR 감지됨 - 지원되지 않음");
+        return { success: false, message: "네이버페이 QR결제는 현재 지원되지 않습니다." };
+    }
+
+    // 4️⃣ 기타 알파벳 포함된 QR류(미지원) 필터링
+    if (isQRType) {
+        sendLogToMain("error", `미지원 QR형식 감지: ${barcode.slice(0, 10)}...`);
+        return { success: false, message: "지원되지 않는 QR형식입니다." };
+    }
 
     if (isKakaoPay) {
         sendLogToMain("info", "카카오페이 바코드 감지됨");
@@ -515,11 +533,14 @@ const reqPayproBarcode = async (amount, halbu = "00") => {
 
         const authData = await authRes.text();
         const authParsed = await reqNCData(authData);
-        sendLogToMain("info", `카카오 승인인증 응답: ${JSON.stringify(authParsed)}`);
 
         if (!authParsed.isValid) {
-            sendLogToMain("error", "카카오 승인인증 실패");
-            return { success: false, message: "카카오페이 승인인증 실패" };
+            // parsedData에서 "응답메시지" 항목 찾기
+            const messageItem = authParsed.parsedData.find(item => item.name === "응답메시지");
+            const message = messageItem?.value || "카카오페이 승인인증 실패";
+
+            sendLogToMain("error", message);
+            return { success: false, message };
         }
 
         // ✅ 2-2. 머니승인 (MONY)
@@ -533,12 +554,24 @@ const reqPayproBarcode = async (amount, halbu = "00") => {
 
         const moneyData = await moneyRes.text();
         const moneyParsed = await reqNCData(moneyData);
-        sendLogToMain("info", `카카오 머니승인 응답: ${JSON.stringify(moneyParsed)}`);
 
         if (moneyParsed.isValid) {
+
+            // moneyParsed "응답메시지" 항목 찾기
+            const messageItem = moneyParsed.parsedData.find(item => item.name === "응답메시지");
+            const message = messageItem?.value || "카카오페이 머니승인 성공";
+
+            sendLogToMain("info", message);
+
             return { success: true, message: moneyParsed };
         } else {
-            return { success: false, message: "카카오페이 머니승인 실패" };
+            // moneyParsed "응답메시지" 항목 찾기
+            const messageItem = moneyParsed.parsedData.find(item => item.name === "응답메시지");
+            const message = messageItem?.value || "카카오페이 머니승인 실패";
+
+            sendLogToMain("error", message);
+            return { success: false, message };
+
         }
 
     } else {
@@ -555,12 +588,23 @@ const reqPayproBarcode = async (amount, halbu = "00") => {
 
             const data = await response.text();
             const responseData = await reqNCData(data);
-            sendLogToMain("info", `일반 바코드 결제 응답: ${JSON.stringify(responseData)}`);
 
             if (responseData.isValid) {
+
+                // responseData "응답메시지" 항목 찾기
+                const messageItem = responseData.parsedData.find(item => item.name === "응답메시지");
+                const message = messageItem?.value || "바코드 결제 성공";
+
+                sendLogToMain("info", message);
+
                 return { success: true, message: responseData };
             } else {
-                return { success: false, message: "일반 바코드 결제 실패" };
+                // responseData "응답메시지" 항목 찾기
+                const messageItem = responseData.parsedData.find(item => item.name === "응답메시지");
+                const message = messageItem?.value || "일반 바코드 결제 실패";
+
+                sendLogToMain("error", message);
+                return { success: false, message: message };
             }
         } catch (error) {
             sendLogToMain("error", `바코드 결제 요청 실패: ${error}`);
