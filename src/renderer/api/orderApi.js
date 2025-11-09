@@ -509,14 +509,16 @@ const reqPayproBarcode = async (amount, halbu = "00") => {
 
     // 3️⃣ 네이버페이 QR 필터링
     if (isNaverPay) {
-        sendLogToMain("error", "네이버페이 QR 감지됨 - 지원되지 않음");
-        return { success: false, message: "네이버페이 QR결제는 현재 지원되지 않습니다." };
+        sendLogToMain("error", "네이버페이 QR 감지됨");
+        return { success: false, message: "지원하지 않는 결제수단입니다.\n" +
+                "관리자에게 문의하세요." };
     }
 
     // 4️⃣ 기타 알파벳 포함된 QR류(미지원) 필터링
     if (isQRType) {
         sendLogToMain("error", `미지원 QR형식 감지: ${barcode.slice(0, 10)}...`);
-        return { success: false, message: "지원되지 않는 QR형식입니다." };
+        return { success: false, message: "지원하지 않는 결제수단입니다.\n" +
+                "관리자에게 문의하세요." };
     }
 
     if (isKakaoPay) {
