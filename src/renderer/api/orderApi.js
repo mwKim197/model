@@ -542,7 +542,8 @@ const reqPayproBarcode = async (amount, halbu = "00") => {
             const message = messageItem?.value || "카카오페이 승인인증 실패";
 
             sendLogToMain("error", message);
-            return { success: false, message };
+            return { success: false, message: "지원하지 않는 결제수단입니다.\n" +
+                    "관리자에게 문의하세요." };
         }
 
         // ✅ 2-2. 머니승인 (MONY)
@@ -572,7 +573,8 @@ const reqPayproBarcode = async (amount, halbu = "00") => {
             const message = messageItem?.value || "카카오페이 머니승인 실패";
 
             sendLogToMain("error", message);
-            return { success: false, message };
+            return { success: false, message :"지원하지 않는 결제수단입니다.\n" +
+                    "관리자에게 문의하세요." };
 
         }
 
@@ -606,7 +608,8 @@ const reqPayproBarcode = async (amount, halbu = "00") => {
                 const message = messageItem?.value || "일반 바코드 결제 실패";
 
                 sendLogToMain("error", message);
-                return { success: false, message: message };
+                return { success: false, message: "지원하지 않는 결제수단입니다.\n" +
+                        "관리자에게 문의하세요." };
             }
         } catch (error) {
             sendLogToMain("error", `바코드 결제 요청 실패: ${error}`);
