@@ -15,17 +15,6 @@ const wsClient = new SmTCatAgentClient({ logger: console });
 
 let NODE_SERVER_URL = '';
 
-// 비동기 데이터 로드
-(async () => {
-    try {
-        const userData = await ipcRenderer.invoke('get-user-data');
-        NODE_SERVER_URL = userData.url;
-        console.log('서버 URL이 설정되었습니다:', NODE_SERVER_URL);
-    } catch (error) {
-        console.error('Error fetching server URL:', error);
-    }
-})();
-
 // 공통 유틸 함수
 function registerIpcListener(channel, callback) {
     const listener = (event, data) => {
@@ -48,8 +37,11 @@ const vcat = createVcatService({
     channel: 'SMTCatAgent_WEB_SAMPLE',
     keyType: 'VNUMBER',
     returnShape: 'compat',
-    // 쿠폰 API 베이스를 런타임에 주입
-    couponApiBase: () => NODE_SERVER_URL, // 문자열도 OK, 함수도 OK 하려면 위 구현을 살짝 수정
+    // 항상 최신 URL을 비동기로 가져와서 사용
+    couponApiBase: async () => {
+        const userData = await ipcRenderer.invoke('get-user-data');
+        return userData?.url || null;
+    },
 });
 
 
@@ -65,14 +57,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.send(channel, data);
     },
 
-    // 서버 URL 반환
     getNodeServerUrl: async () => {
-        if (!NODE_SERVER_URL) {
-            const userData = await ipcRenderer.invoke('get-user-data');
-            NODE_SERVER_URL = userData.url;
-        }
-        return NODE_SERVER_URL;
+        const userData = await ipcRenderer.invoke('get-user-data');
+        return userData?.url || null;
     },
+
     getBasePath: async () => {
         try {
             return await ipcRenderer.invoke('get-cache-dir');

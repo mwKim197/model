@@ -3179,7 +3179,7 @@ async function fetchData() {
         // config 업데이트
         await window.electronAPI.fetchAndSaveUserInfo();
         const allData = await window.electronAPI.getMenuInfoAll();
-        userInfo = await window.electronAPI.getUserInfo();
+        userInfo = await window.electronAPI.getUserData() ?? {};
         const version = await window.electronAPI.getVersion();
         setVersion(version);
         
@@ -3199,8 +3199,8 @@ async function fetchData() {
         checkAndShowEmptyImage();
 
         console.log("version", version);
-        preheatingTime = userInfo.preheatingTime ? userInfo.preheatingTime : 1800;
-        limitCount = userInfo.limitCount ? userInfo.limitCount : 10;
+        preheatingTime = userInfo?.preheatingTime ?? 1800;
+        limitCount = userInfo?.limitCount ?? 10;
 
         // 이미지 받아오기
         await window.electronAPI.downloadAllFromS3WithCache("model-narrow-road", `model/${userInfo.userId}`);
