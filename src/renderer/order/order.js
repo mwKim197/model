@@ -1080,7 +1080,12 @@ const totalPayment = async (data) => {
 
         const payEnd = await barcodePayment(orderAmount, 0);
 
-        // ✅ 결과 객체가 없거나 success가 false면 실패 처리
+        // ❗ 취소라면 아무 것도 안 띄우고 조용히 종료
+        if (payEnd?.canceled) {
+            return;
+        }
+
+        // 실패 처리
         if (!payEnd || !payEnd.success) {
             const failMsg = payEnd?.message || '바코드 결제에 실패했습니다.';
 
@@ -1099,7 +1104,6 @@ const totalPayment = async (data) => {
                 closeAlertModal();
                 await totalPayment();
             };
-
             return;
         }
 
@@ -2655,51 +2659,67 @@ const stopBarcode = async () => {
 const barcodePayment = async (orderAmount, discountAmount = 0) => {
     clearCountdown();
 
-    const totalAmount = orderAmount - discountAmount; // 전체 금액 계산
+    const totalAmount = orderAmount - discountAmount;
     const barcodeModal = document.getElementById('barcodeModal');
     const barcodeModalCloseBtn = document.getElementById('barcodeModalCloseBtn');
 
-    // 열기
     globalDim.classList.remove('hidden');
     barcodeModal.classList.remove('hidden');
 
+    // Promise를 밖으로 빼기 위해 변수 선언
+    let resolvePromise;
+
+    // 결제 Promise 생성
+    const payPromise = new Promise((resolve) => {
+        resolvePromise = resolve;
+    });
+
+    // ❗ 닫기 버튼 클릭 시 → 즉시 취소 반환
     barcodeModalCloseBtn.onclick = () => {
         stopBarcode();
         barcodeModal.classList.add('hidden');
+        globalDim.classList.add('hidden');
+
+        resolvePromise({
+            success: false,
+            canceled: true,
+            message: "사용자가 바코드 결제를 취소했습니다."
+        });
     };
 
     playAudio('../../assets/audio/바코드 또는 큐알코드를 단말기에 스캔 해주세요.m4a');
 
-    try {
-        // 0.1초 대기 후 결제 API 호출
-        const result = await new Promise((resolve) => {
-            setTimeout(async () => {
-                const result= await window.electronAPI.reqPayproBarcode(totalAmount);
-                //const res = {success: true};
-                resolve(result); // 결제 결과 반환
-            }, 100);
-        });
-
-
-        // 결제 성공 여부 확인
-        if (result.success) {
-            barcodeModal.classList.add('hidden');
-            globalDim.classList.add('hidden');
-            sendLogToMain('info',`barcodePayment 시작지점: 바코드결제성공` );
-            return result;
-        } else {
-            barcodeModal.classList.add('hidden');
-            globalDim.classList.add('hidden');
-            sendLogToMain('error',`barcodePayment 시작지점: 바코드결제실패` );
-            return result;
+    // 0.1초 후 결제 요청
+    setTimeout(async () => {
+        try {
+            const result = await window.electronAPI.reqPayproBarcode(totalAmount);
+            resolvePromise(result);
+        } catch (error) {
+            resolvePromise({ success: false, message: "바코드 결제 오류 발생" });
         }
-    } catch (error) {
-        barcodeModal.classList.add('hidden');
-        globalDim.classList.add('hidden');
-        sendLogToMain('error',`barcodePayment 시작지점: 바코드결제에러` );
-        return false;
+    }, 100);
+
+    // 최종 결과 Wait
+    const result = await payPromise;
+
+    // ⬇️ Cancel이면 호출부에서 처리하게 바로 return
+    if (result.canceled) {
+        sendLogToMain('info', `barcodePayment: 사용자 취소`);
+        return result;
     }
-}
+
+    // 성공/실패 UI 처리
+    barcodeModal.classList.add('hidden');
+    globalDim.classList.add('hidden');
+
+    if (result.success) {
+        sendLogToMain('info', `barcodePayment 시작지점: 바코드결제성공`);
+    } else {
+        sendLogToMain('error', `barcodePayment 시작지점: 바코드결제실패`);
+    }
+
+    return result;
+};
 
 // 30분이 지났는지 체크하는 함수
 function isOver30Minutes() {
