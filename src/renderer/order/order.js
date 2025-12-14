@@ -1652,7 +1652,7 @@ const pointPayment = (orderAmount) => {
         inputCount = userInfo.mileageNumber ? userInfo.mileageNumber : 12; // 입력 제한 초기화
         usePoint = 0; //
         totalAmt = orderAmount;
-        isPhone = userInfo.isPhone // 휴대폰 여부
+        isPhone = userInfo?.isPhone || false; // 휴대폰 여부
         modal.classList.remove("hidden"); // 모달 열기
         globalDim.classList.remove("hidden"); // 딤 열기
         updateDynamicContent("pointInput", orderAmount ,resolve);
@@ -1876,10 +1876,12 @@ function updateDynamicContent(contentType, data ,resolve) {
     if (contentType === "pointInput") {
         if (isPhone) {
             type = "phone";
+            dynamicContent.innerHTML = createPhoneInputTemplate("포인트 적립 혹은 사용");
         } else {
             type = "number";
+            dynamicContent.innerHTML = createInputTemplate(`포인트 번호 입력 ${inputCount} 자리`, inputCount);
         }
-        dynamicContent.innerHTML = createPhoneInputTemplate("포인트 적립 혹은 사용");
+//        dynamicContent.innerHTML = createPhoneInputTemplate("포인트 적립 혹은 사용");
 
         totalAmt = data;
         removeAllButtons();
