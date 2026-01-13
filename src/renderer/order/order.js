@@ -43,6 +43,8 @@ let countdownTimer = null;
 let remainingSeconds = 0; // 초기 0초
 const countdownDisplay = document.getElementById("countDown");
 
+
+
 // 타이머 시작
 function startCountdown() {
     clearCountdown();
@@ -56,7 +58,8 @@ function startCountdown() {
         if (remainingSeconds <= 0) {
             clearCountdown();
             removeAll();
-            closePointModal();
+            closePointModal(); // time out 처리
+            closeTotalModal(); // time out 처리
 
             const allTab = document.querySelector('.menu-tab[data-category="all"]');
             if (allTab) {
@@ -446,6 +449,16 @@ const removeAll = () => {
     removeAllItem();
     checkAndShowEmptyImage();
     closeModal();
+}
+
+// 토탈결제 모달 닫기
+const closeTotalModal = () => {
+    const modal = document.getElementById('totalPayModel');
+    // 입력폼 초기화
+    resetInput();
+    modal.classList.add("hidden"); // 모달 숨기기
+    globalDim.classList.add("hidden"); // 딤 숨기기
+    isPaying = false;
 }
 
 // 포인트 모달 닫기

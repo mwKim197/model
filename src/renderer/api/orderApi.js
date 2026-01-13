@@ -487,9 +487,6 @@ const useCoupon = async (couponArray) => {
     }
 };
 
-
-
-
 // 바코드 결제
 const reqPayproBarcode = async (amount, halbu = "00") => {
     // 1️⃣ 바코드 먼저 조회
