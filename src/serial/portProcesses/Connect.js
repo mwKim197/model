@@ -10,9 +10,27 @@ const {duplicateMenuData} = require("../../aws/db/utils/getMenu");
 const {getSerialData} = require("../../services/serialPolling");
 const {saveOrdersToDynamoDB} = require("../../aws/db/utils/getPayment");
 const {getMainWindow} = require('../../windows/mainWindow');
+const { requestInventoryCalculation } = require("../../aws/lambda/inventory");
 
 // MC 머신 Data - SerialPolling 인스턴스 생성
 const polling = new serialDataManager(serialCommCom1);
+
+// 재고 userId 추출
+function extractUserIdFromOrderList(orderList = []) {
+    if (!Array.isArray(orderList) || orderList.length === 0) {
+        return null;
+    }
+
+    return orderList[0].userId || null;
+}
+
+// 재고 리스트 가공
+function buildInventoryOrderList(orderList = []) {
+    return orderList.map(item => ({
+        menuId: item.menuId,
+        count: item.count
+    }));
+}
 
 // 주문 요청 처리 엔드포인트
 Connect.post('/start-order', async (req, res) => {
@@ -22,9 +40,16 @@ Connect.post('/start-order', async (req, res) => {
         await polling.stopPolling(); // 주문 작업을 시작하기 전에 조회 정지
         const reqBody = req.body;
         log.info("주문 데이터 확인: ", JSON.stringify(reqBody));
-        await saveOrdersToDynamoDB(reqBody);
-        // [TODO] 잔여량 계산 로직 추가 예정.
-        // [TODO] reqBody.ordList 로변경예정
+        await saveOrdersToDynamoDB(reqBody); // DB 주문 정보저장
+        
+        // 재고용 데이터 가공
+        const userId = extractUserIdFromOrderList(reqBody.orderList);
+        const inventoryOrderList = buildInventoryOrderList(reqBody.orderList);
+
+        requestInventoryCalculation({ // 재고 lambda 호출
+            userId: userId,
+            orderList: inventoryOrderList
+        });
         await startOrder(reqBody);
         await polling.startPolling(serialCommCom1, 10000).then(); // 주문 작업이 끝난 후 조회 재개
         // list 받음 -> 메뉴판에 있는 데이터 불러서 조합 시작!
