@@ -757,6 +757,7 @@ const paymentSession = {
     orderId: null,
     orderAmount: 0,       // 원 주문금액 (할인 전)
     totalDiscount: 0,     // 총 할인 (포인트 + 쿠폰)
+    paidAmount: 0,        // 총 결제 금액
     usePoint: null,       // 포인트 사용 단건 { uniqueMileageNo, usedAmount, pointData }
     earnPoint: null,      // 적립 단건 { uniqueMileageNo, createdAt }
     totalPayInfo: [],
@@ -771,6 +772,7 @@ const paymentSession = {
         this.orderId = null;
         this.orderAmount = 0;
         this.totalDiscount = 0;
+        this.paidAmount = 0;
         this.usePoint = null;
         this.earnPoint = null;
         this.totalPayInfo = [];
@@ -826,6 +828,7 @@ function accumulatePointUsage(resp) {
 
 // ✅ 세션 포인트(마일리지) 단건 사용 처리
 async function commitPointUsage() {
+    console.log("paymentSession: ", JSON.stringify(paymentSession, null, 2));
     if (!paymentSession.usePoint) {
         return { success: true, committed: 0 }; // 사용 내역 없음
     }
@@ -974,18 +977,23 @@ const totalPayment = async (data) => {
     // baseAmount는 항상 "쿠폰 적용 후" 기준금액을 사용
     const baseAmount = paymentSession.orderAmount;
 
+    const alreadyPaid = paymentSession.paidAmount || 0;
+
     // 결제금액 = (쿠폰 적용 후 금액) - (포인트 사용 금액)
-    const orderAmount = Math.max(0, baseAmount - mileageUsed);
+    const orderAmount = Math.max(0, baseAmount - mileageUsed - alreadyPaid);
 
     console.log(
         `💳 결제금액 계산: 주문금액=${totalAmount}, 쿠폰할인=${couponDiscount}, 포인트할인=${mileageUsed} → 최종결제=${orderAmount}`
     );
 
+    console.log("!!!!!!!!=====", orderAmount);
     // ------------------------------
     // ⑥ 결제금액이 0원일 경우
     // ------------------------------
     if (orderAmount <= 0) {
+        console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         try {
+            console.log("타니????");
             await commitPointUsage();
         } catch (e) {
             sendLogToMain('error', `포인트 커밋 실패: ${e.message}`);
@@ -994,6 +1002,7 @@ const totalPayment = async (data) => {
         }
 
         try {
+            console.log("이것만 타니?타니????");
             // 쿠폰사용함수
             await handleUseCoupons(orderList);
 
@@ -1078,13 +1087,21 @@ const totalPayment = async (data) => {
         // 쿠폰사용함수
         await handleUseCoupons(orderList);
 
-        // 기존 결제 리스트에 카드 결제 추가
+        const paid = Number(payEnd.cardInfo.amount || orderAmount);
+
+        // 🔥 핵심
+        paymentSession.paidAmount += paid;
+
         paymentSession.totalPayInfo.push({
             method: "카드",
-            ...payEnd.cardInfo,  // 카드 승인정보 그대로 확장
+            ...payEnd.cardInfo
         });
 
-        await ordStart(0, payEnd.cardInfo, null, paymentSession.totalPayInfo);
+        await totalPayment({
+            action: 'immediatePayment',
+            payMethod: 'card',
+            cardInfo: payEnd.cardInfo
+        });
     };
 
     payBarcode.onclick = async () => {
