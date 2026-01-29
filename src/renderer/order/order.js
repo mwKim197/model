@@ -44,7 +44,6 @@ let remainingSeconds = 0; // 초기 0초
 const countdownDisplay = document.getElementById("countDown");
 
 
-
 // 타이머 시작
 function startCountdown() {
     clearCountdown();
@@ -100,6 +99,27 @@ function updateCountdownDisplay() {
     countdownDisplay.innerText = `${remainingSeconds}`;
 }
 // [END] 60초 카운트 다운
+
+// 메뉴 품절 판단
+function isMenuSoldOut(menu, inventory) {
+    const soldOutFlags = inventory?.flags?.soldOut || {};
+
+    return menu.items.some(item => {
+        let key;
+
+        if (item.type === "coffee") {
+            // coffee는 slot 기준
+            return (
+                soldOutFlags["coffee_1"] === true ||
+                soldOutFlags["coffee_2"] === true
+            );
+        }
+
+        key = `${item.type}_${item.value1}`;
+        return soldOutFlags[key] === true;
+    });
+}
+
 
 // 필터된 제품을 표시하는 함수
 function displayProducts(products) {
@@ -986,14 +1006,12 @@ const totalPayment = async (data) => {
         `💳 결제금액 계산: 주문금액=${totalAmount}, 쿠폰할인=${couponDiscount}, 포인트할인=${mileageUsed} → 최종결제=${orderAmount}`
     );
 
-    console.log("!!!!!!!!=====", orderAmount);
     // ------------------------------
     // ⑥ 결제금액이 0원일 경우
     // ------------------------------
     if (orderAmount <= 0) {
-        console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
         try {
-            console.log("타니????");
             await commitPointUsage();
         } catch (e) {
             sendLogToMain('error', `포인트 커밋 실패: ${e.message}`);
@@ -1002,7 +1020,7 @@ const totalPayment = async (data) => {
         }
 
         try {
-            console.log("이것만 타니?타니????");
+
             // 쿠폰사용함수
             await handleUseCoupons(orderList);
 
@@ -1015,6 +1033,7 @@ const totalPayment = async (data) => {
             }
             throw e;
         }
+
 
         paymentSession.reset();
         return;
@@ -3224,6 +3243,48 @@ const observer = new MutationObserver((mutations) => {
 
 observer.observe(globalDim, { attributes: true });
 
+// 제고 품절 처리
+function applySoldOutToAllProducts(allProducts, inventory) {
+    const soldOutFlags = inventory?.flags?.soldOut || {};
+
+    const coffee1SoldOut = soldOutFlags["coffee_1"] === true;
+    const coffee2SoldOut = soldOutFlags["coffee_2"] === true;
+    const cupPaperSoldOut = soldOutFlags["cup_paper"] === true;
+    const cupPlasticSoldOut = soldOutFlags["cup_plastic"] === true;
+
+    allProducts.forEach(product => {
+        const isSoldOut = (product.items || []).some(item => {
+            if (item.type === "coffee") {
+                const bean1 = Number(item.value1 || 0);
+                const bean2 = Number(item.value2 || 0);
+
+                if (coffee1SoldOut && bean1 > 0) return true;
+                if (coffee2SoldOut && bean2 > 0) return true;
+
+                return false;
+            }
+
+            // syrup, garucha는 value1이 slot 번호
+            const key = `${item.type}_${item.value1}`;
+            return soldOutFlags[key] === true;
+        });
+
+        // 🧋 컵 품절 체크 (중요!)
+        let cupSoldOut = false;
+        if (product.cupYn === "no") {
+            if (product.cup === "paper" && cupPaperSoldOut) {
+                cupSoldOut = true;
+            }
+            if (product.cup === "plastic" && cupPlasticSoldOut) {
+                cupSoldOut = true;
+            }
+        }
+
+        // 최종 판정
+        product.empty = (isSoldOut || cupSoldOut) ? "yes" : product.empty;
+    });
+}
+
 ///////////////////// 바코드 스캔 //////////////////////
 async function fetchData() {
     try {
@@ -3233,6 +3294,7 @@ async function fetchData() {
         const allData = await window.electronAPI.getMenuInfoAll();
         userInfo = await window.electronAPI.getUserData() ?? {};
         const version = await window.electronAPI.getVersion();
+
         setVersion(version);
         
         // 로고 세팅
@@ -3250,7 +3312,6 @@ async function fetchData() {
         // 아이콘 이미지 호출
         checkAndShowEmptyImage();
 
-        console.log("version", version);
         preheatingTime = userInfo?.preheatingTime ?? 1800;
         limitCount = userInfo?.limitCount ?? 10;
 
@@ -3265,17 +3326,41 @@ async function fetchData() {
             throw new Error('유저정보조회에 실패했습니다.');
         }
 
-        // `empty` 값이 "no"인 항목만 필터링 후 정렬
-        allProducts = allData.Items
-            .filter(item => item.empty === "no") // empty가 "no"인 항목만 남김
-            .sort((a, b) => a.no - b.no); // no 기준으로 정렬
+
 
         // 매장명, 비상연락처
         updateStoreInfo();
         // 메뉴 생성 실행
         generateMenu(userInfo.category);
+
+        // 정렬
+        allProducts = allData.Items.sort((a, b) => a.no - b.no);
+
+        // 제고 사용여부
+        const useInventoryCheck = userInfo?.inventoryCheckEnabled !== false;
+
+        if (useInventoryCheck) {
+            try {
+                // 제고 조회
+                const inventory = await window.electronAPI.getInventoryStatus(userInfo.userId);
+
+                if (inventory?.ok) {
+                    applySoldOutToAllProducts(allProducts, inventory);
+                } else {
+                    console.warn("⚠️ 재고 조회 실패 (무시하고 진행)");
+                }
+
+            } catch (e) {
+                console.warn("⚠️ 재고 API 오류 (무시)", e);
+            }
+        }
+
+        // 품절 제외하고 렌더링
+        allProducts = allProducts.filter(p => p.empty === "no");
+
         // 초기 데이터 로드
         displayProducts(allProducts);
+
     } catch (error) {
         console.error("데이터 로드 중 오류 발생:", error);
     }

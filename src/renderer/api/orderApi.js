@@ -685,6 +685,30 @@ function buildBarcodeRequest(amount, barcode, halbu = "00") {
     return "NICEVCATB" + H7 + fields.join(FS) + H7;
 }
 
+// 재고 조회
+const getInventoryStatus = async (userId) => {
+    try {
+        const res = await fetch(
+            `https://api.narrowroad-model.com/model_inventory_calculate?func=get-runtime&userId=${userId}`,
+            {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+
+        if (!res.ok) {
+            throw new Error("Inventory API error");
+        }
+
+        return await res.json();
+    } catch (err) {
+        console.error("❌ inventory api error:", err);
+        return null;
+    }
+}
+
 
 
 module.exports = {
@@ -698,5 +722,6 @@ module.exports = {
     getCoupon,
     useCoupon,
     reqPayproBarcode,
-    requestAppRestart
+    requestAppRestart,
+    getInventoryStatus
 };

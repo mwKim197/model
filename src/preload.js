@@ -131,7 +131,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // 머신 재시작
     requestAppRestart: async () => await orderApi.requestAppRestart(),
-    
+
+    // 재고 조회 - 재고는 API호출에 실패해도 동작
+    getInventoryStatus: async (userId) => await orderApi.getInventoryStatus(userId),
+
     // S3 이미지 조회 및 캐시 처리
     downloadAllFromS3WithCache: async (bucketName, prefix) =>
         await image.downloadAllFromS3WithCache(bucketName, prefix),
