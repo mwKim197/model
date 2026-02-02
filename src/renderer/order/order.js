@@ -3336,7 +3336,7 @@ async function fetchData() {
         // 정렬
         allProducts = allData.Items.sort((a, b) => a.no - b.no);
 
-        // 제고 사용여부
+        // 재고 사용여부
         const useInventoryCheck = userInfo?.inventoryCheckEnabled !== false;
 
         if (useInventoryCheck) {
