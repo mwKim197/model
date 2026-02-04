@@ -113,7 +113,7 @@ const reqVCAT_HTTP = async (cost, halbu) => {
     }
 }
 
-const make_send_data = (senddata) => {
+/*const make_send_data = (senddata) => {
     let m_sendmsg;
     let m_totlen;
     let m_bodylen;
@@ -122,7 +122,26 @@ const make_send_data = (senddata) => {
     m_totlen = 12 + m_bodylen;
 
     return NCpad(m_totlen, 4) + "VCAT    " + NCpad(m_bodylen, 4) + senddata;
-}
+}*/
+
+const make_send_data = (senddata) => {
+    // senddata는 이미 Buffer 여야 함
+    const bodyBuffer =
+        Buffer.isBuffer(senddata)
+            ? senddata
+            : Buffer.from(senddata, "latin1"); // ★ 중요
+
+    const bodyLen = bodyBuffer.length;
+    const totalLen = 12 + bodyLen;
+
+    return Buffer.concat([
+        Buffer.from(NCpad(totalLen, 4), "ascii"),
+        Buffer.from("VCAT    ", "ascii"),
+        Buffer.from(NCpad(bodyLen, 4), "ascii"),
+        bodyBuffer
+    ]);
+};
+
 
 String.prototype.NCbyteLength = function() {
     let l = 0;
@@ -580,11 +599,24 @@ const reqPayproBarcode = async (amount, halbu = "00") => {
         const sendraw = buildBarcodeRequest(amount, barcode, halbu);
         const sendbuf = make_send_data(sendraw);
 
+        console.log("typeof sendbuf:", typeof sendbuf);
+        console.log("isBuffer:", Buffer.isBuffer(sendbuf));
+
+        if (Buffer.isBuffer(sendbuf)) {
+            console.log("HEX:", sendbuf.toString("hex"));
+        } else {
+            console.log("STRING HEX:", Buffer.from(sendbuf, "latin1").toString("hex"));
+        }
+
+        const sendStr = sendbuf.toString("latin1");
+        sendLogToMain("info", "바코드 메세지" + sendStr);
         try {
             const response = await fetch("http://127.0.0.1:9188", {
                 method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: encodeURI(sendbuf)
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: encodeURI(sendStr)   // ★ 핵심
             });
 
             const data = await response.text();
@@ -677,7 +709,7 @@ function buildBarcodeRequest(amount, barcode, halbu = "00") {
         "0300","10","L",amtStr,"0","0",halbuStr,
         "", "", "", "", "",      // 빈 필드 5개
         barcodeStr,
-        "", "", "", "", "",      // 빈 필드 5개
+        "", "", "", "", "", "",      // 빈 필드 6개 ?
         "PRO",
         "", "", "", "", ""       // 마지막 빈 필드 5개
     ];
