@@ -962,6 +962,7 @@ const totalPayment = async (data) => {
 
     // 리셋 타이머 종료
     clearCountdown();
+    remainingSeconds = 99;
     let response;
 
     // ------------------------------
@@ -2933,6 +2934,13 @@ function getCurrentHour() {
     return now.getHours(); // 24시간 형식의 현재 시각
 }
 
+// 매 정각, 30분 ture
+function isEvery30Minutes() {
+    const now = new Date();
+    const minute = now.getMinutes();
+    return minute === 0 || minute === 30;
+}
+
 
 // 자동 세척 동작
 async function handlerWash() {
@@ -2976,11 +2984,19 @@ async function handlerWash() {
 
 // 커피 예열 동작
 async function coffeePreheating() {
-    // 커피 예열
-    await window.electronAPI.coffeePreheating();
+    console.log("예열체크");
+    if (rd1Info.autoOperationState === "정지" && remainingSeconds === 0) {
+        if (isEvery30Minutes()) {
+            // 커피 예열
+            await window.electronAPI.coffeePreheating();
 
-    console.log('[INFO] 커피 예열 완료');
+            console.log('[INFO] 커피 예열 완료');
+        }
+
+    }
 }
+
+setInterval(coffeePreheating, 1000 * 60 * 1); // 1분 간격으로 예열동작
 
 // 세척 확인 스케줄링
 setInterval(handlerWash, 1000 * 60 * 5); // 5분 간격으로 세척 확인
