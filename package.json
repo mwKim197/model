@@ -3,9 +3,10 @@
   "version": "2.2.1",
   "main": "src/main.js",
   "scripts": {
-    "start": "npx tailwindcss build src/styles/tailwind.css -o src/styles/output.css && set NODE_ENV=development && electron .",
+    "start": "npx tailwindcss -i src/styles/tailwind.css -o src/styles/output.css && cross-env NODE_ENV=development electron .",
     "build:css": "npx tailwindcss -i ./src/styles/tailwind.css -o ./src/styles/output.css --watch",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "rebuild": "electron-rebuild -f -w serialport",
+    "postinstall": "electron-builder install-app-deps",
     "build": "electron-builder"
   },
   "build": {
@@ -28,15 +29,18 @@
       "sign": false,
       "artifactName": "model-setup-${version}.exe"
     },
+    "mac": {
+      "target": ["dmg","zip"],
+      "category": "public.app-category.developer-tools",
+      "artifactName": "model-${version}-mac-${arch}.${ext}",
+      "hardenedRuntime": true,
+      "extraFiles": [
+        { "from": "resources/cloudflared_darwin_arm64", "to": "cloudflared/cloudflared" }
+      ]
+    },
     "extraFiles": [
-      {
-        "from": "resources/cloudflared.exe",
-        "to": "cloudflared/cloudflared.exe"
-      },
-      {
-        "from": "resources/cert.pem",
-        "to": "cloudflared/cert.pem"
-      }
+      { "from": "resources/cloudflared.exe", "to": "cloudflared/cloudflared.exe" },
+      { "from": "resources/cert.pem", "to": "cloudflared/cert.pem" }
     ]
   },
   "devDependencies": {
@@ -49,10 +53,6 @@
     "electron-reload": "^2.0.0-alpha.1",
     "tailwindcss": "^3.4.15"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "aws-cli": "^0.0.2",
     "aws-sdk": "^2.1692.0",
