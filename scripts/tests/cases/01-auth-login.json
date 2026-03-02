@@ -1,0 +1,9 @@
+{
+  "id": "01-auth-login",
+  "name": "Login success",
+  "method": "POST",
+  "url": "http://localhost:3142/set-user-login",
+  "headers": { "Content-Type": "application/json" },
+  "body": { "userId": "model0000", "password": "model0000", "ipAddress": "" },
+  "expect": { "status": 200, "json": { "success": true } }
+}

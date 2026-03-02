@@ -1,0 +1,9 @@
+{
+  "id": "02-get-menu",
+  "name": "Get menu info",
+  "method": "POST",
+  "url": "http://localhost:3142/get-all-users-ids",
+  "headers": { "Content-Type": "application/json" },
+  "body": {},
+  "expect": { "status": 200 }
+}
