@@ -2692,6 +2692,14 @@ const cardPayment = async (orderAmount, discountAmount) => {
     }
 }
 
+const requestEmployeeCardId = async () => {
+    // RF 조회
+    const res = await window.electronAPI.requestEmployeeCardId(); // nvcat
+
+    console.log(res);
+    return res;
+}
+
 const getBarcode = async () => {
     // 바코드 조회
     const res = await window.electronAPI.reqBarcodeHTTP(); // nvcat

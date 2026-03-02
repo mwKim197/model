@@ -760,6 +760,74 @@ const getInventoryStatus = async (userId) => {
     }
 }
 
+// RF 전문생성
+function buildReqCmdHttp(type, cmd, senddata = "  ") {
+    const H7 = '\x07';
+    const FS = '\x1C';
+
+    if (!senddata || senddata.length < 2) {
+        senddata = "  ";
+    }
+
+    // 실제 명령부
+    const commandBody =
+        "REQ_CMD" +
+        H7 +
+        String(type) + FS +
+        String(cmd) + FS +
+        senddata +
+        H7;
+
+    const bodyLength = commandBody.length.toString().padStart(4, "0");
+
+    const fullPacket =
+        bodyLength + "VCAT    " + bodyLength + commandBody;
+
+    return fullPacket;
+}
+
+// RF전송
+async function sendNvcAtHttp(packet) {
+
+    const url = "http://127.0.0.1:9188";
+
+    try {
+
+        const buffer = Buffer.from(packet, "ascii");
+
+        console.log("📤 전송 HEX:", buffer.toString("hex"));
+
+        const res = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: encodeURI(packet)
+        });
+
+        const text = await res.text();
+
+        console.log("📥 ASCII:", text);
+        console.log("📥 HEX:", Buffer.from(text, "ascii").toString("hex"));
+
+
+        return text;
+
+    } catch (err) {
+        console.error("❌ NVCAT 전송 실패:", err);
+        throw err;
+    }
+}
+
+// 실제 RF조회
+async function requestEmployeeCardId() {
+
+    const packet = buildReqCmdHttp(1, 147, "  "); // 공백 2Byte 필수
+
+    const response = await sendNvcAtHttp(packet);
+
+    return response;
+}
 
 
 module.exports = {
@@ -774,5 +842,6 @@ module.exports = {
     useCoupon,
     reqPayproBarcode,
     requestAppRestart,
+    requestEmployeeCardId,
     getInventoryStatus
 };

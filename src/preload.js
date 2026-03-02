@@ -120,6 +120,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // 바코드 결제처리
     reqPayproBarcode: async (price, barcode) => await orderApi.reqPayproBarcode(price, '00'),
 
+    // RF스캔
+    requestEmployeeCardId: async () => await orderApi.requestEmployeeCardId(),
+
     // 주문 처리
     setOrder: async (orderList) => await orderApi.reqOrder(orderList),
 
