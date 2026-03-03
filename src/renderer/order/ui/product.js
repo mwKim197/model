@@ -231,6 +231,9 @@
   global.orderProduct.adjustTextSize = adjustTextSize;
   global.orderProduct.generateMenu = generateMenu;
   global.orderProduct.activateTab = activateTab;
+  // expose normalization helpers for order.js and external callers
+  global.orderProduct.normalizeImageSrc = normalizeImageSrc;
+  global.orderProduct.normalizeImageSrcSafe = normalizeImageSrcSafe;
 
   // Hotfix: scan existing <img> elements and normalize any Windows-style paths that may have been rendered
   // This helps when server-side/template injected img[src="C:\\..."] remains in DOM before our displayProducts runs.
