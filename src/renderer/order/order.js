@@ -2,6 +2,37 @@ function sendLogToMain (level, message) {
     window.electronAPI.logToMain(level, message);
 }
 
+// 작은 호환 레이어: 기존 파일 내부에서 formatDate/getCurrentFormattedTime를 직접 정의하던 곳을
+// 새 유틸(window.orderFormat)을 우선 사용하도록 전환합니다. utils 분리 단계에서 안전한 방식.
+const formatDate = (yyMMddHHmmss) => {
+    if (window.orderFormat && typeof window.orderFormat.formatDate === 'function') {
+        return window.orderFormat.formatDate(yyMMddHHmmss);
+    }
+    // fallback: 기존 동작
+    if (!yyMMddHHmmss || yyMMddHHmmss.length !== 12) return "";
+    const year = "20" + yyMMddHHmmss.slice(0, 2);
+    const month = yyMMddHHmmss.slice(2, 4);
+    const day = yyMMddHHmmss.slice(4, 6);
+    const hour = yyMMddHHmmss.slice(6, 8);
+    const minute = yyMMddHHmmss.slice(8, 10);
+    const second = yyMMddHHmmss.slice(10, 12);
+    return `${year}-${month}-${day}T${hour}:${minute}:${second}`;
+};
+
+const getCurrentFormattedTime = () => {
+    if (window.orderFormat && typeof window.orderFormat.getCurrentFormattedTime === 'function') {
+        return window.orderFormat.getCurrentFormattedTime();
+    }
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
+
 // 주문리스트
 let orderList = [];
 
@@ -2879,42 +2910,8 @@ document.getElementById("buttonContainer").addEventListener("click", async (even
     }
 });
 
-// 카드 승인일자 날짜포멧
-function formatDate(yyMMddHHmmss) {
-    if (!yyMMddHHmmss || yyMMddHHmmss.length !== 12) return "";
-    const year = "20" + yyMMddHHmmss.slice(0, 2);
-    const month = yyMMddHHmmss.slice(2, 4);
-    const day = yyMMddHHmmss.slice(4, 6);
-    const hour = yyMMddHHmmss.slice(6, 8);
-    const minute = yyMMddHHmmss.slice(8, 10);
-    const second = yyMMddHHmmss.slice(10, 12);
-    return `${year}-${month}-${day}T${hour}:${minute}:${second}`;
-}
-
-function getCurrentFormattedTime() {
-    const now = new Date();
-
-    // 연도
-    const year = now.getFullYear();
-
-    // 월 (0부터 시작하므로 1을 더함)
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-
-    // 일
-    const day = String(now.getDate()).padStart(2, '0');
-
-    // 시간
-    const hours = String(now.getHours()).padStart(2, '0');
-
-    // 분
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-
-    // 초
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-
-    // 형식에 맞게 조합
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-}
+// formatDate / getCurrentFormattedTime are provided by the utils wrapper at the top of the file (window.orderFormat).
+// Keep a single source of truth to avoid duplicate declarations.
 
 // RD1 데이터를 업데이트하는 콜백 함수
 function getPollingData(data) {
@@ -3391,4 +3388,48 @@ async function fetchData() {
 }
 
 fetchData().then();  // 함수 호출
+
+
+// If product UI module is loaded, override implementations to use module
+if (window.orderProduct) {
+  try {
+    displayProducts = window.orderProduct.displayProducts;
+    adjustTextSize = window.orderProduct.adjustTextSize;
+    generateMenu = window.orderProduct.generateMenu;
+    activateTab = window.orderProduct.activateTab;
+    // bridge click handler used by module
+    window.orderProductOnClick = (menuId) => { addItemToOrder(menuId).then?.(); };
+  } catch (e) { console.warn('orderProduct override failed', e); }
+}
+
+// Retry logic: if product.js loads after order.js, attempt override for a short period
+(function tryApplyOrderProductOverride() {
+  const apply = () => {
+    if (window.orderProduct && typeof window.orderProduct.displayProducts === 'function') {
+      try {
+        displayProducts = window.orderProduct.displayProducts;
+        adjustTextSize = window.orderProduct.adjustTextSize;
+        generateMenu = window.orderProduct.generateMenu;
+        activateTab = window.orderProduct.activateTab;
+        window.orderProductOnClick = (menuId) => { addItemToOrder(menuId).then?.(); };
+        console.info('[order.js] orderProduct override applied');
+        return true;
+      } catch (e) {
+        console.warn('[order.js] orderProduct override failed', e);
+      }
+    }
+    return false;
+  };
+
+  if (apply()) return;
+
+  let tries = 0;
+  const interval = setInterval(() => {
+    tries += 1;
+    if (apply() || tries > 20) {
+      clearInterval(interval);
+      if (tries > 20) console.info('[order.js] orderProduct override not found after retries');
+    }
+  }, 250);
+})();
 
