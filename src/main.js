@@ -67,6 +67,16 @@ async function initializeApp() {
                 const userData = await mainWindow.webContents.executeJavaScript('window.electronAPI.getUserData()');
                 log.info("✅ userData 가져오기 성공:", userData);
 
+                // RUN DIAGNOSTIC SNIPPET: execute snippet in renderer to normalize and report imgs
+                try {
+                    const diagSnippet = require('fs').readFileSync('/tmp/execute_snippet.js','utf8');
+                    const diagResult = await mainWindow.webContents.executeJavaScript(diagSnippet);
+                    require('fs').writeFileSync('/tmp/product_diag_result.json', JSON.stringify(diagResult, null, 2));
+                    log.info('[DIAG] product_diag_result saved to /tmp/product_diag_result.json');
+                } catch (e) {
+                    log.error('[DIAG] failed to execute snippet:', e && e.message ? e.message : e);
+                }
+
                 // ✅ Cloudflared 설정 실행
                 if (userData && userData.userId) {
                     await setupCloudflare(userData.userId);
