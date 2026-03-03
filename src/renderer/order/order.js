@@ -153,7 +153,7 @@ function isMenuSoldOut(menu, inventory) {
 
 
 // 필터된 제품을 표시하는 함수
-function displayProducts(products) {
+function legacyDisplayProducts(products) {
     productGrid.innerHTML = '';
     products.forEach(product => {
         const card = document.createElement('div');
@@ -237,6 +237,19 @@ function displayProducts(products) {
         }
     });
 }
+
+// Wrapper: prefer product.js implementation when available
+function displayProducts(products) {
+  if (window.orderProduct && typeof window.orderProduct.displayProducts === "function") {
+    try {
+      return window.orderProduct.displayProducts(products);
+    } catch(e) {
+      console.warn("orderProduct.displayProducts failed, falling back to legacy:", e);
+    }
+  }
+  return legacyDisplayProducts(products);
+}
+
 
 // 개별적으로 적용 가능한 최종 조정 함수
 function adjustTextSize(textElement, fixedWidth = 200) {
