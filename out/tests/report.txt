@@ -1,3 +1,0 @@
-Summary:
-01-auth-login Login success => PASS
-02-get-menu Get menu info => PASS

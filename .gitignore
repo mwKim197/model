@@ -5,3 +5,7 @@
 /pem/key.pem
 resources/cert.pem
 /.env.local
+
+# ignore caches and windows absolute paths
+out/
+C:/
