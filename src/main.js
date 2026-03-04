@@ -67,15 +67,6 @@ async function initializeApp() {
                 const userData = await mainWindow.webContents.executeJavaScript('window.electronAPI.getUserData()');
                 log.info("✅ userData 가져오기 성공:", userData);
 
-                // Ensure renderer knows s3CachePath before any image normalization runs
-                try {
-                    const s3Path = JSON.stringify(getBasePath());
-                    await mainWindow.webContents.executeJavaScript(`window.s3CachePath = ${s3Path};`);
-                    log.info('[DIAG] injected window.s3CachePath into renderer:', getBasePath());
-                } catch (e) {
-                    log.error('[DIAG] failed to inject s3CachePath into renderer:', e && e.message ? e.message : e);
-                }
-
                 // RUN DIAGNOSTIC SNIPPET: execute snippet in renderer to normalize and report imgs
                 try {
                     const diagSnippet = require('fs').readFileSync('/tmp/execute_snippet.js','utf8');
