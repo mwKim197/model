@@ -2,7 +2,9 @@
 (function(){
   if(window.orderCore) return; // already registered
 
-  const state = { items: [], status: idle };
+  const IDLE = 'idle';
+  const state = { items: [], status: IDLE };
+  const EVENT_NAME = 'order-core-change';
 
   function computeTotal(){
     return state.items.reduce((s,i)=> s + (Number(i.price||0) * Number(i.qty||1)), 0);
@@ -10,7 +12,7 @@
 
   function createOrder(initialItems){
     state.items = Array.isArray(initialItems)? initialItems.slice():[];
-    state.status = idle;
+    state.status = IDLE;
     emitChange();
     return getOrder();
   }
@@ -38,7 +40,7 @@
   }
 
   function clearOrder(){
-    state.items = []; state.status=idle; emitChange(); return getOrder();
+    state.items = []; state.status=IDLE; emitChange(); return getOrder();
   }
 
   function getOrder(){
@@ -46,10 +48,52 @@
   }
 
   function onChange(cb){
-    window.addEventListener(order-core-change, cb);
-    return ()=>window.removeEventListener(order-core-change, cb);
+    window.addEventListener(EVENT_NAME, cb);
+    return ()=>window.removeEventListener(EVENT_NAME, cb);
   }
 
   function emitChange(){
     const detail = getOrder();
-    try{ window.dispatchEvent(new CustomEvent(order-core-change,{ detail })); }catch(e){ console.warn(orderCore:
+    try{
+      window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail }));
+    }catch(e){
+      console.warn('orderCore: emitChange failed', e);
+    }
+  }
+
+  // payment bridge: attempts to call available payment adapters and returns a Promise
+  function startPayment(method, opts){
+    // method: string like 'card' | 'cash'
+    // opts: { order, amount, metadata }
+    return new Promise(async (resolve, reject)=>{
+      try{
+        const payload = Object.assign({}, opts || {}, { order: getOrder() });
+        if(window.cardPayment && typeof window.cardPayment.process === 'function'){
+          const res = await Promise.resolve(window.cardPayment.process(method, payload));
+          resolve(res);
+          return;
+        }
+        if(window.electronAPI && typeof window.electronAPI.reqVcatHttp === 'function'){
+          const res = await window.electronAPI.reqVcatHttp('/payments/process', payload);
+          resolve(res);
+          return;
+        }
+        reject(new Error('No payment adapter available'));
+      }catch(err){
+        reject(err);
+      }
+    });
+  }
+
+  // expose API
+  window.orderCore = {
+    createOrder,
+    addItem,
+    removeItem,
+    clearOrder,
+    getOrder,
+    onChange,
+    startPayment
+  };
+
+})();
