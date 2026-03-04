@@ -1,4 +1,4 @@
-function sendLogToMain (level, message) {
+function sendLogToMain(level, message) {
     window.electronAPI.logToMain(level, message);
 }
 
@@ -78,7 +78,7 @@ const countdownDisplay = document.getElementById("countDown");
 // 타이머 시작
 function startCountdown() {
     clearCountdown();
-    remainingSeconds = 5; // 초기화
+    remainingSeconds = 62; // 초기화
     updateCountdownDisplay(); // 화면 표시 즉시 업데이트
 
     countdownTimer = setInterval(() => {
