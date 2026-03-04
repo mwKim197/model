@@ -199,7 +199,7 @@ function displayProducts(products) {
         // 카드 내용 추가
         card.innerHTML = `
         <div class="relative bg-black bg-opacity-10 w-[200px] aspect-square overflow-hidden rounded-2xl">
-            <img src="${(window.orderProduct && typeof window.orderProduct.normalizeImageSrcSafe === 'function') ? window.orderProduct.normalizeImageSrcSafe(product.image) : product.image}" alt="${product.name}" class="w-full h-full object-cover rounded-2xl"/>
+            <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover rounded-2xl"/>
              <!-- 겹쳐지는 이미지 -->
             ${newBadgeImage} <!-- 뉴 배지 -->
             ${bestBadgeImage} <!-- 베스트 배지 -->
@@ -3407,7 +3407,6 @@ if (window.orderProduct) {
   const apply = () => {
     if (window.orderProduct && typeof window.orderProduct.displayProducts === 'function') {
       try {
-        
         displayProducts = window.orderProduct.displayProducts;
         adjustTextSize = window.orderProduct.adjustTextSize;
         generateMenu = window.orderProduct.generateMenu;
