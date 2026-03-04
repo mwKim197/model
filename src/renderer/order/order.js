@@ -46,7 +46,7 @@ let paymentTimeout = null;
 let rd1Info = {};
 
 // 메뉴 데이터
-let allProducts = [];
+window.allProducts = [];
 
 // 커피 메뉴주문 여부
 let hasCoffee;
@@ -78,7 +78,7 @@ const countdownDisplay = document.getElementById("countDown");
 // 타이머 시작
 function startCountdown() {
     clearCountdown();
-    remainingSeconds = 62; // 초기화
+    remainingSeconds = 5; // 초기화
     updateCountdownDisplay(); // 화면 표시 즉시 업데이트
 
     countdownTimer = setInterval(() => {

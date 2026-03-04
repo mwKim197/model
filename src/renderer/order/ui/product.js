@@ -149,7 +149,6 @@
       const container = document.createElement('div');
       container.className = 'relative bg-black bg-opacity-10 w-[200px] aspect-square overflow-hidden rounded-2xl';
 
-      console.log("???: ", normalizeImageSrc(product.image || ''));
       const img = document.createElement('img');
       // use safe synchronous normalizer to avoid embedding Windows absolute paths on mac
       img.src = normalizeImageSrcSafe(product.image || '');
@@ -225,6 +224,7 @@
     const filteredProducts = category === 'all'
       ? window.allProducts
       : (window.allProducts || []).filter(product => product.category === category);
+
     displayProducts(filteredProducts);
   }
 
