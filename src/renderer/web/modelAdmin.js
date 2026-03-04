@@ -2550,31 +2550,6 @@ function showOrderDetailsModal(order) {
         </div>
     `;
 
-    // 카드 결제 승인번호 표시 (가능한 여러 위치에서 승인번호를 찾음)
-    try {
-        let approvalNo = '';
-        // 1) 직접 필드
-        if (order.approvalNo) approvalNo = order.approvalNo;
-        // 2) totalPayInfo 배열 내부 항목 탐색
-        if (!approvalNo && Array.isArray(order.totalPayInfo)) {
-            const cardItem = order.totalPayInfo.find(i => (i && ((i.method && /card|카드|CARD/i.test(i.method)) || i.approvalNo)) );
-            if (cardItem) approvalNo = cardItem.approvalNo || '';
-        }
-        // 3) 결제 상세 내결제 객체들 중 승인번호 탐색 (safety)
-        if (!approvalNo && order.payments && Array.isArray(order.payments)) {
-            const p = order.payments.find(x => x && x.approvalNo);
-            if (p) approvalNo = p.approvalNo;
-        }
-
-        if (approvalNo) {
-            const approvalEl = document.createElement('p');
-            approvalEl.innerHTML = `<strong>승인번호:</strong> ${escapeHTML(String(approvalNo))}`;
-            modalContent.appendChild(approvalEl);
-        }
-    } catch (e) {
-        console.warn('showOrderDetailsModal: approvalNo extract failed', e);
-    }
-
     // 모달 표시
     const modal = document.getElementById('order-details-modal');
     modal.classList.remove('hidden');
