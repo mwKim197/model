@@ -45,7 +45,7 @@
       // 1) If running on Windows and winDriveMap exists, preserve old behavior
       if (navigator.platform && /win/i.test(navigator.platform) && window.winDriveMap && window.winDriveMap[drive]) {
         const base = window.winDriveMap[drive].replace(/\\\\/g, '/').replace(/\\/g, '/').replace(/\/$/, '');
-        return 'file:///' + (base + '/' + filename).replace(/\/\//g, '/');
+        return 'file:///' + (base + '/' + filename).replace(/\/g, '/');
       }
 
       // 2) Try S3 cache path (common for mac): consult preload helper if available
@@ -104,32 +104,12 @@
     // extract filename
     const filename = (src || '').replace(/\\\\/g, '/').replace(/\\/g, '/').split('/').pop();
     if (!filename) return src;
-
-    // If running on Windows, preserve original behavior (C:\... may be correct)
-    try {
-      if (navigator && /win/i.test(navigator.platform)) {
-        // If src was already an absolute windows path, normalize slashes and return file:///C:/...
-        const fixedWin = src.replace(/\\\\/g, '/').replace(/\\/g, '/');
-        return fixedWin.startsWith('file:') ? fixedWin : 'file:///' + encodeURI(fixedWin);
-      }
-    } catch (e) {
-      // ignore navigator errors and continue with mac/linux logic
-    }
-
-    // For mac/linux: prefer s3CachePath or appBasePath/out/s3cache
+    // prefer s3CachePath or appBasePath/out/s3cache
     if (window.s3CachePath) return 'file://' + encodeURI(window.s3CachePath.replace(/\/$/, '') + '/' + filename);
     if (window.appBasePath) return 'file://' + encodeURI(window.appBasePath.replace(/\/$/, '') + '/out/s3cache/' + filename);
-
-    // Final fallback: use project out/s3cache path if available (local default for mac)
-    try {
-      // Use a sensible default for this environment (development mac path)
-      const defaultCache = '/Users/minwookim/workspace/model/out/s3cache';
-      return 'file://' + encodeURI(defaultCache.replace(/\/$/, '') + '/' + filename);
-    } catch (e) {
-      // As last resort, return normalized original path
-      const fixed = src.replace(/\\\\/g, '/').replace(/\\/g, '/');
-      return 'file:///' + encodeURI(fixed);
-    }
+    // fallback to original normalized path
+    const fixed = src.replace(/\\\\/g, '/').replace(/\\/g, '/');
+    return 'file:///' + encodeURI(fixed);
   }
 
   function displayProducts(products) {
