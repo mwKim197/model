@@ -1,0 +1,17 @@
+{
+  "runAt": "2026-03-02T13:12:07.153Z",
+  "results": [
+    {
+      "id": "01-auth-login",
+      "name": "Login success",
+      "passed": true,
+      "message": null
+    },
+    {
+      "id": "02-get-menu",
+      "name": "Get menu info",
+      "passed": true,
+      "message": null
+    }
+  ]
+}
