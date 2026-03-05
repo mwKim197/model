@@ -51,10 +51,21 @@
             result.autoClicked = false;
             result.autoClickNote = 'no .product-card element found';
           }
+        } else {
+          result.autoClicked = false;
+          result.autoClickNote = 'allProducts empty';
         }
       }catch(e){ result.autoClickError = String(e); }
 
-      if(window.orderCore && typeof window.orderCore.addItem === 'function' && window.allProducts && window.allProducts.length){
+      // If no products are available, try a simulated addItem directly (diagnostic)
+      if((!window.allProducts || !window.allProducts.length) && window.orderCore && typeof window.orderCore.addItem === 'function'){
+        try{
+          const dummy = { id: 'diag-menu-000', menuId: 'diag-menu-000', price: 1000, name: 'DIAG_ITEM', userId: 'diag', image: '../../assets/basicImage/white.png' };
+          await window.orderCore.addItem(dummy, 1);
+          result.simulatedAdd = true;
+          result.orderCoreAfter = window.orderCore.getOrder();
+        }catch(e){ result.simulatedAddError = String(e); }
+      } else if(window.orderCore && typeof window.orderCore.addItem === 'function' && window.allProducts && window.allProducts.length){
         try{
           const p = window.allProducts[0];
           await window.orderCore.addItem({ id: p.menuId, menuId: p.menuId, price: p.price, name: p.name, userId: p.userId, image: p.image }, 1);
