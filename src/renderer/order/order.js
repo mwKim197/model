@@ -506,16 +506,19 @@ function updateOrderSummary() {
 }
 
 // 아이템 삭제 (orderCore가 있으면 위임)
-async function removeItemFromOrder(button, orderId) {
+async function _removeItemFromOrderImpl(button, orderId) {
+    console.debug('[removeItem] called', { orderId, hasCore: !!(window.orderCore && typeof window.orderCore.removeItem === 'function') });
     if (window.orderCore && typeof window.orderCore.removeItem === 'function') {
         try {
             // orderId is like "menuId-userId" in UI; core expects menuId/id
             const coreId = (typeof orderId === 'string' && orderId.indexOf('-') !== -1) ? orderId.split('-')[0] : orderId;
-            await window.orderCore.removeItem(coreId);
+            const res = await window.orderCore.removeItem(coreId);
+            console.debug('[removeItem] orderCore.removeItem result', res);
             syncOrderListFromCore();
-            return;
+            return { ok: true };
         } catch (e) {
             console.warn('orderCore.removeItem failed, falling back to local:', e);
+            // fallthrough to local fallback
         }
     }
 
@@ -531,12 +534,24 @@ async function removeItemFromOrder(button, orderId) {
         if (orderItem) {
             orderItem.remove();
         }
-    } catch (e) { /* ignore */ }
+    } catch (e) { console.warn('removeItem UI fallback error', e); }
 
     // 주문 요약 업데이트
     updateOrderSummary();
     checkAndShowEmptyImage();
+    return { ok: true };
 }
+
+// expose global function for inline onclick handlers
+window.removeItemFromOrder = async function(button, orderId){
+    try{
+        const r = await _removeItemFromOrderImpl(button, orderId);
+        return r;
+    }catch(e){
+        console.error('removeItemFromOrder global wrapper failed', e);
+        return { ok: false, error: String(e) };
+    }
+};
 
 // 수량조정 (orderCore가 있으면 위임)
 function updateItemQuantity(button, delta, orderId) {
