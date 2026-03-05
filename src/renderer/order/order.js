@@ -243,7 +243,17 @@ function legacyDisplayProducts(products) {
 
         // 클릭 이벤트 처리 (품절 상태에서는 동작하지 않도록 추가 검증)
         if (!isEmpty) {
-            card.addEventListener('click', () => {
+            card.addEventListener('click', async () => {
+                try{
+                    const normalized = (window.orderProduct && typeof window.orderProduct.normalizeImageSrcSafe === 'function') ? window.orderProduct.normalizeImageSrcSafe(product.image) : product.image;
+                    console.log('[CLICK_CHECK]', product.menuId, 'orig:', product.image, 'normalized:', normalized);
+                    if (window.electronAPI && typeof window.electronAPI.fileExists === 'function'){
+                        try{
+                            const exists = await window.electronAPI.fileExists(normalized);
+                            console.log('[CLICK_CHECK].exists', exists, normalized);
+                        }catch(e){ console.warn('[CLICK_CHECK].fileExists failed', e); }
+                    }
+                }catch(e){ console.warn('[CLICK_CHECK] failed', e); }
                 addItemToOrder(product.menuId).then();
             });
         } else {
