@@ -325,6 +325,13 @@ function syncOrderListFromCore(){
     try{
         if(window.orderCore && typeof window.orderCore.getOrder === 'function'){
             const core = window.orderCore.getOrder();
+            if(!core || !Array.isArray(core.items)){
+                console.warn('syncOrderListFromCore: invalid core or core.items', core);
+                // ensure UI reflects empty state instead of throwing
+                orderList = [];
+                updateOrderSummary();
+                return;
+            }
             // core.items expected: [{id, price, qty, ...}]
             orderList = (core.items || []).map(i=>({
                 orderId: `${i.id || i.menuId}-${i.userId || 'unknown'}`,
