@@ -48,6 +48,20 @@ let rd1Info = {};
 // 메뉴 데이터
 window.allProducts = [];
 
+// attach orderCore onChange listener with retries so UI syncs automatically when core emits
+(function attachOrderCoreListener(retries=5, delay=100){
+  try{
+    if(window.orderCore && typeof window.orderCore.onChange === 'function'){
+      window.orderCore.onChange(()=>{
+        try{ syncOrderListFromCore(); }catch(e){ console.warn('syncOrderListFromCore onChange failed', e); }
+      });
+      console.log('orderCore onChange listener attached');
+      return;
+    }
+  }catch(e){/* ignore */}
+  if(retries>0) setTimeout(()=> attachOrderCoreListener(retries-1, delay), delay);
+})();
+
 // 커피 메뉴주문 여부
 let hasCoffee;
 
@@ -358,27 +372,32 @@ function syncOrderListFromCore(){
 
 // 상품 장바구니 추가
 async function addItemToOrder(menuId) {
-    // If orderCore exists, delegate to it and sync
-    if(window.orderCore && typeof window.orderCore.addItem === 'function'){
-        const product = allProducts.find(p => p.menuId === menuId);
-        if(!product) return console.error(`Product not found for menuId: ${menuId}`);
-        try{
-            await window.orderCore.addItem({ id: product.menuId, menuId: product.menuId, price: product.price, name: product.name, userId: product.userId, image: product.image }, 1);
-            syncOrderListFromCore();
-            return;
-        }catch(e){ console.warn('orderCore.addItem failed, falling back to local', e); }
-    }
-
-    if(totalCount > (limitCount - 1)) return openAlertModal(`${limitCount}개 이상 주문 할 수 없습니다.`);
-    // 상품 검색
+    // Prefer using orderCore as single source of truth
     const product = allProducts.find(p => p.menuId === menuId);
-
     if (!product) {
         console.error(`Product not found for menuId: ${menuId}`);
         return;
     }
 
+    // Play selection audio regardless
     playAudio('../../assets/audio/음료를 선택하셨습니다.mp3');
+
+    if (window.orderCore && typeof window.orderCore.addItem === 'function') {
+        try {
+            // Inform orderCore; it handles merging/validation and emits change
+            await window.orderCore.addItem({ id: product.menuId, menuId: product.menuId, price: product.price, name: product.name, userId: product.userId, image: product.image }, 1);
+            // UI will be refreshed by syncOrderListFromCore via orderCore.onChange
+            // call sync once to ensure immediate UI consistency
+            syncOrderListFromCore();
+            return;
+        } catch (e) {
+            console.warn('orderCore.addItem failed, falling back to local', e);
+            // continue to local fallback
+        }
+    }
+
+    // Local fallback (legacy behavior)
+    if(totalCount > (limitCount - 1)) return openAlertModal(`${limitCount}개 이상 주문 할 수 없습니다.`);
 
     // 기존 항목 검색
     const existingOrder = orderList.find(order => order.menuId === product.menuId);
