@@ -39,8 +39,21 @@
       }
     }catch(e){ result.orderCoreError = String(e); }
 
-    // attempt a test addItem if orderCore exists
+    // attempt a test addItem if orderCore exists; also auto-click first product card to trigger click-logger
     (async ()=>{
+      try{
+        if(window.allProducts && window.allProducts.length){
+          // find first clickable card in DOM
+          const firstCard = document.querySelector('.product-card');
+          if(firstCard){
+            try{ firstCard.click(); result.autoClicked = true; }catch(e){ result.autoClicked = false; result.autoClickError = String(e); }
+          } else {
+            result.autoClicked = false;
+            result.autoClickNote = 'no .product-card element found';
+          }
+        }
+      }catch(e){ result.autoClickError = String(e); }
+
       if(window.orderCore && typeof window.orderCore.addItem === 'function' && window.allProducts && window.allProducts.length){
         try{
           const p = window.allProducts[0];
