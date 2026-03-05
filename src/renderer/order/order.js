@@ -507,6 +507,7 @@ function updateOrderSummary() {
 
 // 아이템 삭제 (orderCore가 있으면 위임)
 async function _removeItemFromOrderImpl(button, orderId) {
+    console.log('[removeItem] called', { orderId, hasCore: !!(window.orderCore && typeof window.orderCore.removeItem === 'function') });
     console.debug('[removeItem] called', { orderId, hasCore: !!(window.orderCore && typeof window.orderCore.removeItem === 'function') });
     if (window.orderCore && typeof window.orderCore.removeItem === 'function') {
         try {
