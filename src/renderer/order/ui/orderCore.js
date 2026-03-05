@@ -6,6 +6,18 @@
   const state = { items: [], status: IDLE };
   const EVENT_NAME = 'order-core-change';
 
+  // simple mutex to avoid concurrent modifications from rapid UI clicks
+  let _locked = false;
+  const _lock = async (fn) => {
+    if (_locked) {
+      // simple spin/wait - in practice should be short
+      await new Promise(r => setTimeout(r, 20));
+      return _lock(fn);
+    }
+    _locked = true;
+    try { return await fn(); } finally { _locked = false; }
+  };
+
   function computeTotal(){
     return state.items.reduce((s,i)=> s + (Number(i.price||0) * Number(i.qty||1)), 0);
   }
@@ -17,26 +29,52 @@
     return getOrder();
   }
 
-  function addItem(item, qty=1){
-    const existing = state.items.find(i=>i.id===item.id || i.menuId===item.menuId || i.menuId===item.id);
-    if(existing){
-      existing.qty = Number(existing.qty||0) + Number(qty);
-    } else {
-      state.items.push(Object.assign({}, item, { qty }));
-    }
-    emitChange();
-    return getOrder();
+  async function addItem(item, qty=1){
+    return await _lock(async ()=>{
+      const existing = state.items.find(i=>i.id===item.id || i.menuId===item.menuId || i.menuId===item.id);
+      if(existing){
+        existing.qty = Number(existing.qty||0) + Number(qty);
+      } else {
+        state.items.push(Object.assign({}, item, { qty }));
+      }
+      emitChange();
+      return { ok: true, order: getOrder() };
+    });
   }
 
-  function removeItem(id, qty=0){
-    const idx = state.items.findIndex(i=>i.id===id || i.menuId===id);
-    if(idx===-1) return getOrder();
-    if(qty<=0) { state.items.splice(idx,1); } else {
-      state.items[idx].qty = Math.max(0, Number(state.items[idx].qty||0) - Number(qty));
+  async function setItemQuantity(id, newQty){
+    return await _lock(async ()=>{
+      const idx = state.items.findIndex(i=>i.id===id || i.menuId===id);
+      if(idx===-1) return { ok: false, message: 'not_found', order: getOrder() };
+      state.items[idx].qty = Math.max(0, Number(newQty||0));
       if(Number(state.items[idx].qty)===0) state.items.splice(idx,1);
-    }
-    emitChange();
-    return getOrder();
+      emitChange();
+      return { ok: true, order: getOrder() };
+    });
+  }
+
+  async function updateQuantity(id, delta){
+    return await _lock(async ()=>{
+      const idx = state.items.findIndex(i=>i.id===id || i.menuId===id);
+      if(idx===-1) return { ok: false, message: 'not_found', order: getOrder() };
+      state.items[idx].qty = Math.max(0, Number(state.items[idx].qty||0) + Number(delta||0));
+      if(Number(state.items[idx].qty)===0) state.items.splice(idx,1);
+      emitChange();
+      return { ok: true, order: getOrder() };
+    });
+  }
+
+  async function removeItem(id, qty=0){
+    return await _lock(async ()=>{
+      const idx = state.items.findIndex(i=>i.id===id || i.menuId===id);
+      if(idx===-1) return { ok: false, message: 'not_found', order: getOrder() };
+      if(qty<=0) { state.items.splice(idx,1); } else {
+        state.items[idx].qty = Math.max(0, Number(state.items[idx].qty||0) - Number(qty));
+        if(Number(state.items[idx].qty)===0) state.items.splice(idx,1);
+      }
+      emitChange();
+      return { ok: true, order: getOrder() };
+    });
   }
 
   function clearOrder(){
@@ -89,6 +127,8 @@
   window.orderCore = {
     createOrder,
     addItem,
+    setItemQuantity,
+    updateQuantity,
     removeItem,
     clearOrder,
     getOrder,
