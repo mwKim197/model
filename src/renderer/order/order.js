@@ -347,7 +347,7 @@ function syncOrderListFromCore(){
                     orderItem.innerHTML = `
                         <div class="w-full flex space-x-4">
                             <div class="flex flex-col items-center">
-                                <img src="${(window.orderProduct && typeof window.orderProduct.normalizeImageSrcSafe === 'function') ? window.orderProduct.normalizeImageSrcSafe(o.image||'../../assets/basicImage/white.png') : (o.image||'../../assets/basicImage/white.png')}" alt="${o.name}" class="w-14 h-14 rounded-md">
+                                <img src="${(window.orderProduct && typeof window.orderProduct.normalizeImageSrcSafe === 'function') ? window.orderProduct.normalizeImageSrcSafe(o.image||'../../assets/basicImage/white.png') : (o.image||'../../assets/basicImage/white.png')}" alt="${o.name}" class="w-14 h-14 rounded-md" onerror="this.onerror=null;this.src='../../assets/basicImage/white.png'">
                                 <div class="flex items-center space-x-2 mt-2">
                                     <button class="prevent-double-click h-6 text-white rounded-lg" onclick="updateItemQuantity(this, -1, '${o.orderId}')"><img class="h-6" src="../../assets/basicImage/20241208_153430.png" alt="manus" /></button>
                                     <span class="quantity h-6 rounded-lg text-center">${o.count}</span>
