@@ -426,7 +426,7 @@ async function addItemToOrder(menuId) {
         <div class="w-full flex space-x-4">
             <div class="flex flex-col items-center">
                 <!-- 이미지 -->
-                <img src="${product.image}" alt="${product.name}" class="w-14 h-14 rounded-md">
+                <img src="${(window.orderProduct && typeof window.orderProduct.normalizeImageSrcSafe === 'function') ? window.orderProduct.normalizeImageSrcSafe(product.image) : product.image}" alt="${product.name}" class="w-14 h-14 rounded-md">
                 <!-- 버튼 그룹 -->
                 <div class="flex items-center space-x-2 mt-2">
                     <button class="prevent-double-click h-6 text-white rounded-lg" 
