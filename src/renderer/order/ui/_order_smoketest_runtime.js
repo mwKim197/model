@@ -2,6 +2,16 @@
   try{
     const result = {images:[], modal:{}, orderCore: null, addedTest:false};
 
+    // If no products loaded, inject a dummy product list and force displayProducts to exercise rendering
+    try{
+      if((!window.allProducts || !window.allProducts.length) && typeof displayProducts === 'function'){
+        window.allProducts = [
+          { menuId: 'diag-1', name: 'DIAG_PRODUCT_1', price: 1200, userId: 'diag', image: '../../assets/basicImage/가이드.png', category: 'all' }
+        ];
+        try{ displayProducts(window.allProducts); result.injectedProducts = true; }catch(e){ result.injectError = String(e); }
+      }
+    }catch(e){ result.injectError = String(e); }
+
     // collect orderGrid imgs
     const imgs = Array.from(document.querySelectorAll('#orderGrid img'));
     imgs.forEach(img=>{
