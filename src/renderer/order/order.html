@@ -328,7 +328,7 @@
             </div>
             <!-- 이미지 -->
             <div class="flex items-center justify-center flex-grow">
-                <img id="modalImage" src="../../assets/basicImage/white.png" alt="음료를 준비중입니다." class="w-[600px] h-[400px] object-cover" />
+                <img id="modalImage" src="../../assets/basicImage/white.png" alt="음료를 준비중입니다." class="w-[600px] h-[400px] object-cover" onerror="this.onerror=null;this.src='../../assets/basicImage/white.png'" />
             </div>
 
             <!-- modalText: 이미지 아래에 위치 -->
@@ -533,6 +533,27 @@
         handlerModal();
 
     </script>
+
+
+<script>
+// Ensure modal close buttons are safely wired
+(function(){
+  try{
+    const safeHide = () => {
+      try{ document.getElementById('orderModal')?.classList.add('hidden'); }catch(e){}
+      try{ document.getElementById('pointModal')?.classList.add('hidden'); }catch(e){}
+      try{ document.getElementById('totalPayModel')?.classList.add('hidden'); }catch(e){}
+      try{ document.getElementById('globalDim')?.classList.add('hidden'); }catch(e){}
+    };
+    const ids = ['totalPayCloseModalBtn','closeModalBtn','cancelButton','okButton'];
+    ids.forEach(id=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.addEventListener('click', (ev)=>{ ev.preventDefault(); ev.stopPropagation(); safeHide(); }, {capture:true});
+    });
+  }catch(e){ console.warn('modal close attach failed', e); }
+})();
+</script>
 
 </body>
 </html>
