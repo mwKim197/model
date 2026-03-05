@@ -479,8 +479,18 @@ function updateOrderSummary() {
     }
 }
 
-// 아이템 삭제
+// 아이템 삭제 (orderCore가 있으면 위임)
 function removeItemFromOrder(button, orderId) {
+    if (window.orderCore && typeof window.orderCore.removeItem === 'function') {
+        try {
+            window.orderCore.removeItem(orderId);
+            syncOrderListFromCore();
+            return;
+        } catch (e) {
+            console.warn('orderCore.removeItem failed, falling back to local:', e);
+        }
+    }
+
     // 주문 목록에서 삭제
     const index = orderList.findIndex(o => o.orderId === orderId);
     if (index > -1) {
@@ -488,18 +498,37 @@ function removeItemFromOrder(button, orderId) {
     }
 
     // UI에서 삭제
-    const orderItem = button.closest('.order-item');
-    if (orderItem) {
-        orderItem.remove();
-    }
+    try {
+        const orderItem = button && button.closest ? button.closest('.order-item') : document.querySelector(`[data-order-id="${orderId}"]`);
+        if (orderItem) {
+            orderItem.remove();
+        }
+    } catch (e) { /* ignore */ }
 
     // 주문 요약 업데이트
     updateOrderSummary();
     checkAndShowEmptyImage();
 }
 
-// 수량추가
+// 수량조정 (orderCore가 있으면 위임)
 function updateItemQuantity(button, delta, orderId) {
+    if (window.orderCore && (typeof window.orderCore.updateQuantity === 'function' || typeof window.orderCore.setItemQuantity === 'function')) {
+        try {
+            if (typeof window.orderCore.updateQuantity === 'function') {
+                window.orderCore.updateQuantity(orderId, delta);
+            } else {
+                // fallback: try setItemQuantity(orderId, newQty)
+                const current = window.orderCore.getOrder()?.items?.find(i => (i.id||i.menuId) === orderId || (i.orderId === orderId));
+                const newQty = Math.max(1, (current?.qty || current?.count || 1) + delta);
+                window.orderCore.setItemQuantity(orderId, newQty);
+            }
+            syncOrderListFromCore();
+            return;
+        } catch (e) {
+            console.warn('orderCore.updateQuantity/setItemQuantity failed, falling back to local:', e);
+        }
+    }
+
     if(totalCount > (limitCount - 1) && delta > 0) return openAlertModal(`${limitCount}개 이상 주문 할 수 없습니다.`);
     const order = orderList.find(o => o.orderId === orderId);
     if (!order) {
@@ -517,7 +546,7 @@ function updateItemQuantity(button, delta, orderId) {
     }
 
     // UI 업데이트
-    const orderItem = button.closest('.order-item');
+    const orderItem = button && button.closest ? button.closest('.order-item') : document.querySelector(`[data-order-id="${orderId}"]`);
     if (orderItem) {
         const quantitySpan = orderItem.querySelector('.quantity');
         const itemTotalElement = orderItem.querySelector(`.item-total[data-order-id="${orderId}"]`);
