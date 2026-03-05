@@ -306,8 +306,69 @@ function addOrderItem(orderItem) {
 // 초기 실행
 checkAndShowEmptyImage();
 
+// --- Compatibility layer: prefer window.orderCore when available ---
+function syncOrderListFromCore(){
+    try{
+        if(window.orderCore && typeof window.orderCore.getOrder === 'function'){
+            const core = window.orderCore.getOrder();
+            // core.items expected: [{id, price, qty, ...}]
+            orderList = (core.items || []).map(i=>({
+                orderId: `${i.id || i.menuId}-${i.userId || 'unknown'}`,
+                userId: i.userId || null,
+                menuId: i.menuId || i.id,
+                price: Number(i.price || 0),
+                item: i.items || null,
+                name: i.name || i.menuName || ('상품_' + (i.id||i.menuId)),
+                count: Number(i.qty || i.count || 1),
+            }));
+            updateOrderSummary();
+            // rebuild UI list
+            const orderGridEl = document.getElementById('orderGrid');
+            if(orderGridEl){
+                orderGridEl.innerHTML = '';
+                orderList.forEach(o=>{
+                    const orderItem = document.createElement('div');
+                    orderItem.className = 'order-item bg-black bg-opacity-10 p-2 rounded-lg flex justify-between items-center w-full min-h-24';
+                    orderItem.setAttribute('data-order-id', o.orderId);
+                    orderItem.innerHTML = `
+                        <div class="w-full flex space-x-4">
+                            <div class="flex flex-col items-center">
+                                <img src="${(o.image||'../../assets/basicImage/white.png')}" alt="${o.name}" class="w-14 h-14 rounded-md">
+                                <div class="flex items-center space-x-2 mt-2">
+                                    <button class="prevent-double-click h-6 text-white rounded-lg" onclick="updateItemQuantity(this, -1, '${o.orderId}')"><img class="h-6" src="../../assets/basicImage/20241208_153430.png" alt="manus" /></button>
+                                    <span class="quantity h-6 rounded-lg text-center">${o.count}</span>
+                                    <button class="prevent-double-click h-6 text-white rounded-lg" onclick="updateItemQuantity(this, 1, '${o.orderId}')"><img class="h-6" src="../../assets/basicImage/20241208_153438.png" alt="plus" /></button>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-center">
+                                    <h3 class=" text-xl">${o.name}</h3>
+                                    <p class="text-gray-600 text-xl ">₩<span class="item-total" data-order-id="${o.orderId}">${o.price.toLocaleString()}</span></p>
+                                </div>
+                            </div>
+                            <button class="text-red-500 text-sm h-5" onclick="removeItemFromOrder(this, '${o.orderId}')"><img class="h-6" src="../../assets/basicImage/20241208_154625.png" alt="delete" /></button>
+                        </div>
+                    `;
+                    orderGridEl.appendChild(orderItem);
+                });
+            }
+        }
+    }catch(e){ console.warn('syncOrderListFromCore failed', e); }
+}
+
 // 상품 장바구니 추가
 async function addItemToOrder(menuId) {
+    // If orderCore exists, delegate to it and sync
+    if(window.orderCore && typeof window.orderCore.addItem === 'function'){
+        const product = allProducts.find(p => p.menuId === menuId);
+        if(!product) return console.error(`Product not found for menuId: ${menuId}`);
+        try{
+            await window.orderCore.addItem({ id: product.menuId, menuId: product.menuId, price: product.price, name: product.name, userId: product.userId, image: product.image }, 1);
+            syncOrderListFromCore();
+            return;
+        }catch(e){ console.warn('orderCore.addItem failed, falling back to local', e); }
+    }
+
     if(totalCount > (limitCount - 1)) return openAlertModal(`${limitCount}개 이상 주문 할 수 없습니다.`);
     // 상품 검색
     const product = allProducts.find(p => p.menuId === menuId);
