@@ -2040,11 +2040,15 @@ function updateDynamicContent(contentType, data ,resolve) {
 
     // 닫기 버튼 이벤트 연결
     if (closeBtn) {
-        closeBtn.onclick = () => {
-            modal.classList.add("hidden");
-            globalDim?.classList.add("hidden");
-            resolve?.({ success: true, action: ACTIONS.EXIT });
-        };
+        try{
+            closeBtn.onclick = () => {
+                try{
+                    if (modal) modal.classList.add("hidden");
+                    if (globalDim) globalDim.classList.add("hidden");
+                    if (typeof resolve === 'function') resolve({ success: true, action: ACTIONS.EXIT });
+                }catch(e){ console.warn('closeModalBtn handler error', e); }
+            };
+        }catch(e){ console.warn('failed to attach closeModalBtn onclick', e); }
     }
 
     // 현재 상태를 스택에 저장
