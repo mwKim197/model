@@ -1233,14 +1233,23 @@ const totalPayment = async (data) => {
     payCard.onclick = payBarcode.onclick = payPoint.onclick = payCoupon.onclick = null;
 
     const closeBtn = document.getElementById("totalPayCloseModalBtn");
-    closeBtn.onclick = null;
-    closeBtn.onclick = () => {
-        modal.classList.add('hidden');
-        resetCountdown();
-        globalDim.classList.add('hidden');
-
-        // 세션초기화, orderList coupon 사용초기화
-    };
+    if (closeBtn) {
+        try {
+            closeBtn.onclick = null;
+            closeBtn.onclick = () => {
+                try {
+                    if (modal) modal.classList.add('hidden');
+                    resetCountdown();
+                    if (globalDim) globalDim.classList.add('hidden');
+                    // 세션초기화, orderList coupon 사용초기화
+                } catch (e) {
+                    console.warn('totalPayCloseModalBtn onclick handler failed', e);
+                }
+            };
+        } catch (e) {
+            console.warn('failed to attach totalPayCloseModalBtn onclick', e);
+        }
+    }
 
     payCard.onclick = async () => {
         modal.classList.add('hidden');
