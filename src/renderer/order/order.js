@@ -499,10 +499,12 @@ function updateOrderSummary() {
 }
 
 // 아이템 삭제 (orderCore가 있으면 위임)
-function removeItemFromOrder(button, orderId) {
+async function removeItemFromOrder(button, orderId) {
     if (window.orderCore && typeof window.orderCore.removeItem === 'function') {
         try {
-            window.orderCore.removeItem(orderId);
+            // orderId is like "menuId-userId" in UI; core expects menuId/id
+            const coreId = (typeof orderId === 'string' && orderId.indexOf('-') !== -1) ? orderId.split('-')[0] : orderId;
+            await window.orderCore.removeItem(coreId);
             syncOrderListFromCore();
             return;
         } catch (e) {
@@ -510,7 +512,7 @@ function removeItemFromOrder(button, orderId) {
         }
     }
 
-    // 주문 목록에서 삭제
+    // 주문 목록에서 삭제 (legacy fallback)
     const index = orderList.findIndex(o => o.orderId === orderId);
     if (index > -1) {
         orderList.splice(index, 1);
