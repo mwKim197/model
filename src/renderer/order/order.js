@@ -48,7 +48,7 @@ let rd1Info = {};
 // 메뉴 데이터
 window.allProducts = [];
 
-// attach orderCore onChange listener with retries so UI syncs automatically when core emits
+// orderCore의 onChange 리스너를 재시도 로직과 함께 등록하여, core에서 변경이 emit되면 UI가 자동으로 동기화되도록 함
 (function attachOrderCoreListener(retries=5, delay=100){
   try{
     if(window.orderCore && typeof window.orderCore.onChange === 'function'){
@@ -262,7 +262,7 @@ function legacyDisplayProducts(products) {
     });
 }
 
-// Wrapper: prefer product.js implementation when available
+// 래퍼: 가능하면 product.js 구현을 우선 사용
 function displayProducts(products) {
   if (window.orderProduct && typeof window.orderProduct.displayProducts === "function") {
     try {
@@ -389,7 +389,7 @@ function syncOrderListFromCore(){
 
 // 상품 장바구니 추가
 async function addItemToOrder(menuId) {
-    // Prefer using orderCore as single source of truth
+    // 기본적으로 orderCore를 단일 소스(싱글 소스 오브 트루스)로 사용하도록 우선 처리
     const product = allProducts.find(p => p.menuId === menuId);
     if (!product) {
         console.error(`Product not found for menuId: ${menuId}`);
@@ -553,7 +553,7 @@ async function _removeItemFromOrderImpl(button, orderId) {
     return { ok: true };
 }
 
-// expose global function for inline onclick handlers
+// 인라인 onclick 핸들러를 위해 전역 함수를 노출함
 window.removeItemFromOrder = async function(button, orderId){
     try{
         const r = await _removeItemFromOrderImpl(button, orderId);
@@ -571,7 +571,7 @@ function updateItemQuantity(button, delta, orderId) {
             if (typeof window.orderCore.updateQuantity === 'function') {
                 window.orderCore.updateQuantity(orderId, delta);
             } else {
-                // fallback: try setItemQuantity(orderId, newQty)
+                // 대체 동작: setItemQuantity(orderId, newQty)를 시도
                 const current = window.orderCore.getOrder()?.items?.find(i => (i.id||i.menuId) === orderId || (i.orderId === orderId));
                 const newQty = Math.max(1, (current?.qty || current?.count || 1) + delta);
                 window.orderCore.setItemQuantity(orderId, newQty);

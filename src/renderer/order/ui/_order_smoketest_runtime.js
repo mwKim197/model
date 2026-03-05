@@ -2,11 +2,11 @@
   try{
     const result = {images:[], modal:{}, orderCore: null, addedTest:false};
 
-    // collect orderGrid imgs
+    // orderGrid의 이미지 수집
     const imgs = Array.from(document.querySelectorAll('#orderGrid img'));
     imgs.forEach(img=>{
       result.images.push({src: img.getAttribute('src'), naturalWidth: img.naturalWidth || 0, complete: img.complete, alt: img.alt});
-      // ensure fallback attached
+      // 폴백(onerror) 핸들러 연결 보장
       img.onerror = function(){ this.onerror=null; this.src='../../assets/basicImage/white.png'; };
     });
 
@@ -18,7 +18,7 @@
       modalImage.onerror = function(){ this.onerror=null; this.src='../../assets/basicImage/white.png'; };
     }
 
-    // try simulate close button click
+    // 닫기 버튼 클릭 시뮬레이션 시도
     const closeIds = ['totalPayCloseModalBtn','closeModalBtn','cancelButton','okButton'];
     result.close = {};
     closeIds.forEach(id=>{
@@ -32,14 +32,14 @@
       }
     });
 
-    // orderCore snapshot
+    // orderCore 상태 스냅샷
     try{
       if(window.orderCore && typeof window.orderCore.getOrder === 'function'){
         result.orderCore = window.orderCore.getOrder();
       }
     }catch(e){ result.orderCoreError = String(e); }
 
-    // attempt a test addItem if orderCore exists
+    // orderCore가 존재하면 테스트용 addItem 호출 시도
     (async ()=>{
       if(window.orderCore && typeof window.orderCore.addItem === 'function' && window.allProducts && window.allProducts.length){
         try{

@@ -1,4 +1,4 @@
-// Product UI module: displayProducts, adjustTextSize, generateMenu, activateTab
+// Product UI 모듈: displayProducts, adjustTextSize, generateMenu, activateTab
 (function(global){
   const { createText, createImg, safeSetText } = global.orderDom || {};
 
@@ -22,7 +22,7 @@
     return `<img src="../../assets/basicImage/${name}.png" alt="badge" class="${className}"/>`;
   }
 
-  // Normalize image src values to handle Windows paths, S3 cache, and relative paths
+  // 이미지 src를 정규화: Windows 경로, S3 캐시, 상대 경로를 처리하기 위한 로직
   function normalizeImageSrc(src, product) {
     if (!src) return '';
     // already a URL
@@ -96,7 +96,7 @@
     return src;
   }
 
-  // Safe synchronous normalizer that avoids embedding Windows absolute paths into mac paths
+  // mac 환경에서 Windows 절대 경로를 잘못 결합하지 않도록 안전한 동기 정규화기
   function normalizeImageSrcSafe(src, product) {
     if (!src) return '';
     // if already a http or file URL, leave as-is
@@ -237,8 +237,8 @@
   global.orderProduct.normalizeImageSrc = normalizeImageSrc;
   global.orderProduct.normalizeImageSrcSafe = normalizeImageSrcSafe;
 
-  // Hotfix: scan existing <img> elements and normalize any Windows-style paths that may have been rendered
-  // This helps when server-side/template injected img[src="C:\\..."] remains in DOM before our displayProducts runs.
+  // 핫픽스: 기존 DOM의 <img> 요소를 스캔하여 서버/템플릿에서 삽입된 Windows 스타일 경로를 정규화합니다.
+  // (displayProducts가 실행되기 전에 img[src="C:\\..."] 같은 값이 남아 있는 경우에 유용합니다.)
   function normalizeExistingImgElements() {
     try {
       const imgs = Array.from(document.querySelectorAll('img'));
