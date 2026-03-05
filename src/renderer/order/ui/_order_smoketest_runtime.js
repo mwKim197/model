@@ -2,16 +2,6 @@
   try{
     const result = {images:[], modal:{}, orderCore: null, addedTest:false};
 
-    // If no products loaded, inject a dummy product list and force displayProducts to exercise rendering
-    try{
-      if((!window.allProducts || !window.allProducts.length) && typeof displayProducts === 'function'){
-        window.allProducts = [
-          { menuId: 'diag-1', name: 'DIAG_PRODUCT_1', price: 1200, userId: 'diag', image: '../../assets/basicImage/가이드.png', category: 'all' }
-        ];
-        try{ displayProducts(window.allProducts); result.injectedProducts = true; }catch(e){ result.injectError = String(e); }
-      }
-    }catch(e){ result.injectError = String(e); }
-
     // collect orderGrid imgs
     const imgs = Array.from(document.querySelectorAll('#orderGrid img'));
     imgs.forEach(img=>{
@@ -49,33 +39,9 @@
       }
     }catch(e){ result.orderCoreError = String(e); }
 
-    // attempt a test addItem if orderCore exists; also auto-click first product card to trigger click-logger
+    // attempt a test addItem if orderCore exists
     (async ()=>{
-      try{
-        if(window.allProducts && window.allProducts.length){
-          // find first clickable card in DOM
-          const firstCard = document.querySelector('.product-card');
-          if(firstCard){
-            try{ firstCard.click(); result.autoClicked = true; }catch(e){ result.autoClicked = false; result.autoClickError = String(e); }
-          } else {
-            result.autoClicked = false;
-            result.autoClickNote = 'no .product-card element found';
-          }
-        } else {
-          result.autoClicked = false;
-          result.autoClickNote = 'allProducts empty';
-        }
-      }catch(e){ result.autoClickError = String(e); }
-
-      // If no products are available, try a simulated addItem directly (diagnostic)
-      if((!window.allProducts || !window.allProducts.length) && window.orderCore && typeof window.orderCore.addItem === 'function'){
-        try{
-          const dummy = { id: 'diag-menu-000', menuId: 'diag-menu-000', price: 1000, name: 'DIAG_ITEM', userId: 'diag', image: '../../assets/basicImage/white.png' };
-          await window.orderCore.addItem(dummy, 1);
-          result.simulatedAdd = true;
-          result.orderCoreAfter = window.orderCore.getOrder();
-        }catch(e){ result.simulatedAddError = String(e); }
-      } else if(window.orderCore && typeof window.orderCore.addItem === 'function' && window.allProducts && window.allProducts.length){
+      if(window.orderCore && typeof window.orderCore.addItem === 'function' && window.allProducts && window.allProducts.length){
         try{
           const p = window.allProducts[0];
           await window.orderCore.addItem({ id: p.menuId, menuId: p.menuId, price: p.price, name: p.name, userId: p.userId, image: p.image }, 1);
