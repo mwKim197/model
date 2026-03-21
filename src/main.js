@@ -1,3 +1,13 @@
+try {
+    const dotenv = require('dotenv');
+    const path = require('path');
+    const envPath = path.resolve(__dirname, '../.env.local');
+    dotenv.config({ path: envPath });
+} catch (e) {
+    // ignore if dotenv not installed or file missing
+}
+
+
 const { app, BrowserWindow} = require('electron');
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {

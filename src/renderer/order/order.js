@@ -2992,19 +2992,24 @@ async function handlerWash() {
 
 // 커피 예열 동작
 async function coffeePreheating() {
-    console.log("예열체크");
-    if (rd1Info.autoOperationState === "정지" && remainingSeconds === 0) {
-        if (isEvery30Minutes()) {
-            // 커피 예열
-            await window.electronAPI.coffeePreheating();
+    if (userInfo?.warmUp === true) {
+        sendLogToMain('info', `예열시작`);
+        if (rd1Info.autoOperationState === "정지" && remainingSeconds === 0) {
+            if (isEvery30Minutes()) {
+                // 커피 예열
+                await window.electronAPI.coffeePreheating();
 
-            console.log('[INFO] 커피 예열 완료');
+                sendLogToMain('info', `예열완료`);
+            }
+
         }
-
+    } else {
+        sendLogToMain('info', `예열안탐`);
     }
 }
 
-setInterval(coffeePreheating, 1000 * 60 * 1); // 1분 간격으로 예열동작
+setInterval(coffeePreheating, 1000 * 60); // 예열 1분 테스트
+
 
 // 세척 확인 스케줄링
 setInterval(handlerWash, 1000 * 60 * 5); // 5분 간격으로 세척 확인

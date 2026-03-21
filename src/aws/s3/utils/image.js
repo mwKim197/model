@@ -23,7 +23,6 @@ const downloadImageFromS3 = async (bucketName, key) => {
 
     // 로컬 파일이 존재하면 그대로 반환
     if (fs.existsSync(localFilePath)) {
-        log.info(`캐시 사용: ${localFilePath}`);
         return localFilePath;
     }
 
@@ -84,7 +83,7 @@ const downloadAllFromS3WithCache = async (bucketName, prefix) => {
 
                 // S3와 로컬 파일 수정 시간을 비교
                 if (localFileStats.mtime >= s3LastModified) {
-                    log.info(`캐시 사용: ${localFilePath}`);
+                    //log.info(`캐시 사용: ${localFilePath}`);
                     continue; // 최신 파일이면 다운로드 건너뜀
                 }
             }
