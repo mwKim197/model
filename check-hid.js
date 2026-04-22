@@ -20,6 +20,7 @@ try {
         console.log("path:", d.path);
         console.log("interface:", d.interface);
         console.log("usagePage:", d.usagePage);
+        console.log('serialNumber:', d.serialNumber);
         console.log("usage:", d.usage);
     });
 

@@ -17,18 +17,10 @@ function openRelay() {
         throw new Error('USBRelay4 장치를 찾지 못했습니다.');
     }
 
-    // path로 여는 방식이 가장 안전함
     const device = new HID.HID(relayInfo.path);
     return device;
 }
 
-/**
- * DCTTech USBRelay 계열에서 흔히 쓰이는 HID Feature Report 명령
- * ALL ON  : [0x00, 0xFE]
- * ALL OFF : [0x00, 0xFC]
- * ONE ON  : [0x00, 0xFF, relayNumber]
- * ONE OFF : [0x00, 0xFD, relayNumber]
- */
 function relayOn(device, relayNumber) {
     device.sendFeatureReport([0x00, 0xFF, relayNumber]);
 }
@@ -48,6 +40,7 @@ function allOff(device) {
 async function main() {
     const cmd = process.argv[2];
     const relayNumber = Number(process.argv[3] || 1);
+    const duration = Number(process.argv[4] || 5000);
 
     let device;
     try {
@@ -85,7 +78,7 @@ async function main() {
                     } catch (e) {
                         console.error('OFF 실패:', e);
                     }
-                }, 5000);
+                }, duration);
                 return;
 
             default:
@@ -93,7 +86,7 @@ async function main() {
 사용법:
   node usbrelay4-control.js on 1
   node usbrelay4-control.js off 1
-  node usbrelay4-control.js pulse 1
+  node usbrelay4-control.js pulse 1 300
   node usbrelay4-control.js allon
   node usbrelay4-control.js alloff
         `);
