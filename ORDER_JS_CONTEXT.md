@@ -7,6 +7,43 @@ and order submission to the machine workflow.
 
 Read this document before changing `order.js`.
 
+## Related Files
+
+- `src/renderer/order/order.html`
+  - Loads `order-utils.js` before `order.js`.
+  - Keep this order because `order.js` reads `window.OrderUtils` during startup.
+
+- `src/renderer/order/order-utils.js`
+  - Contains pure calculations and product-name matching logic extracted from
+    `order.js`.
+  - Exposes `window.OrderUtils` for the renderer and `module.exports` for simple
+    Node-based verification.
+  - Current exports: `calculateTotalPayment`, `calculateOrderTotals`,
+    `collectUsedCoupons`, `getMileageUsed`, `calcOrderTotal`, `normalizeName`,
+    `nameScore`, and `findProductByName`.
+  - Prefer adding DOM-independent order calculations here instead of growing
+    `order.js`.
+
+- `src/renderer/order/order-payment-session.js`
+  - Owns the integrated payment session state and its coupon/mileage lifecycle.
+  - Exposes `createPaymentSessionManager(dependencies)` through
+    `window.OrderPaymentSession`.
+  - The manager receives order-list accessors, calculations, API functions, and
+    logging as dependencies so it does not rely on hidden renderer globals.
+  - Current manager exports: `paymentSession`, `startPaymentSession`,
+    `applyCouponFromOrders`, `accumulatePointUsage`, `commitPointUsage`,
+    `accumulateEarnPoint`, `handleMileageEarn`, `handleUseCoupons`,
+    `resetMileageUsage`, and `rollbackPointUsage`.
+
+- `src/renderer/order/order-payment-modal.js`
+  - Owns the current integrated payment modal flow and payment summary rendering.
+  - Exposes `createPaymentModalController(dependencies)` through
+    `window.OrderPaymentModal`.
+  - The controller returns `totalPayment` and `renderTotalPayContent`.
+  - Card, barcode, point, coupon, and order-start functions are injected as
+    callbacks so the modal does not directly own their Electron/API details.
+  - `payment()` remains the older legacy payment flow in `order.js`.
+
 ## File Role
 
 Path:

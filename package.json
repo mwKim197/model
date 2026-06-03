@@ -28,6 +28,9 @@
       "sign": false,
       "artifactName": "model-setup-${version}.exe"
     },
+    "nsis": {
+      "include": "build/installer.nsh"
+    },
     "extraFiles": [
       {
         "from": "resources/cloudflared.exe",
@@ -36,6 +39,18 @@
       {
         "from": "resources/cert.pem",
         "to": "cloudflared/cert.pem"
+      },
+      {
+        "from": "resources/loading/start-model-with-loading.ps1",
+        "to": "start-model-with-loading.ps1"
+      },
+      {
+        "from": "resources/loading/start-model-with-loading.cmd",
+        "to": "start-model-with-loading.cmd"
+      },
+      {
+        "from": "resources/loading/start-model-with-loading.vbs",
+        "to": "start-model-with-loading.vbs"
       }
     ]
   },

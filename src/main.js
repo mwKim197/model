@@ -38,11 +38,19 @@ const {setupCloudflare, stopCloudflareTunnel, checkTunnelHealth} = require("./cl
 
 function registerAutoLaunch() {
     try {
+        const installDir = path.dirname(process.execPath);
+        const loaderPath = app.isPackaged
+            ? path.join(installDir, 'start-model-with-loading.vbs')
+            : path.resolve(__dirname, '../resources/loading/start-model-with-loading.vbs');
+        const wscriptPath = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'wscript.exe');
+        const shouldUseLoader = fs.existsSync(loaderPath) && fs.existsSync(wscriptPath);
+
         app.setLoginItemSettings({
             openAtLogin: true,
-            path: process.execPath,
+            path: shouldUseLoader ? wscriptPath : process.execPath,
+            args: shouldUseLoader ? [loaderPath] : [],
         });
-        log.info(`[DEBUG] Auto launch registered: ${process.execPath}`);
+        log.info(`[DEBUG] Auto launch registered: ${shouldUseLoader ? `${wscriptPath} ${loaderPath}` : process.execPath}`);
     } catch (error) {
         log.error(`[DEBUG] Auto launch registration failed: ${error.message}`);
     }

@@ -1,4 +1,28 @@
-function sendLogToMain (level, message) {
+if (!window.OrderUtils) {
+    throw new Error("order-utils.js must be loaded before order.js");
+}
+
+if (!window.OrderPaymentSession) {
+    throw new Error("order-payment-session.js must be loaded before order.js");
+}
+
+if (!window.OrderPaymentModal) {
+    throw new Error("order-payment-modal.js must be loaded before order.js");
+}
+
+const {
+    calculateTotalPayment,
+    calculateOrderTotals,
+    collectUsedCoupons,
+    getMileageUsed,
+    calcOrderTotal,
+    findProductByName: findProductByNameFromProducts,
+} = window.OrderUtils;
+
+const { createPaymentSessionManager } = window.OrderPaymentSession;
+const { createPaymentModalController } = window.OrderPaymentModal;
+
+function sendLogToMain(level, message) {
     window.electronAPI.logToMain(level, message);
 }
 
@@ -646,741 +670,69 @@ const rollbackMileage = async (mileageNo, totalAmtNum, earnRate, rollBackPointNu
     return await window.electronAPI.updateMileageAndLogHistory(mileageNo, totalAmt, Number(pointsToAdd), 'rollback', note);
 };
 
-//----------------쿠폰결제 금액계산-------------------//
-const calculateTotalPayment = (orderList) => {
-    let total = 0;
-
-    orderList.forEach(order => {
-        const used = order.couponUsed || 0;
-        const count = order.count || 0;
-        const payCount = Math.max(0, count - used); // 쿠폰 사용분 제외
-
-        total += payCount * order.price;
-    });
-
-    return total;
-};
-
-
-// ✅ 쿠폰 할인 / 결제 총액 계산
-function calculateOrderTotals(orderList = []) {
-    let totalAmount = 0;   // 총 주문 금액
-    let couponDiscount = 0; // 쿠폰 할인 금액
-
-    const couponLines = orderList.map(order => {
-        const price = Number(order.price) || 0;
-        const count = Number(order.count) || 0;
-        const used = Number(order.couponUsed) || 0;
-
-        const itemTotal = price * count;
-        const discount = price * Math.min(count, used); // 쿠폰 적용된 금액
-        const finalPay = itemTotal - discount;
-
-        totalAmount += itemTotal;
-        couponDiscount += discount;
-
-        return {
-            name: order.name,
-            count,
-            couponUsed: used,
-            price,
-            discount,
-            finalPay,
-        };
-    });
-
-    return {
-        totalAmount,       // 전체 주문 금액 (할인 전)
-        couponDiscount,    // 전체 쿠폰 할인 금액
-        couponLines        // 각 항목별 계산 결과
-    };
-}
-
-// 세션에 쿠폰사용금액반영
-function applyCouponFromOrders(orderList) {
-    const { totalAmount, couponDiscount, couponLines } = calculateOrderTotals(orderList);
-    paymentSession.orderAmount = totalAmount;
-    paymentSession.couponItems = couponLines.filter(c => c.discount > 0);
-    paymentSession.couponTotal = couponDiscount;
-
-    const mileageUsed = getMileageUsed(paymentSession);
-    paymentSession.totalDiscount = couponDiscount + mileageUsed;
-
-    sendLogToMain('info', `쿠폰 할인 ${couponDiscount}원 적용 (총 주문금액 ${totalAmount}원)`);
-
-    // totalPayInfo 초기화
-    if (!Array.isArray(paymentSession.totalPayInfo)) {
-        paymentSession.totalPayInfo = [];
-    }
-
-    // ✅ 중복 방지용 Set
-    const seenCoupons = new Set(
-        paymentSession.totalPayInfo
-            .flatMap(p => p.coupons?.map(c => c.couponId) || [])
-    );
-
-    // ✅ 쿠폰 1개당 totalPayInfo 1개 생성
-    orderList.forEach(order => {
-        order.usedCoupons?.forEach(coupon => {
-            // 이미 등록된 쿠폰은 무시
-            if (seenCoupons.has(coupon.couponId)) return;
-            seenCoupons.add(coupon.couponId);
-
-            paymentSession.totalPayInfo.push({
-                method: "쿠폰",
-                items: [
-                    {
-                        name: order.name,
-                        discount: order.price
-                    }
-                ],
-                coupons: [
-                    {
-                        couponId: coupon.couponId,
-                        couponCode: coupon.couponCode,
-                        orderId: order.orderId,
-                        name: order.name,
-                        userId: order.userId,
-                        menuId: order.menuId,
-                        price: order.price
-                    }
-                ]
-            });
-        });
-    });
-}
-
-//----------------쿠폰결제 금액계산-------------------//
-//----------------쿠폰사용처리 -------------------//
-function collectUsedCoupons(orderList) {
-    const map = new Map(); // couponId 기준 dedupe
-    for (const order of (orderList || [])) {
-        const { usedCoupons = [], orderId, menuId } = order;
-        for (const c of usedCoupons) {
-            if (!c?.couponId) continue;
-            if (!map.has(c.couponId)) {
-                map.set(c.couponId, {
-                    couponId: c.couponId,
-                    couponCode: c.couponCode,
-                    orderId,
-                    menuId,
-                });
-            }
-        }
-    }
-    return Array.from(map.values());
-}
-//----------------쿠폰사용처리 -------------------//
 //-----------------통합결제--------------------//
-// 결제 세션
-const paymentSession = {
-    orderId: null,
-    orderAmount: 0,       // 원 주문금액 (할인 전)
-    totalDiscount: 0,     // 총 할인 (포인트 + 쿠폰)
-    paidAmount: 0,        // 총 결제 금액
-    usePoint: null,       // 포인트 사용 단건 { uniqueMileageNo, usedAmount, pointData }
-    earnPoint: null,      // 적립 단건 { uniqueMileageNo, createdAt }
-    totalPayInfo: [],
-
-    // 쿠폰 관련
-    couponItems: [],      // [{ name, count, discount }]  — 개별 쿠폰
-    couponMenuIds: [],    // [menuId1, menuId2, ...]      — 전액할인 메뉴 ID
-    couponTotal: 0,       // 총 쿠폰 할인금액 (derived 합산)
-
-    // 초기화
-    reset() {
-        this.orderId = null;
-        this.orderAmount = 0;
-        this.totalDiscount = 0;
-        this.paidAmount = 0;
-        this.usePoint = null;
-        this.earnPoint = null;
-        this.totalPayInfo = [];
-
-        // 쿠폰 관련 초기화
-        this.couponItems = [];
-        this.couponMenuIds = [];
-        this.couponTotal = 0;
+const {
+    paymentSession,
+    startPaymentSession,
+    applyCouponFromOrders,
+    accumulatePointUsage,
+    commitPointUsage,
+    accumulateEarnPoint,
+    handleMileageEarn,
+    handleUseCoupons,
+    resetMileageUsage,
+    rollbackPointUsage,
+} = createPaymentSessionManager({
+    getOrderList: () => orderList,
+    setOrderList: nextOrderList => {
+        orderList = nextOrderList;
     },
-};
+    calculateOrderTotals,
+    collectUsedCoupons,
+    getMileageUsed,
+    addMileage,
+    useMileage,
+    rollbackMileage,
+    useCouponApi: (...args) => useCouponApi(...args),
+    sendLogToMain,
+});
+
+const {
+    totalPayment,
+    renderTotalPayContent,
+} = createPaymentModalController({
+    getOrderList: () => orderList,
+    getUserInfo: () => userInfo,
+    getGlobalDim: () => globalDim,
+    setRemainingSeconds: seconds => {
+        remainingSeconds = seconds;
+    },
+    paymentSession,
+    calculateOrderTotals,
+    calcOrderTotal,
+    getMileageUsed,
+    accumulatePointUsage,
+    commitPointUsage,
+    accumulateEarnPoint,
+    handleMileageEarn,
+    handleUseCoupons,
+    resetMileageUsage,
+    rollbackPointUsage,
+    applyCouponFromOrders,
+    clearCountdown,
+    resetCountdown,
+    sendLogToMain,
+    openAlertModal,
+    closeAlertModal,
+    playAudio,
+    cardPayment: (...args) => cardPayment(...args),
+    barcodePayment: (...args) => barcodePayment(...args),
+    pointPayment: (...args) => pointPayment(...args),
+    showCouponModal: (...args) => showCouponModal(...args),
+    isCouponApplied: result => result?.action === ACTIONS.COUPON_APPLIED,
+    ordStart: (...args) => ordStart(...args),
+});
 
-// 주문 시작 전에 세션 초기화
-function startPaymentSession(orderId, orderAmount) {
-    paymentSession.reset();
-    paymentSession.orderId = orderId;
-    paymentSession.orderAmount = Number(orderAmount) || 0;
-
-    orderList = orderList.map(order => {
-        // coupon 관련 필드 삭제
-        const {couponUsed, usedCoupons, ...rest} = order;
-        return rest;
-    });
-}
-
-// ✅ 포인트(마일리지) 단건 누적 처리
-function accumulatePointUsage(resp) {
-    if (!resp?.success || resp.action !== 'usePoints') return;
-
-    const used = Number(resp.discountAmount) || 0;
-    const mileageNo = resp.pointData?.mileageNo;
-    if (!mileageNo) return;
-
-    // 기존 포인트 사용 세션이 있으면 로그 남기고 덮어쓰기
-    if (paymentSession.usePoint) {
-        console.warn(
-            `🔁 기존 포인트 세션 갱신: ${paymentSession.usePoint.pointData?.mileageNo} → ${mileageNo}`
-        );
-    }
-
-    // 총 할인 금액은 이번 사용분으로 갱신 (누적 X)
-    paymentSession.totalDiscount = used;
-
-    // ✅ 단건만 저장
-    paymentSession.usePoint = {
-        uniqueMileageNo: resp.pointData?.uniqueMileageNo ?? resp.point,
-        usedAmount: used,
-        pointData: resp.pointData ?? null,
-    };
-
-    console.log(`💰 [포인트 사용 세션 등록 완료] mileageNo=${mileageNo}, amount=${used}`);
-}
-
-
-// ✅ 세션 포인트(마일리지) 단건 사용 처리
-async function commitPointUsage() {
-    console.log("paymentSession: ", JSON.stringify(paymentSession, null, 2));
-    if (!paymentSession.usePoint) {
-        return { success: true, committed: 0 }; // 사용 내역 없음
-    }
-
-    const u = paymentSession.usePoint;
-    const mileageNo = u.uniqueMileageNo;
-    const totalAmtNum = u.pointData?.totalAmt || 0;
-    const usedAmount = u.usedAmount;
-
-    try {
-        const res = await useMileage(mileageNo, totalAmtNum, usedAmount);
-        console.log(`✅ [포인트 커밋 완료] mileageNo=${mileageNo}, amount=${usedAmount}`);
-        return { success: true, committed: 1, res };
-    } catch (err) {
-        console.error(`❌ [포인트 커밋 실패] mileageNo=${mileageNo}`, err);
-        throw new Error(`포인트 커밋 실패: ${err.message}`);
-    }
-}
-
-// 마일리지 적립 등록
-function accumulateEarnPoint(data) {
-    if (!data?.success || data.action !== 'immediatePayment') return;
-
-    const uniqueMileageNo = data.point;
-
-    // 기존 적립 세션이 있으면 로그 남기고 덮어쓰기
-    if (paymentSession.earnPoint) {
-        console.warn(` 기존 적립 세션 갱신: ${paymentSession.earnPoint.uniqueMileageNo} → ${uniqueMileageNo}`);
-    }
-
-    // 무조건 새 값으로 덮어쓰기
-    paymentSession.earnPoint = {
-        uniqueMileageNo,
-        createdAt: Date.now()
-    };
-
-    console.log(`[적립 세션 저장 완료] mileageNo=${uniqueMileageNo}`);
-}
-
-//  공통 마일리지 적립 처리 함수
-async function handleMileageEarn(orderAmount, userInfo) {
-    if (!paymentSession.earnPoint) {
-        console.log(" 적립 세션 없음 — 마일리지 적립 스킵");
-        return;
-    }
-
-    const { uniqueMileageNo } = paymentSession.earnPoint;
-    const earnRate = userInfo?.earnMileage || 0;
-
-    try {
-        sendLogToMain('info', ` 마일리지 적립 실행 - 번호: ${uniqueMileageNo}, 금액: ${orderAmount}, 적립률: ${earnRate}%`);
-
-        const res = await addMileage(uniqueMileageNo, orderAmount, earnRate);
-
-        console.log("✅ 마일리지 적립 완료:", res);
-        sendLogToMain('info', `마일리지 적립 완료: ${uniqueMileageNo}`);
-    } catch (err) {
-        console.error("❌ 마일리지 적립 실패:", err);
-        sendLogToMain('error', `마일리지 적립 실패: ${err.message}`);
-    }
-}
-
-// 공통 쿠폰 사용함수
-async function handleUseCoupons(orderList) {
-    const coupons = collectUsedCoupons(orderList);
-    if (coupons.length === 0) {
-        sendLogToMain('error', `사용할 쿠폰이 없습니다.`);
-        return;
-    }
-
-    const result = await useCouponApi(coupons);
-
-    if (result.ok) {
-        sendLogToMain('info', `${result.message}`);
-    } else {
-        sendLogToMain('error', `${result.message}`);
-    }
-}
-
-// 마일리지 사용 초기화 처리
-function resetMileageUsage() {
-    const couponDiscount = paymentSession.couponTotal || 0;
-
-    paymentSession.usePoint = null;
-    paymentSession.totalDiscount = couponDiscount; // 쿠폰 할인만 반영
-    console.log("🔄 마일리지 사용 초기화 — 쿠폰 할인만 유지");
-}
-
-// ✅ 세션 포인트(마일리지) 단건 롤백 처리
-async function rollbackPointUsage(reason = 'ORDER_FAIL') {
-    if (!paymentSession.usePoint) {
-        return { success: true, rolledBack: 0 }; // 롤백할 내역 없음
-    }
-
-    const u = paymentSession.usePoint;
-    const mileageNo = u.pointData?.mileageNo || u.point || u.uniqueMileageNo;
-    const usedAmount = Number(u.usedAmount) || 0;
-    const totalAmtNum = u.pointData?.totalAmt || 0;
-
-    try {
-        const res = await rollbackMileage(mileageNo, usedAmount, totalAmtNum, reason);
-        console.log(`↩️ [포인트 롤백 완료] mileageNo=${mileageNo}, amount=${usedAmount}`);
-        return { success: true, rolledBack: 1, res };
-    } catch (err) {
-        console.error(`❌ [포인트 롤백 실패] mileageNo=${mileageNo}`, err);
-        throw new Error(`포인트 롤백 실패: ${err.message}`);
-    }
-}
-
-const totalPayment = async (data) => {
-
-    // 리셋 타이머 종료
-    clearCountdown();
-    remainingSeconds = 99;
-    let response;
-
-    // ------------------------------
-    // ① 주문 총액 계산 (쿠폰 적용 전)
-    // ------------------------------
-    const { totalAmount } = calculateOrderTotals(orderList);
-
-    // ------------------------------
-    // ② 쿠폰 할인 반영 (쿠폰 할인은 항상 유지)
-    // ------------------------------
-    const couponDiscount = Number(paymentSession.couponTotal) || 0;
-    // 쿠폰 적용 후 결제 기준금액 저장
-    paymentSession.orderAmount = Math.max(0, totalAmount - couponDiscount);
-
-    // ------------------------------
-    // ③ 포인트/적립 세션 갱신
-    // ------------------------------
-    if (data?.action === 'usePoints') {
-        accumulatePointUsage(data);   // ✅ 포인트 사용 세션 갱신
-    } else if (data?.action === 'immediatePayment') {
-        accumulateEarnPoint(data);    // ✅ 적립 세션 저장
-    }
-
-    // ------------------------------
-    // ④ 할인 합계 계산
-    // ------------------------------
-    const mileageUsed = getMileageUsed(paymentSession); // 현재 포인트 사용 금액
-    const totalDiscount = couponDiscount + mileageUsed; // 쿠폰 + 포인트 합산
-
-    // ------------------------------
-    // ⑤ 최종 결제금액 계산
-    // ------------------------------
-    // baseAmount는 항상 "쿠폰 적용 후" 기준금액을 사용
-    const baseAmount = paymentSession.orderAmount;
-
-    const alreadyPaid = paymentSession.paidAmount || 0;
-
-    // 결제금액 = (쿠폰 적용 후 금액) - (포인트 사용 금액)
-    const orderAmount = Math.max(0, baseAmount - mileageUsed - alreadyPaid);
-
-    console.log(
-        `💳 결제금액 계산: 주문금액=${totalAmount}, 쿠폰할인=${couponDiscount}, 포인트할인=${mileageUsed} → 최종결제=${orderAmount}`
-    );
-
-    // ------------------------------
-    // ⑥ 결제금액이 0원일 경우
-    // ------------------------------
-    if (orderAmount <= 0) {
-
-        try {
-            await commitPointUsage();
-        } catch (e) {
-            sendLogToMain('error', `포인트 커밋 실패: ${e.message}`);
-            openAlertModal('포인트 사용 처리에 실패했습니다. 관리자에게 문의해 주세요.');
-            return;
-        }
-
-        try {
-
-            // 쿠폰사용함수
-            await handleUseCoupons(orderList);
-
-            await ordStart(mileageUsed, null, data, paymentSession.totalPayInfo);
-        } catch (e) {
-            try {
-                await rollbackPointUsage('ORDER_FAIL');
-            } catch (re) {
-                sendLogToMain('error', `포인트 롤백 실패: ${re.message}`);
-            }
-            throw e;
-        }
-
-
-        paymentSession.reset();
-        return;
-    }
-
-    // 모달
-    const modal = document.getElementById('totalPayModel');
-    // 열기
-    modal.classList.remove('hidden');
-
-    playAudio('../../assets/audio/결제 방식을 선택 해주세요.m4a');
-
-    // ✅ 본문 렌더(좌70/우30) — orderList, paymentSession 사용
-    renderTotalPayContent(modal, orderList, paymentSession);
-
-    const payCard = document.getElementById('payCard');
-    const payBarcode = document.getElementById('payBarcode');
-    const payPoint = document.getElementById('payPoint');
-    const payCoupon = document.getElementById('payCoupon');
-
-
-    // 바코드 fasle 일때만안보이기
-    if (userInfo?.barcode !== false) {
-        payBarcode.classList.remove("hidden");
-    } else {
-        payBarcode.classList.add("hidden");
-    }
-
-    // 마일리지 fasle 일때만안보이기
-    if (userInfo.payType !== true && paymentSession.earnPoint === null) {
-        payPoint.classList.remove("hidden");
-    } else {
-        payPoint.classList.add("hidden");
-    }
-
-    // 쿠폰 fasle 일때만안보이기
-    if (userInfo.coupon !== true && paymentSession.earnPoint === null && paymentSession.usePoint === null) {
-        payCoupon.classList.remove("hidden");
-    } else {
-        payCoupon.classList.add("hidden");
-    }
-
-    payCard.onclick = payBarcode.onclick = payPoint.onclick = payCoupon.onclick = null;
-
-    const closeBtn = document.getElementById("totalPayCloseModalBtn");
-    closeBtn.onclick = null;
-    closeBtn.onclick = () => {
-        modal.classList.add('hidden');
-        resetCountdown();
-        globalDim.classList.add('hidden');
-
-        // 세션초기화, orderList coupon 사용초기화
-    };
-
-    payCard.onclick = async () => {
-        modal.classList.add('hidden');
-        sendLogToMain('info', `카드 결제 시작`);
-
-        const payEnd = await cardPayment(orderAmount, 0);
-
-        if (!payEnd.success) {
-            sendLogToMain('error', `카드 결제 실패`);
-            await totalPayment();
-            return;
-        }
-
-        // 마일리지 적립 처리
-        await handleMileageEarn(orderAmount, userInfo);
-
-        // 쿠폰사용함수
-        await handleUseCoupons(orderList);
-
-        const paid = Number(payEnd.cardInfo.amount || orderAmount);
-
-        // 🔥 핵심
-        paymentSession.paidAmount += paid;
-
-        paymentSession.totalPayInfo.push({
-            method: "카드",
-            ...payEnd.cardInfo
-        });
-
-        await totalPayment({
-            action: 'immediatePayment',
-            payMethod: 'card',
-            cardInfo: payEnd.cardInfo
-        });
-    };
-
-    payBarcode.onclick = async () => {
-        modal.classList.add('hidden');
-        sendLogToMain('info', `바코드 결제 시작`);
-
-        const payEnd = await barcodePayment(orderAmount, 0);
-
-        // ❗ 취소라면 아무 것도 안 띄우고 조용히 종료
-        if (payEnd?.canceled) {
-            return;
-        }
-
-        // 실패 처리
-        if (!payEnd || !payEnd.success) {
-            const failMsg = payEnd?.message || '바코드 결제에 실패했습니다.';
-
-            // 🔔 사용자에게 알림 표시
-            openAlertModal(failMsg, 'error');
-            sendLogToMain('error', `바코드 결제 실패: ${failMsg}`);
-
-            // 기존 okButton 클릭 이벤트 제거 (중복 방지)
-            okButton.replaceWith(okButton.cloneNode(true));
-
-            // 새로 정의된 okButton 가져오기
-            const newOkButton = document.getElementById('okButton');
-
-            // ✅ 알럿 닫은 후 totalPayment로 복귀
-            newOkButton.onclick = async () => {
-                closeAlertModal();
-                await totalPayment();
-            };
-            return;
-        }
-
-        const payData = payEnd.message.parsedData;
-        const get = (key) => payData.find(f => f.name === key)?.value?.trim() || "";
-
-        const payInfo = {
-            method: get("발급사명") || "카카오페이머니", // 결제수단
-            payName: get("발급사명") || "카카오페이머니", // 결제수단
-            approvalNo: get("승인번호"),
-            amount: String(Number(get("거래금액") || "0")),
-            cardBin: get("카드Bin"),
-            approvedAt: get("승인일시"),
-            message: get("응답메시지"),
-            catId: get("승인CATID"),
-            posTraceNo: get("전문관리번호"),
-            uniqueNo: get("거래고유번호"),
-        };
-
-        // ✅ totalPayInfo가 없으면 초기화
-        if (!Array.isArray(paymentSession.totalPayInfo)) {
-            paymentSession.totalPayInfo = [];
-        }
-
-        // ✅ 기존 결제 리스트에 바코드 결제 추가
-        paymentSession.totalPayInfo.push({
-            ...payInfo, // 바로 확장
-            method: "바코드QR",
-        });
-
-        sendLogToMain("info", `[바코드 결제] ${JSON.stringify(payInfo)}`);
-        sendLogToMain("info", `[totalPayInfo 누적] ${JSON.stringify(paymentSession.totalPayInfo)}`);
-
-        // 마일리지 적립 처리
-        await handleMileageEarn(orderAmount, userInfo);
-
-        // 쿠폰사용함수
-        await handleUseCoupons(orderList);
-
-        await ordStart(0, payInfo, null, paymentSession.totalPayInfo);
-    };
-
-    payPoint.onclick = async () => {
-        modal.classList.add('hidden');
-
-        // ✅ 기존 마일리지 초기화 후 진입
-        resetMileageUsage();
-
-        response = await pointPayment(paymentSession.orderAmount);
-
-        if (!Array.isArray(paymentSession.totalPayInfo)) {
-            paymentSession.totalPayInfo = [];
-        }
-
-        const p = response.pointData || {};
-
-        paymentSession.totalPayInfo.push({
-            method: "마일리지",
-            mileageNo: p.mileageNo,
-            tel: p.tel,
-            uniqueMileageNo: p.uniqueMileageNo,
-            usedAmount: response.discountAmount ?? 0,
-            remainAmount: p.totalAmt ?? 0,
-            pointBalance: p.points ?? 0,
-        });
-
-        sendLogToMain('info', `포인트 : ${JSON.stringify(response)}`);
-
-        await totalPayment(response); // 다시 실행
-    };
-
-    payCoupon.onclick = async () => {
-        modal.classList.add('hidden');                // 통합결제 모달 닫고
-        const result = await showCouponModal();       // updateDynamicContent2("couponInput")
-
-        if (result?.action === ACTIONS.COUPON_APPLIED) {
-            // 쿠폰 적용 후 totalPayment로 복귀 시점
-            applyCouponFromOrders(orderList); // ✅ 세션 갱신 (할인, 총액 등)
-            openAlertModal("쿠폰을 적용했습니다.");
-        }
-
-        await totalPayment();                       // 다시 결제 모달 열기
-    };
-}
-
-// ✅ 마일리지 사용 금액 단건 추출
-function getMileageUsed(ps) {
-    return Number(ps?.usePoint?.usedAmount) || 0;
-}
-
-// 모달 결제 START
-// 통화 포맷 (₩ 1,000 같은 형태)
-const KRW = new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' });
-const asWon = n => KRW.format(Math.max(0, Math.round(Number(n) || 0)));
-
-function calcOrderTotal(list) {
-    return (list ?? []).reduce((sum, o) => {
-        const price = Number(o.price) || 0;
-        const cnt = Number(o.count) || 0;
-        return sum + price * cnt;
-    }, 0);
-}
-
-/**
- * 통합결제 모달 내부(본문) 구성 & 렌더링
- * - 좌: 주문 목록(name, count, price)
- * - 우: 쿠폰 할인(메뉴+수량), 마일리지 할인(금액), 적용금액, 남은 결제금액
- *
- * paymentSession 가질 수 있는 값(관례):
- *  - totalDiscount: 총 할인(쿠폰+마일리지)
- *  - mileageUsed(또는 pointUsed): 마일리지 사용 금액
- *  - couponItems: [{menuId, name, count, discount}]  // 선택(있으면 사용)
- *  - couponMenuIds: [menuId, ...]                    // 선택(없으면 전체할인 가정)
- */
-function renderTotalPayContent(modalEl, orderList, paymentSession) {
-    // 모달 본문 컨테이너(네가 넣어둔 “메뉴 데이터 넣기” 영역)를 찾아서 교체
-    const bodyHost = modalEl.querySelector('.flex.flex-col.items-center.justify-center.w-full.h-full');
-    if (!bodyHost) return;
-
-    // ------------------------------
-    // ① 데이터 준비
-    // ------------------------------
-    const orderTotal = calcOrderTotal(orderList);         // 총 주문금액 (쿠폰 적용 전)
-    const mileageUsed = getMileageUsed(paymentSession);   // 사용된 마일리지 금액
-    const couponTotal = Number(paymentSession.couponTotal) || 0;
-    const couponDiscount = Number(paymentSession.couponTotal) || 0; // 세션의 쿠폰 할인금액
-    const totalDiscount = couponDiscount + mileageUsed;   // 총 할인 (쿠폰 + 포인트)
-
-    // ------------------------------
-    // ② 쿠폰 세부 내역 구성
-    // ------------------------------
-    let couponLines = [];
-
-    if (Array.isArray(paymentSession?.couponItems) && paymentSession.couponItems.length > 0) {
-        couponLines = paymentSession.couponItems.map(ci => ({
-            name: ci.name,
-            count: ci.couponUsed,
-            discount: Number(ci.discount) || 0,
-        }));
-    } else if (Array.isArray(paymentSession?.couponMenuIds) && paymentSession.couponMenuIds.length > 0) {
-        const set = new Set(paymentSession.couponMenuIds);
-        couponLines = (orderList ?? [])
-            .filter(o => set.has(o.menuId))
-            .map(o => ({
-                name: o.name,
-                count: o.count,
-                discount: (Number(o.price) || 0) * (Number(o.count) || 0), // 전액할인
-            }));
-    }
-
-    console.log("couponLines:", couponLines);
-
-    // ------------------------------
-    // ③ 결제금액 계산 (쿠폰 → 포인트 순서)
-    // ------------------------------
-    const appliedAmount = Math.max(0, orderTotal - totalDiscount);
-
-    // ------ 마크업 그리기 ------
-    bodyHost.innerHTML = `
-    <div id="totalPayContent" class="flex w-full h-full px-4 gap-6">
-      <!-- 좌측: 주문 목록 (70%) -->
-      <div class="basis-[70%] bg-gray-50 rounded-xl p-4 flex flex-col">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-2xl font-bold">주문 내역</h3>
-          </div>
-        
-          <div class="grid grid-cols-12 px-2 py-2 text-xl text-gray-500 border-b">
-            <div class="col-span-7">메뉴명</div>
-            <div class="col-span-2 text-center">수량</div>
-            <div class="col-span-3 text-right">금액</div>
-          </div>
-        
-          <!-- 여기만 스크롤 -->
-          <div id="orderListView" class="flex-1 text-xl overflow-auto mt-2 pr-2 scroll-smooth scrollbar-hide" style="max-height: 240px">
-          </div>
-      </div>
-
-      <!-- 우측: 할인/적용금액 (30%) -->
-      <div class="basis-[30%] bg-gray-50 rounded-xl p-4 flex flex-col gap-4">
-        <section class="pb-24">
-          <div class="flex items-center justify-between">
-            <h4 class="font-semibold text-2xl">쿠폰 할인</h4>
-            <span id="couponTotal" class="text-xl text-gray-600">${couponTotal > 0 ? '-' + asWon(couponTotal) : ''}</span>
-          </div>
-          <div id="couponList" class="mt-2 space-y-1 text-gray-700">
-            ${couponLines.length === 0
-        ? `<div class="text-xl text-gray-400">적용된 쿠폰이 없습니다.</div>`
-        : couponLines.map(r => `
-                  <div class="flex items-center justify-between">
-                    <div class="truncate pr-2">• ${r.name} <span class="text-gray-500">x ${r.count}</span></div>
-                    <div class="text-right text-gray-600">-${asWon(r.discount)}</div>
-                  </div>
-                `).join('')}
-          </div>
-        </section>
-
-        <section class="pt-2 border-t">
-          <div class="flex items-center justify-between text-2xl">
-            <h4 class="font-semibold">마일리지 할인</h4>
-            <span id="mileageAmount" class="text-gray-600">${mileageUsed > 0 ? '-' + asWon(mileageUsed) : ''}</span>
-          </div>
-        </section>
-        <section class="mt-auto pt-3 border-t">
-          <div class="text-2xl text-gray-500 mb-1">총 결제금액</div>
-          <div id="remainAmount" class="text-5xl font-extrabold tracking-tight text-right">${asWon(appliedAmount)}</div>
-        </section>
-      </div>
-    </div>
-  `;
-
-    // 주문 목록 렌더
-    const listHost = bodyHost.querySelector('#orderListView');
-    (orderList ?? []).forEach(o => {
-        const priceLine = (Number(o.price) || 0) * (Number(o.count) || 0);
-        const row = document.createElement('div');
-        row.className = 'grid grid-cols-12 px-2 py-3 border-b items-center';
-        row.innerHTML = `
-      <div class="col-span-7 font-medium">${o.name}</div>
-      <div class="col-span-2 text-center">${o.count}</div>
-      <div class="col-span-3 text-right font-semibold">${asWon(priceLine)}</div>
-    `;
-        listHost.appendChild(row);
-    });
-}
-
-// 모달결제 END
-//-----------------통합결제--------------------//
 //-----------------바코드스캔--------------------//
 const getBarcodeScanModal = async () => {
     const modal = document.getElementById('barcodeModal');
@@ -3054,37 +2406,9 @@ function setVersion(version) {
 }
 
 ///////////////////// 음성호출 API /////////////////////
-// 🔧 이름 정규화: 소문자, 공백/특수문자 제거, 괄호 제거
-function normalizeName(s) {
-    return String(s || "")
-        .toLowerCase()
-        .replace(/\s+/g, "")
-        .replace(/[\(\)\[\]\{\}]/g, "")     // 괄호류 제거
-        .replace(/[^\w가-힣]/g, "");        // 영문/숫자/한글만 남김
-}
-
-// 🔎 간단한 매칭 스코어: 완전일치 > 시작일치 > 포함
-function nameScore(productName, q) {
-    const n = normalizeName(productName);
-    if (n === q) return 100;
-    if (n.startsWith(q)) return 80;
-    if (n.includes(q)) return 60;
-    return 0;
-}
-
 // ✅ allProducts에서 이름으로 최적 후보 1개 찾기 (품절 아닌 것 우선)
 function findProductByName(name) {
-    const q = normalizeName(name);
-    if (!q) return null;
-
-    const candidates = (allProducts || [])
-        .filter(p => p && p.name)
-        .map(p => ({ p, s: nameScore(p.name, q) }))
-        .filter(x => x.s > 0)
-        // 스코어 내림차순, 품절(no) 우선
-        .sort((a, b) => (b.s - a.s) || ((a.p.empty === 'yes') - (b.p.empty === 'yes')));
-
-    return candidates.length ? candidates[0].p : null;
+    return findProductByNameFromProducts(allProducts, name);
 }
 
 // 2) menuId + 수량으로 담기 (한 번에 증가/생성)

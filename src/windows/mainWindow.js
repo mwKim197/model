@@ -40,6 +40,7 @@ async function createMainWindow() {
         fullscreen: true,
         alwaysOnTop: true,
         autoHideMenuBar: true,
+        show: false,
     });
 
     // IPC 리스너 설정 - 렌더러로 데이터 전송
@@ -56,11 +57,9 @@ async function createMainWindow() {
         }
     });
 
-    // 1. 로딩 화면 먼저 표시
-    await win.loadFile(path.join(__dirname, '../renderer/loading/loading.html'));
-
-    // 2. 실제 시작 화면으로 전환
+    // Keep Electron hidden while the external PowerShell loading window is shown.
     await win.loadFile(path.join(__dirname, '../renderer/index/index.html'));
+    win.show();
     return win;
 }
 
