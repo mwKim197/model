@@ -73,7 +73,7 @@ Path:
 C:\Users\perop\WebstormProjects\model\src\renderer\order\order.js
 ```
 
-Approximate size: 3,399 lines.
+Approximate size: 1,600 lines.
 
 Main responsibilities:
 
@@ -88,6 +88,21 @@ Main responsibilities:
 - Listen for scanner keyboard input.
 - Receive serial polling data from main process.
 - Run timed wash/preheat checks.
+
+## Logging Policy
+
+- Use `sendLogToMain(level, message)` for operational events that should be
+  available in the application log.
+- Keep renderer `console.error` / `console.warn` only for local programming
+  errors that help diagnose broken UI state.
+- Do not write complete payment responses, sessions, order data, or identifiers
+  to the renderer console.
+- Detailed payment responses, `paymentSession`, `orderList`, `cardInfo`, and
+  point responses may be written through `sendLogToMain` for operational
+  troubleshooting.
+- Never log passwords or raw keypad input values.
+- Do not add polling, per-click, modal visibility, or normal "nothing to do"
+  logs because those paths run frequently.
 
 ## Important Global State
 

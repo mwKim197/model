@@ -116,12 +116,6 @@
             const mileageNo = response.pointData?.mileageNo;
             if (!mileageNo) return;
 
-            if (paymentSession.usePoint) {
-                console.warn(
-                    `기존 포인트 세션 갱신: ${paymentSession.usePoint.pointData?.mileageNo} -> ${mileageNo}`
-                );
-            }
-
             paymentSession.totalDiscount = used;
             paymentSession.usePoint = {
                 uniqueMileageNo: response.pointData?.uniqueMileageNo ?? response.point,
@@ -129,11 +123,12 @@
                 pointData: response.pointData ?? null,
             };
 
-            console.log(`[포인트 사용 세션 등록 완료] mileageNo=${mileageNo}, amount=${used}`);
+            sendLogToMain("info", `포인트 사용 세션 등록 - 금액: ${used}`);
         }
 
         async function commitPointUsage() {
-            console.log("paymentSession: ", JSON.stringify(paymentSession, null, 2));
+            sendLogToMain("info", `[결제 세션 상세] ${JSON.stringify(paymentSession)}`);
+
             if (!paymentSession.usePoint) {
                 return { success: true, committed: 0 };
             }
@@ -145,10 +140,9 @@
 
             try {
                 const result = await useMileage(mileageNo, totalAmount, usedAmount);
-                console.log(`[포인트 커밋 완료] mileageNo=${mileageNo}, amount=${usedAmount}`);
+                sendLogToMain("info", `포인트 사용 처리 완료 - 금액: ${usedAmount}`);
                 return { success: true, committed: 1, res: result };
             } catch (error) {
-                console.error(`[포인트 커밋 실패] mileageNo=${mileageNo}`, error);
                 throw new Error(`포인트 커밋 실패: ${error.message}`);
             }
         }
@@ -158,23 +152,14 @@
 
             const uniqueMileageNo = data.point;
 
-            if (paymentSession.earnPoint) {
-                console.warn(
-                    `기존 적립 세션 갱신: ${paymentSession.earnPoint.uniqueMileageNo} -> ${uniqueMileageNo}`
-                );
-            }
-
             paymentSession.earnPoint = {
                 uniqueMileageNo,
                 createdAt: Date.now(),
             };
-
-            console.log(`[적립 세션 저장 완료] mileageNo=${uniqueMileageNo}`);
         }
 
         async function handleMileageEarn(orderAmount, userInfo) {
             if (!paymentSession.earnPoint) {
-                console.log("적립 세션 없음 - 마일리지 적립 스킵");
                 return;
             }
 
@@ -184,15 +169,13 @@
             try {
                 sendLogToMain(
                     "info",
-                    `마일리지 적립 실행 - 번호: ${uniqueMileageNo}, 금액: ${orderAmount}, 적립률: ${earnRate}%`
+                    `마일리지 적립 실행 - 금액: ${orderAmount}, 적립률: ${earnRate}%`
                 );
 
-                const result = await addMileage(uniqueMileageNo, orderAmount, earnRate);
+                await addMileage(uniqueMileageNo, orderAmount, earnRate);
 
-                console.log("마일리지 적립 완료:", result);
-                sendLogToMain("info", `마일리지 적립 완료: ${uniqueMileageNo}`);
+                sendLogToMain("info", `마일리지 적립 완료 - 금액: ${orderAmount}, 적립률: ${earnRate}%`);
             } catch (error) {
-                console.error("마일리지 적립 실패:", error);
                 sendLogToMain("error", `마일리지 적립 실패: ${error.message}`);
             }
         }
@@ -200,12 +183,12 @@
         async function handleUseCoupons(orderList) {
             const coupons = collectUsedCoupons(orderList);
             if (coupons.length === 0) {
-                sendLogToMain("error", "사용할 쿠폰이 없습니다.");
-                return;
+                return { skipped: true };
             }
 
             const result = await useCouponApi(coupons);
             sendLogToMain(result.ok ? "info" : "error", `${result.message}`);
+            return result;
         }
 
         function resetMileageUsage() {
@@ -213,7 +196,6 @@
 
             paymentSession.usePoint = null;
             paymentSession.totalDiscount = couponDiscount;
-            console.log("마일리지 사용 초기화 - 쿠폰 할인만 유지");
         }
 
         async function rollbackPointUsage(reason = "ORDER_FAIL") {
@@ -228,10 +210,9 @@
 
             try {
                 const result = await rollbackMileage(mileageNo, usedAmount, totalAmount, reason);
-                console.log(`[포인트 롤백 완료] mileageNo=${mileageNo}, amount=${usedAmount}`);
+                sendLogToMain("info", `포인트 롤백 완료 - 금액: ${usedAmount}`);
                 return { success: true, rolledBack: 1, res: result };
             } catch (error) {
-                console.error(`[포인트 롤백 실패] mileageNo=${mileageNo}`, error);
                 throw new Error(`포인트 롤백 실패: ${error.message}`);
             }
         }

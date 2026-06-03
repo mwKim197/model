@@ -324,9 +324,7 @@ const closeAlertModal = () => {
 
 // 확인 버튼 클릭 이벤트
 okButton.addEventListener('click', () => {
-    console.log('Alert 확인 버튼 클릭');
     closeAlertModal();
-    // 필요한 추가 로직 실행
 });
 
 // 모든아이템 제거
@@ -436,7 +434,6 @@ async function startPayment() {
     try {
         //await payment(); // 💳 + 제조 프로세스 포함
         await totalPayment(); // 💳 + 제조 프로세스 포함
-        console.log('✅ 결제 및 제조 요청 완료');
 
         // 제조 완료까지 잠금 유지하고 싶으면 타임아웃/신호에 맞춰 해제
         setTimeout(() => {
@@ -444,15 +441,13 @@ async function startPayment() {
             const anyModalOpen = document.querySelectorAll('#dynamicContent:not(.hidden), #pointModal:not(.hidden), #alertModal:not(.hidden)').length > 0;
             if (!anyModalOpen) {
                 globalDim.classList.add('hidden');
-            } else {
-                console.log('⚠️ 다른 모달이 열려 있어서 globalDim 유지');
             }
         }, 3000);
 
         return { ok: true };
     } catch (e) {
         console.error('[ERROR] 결제 실패:', e);
-        sendLogToMain && sendLogToMain('error', `결제 실패: ${JSON.stringify(e)}`);
+        sendLogToMain('error', `결제 실패: ${e?.message || "알 수 없는 오류"}`);
 
         const message = (e && e.message) || "결제 실패: 다시 시도해 주세요";
         openAlertModal && openAlertModal(message, "error");
@@ -712,7 +707,8 @@ const payment = async () => {
         payType = ACTIONS.USE_CARD;
     } else {
         response = await pointPayment(orderAmount); // 포인트 모달 띄우기 및 포인트 사용 금액 반환
-        sendLogToMain('info', `포인트 : ${JSON.stringify(response)}`);
+        sendLogToMain('info', `포인트 결제 선택 - 사용금액: ${response.discountAmount || 0}`);
+        sendLogToMain('info', `[포인트 응답 상세] ${JSON.stringify(response)}`);
         payType = response.action;
 
         // 결제 취소
@@ -738,18 +734,17 @@ const payment = async () => {
 
         // 포인트 번호가 있을경우 적립
         if (response.point) {
-            sendLogToMain('info', `적립 마일리지번호: ${response.point}`);
             const payEnd = await cardPayment(orderAmount, 0);
 
             if (payEnd.success) {
-                sendLogToMain('info', `마일리지 적립 실행 - 번호: ${response.point}, 결제금액: ${orderAmount}, 적립률 : ${earnRate}`);
+                sendLogToMain('info', `마일리지 적립 실행 - 결제금액: ${orderAmount}, 적립률: ${earnRate}`);
                 await addMileage(response.point, orderAmount, earnRate);
                 
                 try {
                     await ordStart(0, payEnd.cardInfo, response.pointData); // 주문 시작
                 } catch (e) {
                     // 주문에러발생시 마일리치 롤백
-                    sendLogToMain('error', `마일리지 적립 롤백 (주문 에러)- 번호: ${response.point}, 결제금액: ${orderAmount}, 적립률 : ${earnRate}`);
+                    sendLogToMain('error', `마일리지 적립 롤백 - 결제금액: ${orderAmount}, 적립률: ${earnRate}`);
                     await rollbackMileage(response.point, orderAmount, earnRate);
                 }
             } else {
@@ -779,12 +774,12 @@ const payment = async () => {
                 const totalAmount = orderAmount - discountAmount;
 
                 if (totalAmount > 0) {
-                    sendLogToMain('info', `포인트 잔액 카드결제 - 적립 마일리지번호: ${response.point}`);
+                    sendLogToMain('info', `포인트 잔액 카드결제 시작 - 잔액: ${totalAmount}`);
                     const payEnd = await cardPayment(orderAmount, response.discountAmount);
 
                     if (payEnd.success) {
                         // 포인트 결제 시도
-                        sendLogToMain('info', `포인트 결제 실행 - 번호: ${response.point}, 결제금액: ${orderAmount}, 사용포인트 : ${response.discountAmount}`);
+                        sendLogToMain('info', `포인트 결제 실행 - 결제금액: ${orderAmount}, 사용포인트: ${response.discountAmount}`);
                         const pointResult = await useMileage(response.point, orderAmount, response.discountAmount);
 
                         if (!pointResult.success) {
@@ -792,28 +787,23 @@ const payment = async () => {
                             throw new Error("포인트 결제가 실패했습니다.");
                         }
 
-                        console.log("포인트 결제 성공:", response.discountAmount);
-
                         // 카드 결제 마일리지 적립
-                        sendLogToMain('info', `마일리지 적립 실행 - 번호: ${response.point}, 결제금액: ${orderAmount}, 적립률 : ${earnRate}`);
+                        sendLogToMain('info', `마일리지 적립 실행 - 결제금액: ${orderAmount}, 적립률: ${earnRate}`);
                         await addMileage(response.point, totalAmount, earnRate);
 
                         try {
                             await ordStart(response.discountAmount, payEnd.cardInfo, response.pointData); // 주문 시작
                         } catch (e) {
                             // 주문에러발생시 마일리치 롤백
-                            sendLogToMain('error', `마일리지 적립 롤백 (주문 에러)- 번호: ${response.point}, 결제금액: ${orderAmount}, 적립률 : ${earnRate}`);
+                            sendLogToMain('error', `마일리지 적립 롤백 - 결제금액: ${orderAmount}, 적립률: ${earnRate}`);
                             await rollbackMileage(response.point, totalAmount, earnRate);
                         }
                     } else {
-                        /*sendLogToMain('error', `마일리지 사용 롤백 (주문 에러)- 번호: ${response.point}, 결제금액: ${orderAmount}, 롤백포인트 : ${response.discountAmount}`);
-                        // 포인트 사용후 카드결제 실패시 사용포인트 롤백
-                        await rollbackMileage(response.point, totalAmount, earnRate ,response.discountAmount);*/
                         console.error("카드 결제가 실패했습니다.");
                     }
                 } else {
                     // 포인트 결제 시도
-                    sendLogToMain('info', `포인트 결제 실행 - 번호: ${response.point}, 결제금액: ${orderAmount}, 사용포인트 : ${response.discountAmount}`);
+                    sendLogToMain('info', `포인트 결제 실행 - 결제금액: ${orderAmount}, 사용포인트: ${response.discountAmount}`);
                     const pointResult = await useMileage(response.point, orderAmount, response.discountAmount);
 
                     if (!pointResult.success) {
@@ -821,7 +811,6 @@ const payment = async () => {
                         throw new Error("포인트 결제가 실패했습니다.");
                     }
 
-                    console.log("포인트 결제 성공:", response.discountAmount);
                     sendLogToMain('info', `포인트 전액결제완료 - 결제포인트: ${response.discountAmount}`);
                     await ordStart(response.discountAmount, null, response.pointData); // 주문 시작
                 }
@@ -831,9 +820,6 @@ const payment = async () => {
             sendLogToMain('error', `결제 중 오류 발생: ${error.message}`);
             console.error("결제 중 오류 발생:", error.message);
         }
-    } else {
-        console.error("포인트 결제가 사용되지 않았습니다.");
-        sendLogToMain('error', `포인트 결제가 사용되지 않았습니다.`);
     }
 
 };
@@ -915,14 +901,11 @@ const cardPayment = async (orderAmount, discountAmount) => {
                 let res;
 
                 if (userInfo?.vcat) {
-                    console.log("VCAT");
                     res = await window.electronAPI.reqVcatWebSocket(totalAmount);
                 } else {
-                    console.log("NVCAT");
                     res = await window.electronAPI.reqVcatHttp(totalAmount);
                 }
-                sendLogToMain('info', `카드 결제 요청 성공 결과: ${JSON.stringify(res)}`);
-                console.log("res", res);
+                sendLogToMain('info', `[카드 결제 응답 상세] ${JSON.stringify(res)}`);
 
                 resolve(res); // 결제 결과 반환
             }, 100);
@@ -947,10 +930,9 @@ const cardPayment = async (orderAmount, discountAmount) => {
                 responseMessage: getValue("응답메시지"),          // 응답메시지
             };
 
-            sendLogToMain('info', `💳 최종 카드 정보: ${JSON.stringify(cardInfo)}`);
-            sendLogToMain('info', `결제 성공 - 결제 금액:  ${totalAmount}`);
-            sendLogToMain('info', `주문 목록 ${JSON.stringify(orderList)}`);
-            sendLogToMain('info', `결제 카드 정보: ${JSON.stringify(cardInfo)}`);
+            sendLogToMain('info', `카드 결제 승인 - 금액: ${totalAmount}, 카드사: ${cardInfo.issuerName || "미확인"}`);
+            sendLogToMain('info', `[카드 정보 상세] ${JSON.stringify(cardInfo)}`);
+            sendLogToMain('info', `[주문 목록 상세] ${JSON.stringify(orderList)}`);
 
             // 모달 닫기
             modal.classList.add('hidden');
@@ -969,7 +951,11 @@ const cardPayment = async (orderAmount, discountAmount) => {
             // 결제실패시 60초 카운트다운 시작
             resetCountdown();
             openAlertModal(`결제에 실패하였습니다. 다시 시도해주세요.`, "error");
-            sendLogToMain('error', `카드 결제 실패: ${JSON.stringify(result)}`);
+            const failureMessage = typeof result?.message === "string"
+                ? result.message
+                : result?.message?.message || "응답 실패";
+            sendLogToMain('error', `카드 결제 실패: ${failureMessage}`);
+            sendLogToMain('error', `[카드 결제 실패 상세] ${JSON.stringify(result)}`);
             return false;
         }
     } catch (error) {
@@ -990,7 +976,6 @@ const requestEmployeeCardId = async () => {
     // RF 조회
     const res = await window.electronAPI.requestEmployeeCardId(); // nvcat
 
-    console.log(res);
     return res;
 }
 
@@ -998,14 +983,12 @@ const getBarcode = async () => {
     // 바코드 조회
     const res = await window.electronAPI.reqBarcodeHTTP(); // nvcat
     // vcat const res = await window.electronAPI.runVcatFlow();
-    console.log(res);
     return res;
 }
 
 const stopBarcode = async () => {
     // 바코드 스캔취소
     const res = await window.electronAPI.stopBarcode_HTTP(); // nvcat
-    console.log(res);
     return res;
 }
 
@@ -1058,7 +1041,7 @@ const barcodePayment = async (orderAmount, discountAmount = 0) => {
 
     // ⬇️ Cancel이면 호출부에서 처리하게 바로 return
     if (result.canceled) {
-        sendLogToMain('info', `barcodePayment: 사용자 취소`);
+        sendLogToMain('info', `바코드 결제 사용자 취소`);
         return result;
     }
 
@@ -1067,9 +1050,9 @@ const barcodePayment = async (orderAmount, discountAmount = 0) => {
     globalDim.classList.add('hidden');
 
     if (result.success) {
-        sendLogToMain('info', `barcodePayment 시작지점: 바코드결제성공`);
+        sendLogToMain('info', `바코드 결제 승인 - 금액: ${totalAmount}`);
     } else {
-        sendLogToMain('error', `barcodePayment 시작지점: 바코드결제실패`);
+        sendLogToMain('error', `바코드 결제 실패`);
     }
 
     return result;
@@ -1095,8 +1078,6 @@ const ordStart = async (point = 0, payInfo, pointData, totalPayInfo) => {
     if (chkCoffee) {
 
         if (isOver30Minutes()) {
-            console.log("30분지남");
-
             // 커피 예열
             await coffeePreheating();
         }
@@ -1115,6 +1096,7 @@ const ordStart = async (point = 0, payInfo, pointData, totalPayInfo) => {
             pointData,
             totalPayInfo,
         }
+        sendLogToMain('info', `[주문 시작 상세] ${JSON.stringify(ordInfo)}`);
         await window.electronAPI.setOrder(ordInfo); // 주문 처리
         removeAllItem(); // 주문 목록 삭제
         checkAndShowEmptyImage();
@@ -1126,6 +1108,7 @@ const ordStart = async (point = 0, payInfo, pointData, totalPayInfo) => {
         }
     } catch (error) {
         console.error("ordStart 에러 발생:", error.message);
+        sendLogToMain('error', `주문 시작 실패: ${error.message}`);
 
         removeAllItem(); // 주문 목록 삭제
         checkAndShowEmptyImage();
@@ -1160,11 +1143,9 @@ document.getElementById("buttonContainer").addEventListener("click", async (even
     try {
         buttonFlags[buttonId] = true; // 상태 설정
         button.disabled = true; // 버튼 비활성화
-        console.log(`${buttonId} 작업 시작`);
 
         // 비동기 작업 시뮬레이션
         await new Promise(resolve => setTimeout(resolve, 200)); // 0.2초 대기
-        console.log(`${buttonId} 작업 완료`);
     } catch (error) {
         console.error(`${buttonId} 작업 중 에러 발생:`, error);
     } finally {
@@ -1212,7 +1193,6 @@ function getCurrentFormattedTime() {
 
 // RD1 데이터를 업데이트하는 콜백 함수
 function getPollingData(data) {
-    console.log('Polling Data Received:', data); // RD1 상태 확인용 로그
     rd1Info = data; // RD1 데이터를 전역 변수 또는 상태에 저장
 }
 
@@ -1256,7 +1236,7 @@ async function handlerWash() {
 
         // `washTime`과 현재 시간이 일치하면 세척 실행
         if (parseInt(washTime, 10) === currentHour) {
-            console.log(`[INFO] 🧼 오늘 세척 아직 안함. 세척 시작 시간 ${washTime}시`);
+            sendLogToMain('info', `자동 세척 시작 - 예약 시간: ${washTime}시`);
             await window.electronAPI.setLastWashDate(today); // ✅ 기록 저장
             const data = [
                 { "type": "coffee" },
@@ -1279,7 +1259,7 @@ async function handlerWash() {
             // 머신 재시작
             await window.electronAPI.requestAppRestart();
 
-            console.log('[INFO] 세척 완료');
+            sendLogToMain('info', '자동 세척 완료');
         }
     }
 }
@@ -1297,8 +1277,6 @@ async function coffeePreheating() {
             }
 
         }
-    } else {
-        sendLogToMain('info', `예열안탐`);
     }
 }
 
@@ -1370,13 +1348,13 @@ async function addItemByMenuName(menuName, qty = 1) {
 
 // 서버에서 메뉴 추가 호출
 window.electronAPI.on("order-add-item", async (data) => {
-    console.log("👉 서버에서 addItemByMenuName 호출 요청:", data);
+    sendLogToMain('info', `원격 주문 추가 요청 - 메뉴: ${data.menuName}, 수량: ${data.qty || 1}`);
     await addItemByMenuName(data.menuName, data.qty || 1);
 });
 
 // 서버에서 결제 시작 호출
 window.electronAPI.on("order-start-payment", async () => {
-    console.log("👉 서버에서 startPayment 호출 요청");
+    sendLogToMain('info', '원격 결제 시작 요청');
     await startPayment();
 });
 
@@ -1392,7 +1370,6 @@ document.addEventListener("keydown", (e) => {
 
     // 🚫 원격 스캔 중 or 결제 중이면 스캔 무시
     if (isRemoteScanActive || isPaying) {
-        console.warn("🔒 스캔 차단됨: 결제 중이거나 서버 제어 중입니다.");
         return;
     }
     const now = Date.now();
@@ -1413,13 +1390,11 @@ document.addEventListener("keydown", (e) => {
 
 // 바코드 처리 함수
 async function handleBarcode(code) {
-    console.log("📦 바코드 스캔됨:", code);
-
     const product = allProducts.find(p => p.barcode === code);
 
     if (!product) {
         openAlertModal && openAlertModal(`등록되지 않은 바코드입니다: ${code}`);
-        console.warn("해당 바코드 상품 없음:", code);
+        sendLogToMain('warn', '등록되지 않은 상품 바코드 스캔');
         return;
     }
 
@@ -1433,7 +1408,7 @@ async function handleBarcode(code) {
 }
 
 window.electronAPI.on("order-barcode-scan", async () => {
-    console.log("📡 서버에서 바코드 스캔 요청 수신");
+    sendLogToMain('info', '원격 바코드 스캔 요청');
 
     // 🔒 서버 스캔 중에는 로컬 handleBarcode 비활성화
     isRemoteScanActive = true;
@@ -1448,7 +1423,6 @@ window.electronAPI.on("order-barcode-scan", async () => {
         if (e.key === "Enter") {
             const code = buffer.trim();
             document.removeEventListener("keydown", handler);
-            console.log("✅ 바코드 스캔 완료:", code);
 
             // main.js 로 전송
             window.electronAPI.send("barcode-scanned", { barcode: code });
@@ -1464,20 +1438,6 @@ window.electronAPI.on("order-barcode-scan", async () => {
 
 
 const globalDim = document.getElementById("globalDim");
-
-const observer = new MutationObserver((mutations) => {
-    mutations.forEach((m) => {
-        if (m.type === "attributes" && m.attributeName === "class") {
-            const hidden = globalDim.classList.contains("hidden");
-            if (hidden) {
-                console.log(`🔍 globalDim 상태 변경됨 → hidden=${hidden}`, globalDim.className);
-                console.trace(); // 호출 경로 추적
-            }
-        }
-    });
-});
-
-observer.observe(globalDim, { attributes: true });
 
 // 제고 품절 처리
 function applySoldOutToAllProducts(allProducts, inventory) {
@@ -1583,11 +1543,11 @@ async function fetchData() {
                 if (inventory?.ok) {
                     applySoldOutToAllProducts(allProducts, inventory);
                 } else {
-                    console.warn("⚠️ 재고 조회 실패 (무시하고 진행)");
+                    sendLogToMain('warn', '재고 조회 실패 - 기존 메뉴 상태로 진행');
                 }
 
             } catch (e) {
-                console.warn("⚠️ 재고 API 오류 (무시)", e);
+                sendLogToMain('warn', `재고 API 오류 - 기존 메뉴 상태로 진행: ${e.message}`);
             }
         }
 
@@ -1599,6 +1559,7 @@ async function fetchData() {
 
     } catch (error) {
         console.error("데이터 로드 중 오류 발생:", error);
+        sendLogToMain('error', `주문 화면 데이터 로드 실패: ${error.message}`);
     }
 }
 

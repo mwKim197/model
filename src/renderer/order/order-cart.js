@@ -220,7 +220,6 @@
             }
 
             updateOrderSummary();
-            console.log("모든 주문 항목이 삭제되었습니다.");
         }
 
         async function addItemToOrderWithQty(menuId, quantity = 1) {

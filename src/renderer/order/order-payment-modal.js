@@ -65,10 +65,6 @@
             const alreadyPaid = paymentSession.paidAmount || 0;
             const orderAmount = Math.max(0, baseAmount - mileageUsed - alreadyPaid);
 
-            console.log(
-                `결제금액 계산: 주문금액=${totalAmount}, 쿠폰할인=${couponDiscount}, 포인트할인=${mileageUsed} -> 최종결제=${orderAmount}`
-            );
-
             if (orderAmount <= 0) {
                 try {
                     await commitPointUsage();
@@ -207,8 +203,9 @@
                     method: "바코드QR",
                 });
 
-                sendLogToMain("info", `[바코드 결제] ${JSON.stringify(payInfo)}`);
-                sendLogToMain("info", `[totalPayInfo 누적] ${JSON.stringify(paymentSession.totalPayInfo)}`);
+                sendLogToMain("info", `바코드 결제 승인 - 금액: ${payInfo.amount}`);
+                sendLogToMain("info", `[바코드 결제 상세] ${JSON.stringify(payInfo)}`);
+                sendLogToMain("info", `[결제 누적 상세] ${JSON.stringify(paymentSession.totalPayInfo)}`);
 
                 await handleMileageEarn(orderAmount, userInfo);
                 await handleUseCoupons(orderList);
@@ -236,7 +233,8 @@
                     pointBalance: pointData.points ?? 0,
                 });
 
-                sendLogToMain("info", `포인트 : ${JSON.stringify(response)}`);
+                sendLogToMain("info", `포인트 사용 선택 - 금액: ${response.discountAmount ?? 0}`);
+                sendLogToMain("info", `[포인트 응답 상세] ${JSON.stringify(response)}`);
                 await totalPayment(response);
             };
 
