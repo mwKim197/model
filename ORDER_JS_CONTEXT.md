@@ -44,6 +44,27 @@ Read this document before changing `order.js`.
     callbacks so the modal does not directly own their Electron/API details.
   - `payment()` remains the older legacy payment flow in `order.js`.
 
+- `src/renderer/order/order-cart.js`
+  - Owns cart state mutations and the customer order-list DOM.
+  - Exposes `createCartController(dependencies)` through `window.OrderCart`.
+  - Current controller exports: `checkAndShowEmptyImage`, `addOrderItem`,
+    `addItemToOrder`, `updateOrderSummary`, `removeItemFromOrder`,
+    `updateItemQuantity`, `removeAllItem`, and `addItemToOrderWithQty`.
+  - The generated order-item markup uses inline handlers, so `order.js` exposes
+    `addItemToOrder`, `removeItemFromOrder`, and `updateItemQuantity` on
+    `window`.
+
+- `src/renderer/order/order-input-modal.js`
+  - Owns the point, mileage registration, password, phone, and coupon input
+    modal flows.
+  - Exposes `createInputModalController(dependencies)` through
+    `window.OrderInputModal`.
+  - Current controller exports: `pointPayment`, `createInputTemplate`,
+    `createPhoneInputTemplate`, `updateInputDisplay`, `setupNumberButtons`,
+    `resetInput`, `updateDynamicContent`, and `updateDynamicContent2`.
+  - The controller receives Electron APIs, cart access, modal helpers, and
+    countdown helpers as dependencies.
+
 ## File Role
 
 Path:
