@@ -183,10 +183,19 @@ function isMenuSoldOut(menu, inventory) {
 }
 
 
+function getSortNo(item) {
+    const no = Number(item?.no);
+    return Number.isFinite(no) ? no : Number.MAX_SAFE_INTEGER;
+}
+
+function sortByNo(items = []) {
+    return [...items].sort((a, b) => getSortNo(a) - getSortNo(b));
+}
+
 // 필터된 제품을 표시하는 함수
 function displayProducts(products) {
     productGrid.innerHTML = '';
-    products.forEach(product => {
+    sortByNo(products).forEach(product => {
         const card = document.createElement('div');
         card.className = 'product-card rounded-lg text-center cursor-pointer';
 
@@ -1298,7 +1307,7 @@ function updateStoreInfo() {
 function generateMenu(categories) {
     const nav = document.getElementById('menu-nav'); // <nav> 요소 가져오기
 
-    categories.forEach((category, index) => {
+    sortByNo(categories).forEach((category, index) => {
         const menuTab = document.createElement('div');
         menuTab.className = `menu-tab flex-1 text-center py-2 hover:bg-gray-200 transition-colors whitespace-nowrap duration-200  ${index === 0 ? 'active' : ''}`;
         menuTab.setAttribute('data-category', category.item || category.item4); // item 또는 item4 사용
@@ -1530,7 +1539,7 @@ async function fetchData() {
         generateMenu(userInfo.category);
 
         // 정렬
-        allProducts = allData.Items.sort((a, b) => a.no - b.no);
+        allProducts = sortByNo(allData.Items);
 
         // 재고 사용여부
         const useInventoryCheck = userInfo?.inventoryCheckEnabled !== false;
@@ -1552,7 +1561,7 @@ async function fetchData() {
         }
 
         // 품절 제외하고 렌더링
-        allProducts = allProducts.filter(p => p.empty === "no");
+        allProducts = sortByNo(allProducts.filter(p => p.empty === "no"));
 
         // 초기 데이터 로드
         displayProducts(allProducts);

@@ -92,7 +92,7 @@ class OrderModule {
     // 공통 명령어 전송 함수
     async sendCommand(command, timeoutMs = 10000) { // 기본 타임아웃 10초
         try {
-            log.info(`재조 명령 : ${command}`);
+            log.info(`제조 명령 : ${command}`);
 
             // 타임아웃 처리 Promise
             const timeoutPromise = new Promise((_, reject) =>
