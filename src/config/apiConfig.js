@@ -4,8 +4,15 @@ const DEV_API_BASE =
 const PROD_API_BASE =
     'https://api.narrowroad-model.com';
 
-const isDevelopment =
-    (process.env.NODE_ENV || '').trim().toLowerCase() === 'development';
+const requestedEnvironment = (
+    process.env.MODEL_ENV || process.env.NODE_ENV || 'production'
+).trim().toLowerCase();
+
+const runtimeEnvironment = requestedEnvironment === 'development'
+    ? 'development'
+    : 'production';
+
+const isDevelopment = runtimeEnvironment === 'development';
 
 const API_BASE_URL = isDevelopment
     ? DEV_API_BASE
@@ -18,4 +25,5 @@ console.log(
 module.exports = {
     API_BASE_URL,
     isDevelopment,
+    runtimeEnvironment,
 };
