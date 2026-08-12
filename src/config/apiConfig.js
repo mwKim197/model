@@ -4,13 +4,9 @@ const DEV_API_BASE =
 const PROD_API_BASE =
     'https://api.narrowroad-model.com';
 
-const requestedEnvironment = (
-    process.env.MODEL_ENV || process.env.NODE_ENV || 'production'
-).trim().toLowerCase();
+const { normalizeEnvironment } = require('./environment');
 
-const runtimeEnvironment = requestedEnvironment === 'development'
-    ? 'development'
-    : 'production';
+const runtimeEnvironment = normalizeEnvironment(process.env.MODEL_ENV);
 
 const isDevelopment = runtimeEnvironment === 'development';
 

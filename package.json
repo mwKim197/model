@@ -3,10 +3,14 @@
   "version": "2.2.3",
   "main": "src/main.js",
   "scripts": {
-    "start": "npx tailwindcss build src/styles/tailwind.css -o src/styles/output.css && cross-env NODE_ENV=development electron .",
+    "start": "npm run start:dev",
+    "start:dev": "npx tailwindcss build src/styles/tailwind.css -o src/styles/output.css && cross-env MODEL_ENV=development NODE_ENV=development electron .",
+    "start:prod": "npx tailwindcss build src/styles/tailwind.css -o src/styles/output.css && cross-env MODEL_ENV=production NODE_ENV=production electron .",
     "build:css": "npx tailwindcss -i ./src/styles/tailwind.css -o ./src/styles/output.css --watch",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "electron-builder"
+    "build": "npm run build:prod",
+    "build:dev": "cross-env MODEL_ENV=development electron-builder --config electron-builder.config.js",
+    "build:prod": "cross-env MODEL_ENV=production electron-builder --config electron-builder.config.js"
   },
   "build": {
     "appId": "com.example.myapp",

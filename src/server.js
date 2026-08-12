@@ -18,7 +18,7 @@ const app = express();
 const server = createServer(app);
 const { getMainWindow } = require('./windows/mainWindow');
 
-const isDevelopment = (process.env.NODE_ENV || '').trim().toLowerCase() === 'development';
+const isDevelopment = process.env.MODEL_ENV === 'development';
 const appPath = isDevelopment ? path.resolve(process.cwd()) : process.resourcesPath;
 const { app: electronApp } = require('electron');
 const { ipcMain } = require('electron');
