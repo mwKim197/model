@@ -3381,14 +3381,17 @@ async function fetchData() {
 
         setVersion(version);
         
-        // 로고 세팅
-        const userLogo = document.getElementById('userLogo');
-        if (userInfo?.logoUrl) {
-            userLogo.innerHTML = `
-                <div class="flex items-center justify-center pt-4 pb-2 mb-4">
-                    <img src="${userInfo.logoUrl}" alt="logo" class="w-48" />
-                </div> 
-            `;
+        // 원격 로고가 없거나 S3 403/404·네트워크 오류로 로드되지 않으면
+        // 패키지에 포함된 기본 로고를 사용한다.
+        const defaultLogoUrl = '../../assets/basicImage/로고.png';
+        const userLogoImage = document.querySelector('#userLogo img');
+        if (userLogoImage) {
+            userLogoImage.onerror = () => {
+                sendLogToMain('warn', `Store logo load failed; using default logo: ${userInfo?.logoUrl || 'empty URL'}`);
+                userLogoImage.onerror = null;
+                userLogoImage.src = defaultLogoUrl;
+            };
+            userLogoImage.src = userInfo?.logoUrl || defaultLogoUrl;
         }
         
         // 아이콘이미지 세팅
