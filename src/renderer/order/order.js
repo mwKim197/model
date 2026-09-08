@@ -564,6 +564,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
         displayProducts(filteredProducts);
     });
+
+    // 관리자 숨김 기능: 우측 상단 로고를 3초 안에 10회 누르면 창 최소화
+    const userLogo = document.getElementById('userLogo');
+    if (userLogo) {
+        const requiredClicks = 10;
+        const clickWindowMs = 3000;
+        let logoClickCount = 0;
+        let firstLogoClickAt = 0;
+
+        userLogo.addEventListener('click', () => {
+            const now = Date.now();
+
+            if (!firstLogoClickAt || now - firstLogoClickAt > clickWindowMs) {
+                firstLogoClickAt = now;
+                logoClickCount = 1;
+            } else {
+                logoClickCount += 1;
+            }
+
+            if (logoClickCount >= requiredClicks) {
+                logoClickCount = 0;
+                firstLogoClickAt = 0;
+                window.electronAPI.minimizeMachineWindow();
+            }
+        });
+    }
 });
 
 // 결제
@@ -620,12 +646,21 @@ document.getElementById('payment').addEventListener('click', async () => {
 // 세자리 콤마 숫자로 변경
 const cleanNumber = (value) => Number(String(value).replace(/,/g, ''));
 
+const mileageOperationId = (type, uniqueMileageNo) => {
+    if (!paymentSession.mileageOperationBase) {
+        paymentSession.mileageOperationBase = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    }
+    return `${paymentSession.mileageOperationBase}:${type}:${uniqueMileageNo}`;
+};
+
 // 적립 마일리지 사용등록 (마일리지 금액 수정, 마일리지이용내역등록)
-const addMileage = async (mileageNo, totalAmtNum, earnRate) => {
+const       addMileage = async (mileageNo, totalAmtNum, earnRate) => {
     const totalAmt = cleanNumber(totalAmtNum);
     const pointsToAdd = Math.round((totalAmt * earnRate) / 100);
     const note = `결제 금액 ${totalAmt}원에 대한 ${earnRate}% 적립`;
-    return await window.electronAPI.updateMileageAndLogHistory(mileageNo, totalAmt, pointsToAdd, 'earn', note);
+    return await window.electronAPI.updateMileageAndLogHistory(
+        mileageNo, totalAmt, pointsToAdd, 'earn', note, mileageOperationId('earn', mileageNo)
+    );
 };
 
 // 사용 마일리지 사용등록 (마일리지 금액 수정, 마일리지이용내역등록)
@@ -634,7 +669,9 @@ const useMileage = async (mileageNo, totalAmtNum, pointsToUseNum) => {
     const pointsToUse = cleanNumber(pointsToUseNum);
     const note = `사용자 요청으로 ${pointsToUse}포인트 사용`;
 
-    return await window.electronAPI.updateMileageAndLogHistory(mileageNo, totalAmt, -pointsToUse, 'use', note);
+    return await window.electronAPI.updateMileageAndLogHistory(
+        mileageNo, totalAmt, -pointsToUse, 'use', note, mileageOperationId('use', mileageNo)
+    );
 };
 
 // 롤백 마일리지 사용등록 (마일리지 금액 수정, 마일리지이용내역등록)
@@ -643,7 +680,9 @@ const rollbackMileage = async (mileageNo, totalAmtNum, earnRate, rollBackPointNu
     const rollBackPoint = cleanNumber(rollBackPointNum);
     const pointsToAdd = rollBackPoint || -(Math.round((totalAmt * earnRate) / 100));
     const note = `카드 결제 실패로 인해 ${Math.abs(pointsToAdd)}포인트 롤백`;
-    return await window.electronAPI.updateMileageAndLogHistory(mileageNo, totalAmt, Number(pointsToAdd), 'rollback', note);
+    return await window.electronAPI.updateMileageAndLogHistory(
+        mileageNo, totalAmt, Number(pointsToAdd), 'rollback', note, mileageOperationId('rollback', mileageNo)
+    );
 };
 
 //----------------쿠폰결제 금액계산-------------------//
@@ -662,113 +701,101 @@ const calculateTotalPayment = (orderList) => {
 };
 
 
-// ✅ 쿠폰 할인 / 결제 총액 계산
 function calculateOrderTotals(orderList = []) {
-    let totalAmount = 0;   // 총 주문 금액
-    let couponDiscount = 0; // 쿠폰 할인 금액
-
-    const couponLines = orderList.map(order => {
-        const price = Number(order.price) || 0;
-        const count = Number(order.count) || 0;
-        const used = Number(order.couponUsed) || 0;
-
-        const itemTotal = price * count;
-        const discount = price * Math.min(count, used); // 쿠폰 적용된 금액
-        const finalPay = itemTotal - discount;
-
-        totalAmount += itemTotal;
-        couponDiscount += discount;
-
-        return {
-            name: order.name,
-            count,
-            couponUsed: used,
-            price,
-            discount,
-            finalPay,
-        };
-    });
-
     return {
-        totalAmount,       // 전체 주문 금액 (할인 전)
-        couponDiscount,    // 전체 쿠폰 할인 금액
-        couponLines        // 각 항목별 계산 결과
+        totalAmount: orderList.reduce(
+            (sum, order) => sum + (Number(order.price) || 0) * (Number(order.count) || 0),
+            0
+        )
     };
 }
 
-// 세션에 쿠폰사용금액반영
-function applyCouponFromOrders(orderList) {
-    const { totalAmount, couponDiscount, couponLines } = calculateOrderTotals(orderList);
-    paymentSession.orderAmount = totalAmount;
-    paymentSession.couponItems = couponLines.filter(c => c.discount > 0);
-    paymentSession.couponTotal = couponDiscount;
+function normalizeCoupon(couponItem = {}, campaign = null) {
+    const source = campaign || couponItem;
+    const rawType = String(source.discountType || couponItem.type || "MENU").toUpperCase();
+    const discountType = rawType === "RATE" || rawType === "PERCENT" ? "PERCENT"
+        : rawType === "FIXED" ? "FIXED" : "MENU";
 
-    const mileageUsed = getMileageUsed(paymentSession);
-    paymentSession.totalDiscount = couponDiscount + mileageUsed;
+    return {
+        couponId: couponItem.couponId,
+        couponCode: couponItem.couponCode,
+        campaignId: couponItem.campaignId || campaign?.campaignId || null,
+        title: couponItem.title || campaign?.name || "쿠폰",
+        discountType,
+        discountValue: Number(source.discountValue ?? couponItem.amount ?? couponItem.rate ?? 0),
+        maxDiscountAmount: Number(source.maxDiscountAmount ?? couponItem.maxDiscountAmount ?? 0) || null,
+        menuId: source.menuId ?? couponItem.menuId ?? null,
+    };
+}
 
-    sendLogToMain('info', `쿠폰 할인 ${couponDiscount}원 적용 (총 주문금액 ${totalAmount}원)`);
+function calculateCouponDiscount(coupon, orderList = []) {
+    const totalAmount = calculateOrderTotals(orderList).totalAmount;
+    if (!coupon || totalAmount <= 0) return { discountAmount: 0, rawDiscount: 0, couponItem: null };
 
-    // totalPayInfo 초기화
-    if (!Array.isArray(paymentSession.totalPayInfo)) {
-        paymentSession.totalPayInfo = [];
+    let rawDiscount = 0;
+    let couponItem = null;
+    if (coupon.discountType === "FIXED") {
+        rawDiscount = Number(coupon.discountValue) || 0;
+    } else if (coupon.discountType === "PERCENT") {
+        rawDiscount = Math.floor((totalAmount * (Number(coupon.discountValue) || 0) / 100) / 10) * 10;
+        if (coupon.maxDiscountAmount) rawDiscount = Math.min(rawDiscount, coupon.maxDiscountAmount);
+    } else {
+        couponItem = orderList.find(order => String(order.menuId) === String(coupon.menuId));
+        rawDiscount = Number(couponItem?.price) || 0;
     }
 
-    // ✅ 중복 방지용 Set
-    const seenCoupons = new Set(
-        paymentSession.totalPayInfo
-            .flatMap(p => p.coupons?.map(c => c.couponId) || [])
-    );
+    return { discountAmount: Math.min(totalAmount, Math.max(0, rawDiscount)), rawDiscount, couponItem };
+}
 
-    // ✅ 쿠폰 1개당 totalPayInfo 1개 생성
-    orderList.forEach(order => {
-        order.usedCoupons?.forEach(coupon => {
-            // 이미 등록된 쿠폰은 무시
-            if (seenCoupons.has(coupon.couponId)) return;
-            seenCoupons.add(coupon.couponId);
+function applyCouponToSession(coupon, orderList) {
+    const { totalAmount } = calculateOrderTotals(orderList);
+    const { discountAmount, couponItem } = calculateCouponDiscount(coupon, orderList);
+    if (discountAmount <= 0) return false;
 
-            paymentSession.totalPayInfo.push({
-                method: "쿠폰",
-                items: [
-                    {
-                        name: order.name,
-                        discount: order.price
-                    }
-                ],
-                coupons: [
-                    {
-                        couponId: coupon.couponId,
-                        couponCode: coupon.couponCode,
-                        orderId: order.orderId,
-                        name: order.name,
-                        userId: order.userId,
-                        menuId: order.menuId,
-                        price: order.price
-                    }
-                ]
-            });
-        });
+    paymentSession.coupon = { ...coupon, discountAmount };
+    paymentSession.couponTotal = discountAmount;
+    paymentSession.couponItems = [{
+        name: couponItem?.name || coupon.title,
+        couponUsed: 1,
+        discount: discountAmount,
+    }];
+    paymentSession.totalDiscount = discountAmount + getMileageUsed(paymentSession);
+    paymentSession.totalPayInfo = paymentSession.totalPayInfo.filter(info => info.method !== "쿠폰");
+    paymentSession.totalPayInfo.push({
+        method: "쿠폰",
+        discountAmount,
+        coupons: [{
+            couponId: coupon.couponId,
+            couponCode: coupon.couponCode,
+            campaignId: coupon.campaignId,
+            orderId: paymentSession.orderId,
+            couponType: coupon.discountType,
+            couponTitle: coupon.title,
+            menuId: coupon.discountType === "MENU" ? coupon.menuId : null,
+            menuName: coupon.discountType === "MENU" ? (couponItem?.name || coupon.title) : null,
+            discountValue: coupon.discountValue,
+            maxDiscountAmount: coupon.maxDiscountAmount,
+            discountAmount,
+            price: discountAmount,
+        }]
     });
+    sendLogToMain('info', `쿠폰 할인 ${discountAmount}원 적용 (총 주문금액 ${totalAmount}원)`);
+    return true;
 }
 
 //----------------쿠폰결제 금액계산-------------------//
 //----------------쿠폰사용처리 -------------------//
-function collectUsedCoupons(orderList) {
-    const map = new Map(); // couponId 기준 dedupe
-    for (const order of (orderList || [])) {
-        const { usedCoupons = [], orderId, menuId } = order;
-        for (const c of usedCoupons) {
-            if (!c?.couponId) continue;
-            if (!map.has(c.couponId)) {
-                map.set(c.couponId, {
-                    couponId: c.couponId,
-                    couponCode: c.couponCode,
-                    orderId,
-                    menuId,
-                });
-            }
-        }
-    }
-    return Array.from(map.values());
+function collectUsedCoupons() {
+    const coupon = paymentSession.coupon;
+    if (!coupon?.couponId) return [];
+    return [{
+        couponId: coupon.couponId,
+        couponCode: coupon.couponCode,
+        orderId: paymentSession.orderId,
+        menuId: coupon.menuId,
+        discountAmount: coupon.discountAmount,
+        price: coupon.discountAmount,
+    }];
 }
 //----------------쿠폰사용처리 -------------------//
 //-----------------통합결제--------------------//
@@ -781,8 +808,11 @@ const paymentSession = {
     usePoint: null,       // 포인트 사용 단건 { uniqueMileageNo, usedAmount, pointData }
     earnPoint: null,      // 적립 단건 { uniqueMileageNo, createdAt }
     totalPayInfo: [],
+    mileageOperationBase: null,
 
     // 쿠폰 관련
+    coupon: null,          // 주문 세션당 단일 쿠폰
+    couponCommitted: false,
     couponItems: [],      // [{ name, count, discount }]  — 개별 쿠폰
     couponMenuIds: [],    // [menuId1, menuId2, ...]      — 전액할인 메뉴 ID
     couponTotal: 0,       // 총 쿠폰 할인금액 (derived 합산)
@@ -796,8 +826,11 @@ const paymentSession = {
         this.usePoint = null;
         this.earnPoint = null;
         this.totalPayInfo = [];
+        this.mileageOperationBase = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
         // 쿠폰 관련 초기화
+        this.coupon = null;
+        this.couponCommitted = false;
         this.couponItems = [];
         this.couponMenuIds = [];
         this.couponTotal = 0;
@@ -913,19 +946,21 @@ async function handleMileageEarn(orderAmount, userInfo) {
 
 // 공통 쿠폰 사용함수
 async function handleUseCoupons(orderList) {
+    if (paymentSession.couponCommitted) return { ok: true, skipped: true };
     const coupons = collectUsedCoupons(orderList);
     if (coupons.length === 0) {
-        sendLogToMain('error', `사용할 쿠폰이 없습니다.`);
-        return;
+        return { ok: true, skipped: true };
     }
 
     const result = await useCouponApi(coupons);
 
     if (result.ok) {
+        paymentSession.couponCommitted = true;
         sendLogToMain('info', `${result.message}`);
     } else {
         sendLogToMain('error', `${result.message}`);
     }
+    return result;
 }
 
 // 마일리지 사용 초기화 처리
@@ -949,7 +984,8 @@ async function rollbackPointUsage(reason = 'ORDER_FAIL') {
     const totalAmtNum = u.pointData?.totalAmt || 0;
 
     try {
-        const res = await rollbackMileage(mileageNo, usedAmount, totalAmtNum, reason);
+        const res = await rollbackMileage(mileageNo, totalAmtNum, 0, usedAmount);
+        paymentSession.mileageOperationBase = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
         console.log(`↩️ [포인트 롤백 완료] mileageNo=${mileageNo}, amount=${usedAmount}`);
         return { success: true, rolledBack: 1, res };
     } catch (err) {
@@ -1023,9 +1059,15 @@ const totalPayment = async (data) => {
         try {
 
             // 쿠폰사용함수
-            await handleUseCoupons(orderList);
+            const couponUseResult = await handleUseCoupons(orderList);
+            if (!couponUseResult.ok) {
+                throw new Error(couponUseResult.message || "쿠폰 사용 처리에 실패했습니다.");
+            }
 
             await ordStart(mileageUsed, null, data, paymentSession.totalPayInfo);
+            if (couponDiscount >= totalAmount) {
+                openAlertModal("주문이 완료되었습니다.", "success");
+            }
         } catch (e) {
             try {
                 await rollbackPointUsage('ORDER_FAIL');
@@ -1071,7 +1113,7 @@ const totalPayment = async (data) => {
     }
 
     // 쿠폰 fasle 일때만안보이기
-    if (userInfo.coupon !== true && paymentSession.earnPoint === null && paymentSession.usePoint === null) {
+    if (userInfo.coupon !== true && !paymentSession.coupon && paymentSession.earnPoint === null) {
         payCoupon.classList.remove("hidden");
     } else {
         payCoupon.classList.add("hidden");
@@ -1230,9 +1272,7 @@ const totalPayment = async (data) => {
         const result = await showCouponModal();       // updateDynamicContent2("couponInput")
 
         if (result?.action === ACTIONS.COUPON_APPLIED) {
-            // 쿠폰 적용 후 totalPayment로 복귀 시점
-            applyCouponFromOrders(orderList); // ✅ 세션 갱신 (할인, 총액 등)
-            openAlertModal("쿠폰을 적용했습니다.");
+            openAlertModal(`쿠폰 할인 -${asWon(paymentSession.couponTotal)}`, "success");
         }
 
         await totalPayment();                       // 다시 결제 모달 열기
@@ -1467,6 +1507,7 @@ const getCouponApi = async (barcode) => {
             code: "COUPON_VALID",
             message: "사용 가능한 쿠폰입니다.",
             item: body.item,
+            campaign: body.campaign || null,
         };
     } catch (err) {
         // ✅ IPC 통신 실패 등
@@ -2386,7 +2427,6 @@ function updateDynamicContent2(contentType, data = {}) {
             globalDim?.classList.add("hidden");
             aborter.abort();                 // ✅ 이 턴에서 붙인 모든 리스너 정리
             resolve(result);
-            isPaying = false;
         }
 
         // ✅ 닫기 버튼: 전역 위임 1개만
@@ -2431,61 +2471,73 @@ function updateDynamicContent2(contentType, data = {}) {
             // 바코드 스캔 버튼
             addButton("scanBarcodeBtn", "바코드스캔", "bg-red-400 py-3 text-white text-3xl rounded-lg hover:bg-red-500 w-full", async () => {
                 const barcodeScan = await getBarcodeScanModal();
+                if (!barcodeScan) {
+                    openAlertModal("쿠폰을 다시 인식해주세요.", "error");
+                    return;
+                }
                 inputValue = barcodeScan || ""; // 입력된 값에 추가
                 updateInputDisplay();
             });
 
             addButton("useBarCodeBtn", "사용하기", "bg-blue-500 py-3 text-white text-3xl rounded-lg hover:bg-blue-600 w-full", async () => {
                 const couponCode = inputValue.trim();
-                if (!couponCode) return openAlertModal("쿠폰 번호를 입력하세요.", "error");
+                if (!couponCode) return openAlertModal("등록되지 않은 쿠폰번호입니다.", "error");
+                if (paymentSession.coupon) return openAlertModal("쿠폰은 주문당 1개만 사용할 수 있습니다.", "error");
 
                 // 안전망
                 let couponResult;
                 try {
                     couponResult = await getCouponApi(couponCode);
                 } catch (e) {
-                    openAlertModal(e?.message || "쿠폰 조회 실패(예외)", "error");
+                    openAlertModal("일시적인 오류가 발생했어요. 다시 시도해주세요.", "error");
                     return;
                 }
 
                 if (!couponResult.ok || !couponResult.item) {
-                    openAlertModal(couponResult.message || "해당 쿠폰을 찾을 수 없습니다.", "error");
+                    const messageByCode = {
+                        COUPON_NOT_FOUND: "등록되지 않은 쿠폰번호입니다.",
+                        COUPON_EXPIRED: "사용 기간이 지난 쿠폰입니다.",
+                        COUPON_ALREADY_USED: "이미 사용된 쿠폰입니다.",
+                        COUPON_INACTIVE: "사용할 수 없는 쿠폰입니다.",
+                        COUPON_TOTAL_LIMIT: "사용이 종료된 쿠폰입니다.",
+                        COUPON_DAILY_LIMIT: "오늘 사용 가능한 쿠폰이 모두 소진되었습니다.",
+                        COUPON_WRONG_STORE: "이 매장에서 사용할 수 없는 쿠폰입니다.",
+                        IPC_ERROR: "일시적인 오류가 발생했어요. 다시 시도해주세요.",
+                    };
+                    openAlertModal(messageByCode[couponResult.code] || couponResult.message || "일시적인 오류가 발생했어요. 다시 시도해주세요.", "error");
                     return;
                 }
 
-                const couponItem = couponResult.item;
-                const menuId = parseInt(couponItem.menuId, 10);
+                const coupon = normalizeCoupon(couponResult.item, couponResult.campaign);
+                const calculation = calculateCouponDiscount(coupon, orderList);
+                if (coupon.discountType === "MENU" && !calculation.couponItem) {
+                    openAlertModal("쿠폰에 해당하는 메뉴가 주문에 없습니다.", "error");
+                    return;
+                }
+                if (calculation.discountAmount <= 0) {
+                    openAlertModal("사용할 수 없는 쿠폰입니다.", "error");
+                    return;
+                }
 
-                const matchedOrder = orderList.find(order => {
-                    if (parseInt(order.menuId, 10) !== menuId) return false;
-
-                    const used = order.couponUsed || 0;
-                    if (used >= order.count) return false;
-
-                    const alreadyUsed = (order.usedCoupons || [])
-                        .some(c => c.couponId === couponItem.couponId);
-
-                    if (alreadyUsed) {
-                        openAlertModal("이미 사용한 쿠폰입니다.", "error");
-                        return false;
+                const apply = () => {
+                    if (!applyCouponToSession(coupon, orderList)) {
+                        openAlertModal("사용할 수 없는 쿠폰입니다.", "error");
+                        return;
                     }
-                    return true;
-                });
+                    safeResolve({ success: true, action: ACTIONS.COUPON_APPLIED });
+                };
 
-                if (!matchedOrder) {
-                    openAlertModal("적용 가능한 주문이 없거나\n 이미 사용된 쿠폰입니다.", "error");
+                // 주문금액과 할인액이 같으면 정상적인 전액 할인이다.
+                // 할인액이 실제 주문금액을 초과할 때만 차액 소멸 확인을 받는다.
+                if (calculation.rawDiscount > calculateOrderTotals(orderList).totalAmount) {
+                    openModal(
+                        "할인 금액이 결제 금액보다 큽니다. 차액은 소멸됩니다. 진행하시겠습니까?",
+                        apply,
+                        () => {}
+                    );
                     return;
                 }
-
-                matchedOrder.couponUsed = (matchedOrder.couponUsed || 0) + 1;
-                matchedOrder.usedCoupons = matchedOrder.usedCoupons || [];
-                matchedOrder.usedCoupons.push({
-                    couponId: couponItem.couponId,
-                    couponCode: couponItem.couponCode,
-                });
-
-                openAlertModal(`${couponItem.title} 쿠폰을 적용했습니다.`, "success");
-                safeResolve({ success: true, action: ACTIONS.COUPON_APPLIED });
+                apply();
             });
         }
 
@@ -2714,6 +2766,9 @@ const stopBarcode = async () => {
     console.log(res);
     return res;
 }
+
+
+
 
 // 바코드 조회 및 결제
 const barcodePayment = async (orderAmount, discountAmount = 0) => {
@@ -3323,7 +3378,6 @@ async function fetchData() {
         const allData = await window.electronAPI.getMenuInfoAll();
         userInfo = await window.electronAPI.getUserData() ?? {};
         const version = await window.electronAPI.getVersion();
-        const s3BucketName = window.electronAPI.s3BucketName;
 
         setVersion(version);
         
@@ -3346,7 +3400,11 @@ async function fetchData() {
         limitCount = userInfo?.limitCount ?? 10;
 
         // 이미지 받아오기
-        await window.electronAPI.downloadAllFromS3WithCache(s3BucketName, `model/${userInfo.userId}`);
+        try {
+            await window.electronAPI.syncMenuImagesFromApi(userInfo.userId);
+        } catch (error) {
+            sendLogToMain('warn', `Menu image sync failed; using local cache: ${error.message}`);
+        }
         // 데이터가 올바르게 로드되었는지 확인
         if (!allData || !Array.isArray(allData.Items)) {
             openAlertModal("메뉴를 등록해 주세요.", "error");

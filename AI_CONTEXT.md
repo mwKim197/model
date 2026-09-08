@@ -162,42 +162,11 @@ Mounted by `src/server.js`:
   - `POST /extractor-home`
   - `GET /health`
 
-- Menu/admin/mileage/notice routes in `src/aws/db/Menu.js`:
-  - `GET /get-user-info`
-  - `GET /get-menu-info`
-  - `GET /get-menu-info-all`
-  - `POST /set-menu-info`
-  - `PUT /set-menu-update-info`
-  - `POST /set-admin-menu-info`
-  - `POST /delete-menu`
+- Menu, user, mileage, notice, image, and sales data use Lambda APIs under `src/aws/lambda` and `src/renderer/api`.
+- Local admin hardware routes in `src/serial/portProcesses/Admin.js`:
   - `POST /serial-admin-ice-order`
   - `POST /serial-admin-cup-order`
   - `POST /serial-admin-drink-order`
-  - `GET /get-orders-by-date-range`
-  - `GET /calculate-sales-statistics`
-  - `POST /update-user-info`
-  - `GET /fetch-and-save-user`
-  - `POST /login`
-  - `POST /validate-token`
-  - `POST /mileage-add`
-  - `GET /mileage`
-  - `PUT /mileage/:uniqueMileageNo`
-  - `DELETE /mileage/:uniqueMileageNo`
-  - `GET /mileage-history`
-  - `GET /mileage-user`
-  - `POST /mileage-user`
-  - `POST /mileage-transaction`
-  - `POST /notice`
-  - `GET /notice/:noticeId`
-  - `PUT /notice/:noticeId`
-  - `DELETE /notice/:noticeId`
-  - `GET /notices`
-  - `GET /notices-admin`
-
-- Excel routes in `src/aws/db/Excel.js`:
-  - `POST /upload`
-  - `GET /api/mileage/all`
-  - `POST /merge`
 
 - Serial hardware routes:
   - `src/serial/portProcesses/Cup.js`: cup info/use routes.
@@ -379,17 +348,13 @@ For order/kiosk UI changes:
 2. Check whether `preload.js` exposes the needed API.
 3. If the change needs backend/device behavior, follow `orderApi.js` to Express routes.
 
-For admin page changes:
-
-1. Start with `src/renderer/web/modelAdmin.js` and `modelAdmin.html`.
-2. API calls usually go through `src/renderer/api/menuApi.browser.js`.
-3. Server routes are mostly in `src/aws/db/Menu.js` or `src/serial/portProcesses/Connect.js`.
+For admin hardware changes, use `src/serial/portProcesses/Admin.js` and the dedicated serial routers. Menu management is handled by the administrator web application and Lambda APIs.
 
 For menu/data changes:
 
-1. Check `src/aws/db/Menu.js`.
-2. Check `src/aws/db/utils/getMenu.js`.
-3. Check S3 image handling in `src/aws/s3/utils/image.js`.
+1. Check `src/aws/lambda/menu.js`.
+2. Check `src/aws/lambda/image.js` and `src/aws/s3/utils/imageSync.js`.
+3. Check `src/renderer/api/menuApi.js`.
 
 For order manufacturing changes:
 

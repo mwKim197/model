@@ -34,7 +34,7 @@ const setUser = async (user) => {
         // 'user' 정보를 저장
         store.set('user', user);
 
-        log.info('[STORE] 사용자 정보 저장 성공:', user);
+        log.info(`[STORE] user saved: ${user.userId || 'unknown'}`);
     } catch (error) {
         log.error('[STORE] 사용자 정보 저장 중 오류 발생:', error);
         throw error; // 예외 발생 시 호출한 곳에서 처리할 수 있도록 에러를 던짐

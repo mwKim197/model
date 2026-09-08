@@ -6,10 +6,8 @@ const Connect = express.Router();
 const log = require('../../logger');
 let { startOrder, useWash, adminUseWash, coffeePreheating ,extractorHome}= require('../../services/serialOrderManager.js');
 const {serialCommCom1} = require("../../serial/serialCommManager")
-const {signupUser, loginUser, getAllUserIds} = require("../../login");
-const {duplicateMenuData} = require("../../aws/db/utils/getMenu");
 const {getSerialData} = require("../../services/serialPolling");
-const {saveOrdersToDynamoDB} = require("../../aws/db/utils/getPayment");
+const { saveOrderSalesWithQueue } = require("../../services/orderSalesSync");
 const {getMainWindow} = require('../../windows/mainWindow');
 const { requestInventoryCalculation } = require("../../aws/lambda/inventory");
 
@@ -41,7 +39,8 @@ Connect.post('/start-order', async (req, res) => {
         await polling.stopPolling(); // 주문 작업을 시작하기 전에 조회 정지
         const reqBody = req.body;
         log.info("주문 데이터 확인: ", JSON.stringify(reqBody));
-        await saveOrdersToDynamoDB(reqBody); // DB 주문 정보저장
+        const salesResult = await saveOrderSalesWithQueue(reqBody);
+        log.info(`[ORDER SALES] result: ${JSON.stringify(salesResult)}`);
         
         // 재고용 데이터 가공
         const userId = extractUserIdFromOrderList(reqBody.orderList);
@@ -92,73 +91,25 @@ Connect.post('/admin-order', async (req, res) => {
 
 // 회원 가입
 Connect.post('/set-user-info', async(req, res) => {
-    try {
-        const userInfo = req.body;
-
-        const result = await signupUser(userInfo.userId, userInfo.password, userInfo.ipAddress, userInfo.storeName, userInfo.tel).then();
-
-        res.json({ success: true, message: '회원 가입 완료.', data:result });
-        return result;
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
+    res.status(410).json({ success: false, message: '매장 생성은 관리자 웹과 서버 API로 이전되었습니다.' });
 });
 
 // 회원 로그인
 Connect.post('/set-user-login', async (req, res) => {
-    try {
-        const userInfo = req.body;
-        console.log("set-user-login", userInfo);
-
-        const result = await loginUser(userInfo.userId, userInfo.password, userInfo.ipAddress);
-
-        if (result.success) {
-            res.json({ success: true, message: result.message, user: result.user });
-        } else {
-            res.status(400).json({ success: false, message: result.message });
-        }
-    } catch (err) {
-        console.error('set-user-login error:', err);
-        res.status(500).json({ success: false, message: '서버 오류', error: err.message });
-    }
+    res.status(410).json({
+        success: false,
+        message: '머신 로그인은 Lambda 인증 API로 이전되었습니다.',
+    });
 });
 
 // 전체 회원 조회
 Connect.post('/get-all-users-ids', async(req, res) => {
-    try {
-        const result = await getAllUserIds().then();
-        res.json({ success: true, message: '유저정보 조회완료.', data: result});
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
+    res.status(410).json({ success: false, message: '매장 계정 목록 조회는 관리자 웹으로 이전되었습니다.' });
 });
 
 // 조회된 회원 메뉴 데이터 받아서 신규 업데이트
 Connect.post('/set-menu-all-update', async (req, res) => {
-    try {
-        const { sourceUserId, targetUserId } = req.body
-        console.log('Menu.post(set-menu-all-update', sourceUserId + " : " + targetUserId);
-        // 입력값 유효성 검사
-        if (!sourceUserId || !targetUserId) {
-            return res.status(400).json({
-                success: false,
-                message: 'sourceUserId와 targetUserId를 모두 제공해야 합니다.',
-            });
-        }
-
-        await duplicateMenuData(sourceUserId, targetUserId);
-
-        res.json({
-            success: true,
-            message: `${sourceUserId}의 데이터를 ${targetUserId}로 복사했습니다.`,
-        });
-    } catch (err) {
-        log.error(err.message);
-        res.status(500).json({
-            success: false,
-            message: err.message,
-        });
-    }
+    res.status(410).json({ success: false, message: '최초 메뉴 복사는 관리자 웹으로 이전되었습니다.' });
 });
 
 

@@ -30,6 +30,7 @@ const log = require('./logger');
 const fs = require('fs');
 const {setupCloudflare, stopCloudflareTunnel, checkTunnelHealth} = require("./cloudflare/cloudflared");
 const { API_BASE_URL } = require('./config/apiConfig');
+const { startOrderSalesRetryWorker, stopOrderSalesRetryWorker } = require('./services/orderSalesSync');
 
 
 
@@ -139,6 +140,7 @@ async function initializeApp() {
         };
 
         // 5. Serial Polling 시작
+        startOrderSalesRetryWorker();
         serialPolling.start();
         log.info('[DEBUG] Serial polling started.');
 
@@ -206,6 +208,7 @@ app.whenReady().then(() => {
 app.on('before-quit', () => {
     log.info("⚠️ Electron 종료 → Cloudflare Tunnel도 같이 종료");
     serialPolling.stop();
+    stopOrderSalesRetryWorker();
     stopCloudflareTunnel(); // ✅ Cloudflare 종료
 });
 
