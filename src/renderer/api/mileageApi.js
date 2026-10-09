@@ -1,156 +1,68 @@
-const log = require("../../logger");
-const { ipcRenderer, ipcMain} = require('electron');
+const log = require('../../logger');
+const { ipcRenderer } = require('electron');
+const { API_BASE_URL, isDevelopment } = require('../../config/apiConfig');
 
-// 전역 변수 선언
-let userData = null;
+const MILEAGE_API = `${API_BASE_URL}/model_admin_mileage`;
 
-function sendLogToMain(level, message) {
-    ipcRenderer.send('log-to-main', { level, message });
-}
+const getMachineUser = async () => {
+    const user = await ipcRenderer.invoke('get-user-data');
+    if (!user?.userId || (!isDevelopment && !user?.machineToken)) {
+        throw new Error('머신 로그인이 필요합니다.');
+    }
+    return user;
+};
 
-const initializeUserData = async () => {
+const request = async (func, { method = 'GET', query = {}, body } = {}) => {
+    const user = await getMachineUser();
+    const url = new URL(MILEAGE_API);
+    url.searchParams.set('func', func);
+    url.searchParams.set('userId', user.userId);
+    Object.entries(query).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, String(value));
+    });
+    const headers = {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+    };
+    if (user.machineToken) headers.Authorization = `Bearer ${user.machineToken}`;
+    const response = await fetch(url, {
+        method,
+        headers,
+        ...(body && { body: JSON.stringify({ ...body, userId: user.userId }) }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || `마일리지 API 오류 (${response.status})`);
+    return data;
+};
+
+const checkMileageExists = async ({ mileageNo, tel }) => {
     try {
-        userData = await ipcRenderer.invoke('get-user-data'); // 메인 프로세스에서 데이터 가져오기
-        console.log('유저 정보 조회 완료:', userData);
-        return true;
+        return await request('machine-check', { query: { mileageNo, tel } });
     } catch (error) {
-        console.error('유저 정보 조회 실패:', error);
-        throw error; // 초기화 실패 시 에러 던지기
+        log.error('[MILEAGE API] check:', error);
+        throw error;
     }
 };
 
-
-// 초기화 완료 후 호출 가능하도록 보장
-const ensureUserDataInitialized = async () => {
-    if (!userData) {
-        await initializeUserData();
-    }
+const verifyMileageAndReturnPoints = async ({ mileageNo, tel, password }) => {
+    return request('machine-verify', { method: 'POST', body: { mileageNo, tel, password } });
 };
 
-// 유저 번호 체크
-const checkMileageExists = async (mileageInfo) => {
-    try {
+const saveMileageToDynamoDB = async ({ mileageNo, password, tel }) => {
+    return request('machine-create', { method: 'POST', body: { mileageNo, password, tel } });
+};
 
-        await ensureUserDataInitialized(); // userData 초기화 보장
-
-        // userData 초기화가 끝난 후에 실행되도록 보장
-        if (!userData) {
-            throw new Error('User data is not initialized');
-        }
-
-        const { mileageNo, tel } = mileageInfo; // 객체 구조 분해 할당
-
-        // mileageNo와 tel을 함께 쿼리 파라미터로 전달
-        const queryParams = new URLSearchParams();
-        if (mileageNo) queryParams.append("mileageNo", mileageNo);
-        if (tel) queryParams.append("tel", tel);
-
-        const response = await fetch(`http://localhost:3142/mileage-user?${queryParams.toString()}`);
-        if (!response.ok) {
-            throw new Error(`Network response was not ok: ${response.statusText}`);
-        }
-
-        return await response.json();
-    } catch (error) {
-        sendLogToMain('error','Error fetching menu info:', error);
-        log.error(error);
-    }
-}
-
-// 유저 번호 체크
-const verifyMileageAndReturnPoints = async (mileageInfo) => {
-    try {
-
-        await ensureUserDataInitialized(); // userData 초기화 보장
-
-        // userData 초기화가 끝난 후에 실행되도록 보장
-        if (!userData) {
-            throw new Error('User data is not initialized');
-        }
-
-        const response = await fetch(`http://localhost:3142/mileage-user`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ mileageNo: mileageInfo.mileageNo, tel: mileageInfo.tel, password: mileageInfo.password })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Network response was not ok: ${response.statusText}`);
-        }
-
-        return await response.json();
-    } catch (error) {
-        sendLogToMain('error','Error fetching menu info:', error);
-        log.error(error);
-    }
-}
-
-// 마일리지 등록
-const saveMileageToDynamoDB = async (mileageInfo) => {
-    try {
-
-        await ensureUserDataInitialized(); // userData 초기화 보장
-
-        // userData 초기화가 끝난 후에 실행되도록 보장
-        if (!userData) {
-            throw new Error('User data is not initialized');
-        }
-
-        const response = await fetch(`http://localhost:3142/mileage-add`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ mileageNo: mileageInfo.mileageNo, password: mileageInfo.password, tel: mileageInfo.tel })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Network response was not ok: ${response.statusText}`);
-        }
-
-        return await response.json();
-    } catch (error) {
-        sendLogToMain('error','Error fetching menu info:', error);
-        log.error(error);
-    }
-}
-
-// 마일리지트렌젝션
-const updateMileageAndLogHistory = async (mileageNo, totalAmt, changePoints, type, note) => {
-    try {
-
-        await ensureUserDataInitialized(); // userData 초기화 보장
-
-        // userData 초기화가 끝난 후에 실행되도록 보장
-        if (!userData) {
-            throw new Error('User data is not initialized');
-        }
-
-        const response = await fetch(`http://localhost:3142/mileage-transaction`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ mileageNo: mileageNo, totalAmt: totalAmt, changePoints: changePoints, type: type, note: note })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Network response was not ok: ${response.statusText}`);
-        }
-
-        return await response.json();
-    } catch (error) {
-        sendLogToMain('error','Error fetching menu info:', error);
-        log.error(error);
-    }
-}
-
+const updateMileageAndLogHistory = async (uniqueMileageNo, totalAmt, changePoints, type, note, operationId) => {
+    if (!operationId) throw new Error('마일리지 처리 식별자가 필요합니다.');
+    return request('machine-transaction', {
+        method: 'POST',
+        body: { uniqueMileageNo, totalAmt, changePoints, type, note, operationId },
+    });
+};
 
 module.exports = {
     checkMileageExists,
     verifyMileageAndReturnPoints,
     saveMileageToDynamoDB,
-    updateMileageAndLogHistory
-}
+    updateMileageAndLogHistory,
+};

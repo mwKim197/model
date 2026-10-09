@@ -27,6 +27,14 @@ async function createMainWindow() {
         return store.get('user'); // Electron Store에서 사용자 데이터 반환
     });
 
+    ipcMain.handle('set-user-data', (_event, user) => {
+        if (!user || typeof user !== 'object') {
+            throw new Error('Invalid user data.');
+        }
+        store.set('user', user);
+        return user;
+    });
+
     win = new BrowserWindow({
         width: 1200,
         height: 900,

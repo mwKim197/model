@@ -6,8 +6,7 @@ const Connect = require('./serial/portProcesses/Connect');
 const Order = require('./serial/portProcesses/Order');
 const Ice = require('./serial/portProcesses/Ice');
 const Cup = require('./serial/portProcesses/Cup');
-const Menu = require('./aws/db/Menu');
-const Excel = require('./aws/db/Excel');
+const Admin = require('./serial/portProcesses/Admin');
 const fs = require('fs');
 const { createServer } = require('http');
 const { serialCommCom1, serialCommCom3, serialCommCom4 } = require('./serial/serialCommManager');
@@ -18,7 +17,7 @@ const app = express();
 const server = createServer(app);
 const { getMainWindow } = require('./windows/mainWindow');
 
-const isDevelopment = (process.env.NODE_ENV || '').trim().toLowerCase() === 'development';
+const isDevelopment = process.env.MODEL_ENV === 'development';
 const appPath = isDevelopment ? path.resolve(process.cwd()) : process.resourcesPath;
 const { app: electronApp } = require('electron');
 const { ipcMain } = require('electron');
@@ -98,8 +97,7 @@ app.use(Connect);
 app.use(Order);
 app.use(Ice);
 app.use(Cup);
-app.use(Menu);
-app.use(Excel);
+app.use(Admin);
 
 app.get('/version', (req, res) => {
     const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8'));

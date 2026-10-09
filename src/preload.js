@@ -6,10 +6,10 @@ const mileageApi = require('./renderer/api/mileageApi');
 const {SmTCatAgentClient} = require('./vcat/vcat');
 const { createVcatService } = require('./renderer/api/vcatApi'); // ⬅️ 새 파일
 
-const image = require('./aws/s3/utils/image');
-const { s3BucketName } = require('./aws/aws');
+const { syncMenuImagesFromApi } = require('./aws/s3/utils/imageSync');
 const fs = require("fs");
 const path = require("path");
+const { isDevelopment } = require('./config/apiConfig');
 
 // 인스턴스 한 번만 생성해두기
 const wsClient = new SmTCatAgentClient({ logger: console });
@@ -49,8 +49,8 @@ const vcat = createVcatService({
 // contextBridge로 안전하게 API 노출
 contextBridge.exposeInMainWorld('electronAPI', {
 
-    // S3 버킷 이름 (aws.js에서 관리)
-    s3BucketName,
+    // 기존 config.json 자동 진입은 개발 빌드에서만 허용한다.
+    isDevelopment,
 
     // 함수 직접 호출
     on: (channel, callback) => {
@@ -142,9 +142,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // 재고 조회 - 재고는 API호출에 실패해도 동작
     getInventoryStatus: async (userId) => await orderApi.getInventoryStatus(userId),
 
-    // S3 이미지 조회 및 캐시 처리
-    downloadAllFromS3WithCache: async (bucketName, prefix) =>
-        await image.downloadAllFromS3WithCache(bucketName, prefix),
+    syncMenuImagesFromApi: async (userId) =>
+        await syncMenuImagesFromApi(userId),
 
     // polling 으로 받아온 RD1 상태를 노출
     updateSerialData: (callback) => registerIpcListener('update-serial-data', callback),
@@ -155,14 +154,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // 페이지 이동
     navigateToPage: (pageName) => ipcRenderer.send('navigate-to-page', { pageName }),
 
+    // 신규 로그인 완료 후 머신 프로그램 재시작
+    restartAppAfterLogin: () => ipcRenderer.send('restart-app-after-login'),
+
+    // 관리자 숨김 기능: 머신 창 최소화
+    minimizeMachineWindow: () => ipcRenderer.send('minimize-machine-window'),
+
     // 로그 기록
     logToMain: (level, message) => ipcRenderer.send('log-to-main', { level, message }),
-
-    // 데이터 가져올 계정 조회
-    getAllUserIds: async () => await userApi.getAllUserIds(),
-
-    // 해당 계정의 카테고리 + 메뉴 데이터 복제
-    setMenuAllUpdate: async (sourceUserId, targetUserId) => await userApi.setMenuAllUpdate(sourceUserId, targetUserId),
 
     // 마일리지 번호 비교
     checkMileageExists: async (mileageInfo) => await mileageApi.checkMileageExists(mileageInfo),
@@ -174,7 +173,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     saveMileageToDynamoDB: async (mileageInfo) => await mileageApi.saveMileageToDynamoDB(mileageInfo),
 
     //마일리지 트렌젝션
-    updateMileageAndLogHistory: async (mileageNo, totalAmt, pointsToAdd, type, note) => await mileageApi.updateMileageAndLogHistory(mileageNo, totalAmt, pointsToAdd, type, note),
+    updateMileageAndLogHistory: async (mileageNo, totalAmt, pointsToAdd, type, note, operationId) => await mileageApi.updateMileageAndLogHistory(mileageNo, totalAmt, pointsToAdd, type, note, operationId),
 
     // 유저 DATA config 업데이트
     fetchAndSaveUserInfo: async () => await userApi.fetchAndSaveUserInfo(),

@@ -1,6 +1,6 @@
 const log = require("../../logger");
-const { ipcRenderer, ipcMain} = require('electron');
-const {initializeCounter} = require("../../aws/db/utils/getCount");
+const { ipcRenderer } = require('electron');
+const { getAllMenusForMachine } = require('../../aws/lambda/menu');
 
 // 전역 변수 선언
 let userData = null;
@@ -34,73 +34,11 @@ sendLogToMain('error', '렌더러 에러 발생');*/
 
 const getUserInfo = async () => {
     try {
-
         await ensureUserDataInitialized(); // userData 초기화 보장
-
-        // userData 초기화가 끝난 후에 실행되도록 보장
         if (!userData) {
             throw new Error('User data is not initialized');
         }
-
-        const response = await fetch(`http://localhost:3142/get-user-info`);
-        if (!response.ok) {
-            throw new Error(`Network response was not ok: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-
-        return data;
-    } catch (error) {
-        sendLogToMain('error','Error fetching menu info:', error);
-        log.error(error);
-    }
-}
-
-const getMenuInfo = async () => {
-    try {
-
-        await ensureUserDataInitialized(); // userData 초기화 보장
-
-        // userData 초기화가 끝난 후에 실행되도록 보장
-        if (!userData) {
-            throw new Error('User data is not initialized');
-        }
-
-        const response = await fetch(`http://localhost:3142/get-menu-info`);
-        if (!response.ok) {
-            throw new Error(`Network response was not ok: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        sendLogToMain('info','MENU: ', data);  // 디버깅용 콘솔
-        log.info(data);
-        document.getElementById('data').textContent = JSON.stringify(data);
-    } catch (error) {
-        sendLogToMain('error','Error fetching menu info:', error);
-        log.error(error);
-    }
-}
-
-// 선택한 유저정보로 유저 menu 전체 조회
-const getUserMenuInfoAll = async (userId) => {
-    try {
-
-        await ensureUserDataInitialized(); // userData 초기화 보장
-
-        // userData 초기화가 끝난 후에 실행되도록 보장
-        if (!userData) {
-            throw new Error('User data is not initialized');
-        }
-
-        const response = await fetch(`http://localhost:3142/get-menu-info-all/${userId}`);
-
-        if (!response.ok) {
-            throw new Error(`Network response was not ok: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        log.info(data);
-        return data;
+        return userData;
     } catch (error) {
         sendLogToMain('error','Error fetching menu info:', error);
         log.error(error);
@@ -110,102 +48,15 @@ const getUserMenuInfoAll = async (userId) => {
 // 메뉴정보 전체 조회
 const getMenuInfoAll = async () => {
     try {
-
         await ensureUserDataInitialized(); // userData 초기화 보장
-
-        // userData 초기화가 끝난 후에 실행되도록 보장
-        if (!userData) {
+        if (!userData?.userId) {
             throw new Error('User data is not initialized');
         }
-        
-        const response = await fetch(`http://localhost:3142/get-menu-info-all`);
-
-        if (!response.ok) {
-            throw new Error(`Network response was not ok: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        log.info(data);
-        //sendLogToMain('info','MENU-ALL: ', data);  // 디버깅용 콘솔
-        return data;
+        return await getAllMenusForMachine(userData.userId);
     } catch (error) {
         sendLogToMain('error','Error fetching menu info:', error);
         log.error(error);
     }
-}
-
-const setMenuInfo = async () => {
-    document.getElementById('setToMenu').addEventListener('click', async () => {
-        try {
-
-            await ensureUserDataInitialized(); // userData 초기화 보장
-
-            // userData 초기화가 끝난 후에 실행되도록 보장
-            if (!userData) {
-                throw new Error('User data is not initialized');
-            }
-
-            const items = [];
-
-            // 모든 item-input 필드셋에서 데이터 수집
-            document.querySelectorAll('.item-input').forEach((fieldset) => {
-                const itemId = fieldset.id.replace('item', ''); // 항목 ID 추출
-                const itemType = document.getElementById(`itemType${itemId}`)?.value || 'None';
-                const value1 = document.getElementById(`value1-${itemId}`)?.value || '0';
-                const value2 = document.getElementById(`value2-${itemId}`)?.value || '0';
-                const value3 = document.getElementById(`value3-${itemId}`)?.value || '0';
-                const value4 = document.getElementById(`value4-${itemId}`)?.value || '0';
-
-                items.push({
-                    type: itemType,
-                    no: parseInt(itemId, 10),
-                    value1,
-                    value2,
-                    value3,
-                    value4,
-                });
-            });
-
-            // 각 옵션 값을 저장할 객체
-            const selectedOptions = {
-                name: document.getElementById('menuName')?.value || 'None',
-                cup: document.querySelector('input[name="cup"]:checked')?.value || 'None',
-                iceYn: document.querySelector('input[name="iceYn"]:checked')?.value || 'No',
-                hotAndIce: document.querySelector('input[name="hotAndIce"]:checked')?.value || 'None',
-                iceTime: document.querySelector('input[name="iceTime"]')?.value || '0',
-                waterTime: document.querySelector('input[name="waterTime"]')?.value || '0',
-                price: document.getElementById('price').value || 'None',
-                image: 'https://placehold.co/200x300/png',
-                category: document.getElementById('category').value || 'None',
-                items, // 통합된 items 배열 추가
-            };
-
-            log.info("data : " + JSON.stringify(selectedOptions));
-
-            // Fetch 요청 보내기
-            const response = await fetch(`http://localhost:3142/set-menu-info`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(selectedOptions),
-            });
-
-            if (!response.ok) {
-                throw new Error(`Network response was not ok: ${response.statusText}`);
-            }
-
-            const data = await response.json();
-            sendLogToMain('info', '메뉴 저장: ', data); // 디버깅용 로그
-            log.info(data);
-
-            // 결과 표시
-            document.getElementById('data').textContent = JSON.stringify(data);
-        } catch (error) {
-            sendLogToMain('error', 'Error fetching menu info:', error);
-            log.error(error);
-        }
-    });
 }
 
 const fetchCoffeeInfo = async (grinder1, grinder2, extraction, hotwater) => {
@@ -574,10 +425,7 @@ const fetchIceInfo = async () => {
 
 module.exports = {
     getUserInfo,
-    getMenuInfo,
-    getUserMenuInfoAll,
     getMenuInfoAll,
-    setMenuInfo,
     fetchCoffeeInfo,
     fetchCoffeeUse,
     fetchCoffeeUse1,

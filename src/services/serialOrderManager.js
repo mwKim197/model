@@ -1,5 +1,6 @@
 const log = require('../logger');
-const { allProduct } = require("../aws/db/utils/getMenu");
+const { getAllMenusForMachine } = require('../aws/lambda/menu');
+const { getUser } = require('../util/store');
 const {serialCommCom1, serialCommCom3, serialCommCom4 } = require("../serial/serialCommManager");
 const CupModule = require("../serial/portProcesses/CupModule");
 const IceModule = require("../serial/portProcesses/IceModule");
@@ -12,6 +13,14 @@ const Order = new OrderModule(serialCommCom1);
 const McData = new serialDataManager(serialCommCom1);
 
 let menuName = "";
+
+const allProduct = async () => {
+    const user = await getUser();
+    if (!user?.userId) {
+        throw new Error('메뉴 조회를 위한 머신 로그인이 필요합니다.');
+    }
+    return getAllMenusForMachine(user.userId);
+};
 
 // 주문 처리 로직
 const startOrder = async (data) => {

@@ -5,3 +5,5 @@
 /pem/key.pem
 resources/cert.pem
 /.env.local
+/.env.development.local
+/.env.production.local
