@@ -30,6 +30,7 @@ const log = require('./logger');
 const fs = require('fs');
 const {setupCloudflare, stopCloudflareTunnel, checkTunnelHealth} = require("./cloudflare/cloudflared");
 const { API_BASE_URL } = require('./config/apiConfig');
+const { startNetworkMonitor, stopNetworkMonitor } = require('./services/networkMonitor');
 const { startOrderSalesRetryWorker, stopOrderSalesRetryWorker } = require('./services/orderSalesSync');
 
 
@@ -201,11 +202,13 @@ async function initializeApp() {
 
 app.whenReady().then(() => {
     registerAutoLaunch();
+    try { startNetworkMonitor(); } catch (error) { log.warn('네트워크 진단 시작 실패:', error.message); }
     initializeApp().catch((err) => log.info('App initialization failed:', err));
 });
 
 // ✅ Cloudflare 종료 처리
 app.on('before-quit', () => {
+    stopNetworkMonitor();
     log.info("⚠️ Electron 종료 → Cloudflare Tunnel도 같이 종료");
     serialPolling.stop();
     stopOrderSalesRetryWorker();

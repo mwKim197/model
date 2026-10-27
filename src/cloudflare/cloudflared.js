@@ -4,6 +4,7 @@ const { app } = require('electron');
 const fs = require('fs');
 const log = require('../logger');
 const { API_BASE_URL } = require('../config/apiConfig');
+const { notifyNetworkFailure } = require('../services/networkMonitor');
 
 const basePath = path.dirname(app.getPath('exe'));
 const cloudflaredDir = path.join(basePath, 'cloudflared');
@@ -109,6 +110,7 @@ async function checkTunnelHealth(userId = currentUserId) {
         if (!externalRes.ok) throw new Error(`External API unhealthy (${externalRes.status})`);
     } catch (error) {
         log.warn(`⚠️ Healthcheck 실패 (${error.message}) → 터널 토큰 재발급 후 재시작`);
+        notifyNetworkFailure();
         try {
             await setupCloudflare(userId);
         } catch (restartError) {
