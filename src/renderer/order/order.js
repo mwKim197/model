@@ -229,19 +229,41 @@ window.addEventListener('resize', () => {
     document.querySelectorAll('.auto-shrink-text').forEach(el => adjustTextSize(el, 200));
 })
 
-// 가이드 이미지 추가
+// 등록 이미지가 없거나 로드되지 않으면 패키지의 기본 이미지를 사용한다.
+function setStoreImage(image, source, fallback, label) {
+    if (!image) return;
+    const target = typeof source === 'string' && source.trim() ? source.trim() : fallback;
+    if (image.getAttribute('src') === target) return;
+    image.onerror = target === fallback ? null : () => {
+        sendLogToMain('warn', `${label} load failed; using bundled default image`);
+        image.onerror = null;
+        image.src = fallback;
+    };
+    image.src = target;
+}
+
+function applyStoreImages() {
+    setStoreImage(document.querySelector('#userLogo img'), userInfo?.logoUrl,
+        '../../assets/basicImage/로고.png', 'Store logo');
+    iconImage = userInfo?.iconUrl || '';
+    checkAndShowEmptyImage();
+}
+
+// 초기 안내 이미지도 매장 정보가 도착하면 교체한다. 실제 주문 항목은 건드리지 않는다.
 function checkAndShowEmptyImage() {
     const orderGrid = document.getElementById('orderGrid');
-
-    const gridImg = iconImage ? iconImage : "../../assets/basicImage/가이드.png";
-    // 빈 상태인지 확인
+    if (!orderGrid || Array.from(orderGrid.children).some(child => !child.classList.contains('empty-image'))) return;
     if (orderGrid.children.length === 0) {
-        orderGrid.innerHTML = `
-            <div class="empty-image flex items-center justify-center h-full">
-                <img src="${gridImg}" alt="No items available" class="w-96 h-auto" />
-            </div>
-        `;
+        const container = document.createElement('div');
+        container.className = 'empty-image flex items-center justify-center h-full';
+        const image = document.createElement('img');
+        image.alt = 'No items available';
+        image.className = 'w-96 h-auto';
+        container.appendChild(image);
+        orderGrid.appendChild(container);
     }
+    setStoreImage(orderGrid.querySelector('.empty-image img'), iconImage,
+        '../../assets/basicImage/가이드.png', 'Store guide icon');
 }
 
 // 아이템 등록
@@ -968,6 +990,10 @@ function resetMileageUsage() {
     const couponDiscount = paymentSession.couponTotal || 0;
 
     paymentSession.usePoint = null;
+    // 실제 차감 세션과 매출·영수증용 사용내역을 함께 초기화한다.
+    paymentSession.totalPayInfo = (paymentSession.totalPayInfo || []).filter(
+        info => info.method !== "마일리지"
+    );
     paymentSession.totalDiscount = couponDiscount; // 쿠폰 할인만 반영
     console.log("🔄 마일리지 사용 초기화 — 쿠폰 할인만 유지");
 }
@@ -3372,33 +3398,19 @@ function applySoldOutToAllProducts(allProducts, inventory) {
 ///////////////////// 바코드 스캔 //////////////////////
 async function fetchData() {
     try {
+        // 저장된 이미지는 메뉴/서버 조회를 기다리지 않고 먼저 표시한다.
+        userInfo = await window.electronAPI.getUserData() ?? {};
+        applyStoreImages();
         const basePath = await window.electronAPI.getBasePath();
         // config 업데이트
         await window.electronAPI.fetchAndSaveUserInfo();
-        const allData = await window.electronAPI.getMenuInfoAll();
         userInfo = await window.electronAPI.getUserData() ?? {};
+        applyStoreImages();
+        const allData = await window.electronAPI.getMenuInfoAll();
         const version = await window.electronAPI.getVersion();
 
         setVersion(version);
         
-        // 원격 로고가 없거나 S3 403/404·네트워크 오류로 로드되지 않으면
-        // 패키지에 포함된 기본 로고를 사용한다.
-        const defaultLogoUrl = '../../assets/basicImage/로고.png';
-        const userLogoImage = document.querySelector('#userLogo img');
-        if (userLogoImage) {
-            userLogoImage.onerror = () => {
-                sendLogToMain('warn', `Store logo load failed; using default logo: ${userInfo?.logoUrl || 'empty URL'}`);
-                userLogoImage.onerror = null;
-                userLogoImage.src = defaultLogoUrl;
-            };
-            userLogoImage.src = userInfo?.logoUrl || defaultLogoUrl;
-        }
-        
-        // 아이콘이미지 세팅
-        iconImage = userInfo?.iconUrl;
-        // 아이콘 이미지 호출
-        checkAndShowEmptyImage();
-
         preheatingTime = userInfo?.preheatingTime ?? 1800;
         limitCount = userInfo?.limitCount ?? 10;
 
