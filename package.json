@@ -1,6 +1,6 @@
 {
   "name": "model",
-  "version": "2.2.3",
+  "version": "2.2.4",
   "main": "src/main.js",
   "scripts": {
     "start": "npm run start:dev",
@@ -18,7 +18,7 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "mwkim197",
+        "owner": "narrowwayco",
         "repo": "model",
         "releaseType": "release"
       }
