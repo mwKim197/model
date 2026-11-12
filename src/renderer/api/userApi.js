@@ -35,8 +35,12 @@ const setUserLogin = async (userInfo) => {
 
 const fetchAndSaveUserInfo = async () => {
     const currentUser = await getUser();
-    if (!currentUser?.userId || (!isDevelopment && !currentUser?.machineToken)) {
+    if (!currentUser?.userId) {
         throw new Error('머신 로그인이 필요합니다.');
+    }
+    // 기존 설치는 저장된 설정을 유지한다. 인증 없는 운영 API 요청은 하지 않는다.
+    if (!isDevelopment && !currentUser.machineToken) {
+        return { success: true, skipped: true, reason: 'machine-token-missing' };
     }
     const headers = {};
     if (currentUser.machineToken) headers.Authorization = `Bearer ${currentUser.machineToken}`;

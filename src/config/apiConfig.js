@@ -9,6 +9,7 @@ const { normalizeEnvironment } = require('./environment');
 const runtimeEnvironment = normalizeEnvironment(process.env.MODEL_ENV);
 
 const isDevelopment = runtimeEnvironment === 'development';
+const requiresMachineToken = !isDevelopment && require('../../package.json').version !== '2.2.4';
 
 const API_BASE_URL = isDevelopment
     ? DEV_API_BASE
@@ -21,5 +22,6 @@ console.log(
 module.exports = {
     API_BASE_URL,
     isDevelopment,
+    requiresMachineToken,
     runtimeEnvironment,
 };

@@ -1,4 +1,4 @@
-const { API_BASE_URL, isDevelopment } = require('../../config/apiConfig');
+const { API_BASE_URL, requiresMachineToken } = require('../../config/apiConfig');
 const { getUser } = require('../../util/store');
 
 const ORDER_SALES_URL = `${API_BASE_URL}/model_payment?func=save-machine-order`;
@@ -6,7 +6,7 @@ const REQUEST_TIMEOUT_MS = 15000;
 
 async function saveOrderSales(payload) {
     const user = await getUser();
-    if (!user?.userId || (!isDevelopment && !user?.machineToken)) {
+    if (!user?.userId || (requiresMachineToken && !user.machineToken)) {
         throw new Error('Machine authorization token is missing');
     }
     if (user.userId !== payload.userId) throw new Error('Machine token userId does not match order userId');

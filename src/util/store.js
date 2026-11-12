@@ -41,4 +41,32 @@ const setUser = async (user) => {
     }
 };
 
-module.exports = { getUser, setUser }; // 두 유틸 함수 내보내기
+// 관리자 등록 흐름에서 호출한다. 외부 HTTP/IPC에는 직접 노출하지 않는다.
+const installMachineToken = async (userId, token) => {
+    if (typeof userId !== 'string' || !userId || typeof token !== 'string' ||
+        !/^[\w-]+\.[\w-]+\.[\w-]+$/.test(token) || token.length > 4096) {
+        throw new Error('유효하지 않은 머신 등록 정보입니다.');
+    }
+    const { default: Store } = await import('electron-store');
+    const { API_BASE_URL } = require('../config/apiConfig');
+    const store = new Store();
+    if (store.get('user')?.userId !== userId) throw new Error('대상 매장이 일치하지 않습니다.');
+    const url = new URL(`${API_BASE_URL}/model_user_setting`);
+    url.searchParams.set('func', 'machine-verify-enrollment');
+    url.searchParams.set('userId', userId);
+    const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+        redirect: 'error',
+        signal: AbortSignal.timeout(10000),
+    });
+    const data = await response.json();
+    if (!response.ok || !data.success || data.userId !== userId) {
+        throw new Error('서버에서 머신 토큰을 검증하지 못했습니다.');
+    }
+    const current = store.get('user');
+    if (current?.userId !== userId) throw new Error('검증 중 매장 설정이 변경됐습니다.');
+    if (current.machineToken && current.machineToken !== token) throw new Error('이미 머신 토큰이 등록되어 있습니다.');
+    store.set('user', { ...current, machineToken: token });
+};
+
+module.exports = { getUser, setUser, installMachineToken };

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const log = require('../../logger');
-const { API_BASE_URL, isDevelopment } = require('../../config/apiConfig');
+const { API_BASE_URL, requiresMachineToken } = require('../../config/apiConfig');
 const { getUser } = require('../../util/store');
 const { getBasePath, ensureDirectoryExists } = require('../s3/utils/cacheDirManager');
 
@@ -11,7 +11,7 @@ const DOWNLOAD_TIMEOUT_MS = 30000;
 
 async function requestNoticeApi(func, params = {}) {
     const user = await getUser();
-    if (!user?.userId || (!isDevelopment && !user?.machineToken)) throw new Error('머신 로그인이 필요합니다.');
+    if (!user?.userId || (requiresMachineToken && !user.machineToken)) throw new Error('머신 로그인이 필요합니다.');
 
     const url = new URL(NOTICE_API);
     url.searchParams.set('func', func);

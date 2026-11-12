@@ -28,6 +28,13 @@ const { setupPortForwarding } = require('./services/portForwarding');
 const { getBasePath } = require(path.resolve(__dirname, './aws/s3/utils/cacheDirManager'));
 const log = require('./logger');
 const fs = require('fs');
+const { normalizeConfigEncoding } = require('./util/configEncoding');
+try {
+    const encoding = normalizeConfigEncoding(path.join(app.getPath('userData'), 'config.json'));
+    if (encoding) log.info(`[CONFIG] Converted ${encoding} to UTF-8 without BOM; original backed up.`);
+} catch (error) {
+    log.warn(`[CONFIG] Encoding normalization skipped; config unchanged (${error.code || error.name}).`);
+}
 const {setupCloudflare, stopCloudflareTunnel, checkTunnelHealth} = require("./cloudflare/cloudflared");
 const { API_BASE_URL } = require('./config/apiConfig');
 const { startNetworkMonitor, stopNetworkMonitor } = require('./services/networkMonitor');
@@ -76,7 +83,7 @@ async function initializeApp() {
         mainWindow.webContents.once('did-finish-load', async () => {
             try {
                 const userData = await mainWindow.webContents.executeJavaScript('window.electronAPI.getUserData()');
-                log.info("✅ userData 가져오기 성공:", userData);
+                log.info("✅ userData 가져오기 성공:", { userId: userData?.userId });
 
                 // ✅ Cloudflared 설정 실행
                 if (userData && userData.userId) {

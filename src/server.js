@@ -22,7 +22,7 @@ const appPath = isDevelopment ? path.resolve(process.cwd()) : process.resourcesP
 const { app: electronApp } = require('electron');
 const { ipcMain } = require('electron');
 
-const {getUser} = require("./util/store");
+const {getUser, installMachineToken} = require("./util/store");
 const LOG_DIR = path.join(electronApp.getPath('appData'), 'model', 'logs');
 
 const BARCODE_API_BASE = `${API_BASE_URL}/model_barcode_scan`;
@@ -37,7 +37,7 @@ const processUserAndProduct = async () => {
     user = await getUser();
 
     if (user) {
-        log.info('[STORE]User Info:', user);
+        log.info('[STORE]User Info:', { userId: user.userId });
     } else {
         log.error('[STORE]No user found in store.');
 
@@ -59,6 +59,15 @@ app.use(cors({
 
 // Middleware
 app.use(express.json());
+app.post('/machine-token-enrollment', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    try {
+        await installMachineToken(req.body?.userId, req.body?.token);
+        res.json({ saved: true });
+    } catch {
+        res.status(403).json({ saved: false });
+    }
+});
 app.use((req, res, next) => {
     req.serialCommCom1 = serialCommCom1;
     req.serialCommCom3 = serialCommCom3;

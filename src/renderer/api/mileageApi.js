@@ -1,12 +1,12 @@
 const log = require('../../logger');
 const { ipcRenderer } = require('electron');
-const { API_BASE_URL, isDevelopment } = require('../../config/apiConfig');
+const { API_BASE_URL, requiresMachineToken } = require('../../config/apiConfig');
 
 const MILEAGE_API = `${API_BASE_URL}/model_admin_mileage`;
 
 const getMachineUser = async () => {
     const user = await ipcRenderer.invoke('get-user-data');
-    if (!user?.userId || (!isDevelopment && !user?.machineToken)) {
+    if (!user?.userId || (requiresMachineToken && !user.machineToken)) {
         throw new Error('머신 로그인이 필요합니다.');
     }
     return user;

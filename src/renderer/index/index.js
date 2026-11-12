@@ -3,9 +3,9 @@ let userInfo = {};
 window.onload = async () => {
     try {
         const userData = await window.electronAPI.getUserData();
-        // 1차 개발 안정화 기간에는 기존 electron-store(config.json)의
-        // userId만 있어도 기존처럼 자동 진입한다. 운영은 토큰을 계속 요구한다.
-        if (userData?.userId && (window.electronAPI.isDevelopment || userData?.machineToken)) {
+        // 2.2.4 전환 기간에는 기존 매장 설정으로 로컬 주문 화면에 진입한다.
+        // 서버 요청의 인증 요건은 별도로 유지한다.
+        if (typeof userData?.userId === 'string' && userData.userId.trim()) {
             await window.electronAPI.navigateToPage('order');
         }
     } catch (error) {
